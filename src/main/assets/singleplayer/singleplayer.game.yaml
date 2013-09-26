@@ -1,0 +1,699 @@
+---
+# There are 735134400 rotation points, 18378360 would be equivalent to 1 continuum rot point.
+# Note that all position, speed values, factors etc are based on 1024 steps and not 1000 (continuum)
+# Any values that are relative to the ship rotation are based on a rotation of 0 (facing up)
+
+- noop: &GUNS
+        - classic-gun-lvl1
+        - classic-gun-lvl2
+        - classic-gun-lvl3
+        - classic-gun-lvl4
+        - classic-mgun-lvl1
+        - classic-mgun-lvl2
+        - classic-mgun-lvl3
+        - classic-mgun-lvl4
+        
+- noop: &GUNS_SINGLE
+        - classic-gun-lvl1
+        - classic-gun-lvl2
+        - classic-gun-lvl3
+        - classic-gun-lvl4
+        
+- noop: &GUNS_MULTI
+        - classic-mgun-lvl1
+        - classic-mgun-lvl2
+        - classic-mgun-lvl3
+        - classic-mgun-lvl4
+ 
+- noop: &BOMBS
+        - classic-bomb-lvl1
+        - classic-bomb-lvl2
+        - classic-bomb-lvl3
+        - classic-bomb-lvl4
+        - classic-ebomb-lvl1
+        - classic-ebomb-lvl2
+        - classic-ebomb-lvl3
+        - classic-ebomb-lvl4
+        - classic-thor
+
+- noop: &MINES
+        - classic-mine-lvl1
+        - classic-mine-lvl2
+        - classic-mine-lvl3
+        - classic-mine-lvl4
+        - classic-emine-lvl1
+        - classic-emine-lvl2
+        - classic-emine-lvl3
+        - classic-emine-lvl4
+ 
+- noop: &BOMBSMINES
+        - classic-bomb-lvl1
+        - classic-bomb-lvl2
+        - classic-bomb-lvl3
+        - classic-bomb-lvl4
+        - classic-ebomb-lvl1
+        - classic-ebomb-lvl2
+        - classic-ebomb-lvl3
+        - classic-ebomb-lvl4
+        - classic-mine-lvl1
+        - classic-mine-lvl2
+        - classic-mine-lvl3
+        - classic-mine-lvl4
+        - classic-emine-lvl1
+        - classic-emine-lvl2
+        - classic-emine-lvl3
+        - classic-emine-lvl4
+        - classic-thor
+        
+- noop: &BOMBSMINES_EMP
+        - classic-ebomb-lvl1
+        - classic-ebomb-lvl2
+        - classic-ebomb-lvl3
+        - classic-ebomb-lvl4
+        - classic-emine-lvl1
+        - classic-emine-lvl2
+        - classic-emine-lvl3
+        - classic-emine-lvl4
+  
+- noop: &EXPLOSION_BULLET
+        resource: classic.explosion-bullet
+        tiles: [7, 1]
+        frame-duration: 150
+
+- noop: &EXPLOSION_BOMB
+        resource: classic.explosion-bomb
+        tiles: [4, 11]
+        frame-duration: 50
+        
+- noop: &EXPLOSION_EBOMB
+        resource: classic.explosion-ebomb
+        tiles: [5, 2]
+        frame-duration: 50
+        
+- ship-rotation-points: 40
+  ships: [warbird, javelin, spider, leviathan, terrier, weasel, lancaster, shark]
+  ship-speed: 1000
+  ship-thrust: 10
+  ship-rotation-speed: 3000000
+  ship-bounce-friction: 600
+  ship-bounce-friction-other-axis: 900 
+  ship-radius: 14336 # 14 * 1024
+  ship-spawn-x: 512
+  ship-spawn-y: 512
+  ship-spawn-radius: 83
+  ship-energy: 1000
+  ship-recharge: 1000
+  ship-respawn-delay: 400
+  ship-change-respawn: true
+  ship-image:
+        resource: classic.ships
+        offset: [0, 0, 480, 192]
+        tiles: [10, 4]
+        
+  ship-exhaust-image:
+        resource: classic.exhaust
+        offset: [0, 0, 304, 16]
+        tiles: [19, 1] 
+        frame-duration: [10, 50]
+  ship-exhaust-delay: 100 # a new puff every X ms
+  
+  ship-emped-image:
+        resource: classic.emped
+        offset: [0, 0, 400, 40]
+        tiles: [10, 1] 
+        frame-duration: 50
+  ship-emped-delay: 200 # a new spark every X ms
+  
+  ship-radar-colour: 0xFFFF39
+  ship-local-radar-colour:
+        colour: [0xFFFF39, 0x000000]
+        frame-duration: 160
+
+  empty-gauge-left-image: {resource: gui.gauges,   offset: [152, 120, 4, 24]}
+  empty-gauge-right-image:  {resource: gui.gauges,   offset: [78 , 120, 4, 24]}
+  
+  
+  weapon-fire-delay: 100  # prevent wasting lots of bandwidth when a weapon has not been configured
+  projectile-hit-ship: true
+  projectile-hit-tile: true
+  projectile-bounce-friction: 1024
+  projectile-bounce-friction-other-axis: 1024
+  projectile-offset-y: 14336 # same as the radius
+  projectile-image-trail-randomized: true
+  projectile-expiration-ticks: 500
+  projectile-speed-relative: true
+  projectile-damage-self: true
+  projectile-damage-self-kill: false
+  projectile-damage-team: true
+  projectile-damage-team-kill: true
+  projectile-emp-self: false
+  projectile-emp-team: true
+  projectile-angle-relative: true
+  projectile-hit-ship-coupled: true # if multiple projectiles are used, remove them all if 1 hits an actor. Damage is only dealth once.
+  weapon-fire-projectile-limit: 1024
+  
+  ship-explosion-animation:
+        resource: classic.explosion-ship
+        tiles: [6, 6]
+        frame-duration: 50
+
+
+# Weapon images
+- selector: {weapon: *GUNS}
+  projectile-hit-ship-animation: *EXPLOSION_BULLET
+  projectile-hit-tile-animation: *EXPLOSION_BULLET
+        
+
+- selector: {weapon: [classic-gun-lvl1, classic-mgun-lvl1]}
+  projectile-image:         {resource: classic.bullets,        offset: [0,  0, 20, 5], tiles: [ 4, 1]}
+  projectile-image-bounces: {resource: classic.bullets,        offset: [0, 25, 20, 5], tiles: [ 4, 1]}
+  projectile-image-trail:   {resource: classic-bullets-trails, offset: [0,  0, 14, 1], tiles: [14, 1]}
+        
+- selector: {weapon: [classic-gun-lvl2, classic-mgun-lvl2]}
+  projectile-image:         {resource: classic.bullets,        offset: [0,  5, 20, 5], tiles: [ 4, 1]}
+  projectile-image-bounces: {resource: classic.bullets,        offset: [0, 30, 20, 5], tiles: [ 4, 1]}
+  projectile-image-trail:   {resource: classic-bullets-trails, offset: [0,  1, 14, 1], tiles: [14, 1]}
+  
+- selector: {weapon: [classic-gun-lvl3, classic-mgun-lvl3]}
+  projectile-image:         {resource: classic.bullets,        offset: [0, 10, 20, 5], tiles: [ 4, 1]}
+  projectile-image-bounces: {resource: classic.bullets,        offset: [0, 35, 20, 5], tiles: [ 4, 1]}
+  projectile-image-trail:   {resource: classic-bullets-trails, offset: [0,  2, 14, 1], tiles: [14, 1]}
+  
+- selector: {weapon: [classic-gun-lvl4, classic-mgun-lvl4]}
+  projectile-image:         {resource: classic.bullets,        offset: [0, 15, 20, 5], tiles: [ 4, 1]}
+  projectile-image-bounces: {resource: classic.bullets,        offset: [0, 40, 20, 5], tiles: [ 4, 1]}
+  projectile-image-trail:   {resource: classic-bullets-trails, offset: [0,  3, 14, 1], tiles: [14, 1]}
+
+- selector: {weapon: classic-bomb-lvl1}
+  projectile-image:         {resource: classic.bombs,        offset: [0,   0, 160, 16], tiles: [10, 1]}
+  projectile-image-bounces: {resource: classic.bombs,        offset: [0, 128, 160, 16], tiles: [10, 1]}
+  projectile-image-trail:   {resource: classic-bombs-trails, offset: [0,   0, 160, 16], tiles: [10, 1]}
+        
+- selector: {weapon: classic-bomb-lvl2}
+  projectile-image:         {resource: classic.bombs,        offset: [0,  16, 160, 16], tiles: [10, 1]}
+  projectile-image-bounces: {resource: classic.bombs,        offset: [0, 144, 160, 16], tiles: [10, 1]}
+  projectile-image-trail:   {resource: classic-bombs-trails, offset: [0,  16, 160, 16], tiles: [10, 1]}
+    
+- selector: {weapon: classic-bomb-lvl3}
+  projectile-image:         {resource: classic.bombs,        offset: [0,  32, 160, 16], tiles: [10, 1]}
+  projectile-image-bounces: {resource: classic.bombs,        offset: [0, 160, 160, 16], tiles: [10, 1]}
+  projectile-image-trail:   {resource: classic-bombs-trails, offset: [0,  32, 160, 16], tiles: [10, 1]}
+  
+- selector: {weapon: classic-bomb-lvl4}
+  projectile-image:         {resource: classic.bombs,        offset: [0,  48, 160, 16], tiles: [10, 1]}
+  projectile-image-bounces: {resource: classic.bombs,        offset: [0, 176, 160, 16], tiles: [10, 1]}
+  projectile-image-trail:   {resource: classic-bombs-trails, offset: [0,  48, 160, 16], tiles: [10, 1]}
+
+- selector: {weapon: classic-ebomb-lvl1}
+  projectile-image:         {resource: classic.bombs,        offset: [0,  64, 160, 16], tiles: [10, 1]}
+  projectile-image-trail:   {resource: classic-bombs-trails, offset: [0,   0, 160, 16], tiles: [10, 1]}
+        
+- selector: {weapon: classic-ebomb-lvl2}
+  projectile-image:         {resource: classic.bombs,        offset: [0,  80, 160, 16], tiles: [10, 1]}
+  projectile-image-trail:   {resource: classic-bombs-trails, offset: [0,  16, 160, 16], tiles: [10, 1]}
+    
+- selector: {weapon: classic-ebomb-lvl3}
+  projectile-image:         {resource: classic.bombs,        offset: [0,  96, 160, 16], tiles: [10, 1]}
+  projectile-image-trail:   {resource: classic-bombs-trails, offset: [0,  32, 160, 16], tiles: [10, 1]}
+  
+- selector: {weapon: classic-ebomb-lvl4}
+  projectile-image:         {resource: classic.bombs,        offset: [0, 112, 160, 16], tiles: [10, 1]}
+  projectile-image-trail:   {resource: classic-bombs-trails, offset: [0,  48, 160, 16], tiles: [10, 1]}
+
+- selector: {weapon: classic-thor}
+  projectile-image:         {resource: classic.bombs,        offset: [0, 192, 160, 16], tiles: [10, 1]}
+  projectile-image-trail:   {resource: classic-bombs-trails, offset: [0,  64, 160, 16], tiles: [10, 1]}
+  
+
+- selector: {weapon: classic-mine-lvl1}
+  projectile-image:         {resource: classic.mines,        offset: [0,   0, 160, 16], tiles: [10, 1]}
+        
+- selector: {weapon: classic-mine-lvl2}
+  projectile-image:         {resource: classic.mines,        offset: [0,  16, 160, 16], tiles: [10, 1]}
+    
+- selector: {weapon: classic-mine-lvl3}
+  projectile-image:         {resource: classic.mines,        offset: [0,  32, 160, 16], tiles: [10, 1]}
+  
+- selector: {weapon: classic-mine-lvl4}
+  projectile-image:         {resource: classic.mines,        offset: [0,  48, 160, 16], tiles: [10, 1]}
+  
+- selector: {weapon: classic-emine-lvl1}
+  projectile-image:         {resource: classic.mines,        offset: [0,  64, 160, 16], tiles: [10, 1]}
+        
+- selector: {weapon: classic-emine-lvl2}
+  projectile-image:         {resource: classic.mines,        offset: [0,  80, 160, 16], tiles: [10, 1]}
+    
+- selector: {weapon: classic-emine-lvl3}
+  projectile-image:         {resource: classic.mines,        offset: [0,  96, 160, 16], tiles: [10, 1]}
+  
+- selector: {weapon: classic-emine-lvl4}
+  projectile-image:         {resource: classic.mines,        offset: [0, 112, 160, 16], tiles: [10, 1]}
+
+  
+- {selector: {weapon: [classic-gun-lvl1]},      weapon-gauge-image: {resource: gui.gauges,   offset: [0  ,  0  , 26, 24]}}
+- {selector: {weapon: [classic-gun-lvl2]},      weapon-gauge-image: {resource: gui.gauges,   offset: [26 ,  0  , 26, 24]}}
+- {selector: {weapon: [classic-gun-lvl3]},      weapon-gauge-image: {resource: gui.gauges,   offset: [52 ,  0  , 26, 24]}}
+- {selector: {weapon: [classic-gun-lvl4]},      weapon-gauge-image: {resource: gui.gauges,   offset: [52 ,  0  , 26, 24]}}
+- {selector: {weapon: [classic-mgun-lvl1]},     weapon-gauge-image: {resource: gui.gauges,   offset: [78 ,  0  , 26, 24]}}
+- {selector: {weapon: [classic-mgun-lvl2]},     weapon-gauge-image: {resource: gui.gauges,   offset: [104,  0  , 26, 24]}}
+- {selector: {weapon: [classic-mgun-lvl3]},     weapon-gauge-image: {resource: gui.gauges,   offset: [130,  0  , 26, 24]}}
+- {selector: {weapon: [classic-mgun-lvl4]},     weapon-gauge-image: {resource: gui.gauges,   offset: [130,  0  , 26, 24]}}
+  
+- {selector: {weapon: [classic-bomb-lvl1]},     weapon-gauge-image: {resource: gui.gauges,   offset: [0  ,  48 , 26, 24]}}
+- {selector: {weapon: [classic-bomb-lvl2]},     weapon-gauge-image: {resource: gui.gauges,   offset: [26 ,  48 , 26, 24]}}
+- {selector: {weapon: [classic-bomb-lvl3]},     weapon-gauge-image: {resource: gui.gauges,   offset: [52 ,  48 , 26, 24]}}
+- {selector: {weapon: [classic-bomb-lvl4]},     weapon-gauge-image: {resource: gui.gauges,   offset: [52 ,  48 , 26, 24]}}
+- {selector: {weapon: [classic-ebomb-lvl1]},    weapon-gauge-image: {resource: gui.gauges,   offset: [0  ,  48 , 26, 24]}}
+- {selector: {weapon: [classic-ebomb-lvl2]},    weapon-gauge-image: {resource: gui.gauges,   offset: [26 ,  48 , 26, 24]}}
+- {selector: {weapon: [classic-ebomb-lvl3]},    weapon-gauge-image: {resource: gui.gauges,   offset: [52 ,  48 , 26, 24]}}
+- {selector: {weapon: [classic-ebomb-lvl4]},    weapon-gauge-image: {resource: gui.gauges,   offset: [52 ,  48 , 26, 24]}} 
+
+- {selector: {weapon: [classic-thor]},          weapon-gauge-image: {resource: gui.gauges,   offset: [130,  96 , 26, 24]}}
+- {selector: {weapon: [classic-burst]},         weapon-gauge-image: {resource: gui.gauges,   offset: [78 ,  72 , 26, 24]}} 
+  
+  
+- selector: {weapon: *BOMBSMINES}
+  projectile-hit-tile-animation: *EXPLOSION_BOMB
+  projectile-hit-ship-animation: *EXPLOSION_BOMB
+  projectile-prox-animation: *EXPLOSION_BOMB
+        
+  projectile-radar-colour:
+        colour: [0xADADAD, 0x000000]
+        frame-duration: 80
+
+- selector: {weapon: *BOMBSMINES_EMP}
+  projectile-hit-tile-animation: *EXPLOSION_EBOMB
+  projectile-hit-ship-animation: *EXPLOSION_EBOMB
+  projectile-prox-animation: *EXPLOSION_EBOMB
+
+- selector: {weapon: *GUNS}
+  projectile-expiration-ticks: 800
+  
+- selector: {weapon: *BOMBS}
+  projectile-expiration-ticks: 12000
+                
+- selector: {weapon: *MINES}
+  projectile-expiration-ticks: 15000
+  projectile-speed-relative: false
+  projectile-speed: 0
+  projectile-offset-y: 0
+  projectile-limit-group: 1
+
+
+- {selector: {weapon: [classic-gun-lvl1, classic-mgun-lvl1]}, projectile-damage:  520}
+- {selector: {weapon: [classic-gun-lvl2, classic-mgun-lvl2]}, projectile-damage: 1040}
+- {selector: {weapon: [classic-gun-lvl3, classic-mgun-lvl3]}, projectile-damage: 1560}
+- {selector: {weapon: [classic-gun-lvl4, classic-mgun-lvl4]}, projectile-damage: 2080}
+- {selector: {weapon: *BOMBSMINES}, projectile-damage:  2650}  
+  
+  
+- {selector: {weapon: [classic-bomb-lvl1, classic-ebomb-lvl1, classic-mine-lvl1, classic-emine-lvl1]}, projectile-damage-splash: 150}
+- {selector: {weapon: [classic-bomb-lvl2, classic-ebomb-lvl2, classic-mine-lvl2, classic-emine-lvl2]}, projectile-damage-splash: 300}
+- {selector: {weapon: [classic-bomb-lvl3, classic-ebomb-lvl3, classic-mine-lvl3, classic-emine-lvl3]}, projectile-damage-splash: 450}
+- {selector: {weapon: [classic-bomb-lvl4, classic-ebomb-lvl4, classic-mine-lvl4, classic-emine-lvl4]}, projectile-damage-splash: 600}
+  
+- {selector: {weapon: [classic-ebomb-lvl1, classic-emine-lvl1]}, projectile-emp-splash: 150}
+- {selector: {weapon: [classic-ebomb-lvl2, classic-emine-lvl2]}, projectile-emp-splash: 300}
+- {selector: {weapon: [classic-ebomb-lvl3, classic-emine-lvl3]}, projectile-emp-splash: 450}
+- {selector: {weapon: [classic-ebomb-lvl4, classic-emine-lvl4]}, projectile-emp-splash: 600}
+
+- {selector: {weapon: *BOMBSMINES_EMP}, projectile-emp-time: 2000}
+  
+  
+- selector: {weapon: classic-burst}
+  weapon-projectiles: 3
+  projectile-angle: [-245044800, 0, 245044800]
+  projectile-speed: 3500
+  projectile-damage: 2000
+  projectile-angle-relative: false
+  projectile-bounces: -1
+  projectile-activate-bounces: 1
+  projectile-hit-ship-coupled: false
+  projectile-speed-relative: false
+  projectile-offset-y: 0
+  
+  projectile-hit-tile-animation: *EXPLOSION_BULLET
+  projectile-hit-ship-animation: *EXPLOSION_BULLET
+
+  projectile-image:          {resource: classic.bullets,        offset: [0, 20, 20, 5], tiles: [ 4, 1]}
+  projectile-image-inactive: {resource: classic.bullets,        offset: [0, 20, 20, 5], tiles: [ 4, 1]}
+  projectile-image-bounces:  {resource: classic.bullets,        offset: [0, 45, 20, 5], tiles: [ 4, 1]}
+  projectile-image-trail:    {resource: classic-bullets-trails, offset: [0,  3, 14, 1], tiles: [14, 1]}
+
+
+- selector: {weapon: classic-thor}
+  projectile-prox-distance: 81920
+  projectile-prox-explode-ticks: 10 # -1 for never, 0 for immediate   
+  projectile-damage-splash: 600
+  projectile-hit-tile: false
+  
+  
+- selector: {ship: warbird}
+  ship-image:
+        resource: classic.ships
+        offset: [0, 0, 480, 192]
+        tiles: [10, 4]
+        
+  ship-speed: 2000
+  ship-thrust: 16
+  ship-boost-speed: 6000
+  ship-boost-thrust: 24
+  ship-boost-energy: 5500
+  
+  ship-energy: 1500
+  ship-recharge: 4000
+  ship-rotation-speed: 3675672 # round(735134400/40000 * 200)
+  
+  weapon-slot-gun: classic-gun-lvl3
+  weapon-slot-gun-multi: classic-gun-lvl3
+
+- selector: {ship: warbird, weapon: *GUNS}
+  projectile-speed: 5000
+  weapon-fire-energy: 1350
+  weapon-fire-delay: 100
+  weapon-switch-delay: 100
+
+- selector: {ship: warbird, weapon: *BOMBS}
+  projectile-speed: 4000
+  weapon-fire-delay: 30
+  weapon-switch-delay: 30
+
+- selector: {ship: javelin}
+  ship-image:
+        resource: classic.ships
+        offset: [0, 192, 480, 192]
+        tiles: [10, 4]
+        
+  ship-speed: 1900
+  ship-thrust: 13
+  ship-energy: 1500
+  ship-recharge: 1500
+  ship-rotation-speed: 3675672
+  ship-boost-speed: 6000
+  ship-boost-thrust: 24
+  ship-boost-energy: 5000
+  weapon-slot-bomb: classic-bomb-lvl1
+  weapon-slot-gun: classic-gun-lvl1
+  weapon-slot-gun-multi: classic-mgun-lvl1
+  weapon-slot-thor: classic-thor
+
+ 
+
+  
+- selector: {ship: javelin, weapon: *GUNS}
+  projectile-speed: 900
+  weapon-fire-energy: 300
+  weapon-fire-delay: 60
+  weapon-switch-delay: 60
+  projectile-angle: 367567200
+  
+# has multi icon
+- {selector: {ship: javelin, weapon: [classic-gun-lvl1]}, weapon-gauge-image: {resource: gui.gauges,   offset: [156,  0  , 26, 24]}}
+- {selector: {ship: javelin, weapon: [classic-gun-lvl2]}, weapon-gauge-image: {resource: gui.gauges,   offset: [182,  0  , 26, 24]}}
+- {selector: {ship: javelin, weapon: [classic-gun-lvl3]}, weapon-gauge-image: {resource: gui.gauges,   offset: [208,  0  , 26, 24]}}
+- {selector: {ship: javelin, weapon: [classic-gun-lvl4]}, weapon-gauge-image: {resource: gui.gauges,   offset: [208,  0  , 26, 24]}}
+  
+- selector: {ship: javelin, weapon: *GUNS_MULTI}
+  weapon-fire-delay: 150
+  weapon-switch-delay: 150
+  weapon-projectiles: 3
+  projectile-angle: [330810480, 367567200, 404323920]
+  
+  
+- selector: {ship: javelin, weapon: *BOMBS}
+  weapon-fire-energy: 1100
+  weapon-fire-delay: 75
+  weapon-switch-delay: 75
+  projectile-speed: 2250
+  projectile-bounces: 1
+  
+- selector: {ship: spider}
+  ship-image:
+        resource: classic.ships
+        offset: [0, 384, 480, 192]
+        tiles: [10, 4]
+
+  ship-speed: 1700
+  ship-thrust: 18
+  ship-energy: 1400
+  ship-recharge: 2500
+  ship-rotation-speed: 3308105
+  ship-boost-speed: 6000
+  ship-boost-thrust: 24
+  ship-boost-energy: 6200
+  weapon-slot-gun: classic-gun-lvl1
+  weapon-slot-gun-multi: classic-gun-lvl1
+  
+- selector: {ship: spider, weapon: *GUNS}
+  weapon-fire-energy: 225
+  weapon-fire-delay: 35
+  weapon-switch-delay: 35
+  projectile-speed: 4000
+  
+
+- selector: {ship: spider, weapon: *BOMBS}
+  projectile-speed: 0
+  weapon-fire-delay: 30
+  weapon-switch-delay: 30
+  
+  
+- selector: {ship: leviathan}
+  ship-image:
+        resource: classic.ships
+        offset: [0, 576, 480, 192]
+        tiles: [10, 4]
+
+  ship-speed: 500
+  ship-thrust: 5
+  ship-energy: 1500
+  ship-recharge: 1100
+  ship-rotation-speed: 827026
+  ship-boost-speed: 6000
+  ship-boost-thrust: 24
+  ship-boost-energy: 12000
+  weapon-slot-gun: classic-gun-lvl2
+  weapon-slot-gun-multi: classic-mgun-lvl2
+  weapon-slot-bomb: classic-ebomb-lvl3
+  weapon-slot-mine: classic-emine-lvl3
+  
+# has multi icon
+- {selector: {ship: leviathan, weapon: [classic-gun-lvl1]}, weapon-gauge-image: {resource: gui.gauges,   offset: [156,  0  , 26, 24]}}
+- {selector: {ship: leviathan, weapon: [classic-gun-lvl2]}, weapon-gauge-image: {resource: gui.gauges,   offset: [182,  0  , 26, 24]}}
+- {selector: {ship: leviathan, weapon: [classic-gun-lvl3]}, weapon-gauge-image: {resource: gui.gauges,   offset: [208,  0  , 26, 24]}}
+- {selector: {ship: leviathan, weapon: [classic-gun-lvl4]}, weapon-gauge-image: {resource: gui.gauges,   offset: [208,  0  , 26, 24]}}
+
+- selector: {ship: leviathan, weapon: *GUNS}
+  weapon-fire-delay: 60
+  weapon-switch-delay: 60
+  projectile-speed: 1000
+  
+- selector: {ship: leviathan, weapon: *GUNS_SINGLE}
+  weapon-fire-energy: 500
+  weapon-projectiles: 2
+  projectile-offset-x: [-9000, 9000]
+  
+- selector: {ship: leviathan, weapon: *GUNS_MULTI}
+  weapon-fire-energy: 800
+  weapon-projectiles: 4
+  projectile-offset-x: [0, -9000, 9000, 0]
+  # projectile-angle: [-81599918, 0, 0, 81599918]
+  projectile-angle: [-183783600, 0, 0, 183783600]
+        
+- selector: {ship: leviathan, weapon: *BOMBS}
+  weapon-fire-energy: 1100
+  weapon-fire-delay: 300
+  weapon-switch-delay: 300
+  projectile-speed: 3500
+                
+- selector: {ship: terrier}
+  ship-image:
+        resource: classic.ships
+        offset: [0, 768, 480, 192]
+        tiles: [10, 4]
+        
+  ship-speed: 4000
+  ship-thrust: 24
+  ship-energy: 1500
+  ship-recharge: 1800
+  ship-rotation-speed: 5513508
+  ship-boost-speed: 6000
+  ship-boost-thrust: 24
+  ship-boost-energy: 4000
+  weapon-fire-delay: 30
+  weapon-switch-delay: 30
+  weapon-slot-gun: classic-gun-lvl1
+  weapon-slot-gun-multi: classic-mgun-lvl1
+  weapon-slot-burst: classic-burst
+
+# has multi icon
+- {selector: {ship: terrier, weapon: [classic-gun-lvl1]}, weapon-gauge-image: {resource: gui.gauges,   offset: [156,  0  , 26, 24]}}
+- {selector: {ship: terrier, weapon: [classic-gun-lvl2]}, weapon-gauge-image: {resource: gui.gauges,   offset: [182,  0  , 26, 24]}}
+- {selector: {ship: terrier, weapon: [classic-gun-lvl3]}, weapon-gauge-image: {resource: gui.gauges,   offset: [208,  0  , 26, 24]}}
+- {selector: {ship: terrier, weapon: [classic-gun-lvl4]}, weapon-gauge-image: {resource: gui.gauges,   offset: [208,  0  , 26, 24]}}
+
+  
+- selector: {ship: terrier, weapon: *GUNS}
+  weapon-fire-energy: 400
+  weapon-fire-delay: 75
+  weapon-switch-delay: 75
+  projectile-speed: 800
+
+  
+- selector: {ship: terrier, weapon: *GUNS_SINGLE}
+  weapon-projectiles: 2
+  projectile-offset-x: [-9000, 9000]
+  
+- selector: {ship: terrier, weapon: *GUNS_MULTI}
+  weapon-projectiles: 4
+  projectile-offset-x: [0, -9000, 9000, 0]
+  projectile-angle: [-183783600, 0, 0, 183783600]
+  
+- selector: {ship: terrier, weapon: classic-burst}
+  weapon-fire-delay: 30
+  weapon-switch-delay: 30
+  projectile-speed: 3500
+  
+- selector: {ship: weasel}
+  ship-image:
+        resource: classic.ships
+        offset: [0, 960, 480, 192]
+        tiles: [10, 4]
+        
+  ship-speed: 1500
+  ship-thrust: 14
+  ship-energy: 1020
+  ship-recharge: 1500
+  ship-rotation-speed: 3308105
+  ship-boost-speed: 6200
+  ship-boost-thrust: 24
+  ship-boost-energy: 3600
+  weapon-slot-gun: classic-gun-lvl3
+  weapon-slot-gun-multi: classic-mgun-lvl3
+
+# has multi icon
+- {selector: {ship: weasel, weapon: [classic-gun-lvl1]}, weapon-gauge-image: {resource: gui.gauges,   offset: [156,  0  , 26, 24]}}
+- {selector: {ship: weasel, weapon: [classic-gun-lvl2]}, weapon-gauge-image: {resource: gui.gauges,   offset: [182,  0  , 26, 24]}}
+- {selector: {ship: weasel, weapon: [classic-gun-lvl3]}, weapon-gauge-image: {resource: gui.gauges,   offset: [208,  0  , 26, 24]}}
+- {selector: {ship: weasel, weapon: [classic-gun-lvl4]}, weapon-gauge-image: {resource: gui.gauges,   offset: [208,  0  , 26, 24]}}
+
+  
+- selector: {ship: weasel, weapon: *GUNS}
+  weapon-fire-energy: 624
+  weapon-fire-delay: 40
+  weapon-switch-delay: 40
+  projectile-speed: 1000
+  
+- selector: {ship: weasel, weapon: *GUNS_MULTI}
+  weapon-fire-energy: 762
+  weapon-projectiles: 3
+  projectile-angle: [-16319984, 0, 16319984]
+
+- selector: {ship: weasel, weapon: *BOMBS}
+  weapon-fire-delay: 30
+  weapon-switch-delay: 30
+  projectile-speed: 5000
+  
+- selector: {ship: lancaster}
+  ship-image:
+        resource: classic.ships
+        offset: [0, 1152, 480, 192]
+        tiles: [10, 4]
+  
+  ship-speed: 1800
+  ship-thrust: 12
+  ship-energy: 1500
+  ship-recharge: 2500
+  ship-rotation-speed: 3491888
+  ship-boost-speed: 6500
+  ship-boost-thrust: 28
+  ship-boost-energy: 4250
+  weapon-slot-gun: classic-gun-lvl2
+  weapon-slot-gun-multi: classic-mgun-lvl2
+  weapon-slot-burst: classic-burst
+  weapon-slot-thor: classic-thor
+  
+# has multi icon
+- {selector: {ship: lancaster, weapon: [classic-gun-lvl1]}, weapon-gauge-image: {resource: gui.gauges,   offset: [156,  0  , 26, 24]}}
+- {selector: {ship: lancaster, weapon: [classic-gun-lvl2]}, weapon-gauge-image: {resource: gui.gauges,   offset: [182,  0  , 26, 24]}}
+- {selector: {ship: lancaster, weapon: [classic-gun-lvl3]}, weapon-gauge-image: {resource: gui.gauges,   offset: [208,  0  , 26, 24]}}
+- {selector: {ship: lancaster, weapon: [classic-gun-lvl4]}, weapon-gauge-image: {resource: gui.gauges,   offset: [208,  0  , 26, 24]}}
+
+        
+- selector: {ship: lancaster, weapon: *GUNS}
+  weapon-fire-energy: 620
+  weapon-fire-delay: 45
+  weapon-switch-delay: 45
+  projectile-speed: 3650
+
+- selector: {ship: lancaster, weapon: *GUNS_SINGLE}
+  weapon-projectiles: 2
+  projectile-offset-x: [-9000, 9000]
+  
+- selector: {ship: lancaster, weapon: *GUNS_MULTI}
+  weapon-fire-energy: 870
+  weapon-fire-delay: 50
+  weapon-switch-delay: 50
+  weapon-projectiles: 4
+  projectile-offset-x: [0, -9000, 9000, 0]
+  projectile-angle: [-10199990, 0, 0, 10199990]
+  
+- selector: {ship: lancaster, weapon: *BOMBS}
+  weapon-fire-delay: 30
+  weapon-switch-delay: 30
+  projectile-speed: 2250
+
+- selector: {ship: lancaster, weapon: classic-burst}
+  weapon-fire-delay: 30
+  weapon-switch-delay: 30
+  projectile-speed: 2000
+  weapon-projectiles: 50
+  projectile-angle: [LINEAR, 14702688] # 735134400 / 50
+  
+- selector: {ship: lancaster, weapon: classic-thor}
+  projectile-expiration-chain-weapon: classic-burst
+  projectile-damage:  500
+  projectile-expiration-ticks: 100
+  projectile-expiration-explode: true
+  projectile-expiration-animation: *EXPLOSION_BOMB
+
+  
+- selector: {ship: shark}
+  ship-image:
+        resource: classic.ships
+        offset: [0, 1344, 480, 192]
+        tiles: [10, 4]
+        
+  ship-speed: 1875
+  ship-thrust: 13
+  ship-energy: 1200
+  ship-recharge: 1500
+  ship-rotation-speed: 3859456
+  ship-boost-speed: 6000
+  ship-boost-thrust: 24
+  ship-boost-energy: 4000
+  projectile-speed: 0
+  weapon-slot-bomb: classic-ebomb-lvl1
+  weapon-slot-mine: classic-emine-lvl1
+  weapon-slot-burst: classic-burst
+
+- selector: {ship: shark, weapon: *BOMBS}
+  weapon-fire-energy: 1150
+  weapon-fire-delay: 45
+  weapon-switch-delay: 45
+  
+- selector: {ship: shark, weapon: *MINES}
+  weapon-fire-energy: 200
+  weapon-fire-delay: 10
+  weapon-switch-delay: 10
+  weapon-fire-projectile-limit: 4
+  weapon-fire-projectile-limit-group: 1 # 1 is used for all mines
+  
+- selector: {ship: shark, weapon: classic-burst}
+  weapon-fire-delay: 30
+  weapon-switch-delay: 30
+  projectile-speed: 2000
+  #weapon-projectiles: 50
+  #projectile-angle: [LINEAR, 14702688] # 735134400 / 50
+  weapon-projectiles: 8
+  projectile-angle: [RAND, 0, 735134400]
+...

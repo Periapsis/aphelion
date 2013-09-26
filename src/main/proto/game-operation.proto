@@ -1,0 +1,166 @@
+// Copyright (c) 2012-2013  Joris van der Wel
+//
+// This file is part of Aphelion
+//
+//   Aphelion is free software: you can redistribute it and/or modify
+//   it under the terms of the GNU Affero General Public License as published by
+//   the Free Software Foundation, version 3 of the License.
+//
+//   Aphelion is distributed in the hope that it will be useful,
+//   but WITHOUT ANY WARRANTY; without even the implied warranty of
+//   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//   GNU General Public License for more details.
+//
+//   You should have received a copy of the GNU Affero General Public License
+//   along with Aphelion.  If not, see <http://www.gnu.org/licenses/>.
+//  
+//   In addition, the following supplemental terms apply, based on section 7 of
+//   the GNU Affero General Public License (version 3):
+//   a) Preservation of all legal notices and author attributions
+//   b) Prohibition of misrepresentation of the origin of this material, and
+//      modified versions are required to be marked in reasonable ways as
+//      different from the original version (for example by appending a copyright notice).
+//
+//   Linking this library statically or dynamically with other modules is making a
+//   combined work based on this library. Thus, the terms and conditions of the
+//   GNU Affero General Public License cover the whole combination.
+//  
+//   As a special exception, the copyright holders of this library give you 
+//   permission to link this library with independent modules to produce an 
+//   executable, regardless of the license terms of these independent modules,
+//   and to copy and distribute the resulting executable under terms of your 
+//   choice, provided that you also meet, for each linked independent module,
+//   the terms and conditions of the license of that module. An independent
+//   module is a module which is not derived from or based on this library.
+//  
+//   
+//   
+
+package aphelion.shared.net.protobuf;
+
+message ActorNew {
+	required int64 tick = 1;
+        
+        // A PID is always non zero. 
+        // PIDs are not reused but they may wraparound (negative PIDs are valid).
+	required int32 pid = 2;
+        required string name = 3;
+        
+        // a seed for fake-"random" things for this player
+        // Can be any value except 0
+        required sfixed64 seed = 4;
+        
+        required string ship = 5;
+}
+
+message ActorSync {
+        // Sync actor state
+        // Sent alongside ActorNew if the receiving player just entered the arena
+        // Also sent periodically to compensate for lag spikes that are longer 
+        // than a timewarp can possibly correct.
+        // Position is not included, ActorWarp is used for that
+        required int64 tick = 1;
+        required int32 pid = 2;
+        
+        required sint32  x         = 3;
+	required sint32  y         = 4;
+	required sint32  x_vel     = 5;
+	required sint32  y_vel     = 6;
+	required fixed32 rotation  = 7;
+        
+        required int64 nextSwitchedWeaponFire_tick = 8;
+        repeated string nextWeaponFire_key = 9;
+        repeated int64 nextWeaponFire_tick = 10;
+        
+        optional string lastWeaponFire = 11;
+        required int32 energy = 12;
+        optional int64 empUntil_tick = 13; // if not set, no emp is active
+        required bool dead = 14;
+        required int64 spawnAt_tick = 15;
+}
+
+message ActorModification {
+        required int64 tick = 1;
+        required int32 pid = 2;
+        optional string ship = 3;
+}
+
+message ActorRemove {
+	required int64 tick = 1;
+	required int32 pid  = 2;
+}
+
+message ActorWarp {
+	required int64   tick      = 1;
+	required int32   pid       = 2;
+        required bool    hint      = 3;
+	optional sint32  x         = 4;
+	optional sint32  y         = 5;
+	optional sint32  x_vel     = 6;
+	optional sint32  y_vel     = 7;
+	optional fixed32 rotation  = 8;
+}
+
+message ActorMove { // Mutually exclusive with Move
+	required int64   tick      = 1;
+	required int32   pid       = 2;
+	
+	
+	// repeated bitfield. index 0 is tick+0, index 1 is tick+1, etc
+	// 0x1 = up
+	// 0x2 = down
+	// 0x4 = left
+	// 0x8 = right
+        // 0x10 = boost
+	repeated uint32 move = 3 [packed=true];
+        
+        // was this warp sent as a direct response to user input?
+        // If not, the server may be sending you history.
+        optional bool   direct = 4;
+}
+
+message ActorWeapon {
+	required int64   tick      = 1;
+	required int32   pid       = 2;
+	required int32   slot      = 3; // slot id
+	
+	// These 5 values are only used as a hint.
+        // They represent the player position at the moment of weapon fire.
+	// They may be ignored completely. Or ignored only in specific last trialing state.
+	// Sending these is optional (however you must send all 5 if you do).
+	optional int32   x         = 4;
+	optional int32   y         = 5;
+	optional sint32  x_vel     = 6;
+	optional sint32  y_vel     = 7;
+        optional fixed32 snapped_rotation  = 8; // the snapped rotation
+}
+
+message WeaponSync {
+        required int64   tick      = 1; // not the tick of the original weapon fire
+	required int32   pid       = 2;
+        
+        required string  weaponKey = 3; // from config
+        repeated Projectile projectiles = 4; 
+        
+        
+        message Projectile {
+                required int32   index     = 1; // config index
+                required int32   x         = 2;
+        	required int32   y         = 3;
+        	required sint32  x_vel     = 4;
+        	required sint32  y_vel     = 5;
+                required int64   expires_at = 6;
+                required int32   bounces_left = 7;
+                required int32   activate_bounces_left = 8;
+                required bool collideTile = 9;
+                required bool collideShip = 10;
+                required int32 bounceFriction = 11;
+                required int32 bounceOtherAxisFriction = 12;
+                required int32 proxDist = 13;
+                required int32 proxExplodeDelay = 14;
+                required int32 proxActivatedBy = 15; // pid (or 0)
+                required int64 proxLastSeenDist = 16;
+                required int64 proxLastSeenDist_tick = 17;
+                required int64 proxActivatedAt_tick = 18;
+        }
+}

@@ -1,0 +1,113 @@
+// Copyright (c) 2012-2013  Joris van der Wel
+//
+// This file is part of Aphelion
+//
+//   Aphelion is free software: you can redistribute it and/or modify
+//   it under the terms of the GNU Affero General Public License as published by
+//   the Free Software Foundation, version 3 of the License.
+//
+//   Aphelion is distributed in the hope that it will be useful,
+//   but WITHOUT ANY WARRANTY; without even the implied warranty of
+//   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//   GNU General Public License for more details.
+//
+//   You should have received a copy of the GNU Affero General Public License
+//   along with Aphelion.  If not, see <http://www.gnu.org/licenses/>.
+//  
+//   In addition, the following supplemental terms apply, based on section 7 of
+//   the GNU Affero General Public License (version 3):
+//   a) Preservation of all legal notices and author attributions
+//   b) Prohibition of misrepresentation of the origin of this material, and
+//      modified versions are required to be marked in reasonable ways as
+//      different from the original version (for example by appending a copyright notice).
+//
+//   Linking this library statically or dynamically with other modules is making a
+//   combined work based on this library. Thus, the terms and conditions of the
+//   GNU Affero General Public License cover the whole combination.
+//  
+//   As a special exception, the copyright holders of this library give you 
+//   permission to link this library with independent modules to produce an 
+//   executable, regardless of the license terms of these independent modules,
+//   and to copy and distribute the resulting executable under terms of your 
+//   choice, provided that you also meet, for each linked independent module,
+//   the terms and conditions of the license of that module. An independent
+//   module is a module which is not derived from or based on this library.
+//  
+//   
+//   
+
+// version "1"
+package aphelion.shared.net.protobuf;
+
+import "game-operation.proto";
+
+// todo:
+// + settings change
+
+message Hello {
+	//required boolean auth_required = 1; // This server requires authentication? (if not, still send the authentication packet)
+	//required boolean plain_password = 2; // This server supports plain text passwords (show a warning to the player!)
+	//repeated string auth_service = 3; // Something to identify supported auth servers by
+}
+
+message AuthenticateResponse {
+	enum ERROR {
+		OK = 0;
+		OTHER = 1;
+		AUTH_METHOD_UNSUPPORTED = 2;
+                
+                // empty / reserved / bad character / swearing / whatever.
+		INVALID_NICKNAME = 3;
+                
+                // someone is already logged in with that nickname (the server may also choose to kick the previous player)
+                NICKNAME_IN_USE = 4; 
+		//INVALID_PLAIN_PASSWORD = 5; // invalid password or unknown user for PLAIN_PASSWORD method
+		//INVALID_AUTH_TOKEN = 6;
+	}
+	required ERROR error = 1;
+	optional string error_description = 2; // may be shown to the player
+}
+
+message TimeResponse {
+	// Identical to TimeRequest.clientTime
+	required sfixed64 clientTime = 1; 
+	required sfixed64 serverTime = 2;
+}
+
+message ArenaSync {
+	// You are now in an arena, you will now receive all the data you need to start the simulation
+        // This is sent after c2s ArenaLoaded
+	required string name = 1;
+	required int64 current_ticks = 2; // this is also the tick of the actorNew call in PhysicsEnvironment
+	required fixed64 current_nanoTime = 3; // the moment the tick from current_ticks went into effect
+	required int32 your_pid = 4;
+        required sfixed64 your_seed = 5;
+        required string ship = 6;
+}
+
+
+
+
+message S2C {
+	// Multiple message may be contained in a single S2C message.
+	// Both peers should try to buffer for a short duration to 
+	// send as much as possible in a single segment
+
+	// Tags with values in the range 1 through 15 take one byte 
+	// Tags in the range 16 through 2047 take two bytes
+	repeated aphelion.shared.net.protobuf.ActorWarp actorWarp = 1;
+	repeated aphelion.shared.net.protobuf.ActorMove actorMove = 2;
+	repeated aphelion.shared.net.protobuf.ActorWeapon actorWeapon = 3;
+	
+	repeated aphelion.shared.net.protobuf.ActorNew actorNew = 16;
+        repeated aphelion.shared.net.protobuf.ActorModification actorModification = 17;
+	repeated aphelion.shared.net.protobuf.ActorRemove actorRemove = 18;
+	repeated aphelion.shared.net.protobuf.ActorSync actorSync = 19;
+        repeated aphelion.shared.net.protobuf.WeaponSync weaponSync = 20;
+
+	repeated Hello hello = 100;
+	repeated AuthenticateResponse authenticateResponse = 101;
+	repeated TimeResponse timeResponse = 102;
+	repeated ArenaSync arenaSync = 103;
+}
+

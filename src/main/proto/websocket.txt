@@ -1,0 +1,82 @@
+// Aphelion protocols using the "websocket" transport.
+// By default, an aphelion websocket connection is established on port 80 with 
+// the path /aphelion:
+// 	new WebSocket("http://1.2.3.4/aphelion");
+// However both the port and path should be configurable.
+// This websocket flavor for aphelion protocols should work 
+// properly with reverse proxies such as varnish.
+// Nagle should be disabled (TCP_NODELAY)
+
+	
+// After establishment, the client must send the following packet:
+struct C2SInitPacket { // Big Endian, 39 bytes
+
+	// 0x1 = ping (protobuf), lag, etc
+	// 0x2 = game (protobuf)
+	i16 aphelion_protocol;
+	
+	// The version of the protocol the client and server will 
+	// communicate in
+	//  0x0 = bypass version check. 
+	// >0x0 = The revision of the protocol specified in aphelion_protocol
+	i32 protocol_version;
+	
+	// 0x0 (false) or 0x1 (true) 
+	i8 has_session_token;
+	
+	// If has_session_token is 0x0, the content of this value is ignored.
+	// Otherwise it should be the same as your_session_token that the server
+	// has sent in a previous connection.
+	u8[32] session_token;
+}
+
+// The server replies with:
+struct S2CInitPacket { // Big Endian, 32 bytes
+	
+	// A server generated token that the client may use to establish 
+	// multiple connections for the same player.
+	// This token may also be used to quickly reconnect after a dropped 
+	// connection, however the token will expire after a timeout.
+	// If this value is identical to the session_token value sent by the 
+	// client, you now have multiple connections for the same player 
+	// session. 
+	// Otherwise a new player session has been established. (this may occur
+	// when you specify an invalid session token.)
+	u8[32] your_session_token;
+}
+// Or the server may reply with a WebSocket close frame (with an error description):
+4000 = invalid protocol
+4001 = invalid protocol version (requested version too old)
+4002 = invalid protocol version (requested version too new)
+4003 = malformed C2SInitPacket (invalid length) or S2CInitPacket 
+4004 = The client waited too long to send its initialization packet, or the server waited too long with replying
+4005 = The server unexpectedly created a new session for the client. The client is now closing the old ones
+
+
+// After this handshake, both parties may send ProtobufPackets
+// ( message C2S and message S2C ).
+// All messages use the binary WebSocket frame type. The websocket frames 
+// will ensure messages are received in full.
+
+struct ProtobufPacket { // Big Endian >= 1 bytes
+	u8 ack;
+	// (optional) binary form of message C2S or message S2C
+	// The content of this parameter is the rest of the websocket frame
+	u8[...] protobuf; 
+}
+
+When a ProtobufPacket is received, the receiving party must reply with another 
+ProtobufPacket as soon as possible (but not necessarily immediately).
+The ack parameter must be set with the number of received ProtobufPackets since
+the last time "ack" was set. ProtobufPackets which have a protobuf parameter 
+of 0 size must not be included in this count.
+
+Example:
+C2S ProtobufPacket {00 12 34}
+C2S ProtobufPacket {00 45 67}
+S2C ProtobufPacket {02 43 21}
+S2C ProtobufPacket {00 89 AB}
+C2S ProtobufPacket {02}
+S2C ProtobufPacket {00 67 89}
+C2S ProtobufPacket {01}
+

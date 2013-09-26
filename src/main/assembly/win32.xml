@@ -1,0 +1,61 @@
+<assembly xmlns="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.2 http://maven.apache.org/xsd/assembly-1.1.2.xsd">
+        
+        <id>aphelion.win32</id>
+        <formats><format>zip</format></formats>
+        <includeBaseDirectory>true</includeBaseDirectory>
+        <fileSets>
+                <fileSet>
+                        <useDefaultExcludes>true</useDefaultExcludes> <!-- .svn etc -->
+                        <outputDirectory>bin/classes</outputDirectory>
+                        <directory>target/bin/classes</directory>
+                </fileSet>
+                <fileSet>
+                        <useDefaultExcludes>true</useDefaultExcludes>
+                        <outputDirectory>bin/jni</outputDirectory>
+                        <directory>target/bin/jni</directory>
+                </fileSet>
+                <fileSet>
+                        <useDefaultExcludes>true</useDefaultExcludes>
+                        <outputDirectory>bin/bin</outputDirectory>
+                        <directory>target/openjdk/win32/jre/bin</directory>
+                        <excludes>
+                                <exclude>**/*.exe</exclude>
+                                <exclude>server/classes.jsa</exclude>
+                        </excludes>
+                </fileSet>
+                <fileSet>
+                        <useDefaultExcludes>true</useDefaultExcludes>
+                        <outputDirectory>bin/lib</outputDirectory>
+                        <directory>target/openjdk/win32/jre/lib</directory>
+                </fileSet>
+                <fileSet>
+                        <useDefaultExcludes>true</useDefaultExcludes>
+                        <outputDirectory>assets</outputDirectory>
+                        <directory>target/assets</directory>
+                </fileSet>
+        </fileSets>
+        <files>
+                <file>
+                        <source>src/main/launcher/windows/aphelion32.exe</source>
+                        <outputDirectory></outputDirectory>
+                        <destName>aphelion.exe</destName>
+                </file>
+                <file>
+                        <source>LICENSE.txt</source>
+                        <outputDirectory></outputDirectory>
+                </file>
+                <file>
+                        <source>src/main/assets/concielian.ttf</source>
+                        <outputDirectory>assets</outputDirectory>
+                </file>
+                <file>
+                        <source>src/main/assets/UbuntuMono-B.ttf</source>
+                        <outputDirectory>assets</outputDirectory>
+                </file>
+                <file>
+                        <source>src/main/assets/SIL-Open-Font-License.txt</source>
+                        <outputDirectory>assets</outputDirectory>
+                </file>
+        </files>
+</assembly>

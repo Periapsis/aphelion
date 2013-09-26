@@ -1,0 +1,27 @@
+// A client may query the server for game statistics.
+// This is done using a simple (cacheable) GET request:
+// GET /aphelion/stats HTTP/1.1
+//
+// The server will then reply with:
+// HTTP/1.1 200 OK
+// Content-Type: application/json; charset=UTF-8
+
+{
+	"zoneName": "T3 Extreme Trenchspace CTF",
+	"description": "Bla bla bla\nbla bla",
+	
+	"players": 50,
+	"playing": 10, // In actual ships, flying around
+	
+	"supportedTransports": ["websocket", "udp"]
+	"supportedProtocols": [
+		{
+			"id": 1,
+			"ver": [200, 201]
+		},
+		{
+			"id": 2,
+			"ver": [10]
+		}
+	]
+}

@@ -1,0 +1,106 @@
+// Copyright (c) 2012-2013  Joris van der Wel
+//
+// This file is part of Aphelion
+//
+//   Aphelion is free software: you can redistribute it and/or modify
+//   it under the terms of the GNU Affero General Public License as published by
+//   the Free Software Foundation, version 3 of the License.
+//
+//   Aphelion is distributed in the hope that it will be useful,
+//   but WITHOUT ANY WARRANTY; without even the implied warranty of
+//   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//   GNU General Public License for more details.
+//
+//   You should have received a copy of the GNU Affero General Public License
+//   along with Aphelion.  If not, see <http://www.gnu.org/licenses/>.
+//  
+//   In addition, the following supplemental terms apply, based on section 7 of
+//   the GNU Affero General Public License (version 3):
+//   a) Preservation of all legal notices and author attributions
+//   b) Prohibition of misrepresentation of the origin of this material, and
+//      modified versions are required to be marked in reasonable ways as
+//      different from the original version (for example by appending a copyright notice).
+//
+//   Linking this library statically or dynamically with other modules is making a
+//   combined work based on this library. Thus, the terms and conditions of the
+//   GNU Affero General Public License cover the whole combination.
+//  
+//   As a special exception, the copyright holders of this library give you 
+//   permission to link this library with independent modules to produce an 
+//   executable, regardless of the license terms of these independent modules,
+//   and to copy and distribute the resulting executable under terms of your 
+//   choice, provided that you also meet, for each linked independent module,
+//   the terms and conditions of the license of that module. An independent
+//   module is a module which is not derived from or based on this library.
+//  
+//   
+//   
+
+// version "1"
+package aphelion.shared.net.protobuf;
+
+import "game-operation.proto";
+
+// https://developers.google.com/protocol-buffers/docs/proto
+
+// Formats (Using regular expressions):
+// <nickname> = [a-zA-Z][a-zA-Z0-9\-\[\]\\`^{}_ ]*
+// 	Two nicknames with a different case are equal.
+//      {}| is the lowercase equivalent of []\
+//      _ is the lowercase equivalent of a space 
+//	Nicknames in Aphelion are thus compatible with RFC 1459
+
+message Authenticate {
+	enum AUTH_METHOD {
+		NONE = 0; // Nickname given, but no authentication
+		//PLAIN_PASSWORD = 1; // plaintext password
+		//AUTH_SERVICE_2 = 2; // oauth? https://tools.ietf.org/html/draft-ietf-oauth-v2-25
+	} 
+	optional string nickname = 1; // <nickname>
+	optional AUTH_METHOD auth_method = 2; 
+	//optional string plain_password = 3; // only used with PLAIN_PASSWORD
+	//optional string auth_service = 4; // what auth service did the player use?
+	//optional string auth_token = 5; // auth token or whatever	
+}
+
+message TimeRequest {
+	// client's nanoTime(). The server does not actually interpret this value, it only passes it back
+	required sfixed64 clientTime = 1; 
+}
+
+message ConnectionReady {
+	// The client is ready with connecting to the server,
+	// the server may now put the client in an arena or whatever
+}
+
+message ArenaLoaded {
+        // The client has loaded the map and other resource files.
+        // The client is now ready to start the simulation.
+        // The server may now send game operations such as ActorWarp.
+}
+
+message Command {
+	required string name = 1; // Command name for example "go"
+	repeated string arguments = 2;
+        
+        // The server does not interpet this value
+        // It is sent back unaltered in any response to this command 
+        optional int32 response_code = 3; 
+}
+
+
+message C2S {
+	// Tags with values in the range 1 through 15 take one byte 
+	// Tags in the range 16 through 2047 take two bytes
+	
+	repeated aphelion.shared.net.protobuf.ActorMove actorMove = 1;
+	repeated aphelion.shared.net.protobuf.ActorWeapon actorWeapon = 2;
+        
+        repeated Command command = 15;
+
+	repeated Authenticate authenticate = 100;
+	repeated TimeRequest timeRequest = 101;
+	repeated ConnectionReady connectionReady = 102;
+        repeated ArenaLoaded arenaLoaded = 103;
+}
+

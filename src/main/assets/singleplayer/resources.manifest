@@ -1,0 +1,2 @@
+gameconfig.default = singleplayer.game.yaml
+level.map = singleplayer.lvl
