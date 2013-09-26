@@ -125,7 +125,6 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
                                                 <configuration>
                                                         <finalName>assets/classic</finalName>
                                                         <appendAssemblyId>false</appendAssemblyId>
-                                                        <attach>true</attach>
                                                         <descriptors>
                                                                 <descriptor>src/main/assembly/asset-classic.xml</descriptor>
                                                         </descriptors>
@@ -141,7 +140,6 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
                                                 <configuration>
                                                         <finalName>assets/gui</finalName>
                                                         <appendAssemblyId>false</appendAssemblyId>
-                                                        <attach>true</attach>
                                                         <descriptors>
                                                                 <descriptor>src/main/assembly/asset-gui.xml</descriptor>
                                                         </descriptors>
@@ -157,7 +155,6 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
                                                 <configuration>
                                                         <finalName>assets/singleplayer</finalName>
                                                         <appendAssemblyId>false</appendAssemblyId>
-                                                        <attach>true</attach>
                                                         <descriptors>
                                                                 <descriptor>src/main/assembly/asset-singleplayer.xml</descriptor>
                                                         </descriptors>
@@ -172,7 +169,6 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
                                                 <configuration>
                                                         <finalName>bin/classes/aphelion</finalName>
                                                         <appendAssemblyId>false</appendAssemblyId>
-                                                        <attach>true</attach>
                                                         <descriptors>
                                                                 <descriptor>src/main/assembly/bin-classes.xml</descriptor>
                                                         </descriptors>
