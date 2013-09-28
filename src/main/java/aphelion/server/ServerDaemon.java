@@ -83,7 +83,7 @@ public class ServerDaemon implements Daemon
                 
                 if (args.length >= 2)
                 {
-                        hostname = args[2];
+                        hostname = args[1];
                 }
                 else
                 {

@@ -163,7 +163,7 @@ public class ServerMain implements LoopEvent
                 
                 if (args.length >= 2)
                 {
-                        hostname = args[2];
+                        hostname = args[1];
                 }
                 else
                 {
