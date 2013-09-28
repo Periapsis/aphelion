@@ -391,35 +391,69 @@ public class RollingHistorySerialInteger
         
         public void set(RollingHistorySerialInteger other)
         {
-                assert other.HISTORY_LENGTH <= this.HISTORY_LENGTH;
-                assert other.SETTERS == this.SETTERS;
-                history_index = other.history_index;
+                if (other.HISTORY_LENGTH > this.HISTORY_LENGTH)
+                {
+                        throw new IllegalArgumentException();
+                }
+                
+                if (other.SETTERS != this.SETTERS)
+                {
+                        throw new IllegalArgumentException();
+                }
+                
                 history_tick = other.history_tick;
                 dirty = other.dirty;
                 dirtySince_tick = other.dirtySince_tick;
                 oldestValue = other.oldestValue;
                 
-                System.arraycopy(other.values, 0, values, 0, other.HISTORY_LENGTH);
-                System.arraycopy(other.min, 0, min, 0, other.HISTORY_LENGTH);
-                System.arraycopy(other.max, 0, max, 0, other.HISTORY_LENGTH);
                 
-                for (int i = other.HISTORY_LENGTH; i < this.HISTORY_LENGTH; ++i)
-                {
-                        values[i] = 0;
-                        min[i] = 0;
-                        max[i] = 0;
-                }
+                this.history_index = this.HISTORY_LENGTH - 1;
+                int myIndex = this.history_index;
+                int otherIndex = other.history_index;
+                boolean moreData = true;
                 
-                for (int s = 0; s < SETTERS; ++s)
+                while (myIndex >= 0)
                 {
-                        System.arraycopy(other.delta[s], 0, delta[s], 0, other.HISTORY_LENGTH);
-                        System.arraycopy(other.absolute[s], 0, absolute[s], 0, other.HISTORY_LENGTH);
-                        
-                        for (int i = other.HISTORY_LENGTH; i < this.HISTORY_LENGTH; ++i)
+                        if (moreData)
                         {
-                                delta[s][i] = 0;
-                                absolute[s][i] = 0;
+                                this.values[myIndex] = other.values[otherIndex];
+                                this.min[myIndex] = other.min[otherIndex];
+                                this.max[myIndex] = other.max[otherIndex];
+
+                                for (int s = 0; s < SETTERS; ++s)
+                                {
+                                        this.delta[s][myIndex] = other.delta[s][otherIndex];
+                                        this.absolute[s][myIndex] = other.absolute[s][otherIndex];
+                                }
+                                
+                                --otherIndex;
+                        
+                                if (otherIndex == -1)
+                                {
+                                        otherIndex = other.HISTORY_LENGTH-1;
+                                }
+                                assert otherIndex >= 0;
+
+                                if (otherIndex == other.history_index)
+                                {
+                                        moreData = false;
+                                }
                         }
+                        else
+                        {
+                                this.values[myIndex] = other.oldestValue;
+                                this.min[myIndex] = Integer.MIN_VALUE;
+                                this.max[myIndex] = Integer.MAX_VALUE;
+
+                                for (int s = 0; s < SETTERS; ++s)
+                                {
+                                        this.delta[s][myIndex] = 0;
+                                        this.absolute[s][myIndex] = 0;
+                                }
+                        }
+                        
+                        --myIndex;
+                        
                 }
         }
 }

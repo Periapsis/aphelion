@@ -120,4 +120,76 @@ public class RollingHistorySerialIntegerTest
                 hist.setMaximum(200, 100000);
                 assertEquals(24, hist.get(200));
         }
+        
+        @Test
+        public void testSet()
+        {
+                // different history lengths
+                RollingHistorySerialInteger a = new RollingHistorySerialInteger(100, 4, 1);
+                RollingHistorySerialInteger b = new RollingHistorySerialInteger(100, 8, 1);
+                
+                // enough stuff to cause oldestValue to be set
+                // and enough that get() has to wrap
+                
+                a.addRelativeValue(0, 100, 10001); // index 0
+                a.addRelativeValue(0, 101, 10010); // 1
+                a.addRelativeValue(0, 102, 10100); // 2
+                b.set(a);
+                testSet_assertUpto(a, 102);
+                testSet_assertUpto(b, 102);
+                
+                // fill b with some crap
+                b.setAbsoluteOverrideValue(0, 104, 2934203);
+                b.setRelativeValue(0, 106, -9999);
+                b.setMaximum(105, 5);
+                b.setMinimum(105, 4);
+                
+                
+                a.addRelativeValue(0, 103, 11000); // 3
+                b.set(a);
+                testSet_assertUpto(a, 103);
+                testSet_assertUpto(b, 103);
+                
+                //more crap
+                for (int n = 0; n < 17; ++n)
+                {
+                        b.setRelativeValue(0, 100 + n, 50000 * n);
+                }
+                
+                a.addRelativeValue(0, 104, 20000); // 0
+                b.set(a);
+                testSet_assertUpto(a, 104);
+                testSet_assertUpto(b, 104);
+                
+                a.addRelativeValue(0, 105, 30000); // 1
+                b.set(a);
+                testSet_assertUpto(a, 105);
+                testSet_assertUpto(b, 105);
+                
+                
+                
+                a = new RollingHistorySerialInteger(100, 4, 1);
+                b = new RollingHistorySerialInteger(100, 8, 1);
+                
+                // This class uses lazy updating upon a get()
+                // also test stuff without get inbetweens
+                
+                a.addRelativeValue(0, 100, 10001); // index 0
+                a.addRelativeValue(0, 101, 10010); // 1
+                a.addRelativeValue(0, 102, 10100); // 2                
+                a.addRelativeValue(0, 103, 11000); // 3
+                a.addRelativeValue(0, 104, 20000); // 0
+                a.addRelativeValue(0, 105, 30000); // 1
+                b.set(a);
+                testSet_assertUpto(a, 105);
+                testSet_assertUpto(b, 105);
+        }
+        
+        private void testSet_assertUpto(RollingHistorySerialInteger a, long upto_tick)
+        {
+                if (upto_tick >= 102) assertEquals(30111, a.get(102));
+                if (upto_tick >= 103) assertEquals(41111, a.get(103));
+                if (upto_tick >= 104) assertEquals(61111, a.get(104));
+                if (upto_tick >= 105) assertEquals(91111, a.get(105));
+        }
 }

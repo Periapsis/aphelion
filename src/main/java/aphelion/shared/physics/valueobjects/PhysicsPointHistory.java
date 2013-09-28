@@ -39,18 +39,18 @@
 package aphelion.shared.physics.valueobjects;
 
 /**
- *
+ * History for x and y.
+ * Similar to RollingHistory, however instead a generic, you can use two integer values.
  * @author Joris
  */
 public class PhysicsPointHistory
 {
-        private static final boolean DEBUG = false;
         public final int HISTORY_LENGTH;
         private int history_index = 0;
         private long history_tick = 0;
         private final int[] history_x;
         private final int[] history_y;
-
+        
         public PhysicsPointHistory(long initial_tick, int history_length)
         {
                 this.HISTORY_LENGTH = history_length;
@@ -66,37 +66,9 @@ public class PhysicsPointHistory
                 return setHistory(tick, point.x, point.y);
         }
         
-        private StackTraceElement[] prevStack;
-        /** Add (or update) the current position to the history
-         *
-         * @param tick The tick the given position (x and y) belongs to
-         * @param x The position
-         * @param y The position
-         * @return The history index that was just set in history_x, history_y, etc -1 if no history was set
-         */
         public int setHistory(long tick, int x, int y)
         {
-                if (tick > history_tick + 1)
-                {
-                        if (DEBUG && prevStack != null)
-                        {
-                                System.out.flush();
-                                System.out.println("Previously set by:");
-                                for (StackTraceElement s : prevStack)
-                                {
-                                        System.out.println(s);
-                                }
-                                System.out.flush();
-                        }
-                        throw new IllegalStateException("Missing history for the previous tick(s). tick = " + (tick) + "; history_tick = " + history_tick);
-                }
-                
-                if (DEBUG)
-                {
-                        prevStack = (new Throwable()).getStackTrace();
-                }
-
-                if (tick == history_tick + 1)
+                while (tick > history_tick)
                 {
                         ++history_index;
                         ++history_tick;
@@ -104,12 +76,14 @@ public class PhysicsPointHistory
                         {
                                 history_index = 0;
                         }
+                        history_x[history_index] = 0;
+                        history_y[history_index] = 0;
                 }
 
                 long tick_diff = history_tick - tick;
                 if (tick_diff >= HISTORY_LENGTH)
                 {
-                        // My history does not go back that far, look at a trailing state
+                        // My history does not go back that far
                         return -1;
                 }
                 
@@ -126,140 +100,131 @@ public class PhysicsPointHistory
                 return index;
         }
         
-        public void set(PhysicsPointHistory other)
-        {
-                assert other.HISTORY_LENGTH <= this.HISTORY_LENGTH;
-                history_index = other.history_index;
-                history_tick = other.history_tick;
-                
-                System.arraycopy(other.history_x, 0, history_x, 0, other.HISTORY_LENGTH);
-                System.arraycopy(other.history_y, 0, history_y, 0, other.HISTORY_LENGTH);
-                
-                for (int i = other.HISTORY_LENGTH; i < this.HISTORY_LENGTH; ++i)
-                {
-                        history_x[i] = 0;
-                        history_y[i] = 0;
-                }
-                
-                if (DEBUG)
-                {
-                        prevStack = (new Throwable()).getStackTrace();
-                }
-                
-                updated();
-        }
-        
-        protected final int getIndex(long ticks_ago)
+        public void getRelative(PhysicsPoint ret, int ticks_ago) throws IllegalArgumentException
         {
                 if (ticks_ago < 0 || ticks_ago >= HISTORY_LENGTH)
                 {
-                        return -1;
-                }
-                
-                int index = history_index - (int) ticks_ago;
-                if (index < 0) { index += HISTORY_LENGTH; }
-                return index;
-        }
-        
-        protected final int getIndex(int ticks_ago)
-        {
-                if (ticks_ago < 0 || ticks_ago >= HISTORY_LENGTH)
-                {
-                        return -1;
+                        throw new IllegalArgumentException();
                 }
                 
                 int index = history_index - ticks_ago;
                 if (index < 0) { index += HISTORY_LENGTH; }
-                return index;
-        }
-        
-        public int getXRelative(int ticks_ago)
-        {
-                int i = getIndex(ticks_ago);
-                return i < 0 ? 0 : history_x[i];
-        }
-        
-        public int getYRelative(int ticks_ago)
-        {
-                int i = getIndex(ticks_ago);
-                return i < 0 ? 0 : history_y[i];
-        }
-        
-        public void getRelative(PhysicsPoint ret, int ticks_ago)
-        {
-                ret.unset();
-                int index = getIndex(ticks_ago);
-                
-                if (index < 0)
-                {
-                        ret.unset();
-                        return;
-                }
-                
+
                 ret.set = true;
                 ret.x = history_x[index];
                 ret.y = history_y[index];
-        }
-        
-        public boolean isWithinRange(long tick)
-        {
-                long ticks_ago = getMostRecentTick() - tick;
-                if (ticks_ago < 0 || ticks_ago >= HISTORY_LENGTH)
-                {
-                        return false;
-                }
-                
-                return true;
-        }
-        
-        public int getX(long tick)
-        {
-                int i = getIndex(getMostRecentTick() - tick);
-                return i < 0 ? 0 : history_x[i];
-        }
-        
-        public int getY(long tick)
-        {
-                int i = getIndex(getMostRecentTick() - tick);
-                return i < 0 ? 0 : history_y[i];
         }
         
         public void get(PhysicsPoint ret, long tick)
         {
-                ret.unset();
-                int index = getIndex(getMostRecentTick() - tick);
-                
-                if (index < 0)
+                long ticks_ago = history_tick - tick;
+                if (ticks_ago < 0 || ticks_ago >= HISTORY_LENGTH)
                 {
                         ret.unset();
                         return;
                 }
                 
+                int index = history_index - (int) ticks_ago;
+                if (index < 0) { index += HISTORY_LENGTH; }
+
                 ret.set = true;
                 ret.x = history_x[index];
                 ret.y = history_y[index];
         }
         
+        public int getX(long tick)
+        {
+                long ticks_ago = history_tick - tick;
+                if (ticks_ago < 0 || ticks_ago >= HISTORY_LENGTH)
+                {
+                        return 0;
+                }
+                
+                int index = history_index - (int) ticks_ago;
+                if (index < 0) { index += HISTORY_LENGTH; }
+                
+                return history_x[index];
+        }
+        
+        public int getY(long tick)
+        {
+                long ticks_ago = history_tick - tick;
+                if (ticks_ago < 0 || ticks_ago >= HISTORY_LENGTH)
+                {
+                        return 0;
+                }
+                
+                int index = history_index - (int) ticks_ago;
+                if (index < 0) { index += HISTORY_LENGTH; }
+                
+                return history_y[index];
+        }
         
         public long getMostRecentTick()
         {
                 return history_tick;
         }
+        
+        public void set(PhysicsPointHistory other)
+        {
+                if (other.HISTORY_LENGTH > this.HISTORY_LENGTH)
+                {
+                        throw new IllegalArgumentException();
+                }
+                
+                this.history_tick = other.history_tick;
+                
+                this.history_index = this.HISTORY_LENGTH - 1;
+                int myIndex = this.history_index;
+                int otherIndex = other.history_index;
+                boolean moreData = true;
+                
+                while (myIndex >= 0)
+                {
+                        if (moreData)
+                        {
+                                this.history_x[myIndex] = other.history_x[otherIndex];
+                                this.history_y[myIndex] = other.history_y[otherIndex];
+                                
+                                --otherIndex;
+                        
+                                if (otherIndex == -1)
+                                {
+                                        otherIndex = other.HISTORY_LENGTH-1;
+                                }
+                                assert otherIndex >= 0;
+
+                                if (otherIndex == other.history_index)
+                                {
+                                        moreData = false;
+                                }
+                        }
+                        else
+                        {
+                                this.history_x[myIndex] = 0;
+                                this.history_y[myIndex] = 0;
+                        }
+                        
+                        --myIndex;
+                }
+                
+                updated();
+        }
+        
 
         @Override
         public String toString()
         {
                 StringBuilder ret = new StringBuilder();
+                PhysicsPoint p = new PhysicsPoint();
                 ret.append(history_tick);
                 ret.append(": ");
                 
                 for (int t = 0; t < HISTORY_LENGTH; ++t)
                 {
-                        ret.append("(");
-                        ret.append(getXRelative(t));
-                        ret.append(",");
-                        ret.append(getYRelative(t));
-                        ret.append(") ");
+                        getRelative(p, t);
+                        ret.append(p);
+                        ret.append(' ');
                 }
                 
                 return ret.toString();

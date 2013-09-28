@@ -123,18 +123,45 @@ public class RollingHistory<T>
                 return history_tick;
         }
         
-        public void set(RollingHistory other)
+        public void set(RollingHistory<T> other)
         {
-                assert other.HISTORY_LENGTH <= this.HISTORY_LENGTH;
-                history_index = other.history_index;
-                history_tick = other.history_tick;
-                
-                System.arraycopy(other.history, 0, history, 0, other.HISTORY_LENGTH);
-                
-                for (int i = other.HISTORY_LENGTH; i < this.HISTORY_LENGTH; ++i)
+                if (other.HISTORY_LENGTH > this.HISTORY_LENGTH)
                 {
-                        history[i] = null;
+                        throw new IllegalArgumentException();
+                }
+                
+                this.history_tick = other.history_tick;
+                
+                this.history_index = this.HISTORY_LENGTH - 1;
+                int myIndex = this.history_index;
+                int otherIndex = other.history_index;
+                boolean moreData = true;
+                
+                while (myIndex >= 0)
+                {
+                        if (moreData)
+                        {
+                                this.history[myIndex] = other.history[otherIndex];
+                                
+                                --otherIndex;
                         
+                                if (otherIndex == -1)
+                                {
+                                        otherIndex = other.HISTORY_LENGTH-1;
+                                }
+                                assert otherIndex >= 0;
+
+                                if (otherIndex == other.history_index)
+                                {
+                                        moreData = false;
+                                }
+                        }
+                        else
+                        {
+                                this.history[myIndex] = null;
+                        }
+                        
+                        --myIndex;
                 }
                 
                 updated();
