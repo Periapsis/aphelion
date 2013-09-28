@@ -41,9 +41,8 @@ package aphelion.client;
 
 import aphelion.client.net.NetworkedGame;
 import aphelion.client.net.SingleGameConnection;
+import aphelion.client.resource.AsyncTexture;
 import aphelion.shared.resource.ResourceDB;
-import aphelion.shared.event.ClockSource;
-import aphelion.shared.event.TickedEventLoop;
 import aphelion.shared.event.ClockSource;
 import aphelion.shared.event.TickedEventLoop;
 import java.net.URI;
@@ -87,7 +86,8 @@ public class ConnectLoop
         {
                 connectionListener = new NetworkedGame(resourceDB, loop, nickname);
                 
-                Image loadingBanner = resourceDB.getTextureLoader().getTexture("gui.loading.connecting").getImage();
+                AsyncTexture loadingTex = resourceDB.getTextureLoader().getTexture("gui.loading.connecting");
+                
                 
                 connection = new SingleGameConnection(serverUri, loop, connectionListener);
                 connection.connect();
@@ -106,7 +106,11 @@ public class ConnectLoop
                         
                         loop.loop();
                         
-                        loadingBanner.drawCentered(Display.getWidth() / 2, Display.getHeight() / 2);
+                        Image loadingBanner = loadingTex.getCachedImage();
+                        if (loadingBanner != null)
+                        {
+                                loadingBanner.drawCentered(Display.getWidth() / 2, Display.getHeight() / 2);
+                        }
                         
                         Display.sync(120);
                 }

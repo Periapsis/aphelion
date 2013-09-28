@@ -37,18 +37,15 @@
  */
 package aphelion.client.graphics.world;
 
-import java.util.Random;
-
-import aphelion.client.Client;
 import aphelion.client.graphics.Graph;
 import aphelion.client.graphics.screen.Camera;
 import aphelion.client.resource.AsyncTexture;
-import aphelion.shared.physics.entities.ActorPublic;
 import aphelion.shared.resource.ResourceDB;
 import aphelion.shared.swissarmyknife.Point;
 import aphelion.shared.swissarmyknife.SwissArmyKnife;
 
 import org.newdawn.slick.Color;
+import org.newdawn.slick.Image;
 
 /**
  * Starfield with depth.
@@ -58,7 +55,6 @@ import org.newdawn.slick.Color;
 public class StarField
 {
         private int seed;
-        private ActorShip localShip;
         private static final int STAR_TILE_SIZE = 512;
         private Color layer1Color;
         private Color layer2Color;
@@ -66,18 +62,15 @@ public class StarField
         private Color layer4Color;
         private Color layer5Color;
         private ResourceDB db;
+        
         //Background objects
-        private AsyncTexture bg01, bg02, bg03, bg04, bg05,
-                bg06, bg07, bg08, bg09, bg10,
-                bg11, bg12, bg13, bg14;
+        private AsyncTexture[] bg = new AsyncTexture[14];
         //Star objects
-        private AsyncTexture star01, star02, star03, star04,
-                star05, star06, star07;
+        private AsyncTexture[] star = new AsyncTexture[7];
 
-        public StarField(int seed, ActorShip actorShip, ResourceDB db)
+        public StarField(int seed, ResourceDB db)
         {
                 this.db = db;
-                this.localShip = actorShip;
                 loadBackgroundObjects();
                 this.seed = seed;
                 layer1Color = new Color(.7f, .7f, .7f);
@@ -90,38 +83,24 @@ public class StarField
 
         private void loadBackgroundObjects()
         {
-                if (db != null)
+                //Load background objects
+                for (int n = 0; n < bg.length; ++n)
                 {
-                        //Load background objects
-                        bg01 = db.getTextureLoader().getTexture("classic.background.bg01");
-                        bg02 = db.getTextureLoader().getTexture("classic.background.bg02");
-                        bg03 = db.getTextureLoader().getTexture("classic.background.bg03");
-                        bg04 = db.getTextureLoader().getTexture("classic.background.bg04");
-                        bg05 = db.getTextureLoader().getTexture("classic.background.bg05");
-                        bg06 = db.getTextureLoader().getTexture("classic.background.bg06");
-                        bg07 = db.getTextureLoader().getTexture("classic.background.bg07");
-                        bg08 = db.getTextureLoader().getTexture("classic.background.bg08");
-                        bg09 = db.getTextureLoader().getTexture("classic.background.bg09");
-                        bg10 = db.getTextureLoader().getTexture("classic.background.bg10");
-                        bg11 = db.getTextureLoader().getTexture("classic.background.bg11");
-                        bg12 = db.getTextureLoader().getTexture("classic.background.bg12");
-                        bg13 = db.getTextureLoader().getTexture("classic.background.bg13");
-                        bg14 = db.getTextureLoader().getTexture("classic.background.bg14");
-
-                        //Load star objects
-                        star01 = db.getTextureLoader().getTexture("classic.background.star01");
-                        star02 = db.getTextureLoader().getTexture("classic.background.star02");
-                        star03 = db.getTextureLoader().getTexture("classic.background.star03");
-                        star04 = db.getTextureLoader().getTexture("classic.background.star04");
-                        star05 = db.getTextureLoader().getTexture("classic.background.star05");
-                        star06 = db.getTextureLoader().getTexture("classic.background.star06");
-                        star07 = db.getTextureLoader().getTexture("classic.background.star07");
+                        bg[n] = db.getTextureLoader().getTexture(String.format("classic.background.bg%02d", n));
                 }
+
+                //Load star objects
+                for (int n = 0; n < star.length; ++n)
+                {
+                        star[n] = db.getTextureLoader().getTexture(String.format("classic.background.star%02d", n));
+                }
+
         }
 
         public Color colorWithZoom(Color color, float cameraZoomFactor)
         {
-                float subInt = 0;
+                float subInt;
+                
                 if (cameraZoomFactor < 1)
                 {
                         subInt = 1 - cameraZoomFactor;
@@ -132,7 +111,6 @@ public class StarField
                 }
                 return new Color(color.r - 2 * subInt, color.g - 2 * subInt, color.b - 2 * subInt);
         }
-        Random random = new Random();
 
         public void render(Camera camera)
         {
@@ -254,91 +232,22 @@ public class StarField
                                                         Graph.g.drawLine(pxf, pyf, pxf, pyf);
                                                 }
                                         }
-                                        else if (backgroundObjectType == 1)
+                                        else if (backgroundObjectType > 0)
                                         {
-                                                star01.getImage().draw(pxi, pyi);
+                                                Image img = star[backgroundObjectType-1].getCachedImage();
+                                                if (img != null)
+                                                {
+                                                        img.draw(pxi, pyi);
+                                                }
                                         }
-                                        else if (backgroundObjectType == 2)
+                                        else if (backgroundObjectType < 0)
                                         {
-                                                star02.getImage().draw(pxi, pyi);
+                                                Image img = bg[-backgroundObjectType-1].getCachedImage();
+                                                if (img != null)
+                                                {
+                                                        img.draw(pxi, pyi);
+                                                }
                                         }
-                                        else if (backgroundObjectType == 3)
-                                        {
-                                                star03.getImage().draw(pxi, pyi);
-                                        }
-                                        else if (backgroundObjectType == 4)
-                                        {
-                                                star04.getImage().draw(pxi, pyi);
-                                        }
-                                        else if (backgroundObjectType == 5)
-                                        {
-                                                star05.getImage().draw(pxi, pyi);
-                                        }
-                                        else if (backgroundObjectType == 6)
-                                        {
-                                                star06.getImage().draw(pxi, pyi);
-                                        }
-                                        else if (backgroundObjectType == 7)
-                                        {
-                                                star07.getImage().draw(pxi, pyi);
-                                        }
-                                        else if (backgroundObjectType == -1)
-                                        {
-                                                bg01.getImage().draw(pxi, pyi);
-                                        }
-                                        else if (backgroundObjectType == -2)
-                                        {
-                                                bg02.getImage().draw(pxi, pyi);
-                                        }
-                                        else if (backgroundObjectType == -3)
-                                        {
-                                                bg03.getImage().draw(pxi, pyi);
-                                        }
-                                        else if (backgroundObjectType == -4)
-                                        {
-                                                bg04.getImage().draw(pxi, pyi);
-                                        }
-                                        else if (backgroundObjectType == -5)
-                                        {
-                                                bg05.getImage().draw(pxi, pyi);
-                                        }
-                                        else if (backgroundObjectType == -6)
-                                        {
-                                                bg06.getImage().draw(pxi, pyi);
-                                        }
-                                        else if (backgroundObjectType == -7)
-                                        {
-                                                bg07.getImage().draw(pxi, pyi);
-                                        }
-                                        else if (backgroundObjectType == -8)
-                                        {
-                                                bg08.getImage().draw(pxi, pyi);
-                                        }
-                                        else if (backgroundObjectType == -9)
-                                        {
-                                                bg09.getImage().draw(pxi, pyi);
-                                        }
-                                        else if (backgroundObjectType == -10)
-                                        {
-                                                bg10.getImage().draw(pxi, pyi);
-                                        }
-                                        else if (backgroundObjectType == -11)
-                                        {
-                                                bg11.getImage().draw(pxi, pyi);
-                                        }
-                                        else if (backgroundObjectType == -12)
-                                        {
-                                                bg12.getImage().draw(pxi, pyi);
-                                        }
-                                        else if (backgroundObjectType == -13)
-                                        {
-                                                bg13.getImage().draw(pxi, pyi);
-                                        }
-                                        else if (backgroundObjectType == -14)
-                                        {
-                                                bg14.getImage().draw(pxi, pyi);
-                                        }
-
                                 }
                         }
                 }
@@ -346,11 +255,13 @@ public class StarField
 
         private byte getBackgroundType(int px, int py, int hash, int layer)
         {
-                int value = 0,
-                        offset = 75000;
+                int value;
+                int offset;
+                
                 if (hash > 100000)
                 {
                         value = 100000;
+                        
                         //planets layer
                         if (layer == 1)
                         {

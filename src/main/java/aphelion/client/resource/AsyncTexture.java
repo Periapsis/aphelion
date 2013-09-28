@@ -39,15 +39,11 @@
 package aphelion.client.resource;
 
 
-import java.lang.ref.WeakReference;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.IntBuffer;
-import java.util.LinkedList;
 import java.util.logging.Logger;
 import org.lwjgl.BufferUtils;
-import org.lwjgl.opengl.GL11;
-import org.newdawn.slick.Color;
 import org.newdawn.slick.Image;
 import org.newdawn.slick.opengl.SlickLastBindHack;
 import org.newdawn.slick.opengl.Texture;
@@ -120,8 +116,6 @@ public class AsyncTexture implements Texture
         float widthRatio = 1;
         float heightRatio = 1;
         boolean alpha = false;
-        
-        private LinkedList<WeakReference<Image>> imagesBeforeLoad = new LinkedList<WeakReference<Image>>();
 
         public AsyncTexture(AsyncTextureLoader loader, String resourceKey, int target)
         {
@@ -325,66 +319,27 @@ public class AsyncTexture implements Texture
         
         void loaded()
         {
-                for (WeakReference<Image> imageRef : this.imagesBeforeLoad)
-                {
-                        Image image = imageRef.get();
-                        if (image != null)
-                        {
-                                 // reinit width and height values as these are not known before loading is complete.
-                                image.setTexture(this);
-                        }
-                }
-                
-                this.imagesBeforeLoad = null;
-                
                 loaded = true;
         }
         
-        /** Get a slick Image instance for this texture.
-         * Use this method instead of using the Image constructors or copy methods directly.
-         * @return 
+        private Image cachedImaged;
+        
+        /** Return a slick image instance for this texture.
+         * @return null if this texture is not yet loaded (isLoaded()) otherwise 
+         * the same Image instance every time.
          */
-        public Image getImage()
+        public Image getCachedImage()
         {
-                // horrible test until kevin can find something more suitable
-                try
-                {
-                        GL11.glGetError();
-                }
-                catch (NullPointerException e)
-                {
-                        throw new RuntimeException("getImage() may only be called as part of the render loop.");
-                }
-                
-                
-                Image image = new MyImage(this);
                 if (!this.isLoaded())
                 {
-                        imagesBeforeLoad.add(new WeakReference<>(image));
+                        return null;
                 }
-                return image;
-        }
-        
-        private static class MyImage extends Image
-        {
-                MyImage(Texture texture)
-                {
-                        super(texture);
-                }                
                 
-                @Override
-                public Color getColor(int x, int y)
+                if (cachedImaged == null)
                 {
-                        if (pixelData == null)
-                        {
-                                pixelData = texture.getTextureData();
-                        }
-                        
-                        if (pixelData == null)
-                        {
-                                return null;
-                        }
-                        return super.getColor(x, y);
+                        cachedImaged = new Image(this);
                 }
+                
+                return cachedImaged;
         }
 }

@@ -80,15 +80,13 @@ public class EnergyBar
 
                 int energy = SwissArmyKnife.clip(localShip.getActor().getEnergy() / 1024, 0, localShip.maxEnergy.get());
 
-                if (!textureEnergyBar.isLoaded() || !textureEnergyGradients.isLoaded())
+                Image energyBar = textureEnergyBar.getCachedImage();
+                Image energyColor = textureEnergyGradients.getCachedImage();
+                
+                if (energyBar == null || energyColor == null)
                 {
                         return;
                 }
-                
-                Image energyBar = textureEnergyBar.getImage();
-                Image energyColor = textureEnergyGradients.getImage();
-                
-                
                 
                 if (delayTickOffset == delayTickMax)
                 {

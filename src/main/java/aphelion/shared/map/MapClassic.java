@@ -174,7 +174,7 @@ public class MapClassic implements PhysicsMap
                 {
                         if (this.radarBuffer == null)
                         {
-                                this.radar = resourceDB.getTextureLoader().getTexture("gui.loading.map").getImage();
+                                this.radar = resourceDB.getTextureLoader().getTexture("gui.loading.map").getCachedImage();
                         }
                         else
                         {

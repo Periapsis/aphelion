@@ -52,6 +52,7 @@ import aphelion.client.graphics.world.GCImageAnimation;
 import aphelion.client.graphics.world.MapEntities;
 import aphelion.client.graphics.world.Projectile;
 import aphelion.client.graphics.world.StarField;
+import aphelion.client.resource.AsyncTexture;
 import aphelion.shared.event.TickEvent;
 import aphelion.shared.event.TickedEventLoop;
 import aphelion.shared.event.WorkerTask;
@@ -190,8 +191,6 @@ public class GameLoop
         
         public void loop()
         {
-                Image loadingBanner = resourceDB.getTextureLoader().getTexture("gui.loading.graphics").getImage();
-                
                 loop.addWorkerTask(
                         new MapClassic.LoadMapTask(resourceDB, true), 
                         "level.map", 
@@ -211,7 +210,7 @@ public class GameLoop
                                 log.log(Level.INFO, "Map loaded");
                                 mapClassic = ret;
                                 // should work fine for lvl files < 2 GiB
-                                stars = new StarField((int) mapClassic.getLevelSize(),mapEntities.getLocalShip(),resourceDB);
+                                stars = new StarField((int) mapClassic.getLevelSize(), resourceDB);
                                 
                                 tryLoaded();
                         }
@@ -238,6 +237,8 @@ public class GameLoop
                                 tryLoaded();
                         }
                 });
+                
+                AsyncTexture loadingTex = resourceDB.getTextureLoader().getTexture("gui.loading.graphics");
                 
                 myKeyboard = new MyKeyboard();
                 
@@ -316,10 +317,16 @@ public class GameLoop
                         
                         if (!networkedGame.isReady())
                         {
-                                loadingBanner.drawCentered(Display.getWidth() / 2, Display.getHeight() / 2);
+                                Image loadingBanner = loadingTex.getCachedImage();
+                                if (loadingBanner != null)
+                                {
+                                        loadingBanner.drawCentered(Display.getWidth() / 2, Display.getHeight() / 2);
+                                }
                         }
                         else
                         {
+                                loadingTex = null;
+                                
                                 updateEntities();
                                 
                                 if (localShip == null || localActor == null)

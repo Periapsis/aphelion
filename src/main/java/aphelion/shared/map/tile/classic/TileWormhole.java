@@ -35,7 +35,6 @@
  * the terms and conditions of the license of that module. An independent
  * module is a module which is not derived from or based on this library.
  */
-
 package aphelion.shared.map.tile.classic;
 
 import aphelion.client.resource.AsyncTexture;
@@ -46,8 +45,6 @@ import aphelion.shared.swissarmyknife.Point;
 import aphelion.shared.swissarmyknife.SwissArmyKnife;
 import org.newdawn.slick.Animation;
 
-
-
 /**
  *
  * @author Joris
@@ -57,13 +54,13 @@ public class TileWormhole extends TileType
 {
         private AsyncTexture texture;
         private Animation anim;
-        
+
         public TileWormhole(ResourceDB db, short tileID)
         {
                 super(db, tileID);
-                
+
                 this.layer = TileType.TILE_LAYER.ANIMATED;
-                
+
                 if (db != null)
                 {
                         texture = db.getTextureLoader().getTexture("mapclassic.wormhole");
@@ -75,35 +72,35 @@ public class TileWormhole extends TileType
         {
                 return 5;
         }
-        
+
         @Override
         public void render(Camera camera, int tileX, int tileY, aphelion.shared.map.MapClassic map)
-        {       
+        {
                 if (texture.isLoaded())
                 {
                         if (anim == null)
                         {
-                                anim = SwissArmyKnife.spriteToAnimation(texture.getImage(), 4, 6, 100);
+                                anim = SwissArmyKnife.spriteToAnimation(texture.getCachedImage(), 4, 6, 100);
                         }
                 }
                 else
                 {
                         return;
                 }
-                
+
                 Point screenPos = new Point();
-                
+
                 camera.mapToScreenPosition(tileX * 16, tileY * 16, screenPos);
                 anim.draw(
-                        screenPos.x, 
-                        screenPos.y, 
+                        screenPos.x,
+                        screenPos.y,
                         getSize() * 16 * camera.zoom,
                         getSize() * 16 * camera.zoom);
         }
-        
+
         @Override
         public boolean physicsIsSolid()
         {
-        	return false;
-        }       
+                return false;
+        }
 }

@@ -216,7 +216,7 @@ public class GCImage extends WrappedValueAbstract
                 
                 if (image == null)
                 {
-                        image = texture.getImage();
+                        image = texture.getCachedImage();
 
                         if (offsetX > 0 || offsetY > 0 || offsetWidth > 0 || offsetHeight > 0)
                         {

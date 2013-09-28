@@ -68,10 +68,10 @@ public class TileAsteroidSmallB extends TileType
                         if (anim == null)
                         {
                         	//Classic
-                        	//anim = SwissArmyKnife.spriteToAnimation(texture.getImage(), 15, 2, 60);
+                        	//anim = SwissArmyKnife.spriteToAnimation(texture.getCachedImage(), 15, 2, 60);
                             
                         	//JabBase
-                        	anim = SwissArmyKnife.spriteToAnimation(texture.getImage(), 8, 8, 365 / 6);
+                        	anim = SwissArmyKnife.spriteToAnimation(texture.getCachedImage(), 8, 8, 365 / 6);
                         }
                 }
                 else

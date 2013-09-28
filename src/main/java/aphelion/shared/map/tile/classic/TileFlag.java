@@ -49,58 +49,57 @@ import aphelion.shared.swissarmyknife.SwissArmyKnife;
 
 public class TileFlag extends TileTeam
 {
-	private AsyncTexture textureFlagEnemy,
-						 textureFlagTeam;
-    private Animation anim;
+        private AsyncTexture textureFlagEnemy,
+                textureFlagTeam;
+        private Animation anim;
 
-	public TileFlag(ResourceDB db, short tileID) 
-	{
-		super(db, tileID);
-		this.layer = TileType.TILE_LAYER.ANIMATED;
-        
-        if (db != null)
+        public TileFlag(ResourceDB db, short tileID)
         {
-        	textureFlagEnemy = db.getTextureLoader().getTexture("mapclassic.flag.enemy");
-        	textureFlagTeam = db.getTextureLoader().getTexture("mapclassic.flag.team");
-        }
-	}
+                super(db, tileID);
+                this.layer = TileType.TILE_LAYER.ANIMATED;
 
-	@Override
-	public void render(Camera camera, int tileX, int tileY, MapClassic map) 
-	{
-		if (textureFlagEnemy.isLoaded() && textureFlagTeam.isLoaded())
-        {
-                if (anim == null)
+                if (db != null)
                 {
-                	if(camera.getFrequency() == this.getFrequency())
-                	{                		
-                		anim = SwissArmyKnife.spriteToAnimation(textureFlagTeam.getImage(), 10, 1, 100);
-                	}
-                	else
-                	{
-                		anim = SwissArmyKnife.spriteToAnimation(textureFlagEnemy.getImage(), 10, 1, 100);
-                	}
+                        textureFlagEnemy = db.getTextureLoader().getTexture("mapclassic.flag.enemy");
+                        textureFlagTeam = db.getTextureLoader().getTexture("mapclassic.flag.team");
                 }
         }
-        else
+
+        @Override
+        public void render(Camera camera, int tileX, int tileY, MapClassic map)
         {
-                return;
+                if (textureFlagEnemy.isLoaded() && textureFlagTeam.isLoaded())
+                {
+                        if (anim == null)
+                        {
+                                if (camera.getFrequency() == this.getFrequency())
+                                {
+                                        anim = SwissArmyKnife.spriteToAnimation(textureFlagTeam.getCachedImage(), 10, 1, 100);
+                                }
+                                else
+                                {
+                                        anim = SwissArmyKnife.spriteToAnimation(textureFlagEnemy.getCachedImage(), 10, 1, 100);
+                                }
+                        }
+                }
+                else
+                {
+                        return;
+                }
+
+                Point screenPos = new Point();
+
+                camera.mapToScreenPosition(tileX * 16, tileY * 16, screenPos);
+                anim.draw(
+                        screenPos.x,
+                        screenPos.y,
+                        getSize() * 16 * camera.zoom,
+                        getSize() * 16 * camera.zoom);
         }
-        
-        Point screenPos = new Point();
-        
-        camera.mapToScreenPosition(tileX * 16, tileY * 16, screenPos);
-        anim.draw(
-                screenPos.x, 
-                screenPos.y, 
-                getSize() * 16 * camera.zoom,
-                getSize() * 16 * camera.zoom);
-	}
 
-	@Override
-	public boolean physicsIsSolid() 
-	{
-		return false;
-	}
-
+        @Override
+        public boolean physicsIsSolid()
+        {
+                return false;
+        }
 }

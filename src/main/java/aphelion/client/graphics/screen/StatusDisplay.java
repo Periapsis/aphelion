@@ -35,68 +35,63 @@
  * the terms and conditions of the license of that module. An independent
  * module is a module which is not derived from or based on this library.
  */
- 
 package aphelion.client.graphics.screen;
 
-import org.newdawn.slick.Animation;
 import org.newdawn.slick.Image;
-import org.newdawn.slick.SpriteSheet;
 
 import aphelion.client.resource.AsyncTexture;
 import aphelion.client.graphics.world.ActorShip;
-import aphelion.shared.gameconfig.GCInteger;
 import aphelion.shared.resource.ResourceDB;
 
-public class StatusDisplay 
+public class StatusDisplay
 {
-	private ResourceDB db;
-	private ActorShip localShip;
-	private AsyncTexture textureDisplay;
-	private Image imageDisplay,
-				  imageEnergy;
-	private SpriteSheet spriteSheetEnergy,
-						spriteSheetNumbers;
-	private Animation anim;
-	
-	
-	public StatusDisplay(ResourceDB db, ActorShip localShip)
-	{
-		this.db = db;
-		this.localShip = localShip;
-		if(db != null)
-		{
-			textureDisplay = db.getTextureLoader().getTexture("gui.display");
-			imageEnergy = db.getTextureLoader().getTexture("gui.display.energy").getImage();
-			//spriteSheetEnergy = new SpriteSheet(imageEnergy,imageEnergy.getWidth() / 10,imageEnergy.getHeight());
-			spriteSheetNumbers = new SpriteSheet(db.getTextureLoader().getTexture("gui.display.numbers").getImage(),10,1);
-		}
-	}
+        private ResourceDB db;
+        private ActorShip localShip;
+        
+        private AsyncTexture texDisplay;
+        private AsyncTexture texEnergy;
 
-	 public void render(Camera camera)
-     {
-         if (localShip.maxEnergy == null || textureDisplay == null)
-         {
-        	 return;
-         }
-         if (imageDisplay == null)
-     	 {
-     		imageDisplay = textureDisplay.getImage();
-     	 }
-         imageDisplay.draw(
-     			(camera.dimensionX - imageDisplay.getWidth()), 
-                 6, 
-                 imageDisplay.getWidth(),
-                 imageDisplay.getHeight());
-         int energy = localShip.getActor().getEnergy()  / 1024;
-         String energyString = "" + energy;
-         int energyFigures = (byte) energyString.length();
-         short energyWidth = (short) (imageEnergy.getWidth() / 10);
-         int offset = energyWidth - 2;
-         for(int x = 0; x < energyFigures; x++)
-         {
-        	 int energyNumber = Integer.parseInt(energyString.charAt(x) + "");
-        	 imageEnergy.getSubImage((energyNumber) * energyWidth, 0, energyWidth, imageEnergy.getHeight()).draw(((camera.dimensionX - (energyWidth * energyFigures)) + (x * energyWidth)) - offset,1);
-         }
-     }
+        public StatusDisplay(ResourceDB db, ActorShip localShip)
+        {
+                this.db = db;
+                this.localShip = localShip;
 
+                texDisplay = db.getTextureLoader().getTexture("gui.display");
+                texEnergy = db.getTextureLoader().getTexture("gui.display.energy");
+        }
+
+        public void render(Camera camera)
+        {
+                if (localShip.maxEnergy == null || texDisplay == null)
+                {
+                        return;
+                }
+                
+                Image imageDisplay = texDisplay.getCachedImage();
+                Image imageEnergy = texEnergy.getCachedImage();
+                
+                if (imageDisplay != null)
+                {
+                        imageDisplay.draw(
+                                (camera.dimensionX - imageDisplay.getWidth()),
+                                6,
+                                imageDisplay.getWidth(),
+                                imageDisplay.getHeight());
+                }
+                
+                if (imageEnergy != null)
+                {
+                        int energy = localShip.getActor().getEnergy() / 1024;
+                        String energyString = "" + energy;
+                        int energyFigures = (byte) energyString.length();
+                        short energyWidth = (short) (imageEnergy.getWidth() / 10);
+                        int offset = energyWidth - 2;
+
+                        for (int x = 0; x < energyFigures; x++)
+                        {
+                                int energyNumber = Integer.parseInt(energyString.charAt(x) + "");
+                                imageEnergy.getSubImage((energyNumber) * energyWidth, 0, energyWidth, imageEnergy.getHeight()).draw(((camera.dimensionX - (energyWidth * energyFigures)) + (x * energyWidth)) - offset, 1);
+                        }
+                }
+        }
 }

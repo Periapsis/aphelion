@@ -47,6 +47,7 @@ import aphelion.shared.swissarmyknife.Point;
 import aphelion.shared.swissarmyknife.SwissArmyKnife;
 import org.lwjgl.opengl.Display;
 import org.newdawn.slick.Color;
+import org.newdawn.slick.Image;
 
 /**
  *
@@ -341,15 +342,18 @@ public final class Camera
                         float imgX2 = rightBottom.x / 16;
                         float imgY2 = rightBottom.y / 16;
                         
-                        map.getRadarImage().draw(
-                                screenPos.x, screenPos.y, 
-                                screenPos.x + dimension.x, screenPos.y + dimension.y,
-                                imgX,
-                                imgY,
-                                imgX2, 
-                                imgY2
-                                );
-                        
+                        Image img = map.getRadarImage();
+                        if (img != null)
+                        {
+                                img.draw(
+                                        screenPos.x, screenPos.y, 
+                                        screenPos.x + dimension.x, screenPos.y + dimension.y,
+                                        imgX,
+                                        imgY,
+                                        imgX2, 
+                                        imgY2
+                                        );
+                        }
                         Graph.g.clearClip();
                         
                         return;

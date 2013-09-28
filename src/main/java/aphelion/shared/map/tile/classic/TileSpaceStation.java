@@ -82,7 +82,7 @@ public class TileSpaceStation extends TileType
                 {
                         if (anim == null)
                         {
-                                anim = SwissArmyKnife.spriteToAnimation(texture.getImage(), 5, 2, 60);
+                                anim = SwissArmyKnife.spriteToAnimation(texture.getCachedImage(), 5, 2, 60);
                         }
                 }
                 else
