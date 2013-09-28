@@ -17,7 +17,7 @@ You can build this project using maven ("mvn package"). However there are a few 
 
 1. Add slick.jar to your local maven repository (only needed once). You need the following command:
 ```
-mvn install:install-file -Dfile=slick.jar -DgroupId=slick -DartifactId=slick -Dversion=237 -Dpackaging=jar
+mvn install:install-file -Dfile=slick.jar -DgroupId=slick -DartifactId=slick -Dversion=237 -Dpackaging=jar -Dsources=slick-src.jar
 ```
 
 2. The command "protoc" from <a href="https://code.google.com/p/protobuf/">google protobuf</a> needs to be on your PATH. If you are on windows, "protoc.exe" has been included and should be picked up by maven.

@@ -52,7 +52,7 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
                         <!-- This slick version is not in any repository yet, 
                              download the jar for version 237 and run this command:
                         mvn install:install-file -Dfile=slick.jar -DgroupId=slick \
-                        -DartifactId=slick -Dversion=237 -Dpackaging=jar
+                        -DartifactId=slick -Dversion=237 -Dpackaging=jar -Dsources=slick-src.jar
                         -->
                         <groupId>slick</groupId>
                         <artifactId>slick</artifactId>
