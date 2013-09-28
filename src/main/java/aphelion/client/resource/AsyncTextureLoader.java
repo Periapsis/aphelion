@@ -275,9 +275,9 @@ public class AsyncTextureLoader implements LoopEvent
                                 };
                                 
                         }
-                        catch (IOException ex)
+                        catch (IOException | UnsatisfiedLinkError ex)
                         {
-                                log.log(Level.SEVERE, "IOException while parse image for texture " + resourceKey, ex);
+                                log.log(Level.SEVERE, "Exception while parsing image for texture " + resourceKey, ex);
                                 throw new WorkerException(ex);
                         }
                 }       
