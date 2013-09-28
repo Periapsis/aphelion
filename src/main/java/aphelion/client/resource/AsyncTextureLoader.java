@@ -251,6 +251,11 @@ public class AsyncTextureLoader implements LoopEvent
                         {
                                 ByteBuffer textureBytes = imageData.loadImage(new BufferedInputStream(in), false, null);
                                 
+                                if (textureBytes == null)
+                                {
+                                        throw new IOException("loadImage returned null");
+                                }
+                                
                                 log.log(Level.INFO, "Texture data for {0} read. {1} {2} {3} {4} {5}", new Object[] {
                                         resourceKey,
                                         imageData.getWidth(),
@@ -272,7 +277,7 @@ public class AsyncTextureLoader implements LoopEvent
                         }
                         catch (IOException ex)
                         {
-                                log.log(Level.SEVERE, "IOException while parse image for texture", ex);
+                                log.log(Level.SEVERE, "IOException while parse image for texture " + resourceKey, ex);
                                 throw new WorkerException(ex);
                         }
                 }       
