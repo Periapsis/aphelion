@@ -369,7 +369,7 @@ public class GameLoop
                         Graph.g.setColor(Color.yellow);
                         if (physicsEnv != null)
                         {
-                                Graph.g.setFont(Fonts.monospace_bold_16);
+                                Graph.g.setFont(Fonts.normal);
                                 Graph.g.drawString(String.format("%d (%2dms) %4d %d %3dms",
                                         lastFps, 
                                         frameTimeDelta, 

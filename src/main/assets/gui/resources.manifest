@@ -7,3 +7,5 @@ gui.display = display.png
 gui.display.energy = engyfont.png
 gui.display.numbers = led.png
 gui.gauges = icons.png
+gui.font.normal = UbuntuMono-B.ttf
+gui.font.shipname = concielian.ttf

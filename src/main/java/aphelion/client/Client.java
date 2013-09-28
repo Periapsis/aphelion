@@ -121,8 +121,6 @@ public class Client
                 Display.setDisplayMode(new DisplayMode(1024, 768));
                 Display.create();
 
-                Fonts.initialize();
-
 
                 Keyboard.create();
 
@@ -136,6 +134,8 @@ public class Client
                 resourceDB.addZip(new File("assets/gui.zip"));
                 resourceDB.addZip(new File("assets/classic.zip"));
                 resourceDB.addZip(new File("assets/singleplayer.zip"));
+                
+                Fonts.initialize(resourceDB);
 
                 loop.setup();
 

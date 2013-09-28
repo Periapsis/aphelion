@@ -45,17 +45,5 @@
                         <source>LICENSE.txt</source>
                         <outputDirectory></outputDirectory>
                 </file>
-                <file>
-                        <source>src/main/assets/concielian.ttf</source>
-                        <outputDirectory>assets</outputDirectory>
-                </file>
-                <file>
-                        <source>src/main/assets/UbuntuMono-B.ttf</source>
-                        <outputDirectory>assets</outputDirectory>
-                </file>
-                <file>
-                        <source>src/main/assets/SIL-Open-Font-License.txt</source>
-                        <outputDirectory>assets</outputDirectory>
-                </file>
         </files>
 </assembly>

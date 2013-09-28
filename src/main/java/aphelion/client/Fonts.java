@@ -1,6 +1,7 @@
 package aphelion.client;
 
 import aphelion.client.graphics.Graph;
+import aphelion.shared.resource.ResourceDB;
 import java.io.InputStream;
 
 import org.newdawn.slick.util.ResourceLoader;
@@ -16,48 +17,44 @@ import org.newdawn.slick.UnicodeFont;
 import org.newdawn.slick.font.effects.ColorEffect;
 
 
+// temporary until nifty is implemented
 public class Fonts 
 {
         private static final Logger log = Logger.getLogger(Fonts.class.getName());
-	public static UnicodeFont concielian_jet_14; // http://iconian.com/ TODO: credit
-        public static UnicodeFont verdana_bold_14;
-        public static UnicodeFont monospace_bold_16;
-	
-	public static void initialize()
-	{    
+        
+	public static UnicodeFont player_name; // http://iconian.com/ TODO: credit
+        public static UnicodeFont normal;        
+        
+	public static void initialize(ResourceDB db)
+	{
+                player_name = null;
+                normal = null;
+                
 		try
                 {
                         java.awt.Font awtFont = null;
                         
-                        InputStream inputStream	= new FileInputStream("assets/UbuntuMono-B.ttf");
-                        awtFont = java.awt.Font.createFont(java.awt.Font.TRUETYPE_FONT, inputStream);
-                        inputStream.close();
-                        awtFont = awtFont.deriveFont(16f); // set font size
-                        monospace_bold_16 = new UnicodeFont(awtFont);
-                        monospace_bold_16.getEffects().add(new ColorEffect());
-                        loadAllGlyphs(monospace_bold_16);
-                        
-                        inputStream = ResourceLoader.getResourceAsStream("assets/concielian.ttf");
-                        awtFont = java.awt.Font.createFont(java.awt.Font.TRUETYPE_FONT, inputStream);
-                        inputStream.close();
-                        awtFont = awtFont.deriveFont(14f); // set font size
-                        concielian_jet_14 = new UnicodeFont(awtFont);
-                        concielian_jet_14.getEffects().add(new ColorEffect());
-                        loadLatinGlyphs(concielian_jet_14);
-
-                        awtFont = null;
-                        if (hasFontFamily("Verdana"))
+                        InputStream inputStream = db.getInputStreamSync("gui.font.normal");
+                        if (inputStream != null)
                         {
-                                awtFont = new java.awt.Font("Verdana", java.awt.Font.BOLD, 14);
-                        }
-                        else
-                        {
-                                awtFont = new java.awt.Font(java.awt.Font.SANS_SERIF, java.awt.Font.BOLD, 14);
+                                awtFont = java.awt.Font.createFont(java.awt.Font.TRUETYPE_FONT, inputStream);
+                                inputStream.close();
+                                awtFont = awtFont.deriveFont(16f); // set font size
+                                normal = new UnicodeFont(awtFont);
+                                normal.getEffects().add(new ColorEffect());
+                                loadAllGlyphs(normal);
                         }
                         
-                        verdana_bold_14 = new UnicodeFont(awtFont);
-                        verdana_bold_14.getEffects().add(new ColorEffect());
-                        loadLatinGlyphs(verdana_bold_14);
+                        inputStream = db.getInputStreamSync("gui.font.shipname");
+                        if (inputStream != null)
+                        {
+                                awtFont = java.awt.Font.createFont(java.awt.Font.TRUETYPE_FONT, inputStream);
+                                inputStream.close();
+                                awtFont = awtFont.deriveFont(14f); // set font size
+                                player_name = new UnicodeFont(awtFont);
+                                player_name.getEffects().add(new ColorEffect());
+                                loadLatinGlyphs(player_name);
+                        }
                 }
                 catch (FontFormatException | IOException e)
                 {
@@ -67,7 +64,7 @@ public class Fonts
         
         public static void setDefault()
         {
-                Graph.g.setFont(monospace_bold_16);
+                Graph.g.setFont(normal);
         }
         
         private static void loadLatinGlyphs(UnicodeFont font)

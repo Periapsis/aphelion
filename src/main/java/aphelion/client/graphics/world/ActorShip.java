@@ -231,7 +231,7 @@ public class ActorShip extends MapEntity implements TickEvent, WrappedValueAbstr
                 
                 long now = System.nanoTime();
                 
-                Graph.g.setFont(Fonts.concielian_jet_14);
+                Graph.g.setFont(Fonts.player_name);
                 
                 Point screenPos = new Point();
                 camera.mapToScreenPosition(pos, screenPos);
