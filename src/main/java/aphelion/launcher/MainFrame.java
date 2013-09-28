@@ -172,7 +172,7 @@ public class MainFrame extends JFrame implements PingListener
                 try
                 {
                         addZoneEntry(true, new URI("ws://localhost:80/aphelion"), "localhost", "Test your own locally hosted game server");
-                        addZoneEntry(false, new URI("ws://86.87.83.47:80/aphelion"), "Test server", "JoWie's test server in Europe!");
+                        addZoneEntry(false, new URI("ws://aphelion-test.welcome-to-the-machine.com:81/aphelion"), "Test server", "JoWie's test server in Europe!");
                 }
                 catch (URISyntaxException ex)
                 {
