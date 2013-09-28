@@ -111,7 +111,10 @@ public class AphelionServerThread extends Thread
                 serverMain.stop();
                 try
                 {
-                        privateSsChannel.close();
+                        if (privateSsChannel != null)
+                        {
+                                privateSsChannel.close();
+                        }
                 }
                 catch (IOException ex)
                 {
