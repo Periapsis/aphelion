@@ -40,6 +40,7 @@ package aphelion.shared.net;
 
 import aphelion.client.net.SingleGameConnection;
 import aphelion.server.AphelionServer;
+import aphelion.server.http.HttpServer;
 import aphelion.shared.event.TickedEventLoop;
 import aphelion.shared.net.protocols.GameProtocolConnection;
 import aphelion.shared.net.protocols.GameListener;
@@ -54,6 +55,7 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.channels.ServerSocketChannel;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.junit.*;
@@ -111,34 +113,37 @@ public class WebSocketTest
                 
                 // Set up the server
                 // use an ephemeral port. aka a temporary port number
-                AphelionServer server = new AphelionServer(new InetSocketAddress("127.0.0.1", 0), new File("./www"), loop);
-                loop.addLoopEvent(server);
-                server.setGameClientListener(new testSingleGameWebSocket_ServerGameListener());
-                server.setup();
-                
-                // set up the client
-                SingleGameConnection client = new SingleGameConnection(
-                        new URI("ws://127.0.0.1:"+server.getHTTPListeningPort()+"/aphelion"), 
-                        loop, 
-                        new testSingleGameWebSocket_ClientGameListener(), 
-                        1); // 1 connection; TODO: test with multiple
-                
-                loop.addLoopEvent(client);
-                client.connect();
-                
-                loop.run();
-                assertEquals(1, clientNewClient);
-                assertEquals(1, serverNewClient);
-                assertTrue(clientRemoved);
-                assertTrue(serverRemoved);
-                assertEquals(1, clientMessages);
-                assertEquals(1, serverMessages);
-                
-                double latency = (receivedC2SMove - sentC2SMove) / 1000000d;
-                log.log(Level.INFO, "Latency: {0}ms", latency);
-                
-                client.close(WS_CLOSE_STATUS.NORMAL);
-                server.closeAll(WS_CLOSE_STATUS.NORMAL);
+                try (ServerSocketChannel ssChannel = HttpServer.openServerChannel(new InetSocketAddress("127.0.0.1", 0)))
+                {
+                        AphelionServer server = new AphelionServer(ssChannel, new File("./www"), loop);
+                        loop.addLoopEvent(server);
+                        server.setGameClientListener(new testSingleGameWebSocket_ServerGameListener());
+                        server.setup();
+
+                        // set up the client
+                        SingleGameConnection client = new SingleGameConnection(
+                                new URI("ws://127.0.0.1:"+server.getHTTPListeningPort()+"/aphelion"), 
+                                loop, 
+                                new testSingleGameWebSocket_ClientGameListener(), 
+                                1); // 1 connection; TODO: test with multiple
+
+                        loop.addLoopEvent(client);
+                        client.connect();
+
+                        loop.run();
+                        assertEquals(1, clientNewClient);
+                        assertEquals(1, serverNewClient);
+                        assertTrue(clientRemoved);
+                        assertTrue(serverRemoved);
+                        assertEquals(1, clientMessages);
+                        assertEquals(1, serverMessages);
+
+                        double latency = (receivedC2SMove - sentC2SMove) / 1000000d;
+                        log.log(Level.INFO, "Latency: {0}ms", latency);
+
+                        client.close(WS_CLOSE_STATUS.NORMAL);
+                        server.closeAll(WS_CLOSE_STATUS.NORMAL);
+                }
         }
         
         private class testSingleGameWebSocket_ServerGameListener implements GameListener
@@ -332,32 +337,35 @@ public class WebSocketTest
                 
                 // Set up the server
                 // use an ephemeral port. aka a temporary port number
-                AphelionServer server = new AphelionServer(new InetSocketAddress("127.0.0.1", 0), new File("./www"), loop);
-                loop.addLoopEvent(server);
-                server.setGameClientListener(new testMultiGameWebSocket_ServerGameListener());
-                server.setup();
-                
-                // set up the client
-                SingleGameConnection client = new SingleGameConnection(
-                        new URI("ws://127.0.0.1:"+server.getHTTPListeningPort()+"/aphelion"), 
-                        loop, 
-                        new testMultiGameWebSocket_ClientGameListener(), 
-                        5); // 5 connections;
-                
-                loop.addLoopEvent(client);
-                client.connect();
-                
-                loop.run();
-                assertEquals(1, clientNewClient);
-                assertEquals(1, serverNewClient);
-                assertTrue(clientRemoved);
-                assertTrue(serverRemoved);
-                assertEquals(18, clientMessages);
-                assertEquals(28, serverMessages);
-                assertEquals(210, clientPidSum);
-                assertEquals(465, serverPidSum);
-                client.close(WS_CLOSE_STATUS.NORMAL);
-                server.closeAll(WS_CLOSE_STATUS.NORMAL);
+                try (ServerSocketChannel ssChannel = HttpServer.openServerChannel(new InetSocketAddress("127.0.0.1", 0)))
+                {
+                        AphelionServer server = new AphelionServer(ssChannel, new File("./www"), loop);
+                        loop.addLoopEvent(server);
+                        server.setGameClientListener(new testMultiGameWebSocket_ServerGameListener());
+                        server.setup();
+
+                        // set up the client
+                        SingleGameConnection client = new SingleGameConnection(
+                                new URI("ws://127.0.0.1:"+server.getHTTPListeningPort()+"/aphelion"), 
+                                loop, 
+                                new testMultiGameWebSocket_ClientGameListener(), 
+                                5); // 5 connections;
+
+                        loop.addLoopEvent(client);
+                        client.connect();
+
+                        loop.run();
+                        assertEquals(1, clientNewClient);
+                        assertEquals(1, serverNewClient);
+                        assertTrue(clientRemoved);
+                        assertTrue(serverRemoved);
+                        assertEquals(18, clientMessages);
+                        assertEquals(28, serverMessages);
+                        assertEquals(210, clientPidSum);
+                        assertEquals(465, serverPidSum);
+                        client.close(WS_CLOSE_STATUS.NORMAL);
+                        server.closeAll(WS_CLOSE_STATUS.NORMAL);
+                }
         }
         
         private class testMultiGameWebSocket_ServerGameListener implements GameListener

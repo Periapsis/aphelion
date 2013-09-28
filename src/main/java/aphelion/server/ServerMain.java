@@ -39,6 +39,7 @@
 package aphelion.server;
 
 import aphelion.server.game.ServerGame;
+import aphelion.server.http.HttpServer;
 import aphelion.shared.event.Deadlock;
 import aphelion.shared.event.LoopEvent;
 import aphelion.shared.event.TickedEventLoop;
@@ -51,6 +52,7 @@ import aphelion.shared.resource.ResourceDB;
 import java.io.File;
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.nio.channels.ServerSocketChannel;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -63,11 +65,11 @@ public class ServerMain implements LoopEvent
 {
         private static final Logger log = Logger.getLogger(ServerMain.class.getName());
         private TickedEventLoop loop;
-        private InetSocketAddress listen;
+        private ServerSocketChannel listen;
         private AphelionServer server;
         private ServerGame serverGame;
         
-        public ServerMain(InetSocketAddress listen)
+        public ServerMain(ServerSocketChannel listen)
         {                
                 this.listen = listen;
         }
@@ -147,11 +149,35 @@ public class ServerMain implements LoopEvent
         
         public static void main(String[] args) throws IOException
         {
-                Deadlock.start(false);
-                ServerMain main = new ServerMain(new InetSocketAddress("0.0.0.0", 80));
-                main.setup();
-                main.run();
-                Deadlock.stop();
+                String hostname;
+                int port;
+                
+                if (args.length >= 1)
+                {
+                        port = Integer.parseInt(args[0]); // may throw
+                }
+                else
+                {
+                        port = 80;
+                }
+                
+                if (args.length >= 2)
+                {
+                        hostname = args[2];
+                }
+                else
+                {
+                        hostname = "0.0.0.0";
+                }
+                
+                try (ServerSocketChannel ssChannel = HttpServer.openServerChannel(new InetSocketAddress(hostname, port)))
+                {
+                        Deadlock.start(false);
+                        ServerMain main = new ServerMain(ssChannel);
+                        main.setup();
+                        main.run();
+                        Deadlock.stop();
+                }
         }
 
         

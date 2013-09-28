@@ -81,7 +81,7 @@ import org.java_websocket.handshake.ClientHandshake;
  *
  * @author Joris
  */
-public class HttpServer implements UpgradeWebSocketHandler, LoopEvent, HttpWebSocketServerListener
+        public class HttpServer implements UpgradeWebSocketHandler, LoopEvent, HttpWebSocketServerListener
 {
         static final int LINEBUFFER_SIZE = 512; // Used to combine a line that spans multiple TCP segments
         static final int RCVBUFFER_SIZE = 16384;
@@ -90,7 +90,6 @@ public class HttpServer implements UpgradeWebSocketHandler, LoopEvent, HttpWebSo
         static final long HTTP_TIMEOUT = 10;
         private static final Logger log = Logger.getLogger(HttpServer.class.getName());
         public volatile HttpWebSocketServerListener websocketListener;
-        InetSocketAddress address;
         File httpdocs;
         ServerSocketChannel ssChannel;
         HttpDownloadThread downloadThread;
@@ -98,15 +97,15 @@ public class HttpServer implements UpgradeWebSocketHandler, LoopEvent, HttpWebSo
         volatile int upgradeWebSocketHandler_counter = 0;
         private final Set<WebSocket> websockets = new HashSet<>();
 
-        public HttpServer(InetSocketAddress address, File httpdocs_, HttpWebSocketServerListener websocketListener) throws IOException
+        public HttpServer(ServerSocketChannel ssChannel, File httpdocs_, HttpWebSocketServerListener websocketListener) throws IOException
         {
-                this.address = address;
+                this.ssChannel = ssChannel;
                 this.httpdocs = httpdocs_.getCanonicalFile();
                 this.websocketListener = websocketListener;
-
-                if (this.address == null)
+                
+                if (ssChannel == null)
                 {
-                        this.address = new InetSocketAddress("127.0.0.1", 80);
+                        throw new IllegalArgumentException();
                 }
 
                 if (this.httpdocs != null)
@@ -129,7 +128,17 @@ public class HttpServer implements UpgradeWebSocketHandler, LoopEvent, HttpWebSo
                         server.setDeamon(true);
                         websocketServers.add(server);
                 }
-
+        }
+        
+        public static ServerSocketChannel openServerChannel(InetSocketAddress listenAddr) throws IOException
+        {
+                ServerSocketChannel ssChannel = ServerSocketChannel.open();
+                ssChannel.configureBlocking(false);
+                ssChannel.socket().bind(listenAddr);
+                ssChannel.socket().setReceiveBufferSize(RCVBUFFER_SIZE);
+                
+                log.log(Level.INFO, "Listening on {0}:{1,number,#}", new Object[] { ssChannel.socket().getInetAddress(), getListeningPort(ssChannel) });
+                return ssChannel;
         }
 
         public void setup() throws IOException
@@ -139,19 +148,20 @@ public class HttpServer implements UpgradeWebSocketHandler, LoopEvent, HttpWebSo
                 {
                         s.start();
                 }
-
-                ssChannel = ServerSocketChannel.open();
-                ssChannel.configureBlocking(false);
-                ssChannel.socket().bind(address);
-                ssChannel.socket().setReceiveBufferSize(RCVBUFFER_SIZE);
                 
-                log.log(Level.INFO, "Listening on {0}:{1,number,#}", new Object[] { ssChannel.socket().getInetAddress(), getListeningPort() });
+                log.log(Level.INFO, "Http server setup at {0}:{1,number,#}", new Object[] { ssChannel.socket().getInetAddress(), getListeningPort(ssChannel) });
+        }
+        
+        public int getListeningPort()
+        {
+                return getListeningPort(ssChannel);
         }
         
         /** Returns the TCP port that we are currently listening on
+         * @param ssChannel 
          * @return -1 if not yet listening, otherwise the listening port.
          */
-        public int getListeningPort()
+        public static int getListeningPort(ServerSocketChannel ssChannel)
         {
                 if (ssChannel == null)
                 {
@@ -185,15 +195,6 @@ public class HttpServer implements UpgradeWebSocketHandler, LoopEvent, HttpWebSo
                 }
                 catch (InterruptedException ex)
                 {
-                }
-
-                try
-                {
-                        ssChannel.close();
-                }
-                catch (IOException ex)
-                {
-                        log.log(Level.SEVERE, "Exception while closing server listening socket", ex);
                 }
                 
                 log.log(Level.INFO, "HttpServer has stopped");

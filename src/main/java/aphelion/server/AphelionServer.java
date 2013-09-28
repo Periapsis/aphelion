@@ -58,6 +58,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
+import java.nio.channels.ServerSocketChannel;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.java_websocket.framing.CloseFrame;
@@ -68,7 +69,7 @@ import org.java_websocket.framing.CloseFrame;
 public class AphelionServer implements LoopEvent, WebSocketTransportListener
 {
         private static final Logger log = Logger.getLogger(AphelionServer.class.getName());
-        private static final AttachmentConsumer<SessionToken, GameProtocolConnection> gameAttachment = new AttachmentConsumer<SessionToken, GameProtocolConnection>(SessionToken.attachmentManager);
+        private static final AttachmentConsumer<SessionToken, GameProtocolConnection> gameAttachment = new AttachmentConsumer<>(SessionToken.attachmentManager);
         
         private final static int SERVER_PING_PROTO_VERSION = 1;
         private final static int SERVER_GAME_PROTO_VERSION = 1;
@@ -84,7 +85,7 @@ public class AphelionServer implements LoopEvent, WebSocketTransportListener
         private volatile int ping_players = -1;
         private volatile int ping_playing = -1;
 
-        public AphelionServer(InetSocketAddress httpListen, File httpDocs, Workable workManager) throws IOException
+        public AphelionServer(ServerSocketChannel httpListen, File httpDocs, Workable workManager) throws IOException
         {
                 this.workable = workManager;
                 webSocketTransport = new WebSocketTransport(this);

@@ -35,15 +35,15 @@
  * the terms and conditions of the license of that module. An independent
  * module is a module which is not derived from or based on this library.
  */
+package aphelion.server;
 
-package aphelion.client;
-
-
+import aphelion.client.ErrorDialog;
 import aphelion.server.ServerMain;
-import aphelion.shared.event.Deadlock;
+import aphelion.server.http.HttpServer;
 import aphelion.shared.swissarmyknife.ThreadSafe;
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.nio.channels.ServerSocketChannel;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -51,47 +51,71 @@ import java.util.logging.Logger;
  *
  * @author Joris
  */
-public class LocalServerThread extends Thread
+public class AphelionServerThread extends Thread
 {
-        private static final Logger log = Logger.getLogger(LocalServerThread.class.getName());
-        
+        private static final Logger log = Logger.getLogger(AphelionServerThread.class.getName());
         private ServerMain serverMain;
-                private int listenPort;
+        private int listenPort;
+        
+        private ServerSocketChannel privateSsChannel; // If we opened it ourselves, we need to close it too
+
+        public AphelionServerThread() throws IOException
+        {
+                super();
+
+                // use an ephemeral port. aka a temporary port number
+
+                privateSsChannel = HttpServer.openServerChannel(new InetSocketAddress("127.0.0.1", 0));
                 
-                LocalServerThread() throws IOException
+                serverMain = new ServerMain(privateSsChannel);
+                // run setup() in this thread so that a client thread will be able to connect immediately
+                serverMain.setup();
+                listenPort = serverMain.getHTTPListeningPort();
+        }
+        
+        public AphelionServerThread(ServerSocketChannel ssChannel) throws IOException
+        {
+                super();
+
+                // use an ephemeral port. aka a temporary port number
+
+                serverMain = new ServerMain(ssChannel);
+                // run setup() in this thread so that a client thread will be able to connect immediately
+                serverMain.setup();
+                listenPort = serverMain.getHTTPListeningPort();
+        }
+
+        public int getHTTPListeningPort()
+        {
+                return listenPort;
+        }
+
+        @Override
+        public void run()
+        {
+                this.setName("AphelionServerThread-" + this.getId());
+                try
                 {
-                        super();
-                        
-                        // use an ephemeral port. aka a temporary port number
-                        serverMain = new ServerMain(new InetSocketAddress("127.0.0.1", 0));
-                        // do not run setup() in this thread so that the main thread will be able to connect immediately
-                        serverMain.setup(); 
-                        listenPort = serverMain.getHTTPListeningPort();
+                        serverMain.run();
                 }
-                
-                public int getHTTPListeningPort()
+                catch (Throwable ex)
                 {
-                        return listenPort;
+                        new ErrorDialog().setErrorText(ex);
+                        throw ex;
                 }
-                
-                @Override
-                public void run()
+        }
+
+        @ThreadSafe
+        public void stopServer()
+        {
+                serverMain.stop();
+                try
                 {
-                        this.setName("LocalServerThread-" + this.getId());
-                        try
-                        {
-                                serverMain.run();
-                        }
-                        catch (Throwable ex)
-                        {
-                                new ErrorDialog().setErrorText(ex);
-                                throw ex;
-                        }
+                        privateSsChannel.close();
                 }
-                
-                @ThreadSafe
-                public void stopServer()
+                catch (IOException ex)
                 {
-                        serverMain.stop();
+                        log.log(Level.SEVERE, null, ex);
                 }
+        }
 }

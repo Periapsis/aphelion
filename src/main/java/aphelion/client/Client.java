@@ -37,6 +37,7 @@
  */
 package aphelion.client;
 
+import aphelion.server.AphelionServerThread;
 import aphelion.client.graphics.Graph;
 import aphelion.client.net.NetworkedGame;
 import aphelion.client.resource.AsyncTexture;
@@ -70,7 +71,7 @@ public class Client
         private static final Logger log = Logger.getLogger(Client.class.getName());
         private TickedEventLoop loop;
         private ResourceDB resourceDB;
-        private LocalServerThread serverThread;
+        private AphelionServerThread serverThread;
         private ConnectLoop connectLoop;
         private STATE state = STATE.NONE;
         private URI serverUri;
@@ -95,7 +96,7 @@ public class Client
                         // singleplayer
                         // future versions might not need to run a server in sigleplayer
                         // however this is ok for now.
-                        serverThread = new LocalServerThread();
+                        serverThread = new AphelionServerThread();
                         serverThread.start();
                         try
                         {
