@@ -1,5 +1,5 @@
 # Aphelion
-2D spaceship mmog written in java with an authoritative server model. Inspired on subspace.
+2D spaceship mmog written in java with an authoritative server model. Inspired by subspace.
 
 ## Goals
 
