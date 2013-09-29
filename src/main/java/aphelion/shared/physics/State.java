@@ -406,7 +406,6 @@ public class State
                                 if (actorMine == null)
                                 {
                                         actorMine = new Actor(this, actorOther.crossStateList, actorOther.pid, actorOther.createdAt_tick);
-                                        actorOther.crossStateList[this.id] = actorMine;
                                         actorMine.resetTo(this, actorOther);
                                 }
                         }

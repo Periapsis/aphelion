@@ -77,6 +77,7 @@ public abstract class MapEntity
                 this.debug_id_with_reset = debug_id;
                 this.state = state;
                 this.crossStateList = crossStateList;
+                crossStateList[state.id] = this;
                 this.createdAt_tick = createdAt_tick;
                 this.HISTORY_LENGTH = historyLength;
                 // + 1 is need for consistency checking

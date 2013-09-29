@@ -277,8 +277,6 @@ public class ProjectileExplosion extends Event implements ProjectileExplosionPub
                                         chainConfig,
                                         p);
                                 
-                                crossStateList[state.id] = (MapEntity) chainedProjectile;
-                                
                                 if (coupled_last == null)
                                 {
                                         chainedProjectile.coupled.beginCircular();

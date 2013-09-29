@@ -216,9 +216,6 @@ public class ActorWeaponFire extends Operation implements ActorWeaponFirePublic
                                 config,
                                 p);
                         
-                        crossStateList[state.id] = (MapEntity) projectile;
-                        
-                        
                         if (coupled_last == null)
                         {
                                 projectile.coupled.beginCircular();
