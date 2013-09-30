@@ -66,7 +66,7 @@ import java.util.logging.Logger;
  */
 public class SingleGameConnection implements LoopEvent, WebSocketTransportListener
 {
-        private static final Logger log = Logger.getLogger(SingleGameConnection.class.getName());
+        private static final Logger log = Logger.getLogger("aphelion.net");
         
         private final static int CLIENT_PROTO_VERSION = 1; // use 0 to disable checking
         

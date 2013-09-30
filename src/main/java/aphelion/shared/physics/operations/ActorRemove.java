@@ -52,7 +52,7 @@ import java.util.logging.Logger;
  */
 public class ActorRemove extends Operation implements ActorRemovePublic
 {
-        private static final Logger log = Logger.getLogger("Aphelion.Shared.Physics");
+        private static final Logger log = Logger.getLogger("aphelion.shared.physics");
         
         public ActorRemove()
         {

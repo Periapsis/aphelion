@@ -59,7 +59,7 @@ import java.util.logging.Logger;
  */
 class HttpDownloadThread extends Thread implements ConnectionStateChangeListener
 {
-        private static final Logger log = Logger.getLogger(HttpDownloadThread.class.getName());
+        private static final Logger log = Logger.getLogger("aphelion.server.http");
         private Selector selector;
         private File httpdocs;
         private UpgradeWebSocketHandler upgradeWebSocketHandler;

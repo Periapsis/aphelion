@@ -52,7 +52,7 @@ import java.util.logging.Logger;
  */
 public class ActorModification extends Operation implements ActorModificationPublic
 {
-        private static final Logger log = Logger.getLogger("Aphelion.Shared.Physics");
+        private static final Logger log = Logger.getLogger("aphelion.shared.physics");
         
         private final boolean[] executed = new boolean[PhysicsEnvironment.MAX_TRAILING_STATES];
         

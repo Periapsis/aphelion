@@ -61,7 +61,7 @@ import java.util.logging.Logger;
  */
 public class State
 {
-        private static final Logger log = Logger.getLogger("Aphelion.Shared.Physics");
+        private static final Logger log = Logger.getLogger("aphelion.shared.physics");
         private static final int ACTOR_INITIALCAPACITY = 64;
         public final int id;
         public final PhysicsEnvironment env;

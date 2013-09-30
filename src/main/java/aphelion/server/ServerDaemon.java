@@ -56,7 +56,7 @@ import org.apache.commons.daemon.DaemonInitException;
  */
 public class ServerDaemon implements Daemon
 {
-        private static final Logger log = Logger.getLogger(ServerDaemon.class.getName());
+        private static final Logger log = Logger.getLogger("aphelion.daemon");
 
         private ServerSocketChannel ssChannel;
         private AphelionServerThread serverThread;

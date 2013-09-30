@@ -59,7 +59,7 @@ import org.newdawn.slick.SpriteSheetCounted;
  */
 public class GCImage extends WrappedValueAbstract
 {
-        private static final Logger log = Logger.getLogger(GCImage.class.getName());
+        private static final Logger log = Logger.getLogger("aphelion.config");
         
         final ResourceDB db;
         private String resourceKey;

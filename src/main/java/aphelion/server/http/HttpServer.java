@@ -88,7 +88,7 @@ import org.java_websocket.handshake.ClientHandshake;
         static final int BUFFER_SIZE = RCVBUFFER_SIZE + LINEBUFFER_SIZE;
         static final int WEBSOCKET_PARSE_THREADS = 2;
         static final long HTTP_TIMEOUT = 10;
-        private static final Logger log = Logger.getLogger(HttpServer.class.getName());
+        private static final Logger log = Logger.getLogger("aphelion.server.http");
         public volatile HttpWebSocketServerListener websocketListener;
         File httpdocs;
         ServerSocketChannel ssChannel;

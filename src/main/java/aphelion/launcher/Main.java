@@ -64,7 +64,7 @@ import javax.swing.UIManager;
  */
 public class Main
 {
-        private static final Logger log = Logger.getLogger(Main.class.getName());
+        private static final Logger log = Logger.getLogger("aphelion.launcher");
         
         private static final ActionListener playAction = new ActionListener()
         {

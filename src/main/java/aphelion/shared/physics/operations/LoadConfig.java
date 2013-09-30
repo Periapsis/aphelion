@@ -51,7 +51,7 @@ import java.util.logging.Logger;
  */
 public class LoadConfig extends Operation
 {
-        private static final Logger log = Logger.getLogger("Aphelion.Shared.Physics");
+        private static final Logger log = Logger.getLogger("aphelion.shared.physics");
 
         public String fileIdentifier;
         public List<Object> yamlDocuments;

@@ -68,7 +68,7 @@ import org.java_websocket.framing.CloseFrame;
  */
 public class AphelionServer implements LoopEvent, WebSocketTransportListener
 {
-        private static final Logger log = Logger.getLogger(AphelionServer.class.getName());
+        private static final Logger log = Logger.getLogger("aphelion.server");
         private static final AttachmentConsumer<SessionToken, GameProtocolConnection> gameAttachment = new AttachmentConsumer<>(SessionToken.attachmentManager);
         
         private final static int SERVER_PING_PROTO_VERSION = 1;

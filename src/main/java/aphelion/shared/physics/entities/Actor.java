@@ -75,7 +75,7 @@ import java.util.logging.Logger;
  */
 public class Actor extends MapEntity
 {
-        private static final Logger log = Logger.getLogger("Aphelion.Shared.Physics");
+        private static final Logger log = Logger.getLogger("aphelion.shared.physics");
         public ActorPublicImpl publicWrapper;
         public final LinkedListHead<Projectile> projectiles = new LinkedListHead<>(); // fired by the actor
         

@@ -50,7 +50,7 @@ import java.util.logging.Logger;
  */
 public class ExhaustAnimation extends GCImageAnimation
 {
-        private static final Logger log = Logger.getLogger(ExhaustAnimation.class.getName());
+        private static final Logger log = Logger.getLogger("aphelion.client.graphics");
 
         public ExhaustAnimation(ResourceDB db, GCImage image)
         {

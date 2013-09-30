@@ -48,7 +48,7 @@ import java.util.logging.Logger;
  */
 class WorkerThread extends Thread
 {
-        private static final Logger log = Logger.getLogger(WorkerThread.class.getName());
+        private static final Logger log = Logger.getLogger("aphelion.eventloop");
         Workable workable;
         ArrayBlockingQueue<WorkerTask> tasks;
 

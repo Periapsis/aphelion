@@ -52,7 +52,7 @@ import java.util.logging.Logger;
  */
 public class ActorWarp extends Operation implements ActorWarpPublic
 {
-        private static final Logger log = Logger.getLogger("Aphelion.Shared.Physics");
+        private static final Logger log = Logger.getLogger("aphelion.shared.physics");
         public PhysicsWarp warp;
         public boolean hint; // optional execution, used to correct inconsistencies caused by super high latency
 

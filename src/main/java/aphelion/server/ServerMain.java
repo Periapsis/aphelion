@@ -63,7 +63,7 @@ import java.util.logging.Logger;
  */
 public class ServerMain implements LoopEvent
 {
-        private static final Logger log = Logger.getLogger(ServerMain.class.getName());
+        private static final Logger log = Logger.getLogger("aphelion.server");
         private TickedEventLoop loop;
         private ServerSocketChannel listen;
         private AphelionServer server;

@@ -57,7 +57,7 @@ import org.newdawn.slick.Image;
  */
 public class ConnectLoop
 {
-        private static final Logger log = Logger.getLogger(ConnectLoop.class.getName());
+        private static final Logger log = Logger.getLogger("aphelion.client");
         
         private URI serverUri;
         private ResourceDB resourceDB;

@@ -56,7 +56,7 @@ import java.util.regex.Matcher;
  */
 class HttpResponse
 {
-        private static final Logger log = Logger.getLogger(HttpResponse.class.getName());
+        private static final Logger log = Logger.getLogger("aphelion.server.http");
         METHOD requestMethod;
         HashMap<String, String> requestHeaders;
         int status;

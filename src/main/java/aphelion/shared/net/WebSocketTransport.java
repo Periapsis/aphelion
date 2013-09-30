@@ -82,7 +82,7 @@ import org.java_websocket.handshake.ServerHandshake;
 
 public class WebSocketTransport implements HttpWebSocketServerListener, LoopEvent
 {
-        private static final Logger log = Logger.getLogger(WebSocketTransport.class.getName());
+        private static final Logger log = Logger.getLogger("aphelion.net");
         /**
          * When calling send(byte[]) make sure there are this many
          * unused bytes at the beginning of the byte array.

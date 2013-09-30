@@ -60,7 +60,7 @@ import org.yaml.snakeyaml.constructor.SafeConstructor;
  */
 public class GameConfig implements TickEvent
 {
-        private static final Logger log = Logger.getLogger(GameConfig.class.getName());
+        private static final Logger log = Logger.getLogger("aphelion.config");
         
         // rule with the highest specificy first!
         final LinkedListHead<Rule> rules = new LinkedListHead<>();

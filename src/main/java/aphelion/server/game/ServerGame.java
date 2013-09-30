@@ -73,7 +73,7 @@ import java.util.logging.Logger;
  */
 public class ServerGame implements LoopEvent, TickEvent, GameListener
 {
-        private static final Logger log = Logger.getLogger(ServerGame.class.getName());
+        private static final Logger log = Logger.getLogger("aphelion.server.game");
         
         private static final AttachmentConsumer<GameProtocolConnection, ClientState> stateAttachment 
                 = new AttachmentConsumer<>(GameProtocolConnection.attachmentManager);

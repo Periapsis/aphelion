@@ -145,7 +145,7 @@ public class ConsistencyFuzz
                         iterations *= i;
                 }
                 
-                Logger.getLogger("Aphelion.Shared.Physics").setLevel(Level.OFF); // speed up execution
+                Logger.getLogger("aphelion.shared.physics").setLevel(Level.OFF); // speed up execution
                 
                 int iteration = 0;
                 long startNano = System.nanoTime();

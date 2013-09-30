@@ -56,7 +56,7 @@ import java.util.logging.Logger;
  */
 public class WeaponSync extends Operation implements WeaponSyncPublic
 {
-        private static final Logger log = Logger.getLogger("Aphelion.Shared.Physics");
+        private static final Logger log = Logger.getLogger("aphelion.shared.physics");
         
         private ArrayList<MapEntity[]> crossStateLists; // projectile index -> state id -> map entity
         

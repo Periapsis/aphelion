@@ -58,7 +58,7 @@ import javax.swing.table.TableCellRenderer;
  */
 public class ZoneList extends JPanel
 {
-        private static final Logger log = Logger.getLogger(ZoneList.class.getName());
+        private static final Logger log = Logger.getLogger("aphelion.launcher");
         private final ArrayList<ZoneEntry> entries;
         private JScrollPane scroll;
         private MyTableModel modal;

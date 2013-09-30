@@ -142,7 +142,7 @@ import org.yaml.snakeyaml.Yaml;
  */
 public class PhysicsEnvironment implements TickEvent
 {
-        private static final Logger log = Logger.getLogger("Aphelion.Shared.Physics");
+        private static final Logger log = Logger.getLogger("aphelion.shared.physics");
         private final boolean DEBUG_LOG;
         private OutputStreamWriter debugLog;
         

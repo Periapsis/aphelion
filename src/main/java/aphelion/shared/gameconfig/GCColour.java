@@ -51,7 +51,7 @@ import org.newdawn.slick.Color;
  */
 public class GCColour extends WrappedValueAbstract
 {
-        private static final Logger log = Logger.getLogger(GCColour.class.getName());
+        private static final Logger log = Logger.getLogger("aphelion.config");
         private int[] colours;
         private int[] frameDuration;
         private boolean tmpDirty;

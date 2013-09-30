@@ -98,7 +98,7 @@ import org.newdawn.slick.Image;
  */
 public class GameLoop
 {
-        private static final Logger log = Logger.getLogger(GameLoop.class.getName());
+        private static final Logger log = Logger.getLogger("aphelion.client");
         
         private ResourceDB resourceDB;
         private TickedEventLoop loop;

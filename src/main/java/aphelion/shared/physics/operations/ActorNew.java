@@ -52,7 +52,7 @@ import java.util.logging.Logger;
  */
 public class ActorNew extends Operation implements ActorNewPublic
 {
-        private static final Logger log = Logger.getLogger("Aphelion.Shared.Physics");
+        private static final Logger log = Logger.getLogger("aphelion.shared.physics");
         
         // this list is only kept here temporary.
         // it will be set as an attribute in every actor.

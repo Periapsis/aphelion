@@ -73,7 +73,7 @@ import org.newdawn.slick.opengl.renderer.SGL;
  */
 public class AsyncTexture implements Texture
 {
-        private static final Logger log = Logger.getLogger(AsyncTexture.class.getName());
+        private static final Logger log = Logger.getLogger("aphelion.client.graphics");
         private static SGL GL = Renderer.get();
         
         public static Texture getLastBind()

@@ -50,7 +50,7 @@ import java.util.logging.Logger;
  */
 public class Deadlock
 {
-        private static final Logger log = Logger.getLogger(Deadlock.class.getName());
+        private static final Logger log = Logger.getLogger("aphelion.eventloop.deadlock");
         private final static LinkedList<TickedEventLoop> eventLoops = new LinkedList<>();
         private static DeadlockThread thread;
         private static boolean gui;

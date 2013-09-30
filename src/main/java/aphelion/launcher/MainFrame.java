@@ -65,7 +65,7 @@ import javax.swing.event.ListSelectionListener;
  */
 public class MainFrame extends JFrame implements PingListener
 {
-        private static final Logger log = Logger.getLogger(MainFrame.class.getName());
+        private static final Logger log = Logger.getLogger("aphelion.launcher");
 
         private ArrayList<ZoneEntry> zones = new ArrayList<>();
         private Ping ping;

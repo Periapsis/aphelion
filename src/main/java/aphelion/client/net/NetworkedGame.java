@@ -70,7 +70,7 @@ import java.util.logging.Logger;
  */
 public class NetworkedGame implements GameListener, TickEvent
 {
-        private static final Logger log = Logger.getLogger(NetworkedGame.class.getName());
+        private static final Logger log = Logger.getLogger("aphelion.net");
         private static final int SEND_MOVE_DELAY = 5; // in ticks
         private static final long CLOCKSYNC_DELAY = 1 * 30 * 1000000000L; // in nano seconds. clock sync also measures lag
         

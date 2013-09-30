@@ -54,7 +54,7 @@ import java.util.logging.Logger;
  */
 public class ConfigSelection
 {
-        private static final Logger log = Logger.getLogger(ConfigSelection.class.getName());
+        private static final Logger log = Logger.getLogger("aphelion.config");
         private final GameConfig config;
         public final Selector selection = new Selector();
         

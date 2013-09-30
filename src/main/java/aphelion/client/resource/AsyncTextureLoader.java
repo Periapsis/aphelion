@@ -82,7 +82,7 @@ import org.newdawn.slick.opengl.LoadableImageData;
  */
 public class AsyncTextureLoader implements LoopEvent
 {
-        private static final Logger log = Logger.getLogger(AsyncTextureLoader.class.getName());
+        private static final Logger log = Logger.getLogger("aphelion.client.graphics");
         
         // TODO: perhaps a better way of expiring items in the cache
         private final HashMap<String, WeakReference<AsyncTexture>> textureCache = new HashMap<String, WeakReference<AsyncTexture>>();

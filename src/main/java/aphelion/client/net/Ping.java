@@ -64,7 +64,7 @@ import org.java_websocket.framing.CloseFrame;
  */
 public class Ping extends Thread
 {
-        private static final Logger log = Logger.getLogger(Ping.class.getName());
+        private static final Logger log = Logger.getLogger("aphelion.net.ping");
         
         private final static int CLIENT_PROTO_VERSION = 1; // use 0 to disable checking
         private final static long PING_INTERVAL_NANO = 5_000_000_000L;

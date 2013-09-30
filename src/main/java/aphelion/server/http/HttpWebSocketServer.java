@@ -75,7 +75,7 @@ import org.java_websocket.server.WebSocketServer.WebSocketServerFactory;
  */
 class HttpWebSocketServer extends WebSocketAdapter implements Runnable
 {
-        private static final Logger log = Logger.getLogger(HttpWebSocketServer.class.getName());
+        private static final Logger log = Logger.getLogger("aphelion.server.http");
         public Thread thread = new Thread(this);
         private Selector selector;
         private ConcurrentLinkedQueue<NewChannel> newChannels = new ConcurrentLinkedQueue<>();

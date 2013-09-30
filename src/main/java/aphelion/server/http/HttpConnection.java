@@ -60,7 +60,7 @@ import java.util.regex.Matcher;
  */
 class HttpConnection
 {
-        private static final Logger log = Logger.getLogger(HttpServer.class.getName());
+        private static final Logger log = Logger.getLogger("aphelion.server.http");
         private final int RAWHEAD_SIZE = 512;
         
         ConnectionStateChangeListener stateChangeListener;
@@ -150,7 +150,7 @@ class HttpConnection
                                         setState(STATE.WAIT_FOR_REQUEST_LINE);
                                 }
 
-                                Logger.getLogger(HttpConnection.class.getName()).log(Level.SEVERE, null, ex);
+                                log.log(Level.SEVERE, null, ex);
                         }
                         
                         if (requestReady)

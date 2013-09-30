@@ -70,7 +70,7 @@ import java.util.logging.Logger;
  */
 public class GameProtocolConnection implements Attachable
 {
-        private static final Logger log = Logger.getLogger(GameProtocolConnection.class.getName());
+        private static final Logger log = Logger.getLogger("aphelion.net");
         
         public static final AttachmentManager attachmentManager = new AttachmentManager();
         private AttachmentData attachment = attachmentManager.getNewDataContainer();

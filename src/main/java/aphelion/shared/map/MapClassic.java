@@ -63,7 +63,7 @@ import org.newdawn.slick.geom.Vector2f;
 
 public class MapClassic implements PhysicsMap
 {
-        private static final Logger log = Logger.getLogger(MapClassic.class.getName());
+        private static final Logger log = Logger.getLogger("aphelion.config");
         
         private ResourceDB resourceDB;
         

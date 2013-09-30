@@ -68,7 +68,7 @@ import org.newdawn.slick.Graphics;
  */
 public class Client
 {
-        private static final Logger log = Logger.getLogger(Client.class.getName());
+        private static final Logger log = Logger.getLogger("aphelion.client");
         private TickedEventLoop loop;
         private ResourceDB resourceDB;
         private AphelionServerThread serverThread;

@@ -53,7 +53,7 @@ import java.util.logging.Logger;
  */
 public class ActorSync extends Operation implements ActorSyncPublic
 {
-        private static final Logger log = Logger.getLogger("Aphelion.Shared.Physics");
+        private static final Logger log = Logger.getLogger("aphelion.shared.physics");
         public GameOperation.ActorSync sync;
         public long sync_tick_offset;
         

@@ -60,7 +60,7 @@ import java.util.logging.Logger;
  */
 public class ActorWeaponFire extends Operation implements ActorWeaponFirePublic
 {
-        private static final Logger log = Logger.getLogger("Aphelion.Shared.Physics");
+        private static final Logger log = Logger.getLogger("aphelion.shared.physics");
         
         private boolean[] usedHint = new boolean[PhysicsEnvironment.MAX_TRAILING_STATES];
         

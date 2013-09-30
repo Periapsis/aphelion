@@ -53,7 +53,7 @@ import java.util.logging.Logger;
  */
 public class AphelionServerThread extends Thread
 {
-        private static final Logger log = Logger.getLogger(AphelionServerThread.class.getName());
+        private static final Logger log = Logger.getLogger("aphelion.server");
         private ServerMain serverMain;
         private int listenPort;
         

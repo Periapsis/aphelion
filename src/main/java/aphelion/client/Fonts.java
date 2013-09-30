@@ -20,7 +20,7 @@ import org.newdawn.slick.font.effects.ColorEffect;
 // temporary until nifty is implemented
 public class Fonts 
 {
-        private static final Logger log = Logger.getLogger(Fonts.class.getName());
+        private static final Logger log = Logger.getLogger("aphelion.client.graphics");
         
 	public static UnicodeFont player_name; // http://iconian.com/ TODO: credit
         public static UnicodeFont normal;        
