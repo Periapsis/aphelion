@@ -95,8 +95,9 @@ public class RollingHistorySerialInteger
                                 return -1;
                         }
                         
-                        if (dirty && dirtySince_tick == history_tick)
+                        if (dirty && dirtySince_tick == history_tick - HISTORY_LENGTH + 1)
                         {
+                                // Really have to update now
                                 updateDirty();
                         }
                         

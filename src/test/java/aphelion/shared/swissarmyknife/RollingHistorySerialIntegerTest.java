@@ -56,6 +56,8 @@ public class RollingHistorySerialIntegerTest
         {
                 RollingHistorySerialInteger hist = new RollingHistorySerialInteger(100, 4, 2);
                 
+                assertEquals(100, hist.getMostRecentTick());
+                
                 assertEquals(0, hist.get(100));
                 
                 hist.setRelativeValue(0, 100, 10);
@@ -69,9 +71,13 @@ public class RollingHistorySerialIntegerTest
                 // test setter IDs
                 hist.setRelativeValue(0, 102, 5);
                 hist.setRelativeValue(0, 102, 5);
+                assertEquals(5, hist.getSetterValue(0, 102));
                 assertEquals(35, hist.get(102));
                 hist.setAbsoluteValue(1, 102, 1);
+                assertEquals(5, hist.getSetterValue(0, 102));
+                assertEquals(1, hist.getSetterValue(1, 102));
                 assertEquals(6, hist.get(102));
+                
                 
                 hist.setRelativeValue(0, 103, 40);
                 assertEquals(46, hist.get(103));
@@ -101,13 +107,33 @@ public class RollingHistorySerialIntegerTest
                 assertEquals(22, hist.get(110));
                 assertEquals(23, hist.get(111));
                 
-                // gap greater than history_length
-                hist.setRelativeValue(0, 200, 1);
-                assertEquals(24, hist.get(200));
-                assertEquals(23, hist.get(199));
-                assertEquals(23, hist.get(198));
-                assertEquals(23, hist.get(197));
+                
+                hist.setRelativeValue(0, 120, 1);
+                hist.setRelativeValue(0, 119, 1); // go a step backwards, this should not affect dirty
+                hist.setRelativeValue(0, 200, 1); // gap greater than history_length, without a get() inbetween
+                
+                //These should be ignored because they are too old
+                hist.setRelativeValue(0, 140, 8394200);
+                hist.setAbsoluteValue(0, 141, 438239);
+                hist.setAbsoluteOverrideValue(0, 142, 39273);
+                hist.addAbsoluteValue(0, 143, 2020528);
+                hist.addRelativeValue(0, 144, 49204382);
+                hist.setMinimum(145, 10000000);
+                hist.setMaximum(146, -10000000);
+                
+                assertTrue(hist.hasValueFor(200));
+                assertTrue(hist.hasValueFor(199));
+                assertTrue(hist.hasValueFor(198));
+                assertTrue(hist.hasValueFor(197));
+                assertFalse(hist.hasValueFor(196));
+                assertFalse(hist.hasValueFor(195));
+                assertEquals(200, hist.getMostRecentTick());
+                assertEquals(26, hist.get(200));
+                assertEquals(25, hist.get(199));
+                assertEquals(25, hist.get(198));
+                assertEquals(25, hist.get(197));
                 assertEquals(0, hist.get(196)); // too old
+                assertEquals(0, hist.getSetterValue(0, 120)); // too old
 
                 
                 hist.setMinimum(199, 1000);
@@ -118,7 +144,18 @@ public class RollingHistorySerialIntegerTest
                 assertEquals(5, hist.get(200));
                 hist.setMinimum(199, 0);
                 hist.setMaximum(200, 100000);
-                assertEquals(24, hist.get(200));
+                assertEquals(26, hist.get(200));
+                
+                
+                hist.setAbsoluteValue(0, 201, 25234);
+                hist.setAbsoluteOverrideValue(1, 201, -50000);
+                hist.addAbsoluteValue(1, 201, 12301023); // should be ignored
+                hist.addRelativeValue(1, 201, 219420220); // should be ignored
+                assertEquals(-50000, hist.get(201));
+                
+                hist.setRelativeValue(0, 202, 1);
+                hist.addAbsoluteValue(0, 202, 5);
+                assertEquals(6, hist.get(202));
         }
         
         @Test
