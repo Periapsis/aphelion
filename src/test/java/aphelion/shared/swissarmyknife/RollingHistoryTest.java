@@ -57,6 +57,7 @@ public class RollingHistoryTest
                 assertTrue(a.setHistory(7, -2) >= 0);
                 assertTrue(a.setHistory(6, -3) < 0); // too far in the past, can not be set
                 assertNull(a.get(-3));
+                assertNull(a.get(11));
                 assertEquals((Integer) (-2), a.get(7));
                 assertEquals((Integer) (-1), a.get(8));
                 assertEquals((Integer) 0, a.get(9));
@@ -75,6 +76,29 @@ public class RollingHistoryTest
                 assertNull(a.get(14)); // not set
                 assertEquals((Integer) 5, a.get(15));
                 assertEquals((Integer) 6, a.get(16));
+                
+                assertEquals((Integer) 6, a.getRelative(0));
+                assertEquals((Integer) 5, a.getRelative(1));
+                
+                try
+                {
+                        a.getRelative(-1);
+                        assertTrue(false);
+                }
+                catch(IllegalArgumentException ex)
+                {
+                }
+                
+                try
+                {
+                        a.getRelative(4);
+                        assertTrue(false);
+                }
+                catch(IllegalArgumentException ex)
+                {
+                }
+                
+                assertNotNull(a.toString());
         }
         
         @Test
