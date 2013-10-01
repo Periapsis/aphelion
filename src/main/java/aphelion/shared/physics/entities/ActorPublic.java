@@ -62,6 +62,7 @@ public interface ActorPublic
 {
         boolean hasReference();
         boolean isDeleted();
+        int getStateId();
         int getPid();
         boolean getPosition(PhysicsShipPosition pos);
         boolean getHistoricPosition(PhysicsShipPosition pos, long tick, boolean lookAtOtherStates);

@@ -623,6 +623,12 @@ public final class Projectile extends MapEntity implements ProjectilePublic
                         actor.applyEmp(tick, getSplashDamage(actor, damage, splash, splashSq));
                 }
         }
+
+        @Override
+        public int getStateId()
+        {
+                return state.id;
+        }
         
         @Override
         public boolean getPosition(Position pos)

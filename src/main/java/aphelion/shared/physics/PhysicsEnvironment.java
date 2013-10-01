@@ -382,7 +382,7 @@ public class PhysicsEnvironment implements TickEvent
         /** Reset all states to the given state and re-simulate.
          * @param stateid The state to reset lower (more recent) states to
          */
-        private void timewarp(int stateid)
+        public void timewarp(int stateid)
         {
                 lastTimewarp_tick = this.tick_now;
                 long start = System.nanoTime();
@@ -681,6 +681,26 @@ public class PhysicsEnvironment implements TickEvent
                 state = trailingStates[stateid];
                 
                 return (Iterator<ProjectilePublic>) (Object) state.projectiles.iteratorReadOnly();
+        }
+        
+        @SuppressWarnings("unchecked")
+        public Iterable<ProjectilePublic> projectileIterable(int stateid)
+        {
+                if (stateid < 0 || stateid >= TRAILING_STATES)
+                {
+                        throw new IllegalArgumentException("Invalid state");
+                }
+                
+                final State state = trailingStates[stateid];
+                
+                return new Iterable<ProjectilePublic>() {
+
+                        @Override
+                        public Iterator<ProjectilePublic> iterator()
+                        {
+                                return (Iterator<ProjectilePublic>) (Object) state.projectiles.iteratorReadOnly();
+                        }
+                };
         }
         
         /** Loop over all the operations in the todo list of a state.

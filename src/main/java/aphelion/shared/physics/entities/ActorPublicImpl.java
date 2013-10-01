@@ -159,6 +159,12 @@ public class ActorPublicImpl implements ActorPublic
                 
                 return actor.removed;
         }
+
+        @Override
+        public int getStateId()
+        {
+                return state.id;
+        }
         
         @Override
         public int getPid()

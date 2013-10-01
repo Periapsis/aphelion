@@ -59,6 +59,8 @@ public interface ProjectilePublic extends Attachable
 {
         boolean isRemoved();
         
+        int getStateId();
+        
         int getProjectileIndex();
         /** Iterate over the projectiles that were triggered by the same event as this one. 
          * (including this instance)
