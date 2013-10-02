@@ -668,6 +668,21 @@ public class PhysicsEnvironment implements TickEvent
                 return new ActorIterator(state.actors.iterator(), state);
         }
         
+        public int getActorCount(int stateid)
+        {
+                State state;
+        
+                if (stateid < 0 || stateid >= TRAILING_STATES)
+                {
+                        throw new IllegalArgumentException("Invalid state");
+                }
+                
+                state = trailingStates[stateid];
+                
+                assert state.actors.size() == state.actorsList.size();
+                return state.actors.size();
+        }
+        
         @SuppressWarnings("unchecked")
         public Iterator<ProjectilePublic> projectileIterator(int stateid)
         {
