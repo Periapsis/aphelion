@@ -76,17 +76,17 @@ public class State
         public long tick_now;
         public boolean needTimewarpToThisState;
         
-        public final TIntObjectHashMap<Actor> actors = new TIntObjectHashMap<>(ACTOR_INITIALCAPACITY);; // actor id -> entity
-        public final ArrayList<Actor> actorsList = new ArrayList<>(ACTOR_INITIALCAPACITY);;
+        public final TIntObjectHashMap<Actor> actors = new TIntObjectHashMap<>(ACTOR_INITIALCAPACITY); // actor id -> entity
+        public final ArrayList<Actor> actorsList = new ArrayList<>(ACTOR_INITIALCAPACITY);
         
-        public LinkedListHead<Projectile> projectiles = new LinkedListHead<>();;
-        public final LinkedListHead<Operation> history = new LinkedListHead<>();; // ordered by tick ascending
-        public final LinkedListHead<Operation> todo = new LinkedListHead<>();; // ordered by tick ascending
+        public LinkedListHead<Projectile> projectiles = new LinkedListHead<>();
+        public final LinkedListHead<Operation> history = new LinkedListHead<>(); // ordered by tick ascending
+        public final LinkedListHead<Operation> todo = new LinkedListHead<>(); // ordered by tick ascending
         
         public final GameConfig config = new GameConfig();
         public final ConfigSelection globalConfig = config.newSelection();
         public long config_lastModification = 0; // edge case: 0 is used as a "not set" value here. however 0 is also a valid tick
-        public HashSet<Integer> unknownActorRemove = new HashSet<>();; // Assumes PIDs are unique. ActorNew is never called twice with the same PID.
+        public HashSet<Integer> unknownActorRemove = new HashSet<>(); // Assumes PIDs are unique. ActorNew is never called twice with the same PID.
         
         State(PhysicsEnvironment env, int state_id, long delay, boolean allowHints, boolean isLast)
         {
@@ -384,6 +384,8 @@ public class State
                                 if (actorOther == null)
                                 {
                                         actorIt.remove();
+                                        boolean removed = this.actorsList.remove(actorMine);
+                                        assert removed;
                                         continue;
                                 }
 
