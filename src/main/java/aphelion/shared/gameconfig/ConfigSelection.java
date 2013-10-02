@@ -41,11 +41,7 @@ package aphelion.shared.gameconfig;
 
 import aphelion.shared.resource.ResourceDB;
 import java.lang.ref.WeakReference;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.logging.Logger;
 
 /**
@@ -234,22 +230,45 @@ public class ConfigSelection
          */
         public void resolveValue(WrappedValueAbstract value)
         {
-                // rules is ordered by highest specificity first
-                for (Rule rule : config.rules)
+                resolveValue(value, 0);
+        }
+        
+        public void resolveValue(WrappedValueAbstract value, int n)
+        {
+                try
                 {
-                        if (rule.selector.selectorAppliesToSelection(this.selection))
+                        // "rules" is ordered by highest specificity first
+                        for (Rule rule : config.rules)
                         {
-                                Object yamlValue = rule.attributes.get(value.key);
-                                if (yamlValue != null)
+                                if (rule.selector.selectorAppliesToSelection(this.selection))
                                 {
-                                        value.newValue(yamlValue);
-                                        
-                                        return;
+                                        Object yamlValue = rule.attributes.get(value.key);
+                                        if (yamlValue != null)
+                                        {
+                                                value.newValue(yamlValue); // might fire an event listener!
+
+                                                return;
+                                        }
                                 }
                         }
+
+                        value.newValue(null);
                 }
-                
-                value.newValue(null);
+                catch (ConcurrentModificationException ex)
+                {
+                        // An event listener might have called GameConfig.addRule()
+                        // try again.
+                        
+                        // Note: because we are not dealing with threads in this code,
+                        // it is safe to rely ConcurrentModificationException
+                        
+                        if (n == 100000)
+                        {
+                                throw new Error("Too many concurrent modifications. Probably caused by an infinite callback loop");
+                        }
+                        
+                        resolveValue(value, n + 1);
+                }
         }
         
         /** This method is called whenever the values returned from this object need updating.
@@ -258,29 +277,52 @@ public class ConfigSelection
          */
         public void resolveAllValues()
         {
-                Iterator <List<WeakReference<WrappedValueAbstract>>> it = usedValues.values().iterator();
-                while (it.hasNext())
+                resolveAllValues(0);
+        }
+        
+        private void resolveAllValues(int n)
+        {
+                try
                 {
-                        List<WeakReference<WrappedValueAbstract>> list = it.next();
-                        
-                        Iterator<WeakReference<WrappedValueAbstract>> listIt = list.iterator();
-                        
-                        while (listIt.hasNext())
+                        Iterator <List<WeakReference<WrappedValueAbstract>>> it = usedValues.values().iterator();
+                        while (it.hasNext())
                         {
-                                WrappedValueAbstract value = listIt.next().get();
-                                if (value == null)
-                                {
-                                        listIt.remove();
-                                        continue;
-                                }
-                                
-                                resolveValue(value);
-                        }
+                                List<WeakReference<WrappedValueAbstract>> list = it.next();
 
-                        if (list.isEmpty())
-                        {
-                                it.remove();
+                                Iterator<WeakReference<WrappedValueAbstract>> listIt = list.iterator();
+
+                                while (listIt.hasNext())
+                                {
+                                        WrappedValueAbstract value = listIt.next().get();
+                                        if (value == null)
+                                        {
+                                                listIt.remove();
+                                                continue;
+                                        }
+
+                                        resolveValue(value);
+                                }
+
+                                if (list.isEmpty())
+                                {
+                                        it.remove();
+                                }
                         }
+                }
+                catch (ConcurrentModificationException ex)
+                {
+                        // An event listener might have called getValue()
+                        // try again.
+                        
+                        // Note: because we are not dealing with threads in this code,
+                        // it is safe to rely ConcurrentModificationException
+                        
+                        if (n == 100000)
+                        {
+                                throw new Error("Too many concurrent modifications. Probably caused by an infinite callback loop");
+                        }
+                        
+                        resolveAllValues(n + 1);
                 }
         }
 

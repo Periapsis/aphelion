@@ -44,11 +44,7 @@ import aphelion.shared.swissarmyknife.LinkedListEntry;
 import aphelion.shared.swissarmyknife.LinkedListHead;
 import java.io.InputStream;
 import java.lang.ref.WeakReference;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.yaml.snakeyaml.Yaml;
@@ -269,17 +265,40 @@ public class GameConfig implements TickEvent
         
         public void applyChanges()
         {
-                Iterator <WeakReference<ConfigSelection>> it = usedSelections.iterator();
-                while (it.hasNext())
+                applyChanges(0);
+        }
+        
+        private void applyChanges(int n)
+        {
+                try
                 {
-                        ConfigSelection selection = it.next().get();
-                        if (selection == null)
+                        Iterator <WeakReference<ConfigSelection>> it = usedSelections.iterator();
+                        while (it.hasNext())
                         {
-                                it.remove();
-                                continue;
-                        }
+                                ConfigSelection selection = it.next().get();
+                                if (selection == null)
+                                {
+                                        it.remove();
+                                        continue;
+                                }
 
-                        selection.resolveAllValues();
+                                selection.resolveAllValues();
+                        }
+                }
+                catch (ConcurrentModificationException ex)
+                {
+                        // An event listener might have called newSelection()
+                        // try again.
+                        
+                        // Note: because we are not dealing with threads in this code,
+                        // it is safe to rely ConcurrentModificationException
+                        
+                        if (n == 100000)
+                        {
+                                throw new Error("Too many concurrent modifications. Probably caused by an infinite callback loop");
+                        }
+                        
+                        applyChanges(n + 1);
                 }
         }
         
