@@ -591,6 +591,11 @@ public final class Projectile extends MapEntity implements ProjectilePublic
                                 {
                                         actor.dead = true;
                                         actor.spawnAt_tick = tick + actor.respawnDelay.get();
+                                        if (actor.spawnAt_tick <= tick)
+                                        {
+                                                // can not be respawned in this tick (or in the past)
+                                                actor.spawnAt_tick = tick + 1;
+                                        }
                                         killed.add(actor.pid);
                                 }
                         }

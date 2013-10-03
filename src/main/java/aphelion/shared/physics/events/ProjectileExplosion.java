@@ -217,6 +217,11 @@ public class ProjectileExplosion extends Event implements ProjectileExplosionPub
                                 hist.killed_pids.add(actorHit.pid);
                                 actorHit.dead = true;
                                 actorHit.spawnAt_tick = tick + actorHit.respawnDelay.get();
+                                if (actorHit.spawnAt_tick <= tick)
+                                {
+                                        // can not be respawned in this tick (or in the past)
+                                        actorHit.spawnAt_tick = tick + 1;
+                                }
                         }
 
                         actorHit.applyEmp(tick, explodedProjectile.cfg(explodedConfig.projectile_empTime, tick));
