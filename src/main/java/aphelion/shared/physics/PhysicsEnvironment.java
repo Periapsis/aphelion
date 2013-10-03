@@ -146,9 +146,14 @@ public class PhysicsEnvironment implements TickEvent
         private final boolean DEBUG_LOG;
         private OutputStreamWriter debugLog;
         
+        /** The maximum amount of trailing states for both client and server. */
         public static final int MAX_TRAILING_STATES = 8;
-        // each state trail this much time (tick) behind the next state; 8 is a power of 2 which gives a small speed benefit
+        /** Each state trails this much time (tick) behind the next state. 
+         * 16 is a power of 2 which gives a small speed benefit */
         public static final int TRAILING_STATE_DELAY = 16;
+        
+        /** The total amount of ticks history is kept for. */
+        public static final int TOTAL_HISTORY = MAX_TRAILING_STATES * TRAILING_STATE_DELAY;
         
         public final boolean server; // true = server; false = client
         public final int MAX_OPERATION_AGE; // do not accept operations that are older than this many ticks

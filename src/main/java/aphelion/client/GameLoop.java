@@ -177,7 +177,7 @@ public class GameLoop
                 for (LoadYamlTask.Return ret : yamlGameConfigTemp)
                 {
                         physicsEnv.loadConfig(
-                                physicsEnv.getTick() - physicsEnv.MAX_OPERATION_AGE, 
+                                physicsEnv.getTick() - PhysicsEnvironment.TOTAL_HISTORY,
                                 ret.fileIdentifier, 
                                 ret.yamlDocuments);
                 }

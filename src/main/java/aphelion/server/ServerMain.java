@@ -99,7 +99,7 @@ public class ServerMain implements LoopEvent
                 
                 for (LoadYamlTask.Return ret : gameConfig)
                 {
-                        physicsEnv.loadConfig(physicsEnv.getTick() - physicsEnv.MAX_OPERATION_AGE, ret.fileIdentifier, ret.yamlDocuments);
+                        physicsEnv.loadConfig(physicsEnv.getTick() - PhysicsEnvironment.TOTAL_HISTORY, ret.fileIdentifier, ret.yamlDocuments);
                 }
                 gameConfig = null;
                 
