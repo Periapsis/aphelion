@@ -26,3 +26,6 @@ mvn install:install-file -Dfile=slick.jar -DgroupId=slick -DartifactId=slick -Dv
 
 ## Subspace
 The first versions of this game will be based around the existing game subspace. However aphelion will not be a drop-in replacement, the architecture of that game conflicts with our goals. Most or all of the gameplay of subspace will be supported, but will be implemented in different ways.
+
+## License
+This project is released under the GNU Affero General Public License version 3 with classpath exception. The classpath exception gives you permission to link this library/application with independent modules to produce an executable, regardless of the license terms of these independent modules (see LICENSE.txt for more details). Without this exception the AGPL license would force you to use a GPL compatible license for any module that is merely linked with or loaded by aphelion.
