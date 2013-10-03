@@ -75,6 +75,7 @@ public class PhysicsEnvironmentTest extends PhysicsTest
         }
 
         @Test
+        @Ignore
         public void testActorCreation()
         {
                 
@@ -115,6 +116,7 @@ public class PhysicsEnvironmentTest extends PhysicsTest
         }
 
         @Test
+        @Ignore
         public void testActorMovement()
         {
                 // todo: break apart test case
@@ -293,6 +295,7 @@ public class PhysicsEnvironmentTest extends PhysicsTest
         }
 
         @Test
+        @Ignore
         public void testMoveConsistency1()
         {
                 // Test multiple move's received in the past (but still in order)
@@ -326,6 +329,7 @@ public class PhysicsEnvironmentTest extends PhysicsTest
         }
 
         @Test
+        @Ignore
         public void testMoveConsistency2()
         {
                 // Test multiple move's received in the past, out of order
@@ -362,6 +366,7 @@ public class PhysicsEnvironmentTest extends PhysicsTest
         }
         
         @Test
+        @Ignore
         public void testInvalidOperationOrder()
         {
                 env.actorWarp(1, 1, false, 1000, 1000, 100, 100, 0);
@@ -380,6 +385,7 @@ public class PhysicsEnvironmentTest extends PhysicsTest
         }
         
         @Test
+        @Ignore
         public void testLateActorRemove()
         {
                 // these tick values are so long ago, they are not part of any trailing state
@@ -390,6 +396,7 @@ public class PhysicsEnvironmentTest extends PhysicsTest
         }
         
         @Test
+        @Ignore
         public void testWeaponFire()
         {
                 env.actorNew(0, 1, "Player 1", 1234, "Warbird");
@@ -430,6 +437,7 @@ public class PhysicsEnvironmentTest extends PhysicsTest
         }
         
         @Test
+        @Ignore
         public void testWeaponFireConsistency()
         {
                 env.actorNew(0, 1, "Player 1", 1234, "Warbird");

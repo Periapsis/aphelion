@@ -164,7 +164,8 @@ public class TimewarpTest extends PhysicsTest
                 {
                         List<Object> yamlDocuments = GameConfig.loadYaml(""
                                 + "- weapon-slot-gun: test-noreload\n"
-                                + "  weapon-slot-bomb: test-reload\n" 
+                                + "  weapon-slot-bomb: test-reload\n"
+                                + "  projectile-expiration-ticks: 100\n"
                                 
                                 + "- selector: {weapon: test-noreload}\n"
                                 + "  weapon-switch-delay: 0\n"
@@ -172,7 +173,7 @@ public class TimewarpTest extends PhysicsTest
                                 + "- selector: {weapon: test-reload}\n"
                                 + "  weapon-switch-delay: 4\n"
                         );
-                        env.loadConfig(env.getTick() - env.MAX_OPERATION_AGE, "test", yamlDocuments);
+                        env.loadConfig(env.getTick() - PhysicsEnvironment.TOTAL_HISTORY, "test", yamlDocuments);
                 }
                 catch (Exception ex)
                 {
@@ -266,6 +267,23 @@ public class TimewarpTest extends PhysicsTest
 
                         assertEquals(3, count);
                 }
+                
+                // expire the projectiles
+                while(env.getTick(env.TRAILING_STATES-1) < t + 3 + 100 + PhysicsEnvironment.TOTAL_HISTORY)
+                {
+                        env.tick();
+                }
+                
+                {
+                        int count = 0;
+                        for (ProjectilePublic proj : env.projectileIterable(0))
+                        {
+                                // this includes soft deleted projectiles
+                                ++count;
+                        }
+
+                        assertEquals(0, count);
+                }
         }
         
         private void testExplosionEventShort_assertEvent(int state)
@@ -309,7 +327,7 @@ public class TimewarpTest extends PhysicsTest
                                 + "  projectile-damage: 2000\n"
                                 + "  ship-energy: 1500\n"
                         );
-                        env.loadConfig(env.getTick() - env.MAX_OPERATION_AGE, "test", yamlDocuments);
+                        env.loadConfig(env.getTick() - PhysicsEnvironment.TOTAL_HISTORY, "test", yamlDocuments);
                 }
                 catch (Exception ex)
                 {
@@ -391,7 +409,7 @@ public class TimewarpTest extends PhysicsTest
                                 + "  projectile-damage: 2000\n"
                                 + "  ship-energy: 1500\n"
                         );
-                        env.loadConfig(env.getTick() - env.MAX_OPERATION_AGE, "test", yamlDocuments);
+                        env.loadConfig(env.getTick() - PhysicsEnvironment.TOTAL_HISTORY, "test", yamlDocuments);
                 }
                 catch (Exception ex)
                 {

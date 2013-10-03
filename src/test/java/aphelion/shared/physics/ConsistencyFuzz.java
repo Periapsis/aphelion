@@ -114,7 +114,7 @@ public class ConsistencyFuzz
 
         private ConfigSelection applyTestSettings(PhysicsEnvironment env)
         {
-                env.loadConfig(env.getTick() - env.MAX_OPERATION_AGE, "test", yamlDocuments);
+                env.loadConfig(env.getTick() - PhysicsEnvironment.TOTAL_HISTORY, "test", yamlDocuments);
                 return env.newConfigSelection(0);
         }
 

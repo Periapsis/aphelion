@@ -216,7 +216,7 @@ public class State
                                 // Can we really remove the projectile now?
                                 // do not bother if the projectile index is not 0, 
                                 // it has already been checked
-                                if (projectile.projectile_index != 0
+                                if (projectile.projectile_index == 0
                                     && env.tick_now - projectile.removedAt_tick > env.TRAILING_STATES * PhysicsEnvironment.TRAILING_STATE_DELAY)
                                 {
                                         boolean activeSomewhere = false;
