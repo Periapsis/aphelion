@@ -1101,7 +1101,13 @@ public class PhysicsEnvironment implements TickEvent
                 event.added = true;
                 eventHistory.append(event.link);
         }
-        
+
+        /** Return the next event that has occured. 
+         * This event will never be returned again.
+         * If this method is not called regurarly you may miss events because events
+         * are discarded after haven been executed in every state. (see Event.isOld())
+         * @return 
+         */
         public EventPublic nextEvent()
         {
                 if (this.eventHistory_lastSeen == null)
@@ -1126,6 +1132,33 @@ public class PhysicsEnvironment implements TickEvent
                 }
                 
                 return (EventPublic) eventHistory_lastSeen.data;
+        }
+        
+        /** Iterate over all events that have not yet been discarded.
+         * An event may be discarded if it has been executed in every state.
+         * (see Event.isOld())
+         * @return 
+         */
+        public Iterator<EventPublic> eventIterator()
+        {
+                return (Iterator<EventPublic>) (Object) this.eventHistory.iteratorReadOnly();
+        }
+        
+        /** Iterate over all events that have not yet been discarded.
+         * An event may be discarded if it has been executed in every state.
+         * (see Event.isOld())
+         * @return 
+         */
+        public Iterable<EventPublic> eventIterable()
+        {
+                return new Iterable<EventPublic>()
+                {
+                        @Override
+                        public Iterator<EventPublic> iterator()
+                        {
+                                return (Iterator<EventPublic>) (Object) eventHistory.iteratorReadOnly();
+                        }
+                };
         }
         
         public GCInteger getGlobalConfigInteger(int stateid, String name)

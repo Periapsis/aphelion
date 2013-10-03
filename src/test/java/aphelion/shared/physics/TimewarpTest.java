@@ -9,6 +9,9 @@ package aphelion.shared.physics;
 import aphelion.shared.gameconfig.GameConfig;
 import static aphelion.shared.physics.PhysicsEnvironmentTest.MOVE_UP;
 import aphelion.shared.physics.entities.ProjectilePublic;
+import aphelion.shared.physics.events.pub.EventPublic;
+import aphelion.shared.physics.events.pub.ProjectileExplosionPublic;
+import aphelion.shared.physics.valueobjects.PhysicsPoint;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -263,5 +266,170 @@ public class TimewarpTest extends PhysicsTest
 
                         assertEquals(3, count);
                 }
+        }
+        
+        private void testExplosionEventShort_assertEvent(int state)
+        {
+                int events = 0;
+                for (EventPublic e : env.eventIterable())
+                {
+                        ++events;
+                        if (e instanceof ProjectileExplosionPublic)
+                        {
+                                ProjectileExplosionPublic ev = (ProjectileExplosionPublic) e;
+                                assert ev.hasOccured(state);
+                                assertEquals(ACTOR_FIRST, ev.getFireActor(state));
+                                assertEquals(ACTOR_SECOND, ev.getHitActor(state));
+                                assertEquals(4, ev.getTick(state));
+                                
+                                PhysicsPoint pos = new PhysicsPoint();
+                                ev.getPosition(state, pos);
+                                assertPointEquals(45664, 90, pos);
+                        }
+                        else
+                        {
+                                assert false;
+                        }
+                }
+                
+                assertEquals(1, events);
+        }
+        
+        @Test
+        public void testExplosionEventShort()
+        {
+                // Short time between fire and explosion (less than TRAILING_STATE_DELAY)
+                try
+                {
+                        List<Object> yamlDocuments = GameConfig.loadYaml(""
+                                + "- weapon-projectiles: 1\n"
+                                + "  projectile-hit-ship: true\n"
+                                + "  projectile-angle-relative: true\n"
+                                + "  projectile-speed: 20000\n"
+                                + "  projectile-damage: 2000\n"
+                                + "  ship-energy: 1500\n"
+                        );
+                        env.loadConfig(env.getTick() - env.MAX_OPERATION_AGE, "test", yamlDocuments);
+                }
+                catch (Exception ex)
+                {
+                        throw new Error(ex);
+                }
+                
+                
+                env.actorNew(1, ACTOR_FIRST, "Bla", 1234, "warbird");
+                env.actorWarp(1, ACTOR_FIRST, false, 1000, 90, 0, 0, PhysicsEnvironment.ROTATION_1_4TH);
+                env.actorNew(1, ACTOR_SECOND, "Bl2a", 4321, "warbird");
+                env.actorWarp(1, ACTOR_SECOND, false, 60000, 90, 0, 0, 0);
+                
+                env.actorWeapon(2, ACTOR_FIRST, WEAPON_SLOT.GUN, false, 0, 0, 0 , 0, 0);
+                
+                env.tick(); // 1
+                env.tick(); // 2
+                env.tick(); // 3
+                env.tick(); // 4, should hit at this tick
+                testExplosionEventShort_assertEvent(0);
+                env.timewarp(1);
+                testExplosionEventShort_assertEvent(0);
+                
+                while (env.getTick() < PhysicsEnvironment.TRAILING_STATE_DELAY + 4)
+                {
+                        env.tick();
+                }
+                
+                testExplosionEventShort_assertEvent(0);
+                testExplosionEventShort_assertEvent(1);
+                env.timewarp(1);
+                testExplosionEventShort_assertEvent(0);
+                testExplosionEventShort_assertEvent(1);
+                env.timewarp(env.TRAILING_STATES-1);
+                testExplosionEventShort_assertEvent(0);
+                testExplosionEventShort_assertEvent(1);
+                
+                
+                // todo also test time between fire and explosion > TRAILING_STATE_DELAY
+        }
+        
+        private void testExplosionEventLong_assertEvent(int state)
+        {
+                int events = 0;
+                for (EventPublic e : env.eventIterable())
+                {
+                        ++events;
+                        if (e instanceof ProjectileExplosionPublic)
+                        {
+                                ProjectileExplosionPublic ev = (ProjectileExplosionPublic) e;
+                                assert ev.hasOccured(state);
+                                assertEquals(ACTOR_FIRST, ev.getFireActor(state));
+                                assertEquals(ACTOR_SECOND, ev.getHitActor(state));
+                                assertEquals(21, ev.getTick(state));
+                                
+                                PhysicsPoint pos = new PhysicsPoint();
+                                ev.getPosition(state, pos);
+                                assertPointEquals(385664, 90, pos);
+                        }
+                        else
+                        {
+                                assert false;
+                        }
+                }
+                
+                assertEquals(1, events);
+        }
+        
+        @Test
+        public void testExplosionEventLong()
+        {
+                // Long time between fire and explosion (more than TRAILING_STATE_DELAY)
+                try
+                {
+                        List<Object> yamlDocuments = GameConfig.loadYaml(""
+                                + "- weapon-projectiles: 1\n"
+                                + "  projectile-hit-ship: true\n"
+                                + "  projectile-angle-relative: true\n"
+                                + "  projectile-speed: 20000\n"
+                                + "  projectile-damage: 2000\n"
+                                + "  ship-energy: 1500\n"
+                        );
+                        env.loadConfig(env.getTick() - env.MAX_OPERATION_AGE, "test", yamlDocuments);
+                }
+                catch (Exception ex)
+                {
+                        throw new Error(ex);
+                }
+                
+                
+                env.actorNew(1, ACTOR_FIRST, "Bla", 1234, "warbird");
+                env.actorWarp(1, ACTOR_FIRST, false, 1000, 90, 0, 0, PhysicsEnvironment.ROTATION_1_4TH);
+                env.actorNew(1, ACTOR_SECOND, "Bl2a", 4321, "warbird");
+                env.actorWarp(1, ACTOR_SECOND, false, 400000, 90, 0, 0, 0);
+                
+                env.actorWeapon(2, ACTOR_FIRST, WEAPON_SLOT.GUN, false, 0, 0, 0 , 0, 0);
+                
+                // modify this test case if TRAILING_STATE_DELAY changes
+                assert PhysicsEnvironment.TRAILING_STATE_DELAY == 16; 
+                
+                while (env.getTick() < 22)
+                {
+                        env.tick();
+                }
+                
+                testExplosionEventLong_assertEvent(0);
+                env.timewarp(1);
+                testExplosionEventLong_assertEvent(0);
+                
+                while (env.getTick() < PhysicsEnvironment.TRAILING_STATE_DELAY + 22)
+                {
+                        env.tick();
+                }
+                
+                testExplosionEventLong_assertEvent(0);
+                testExplosionEventLong_assertEvent(1);
+                env.timewarp(1);
+                testExplosionEventLong_assertEvent(0);
+                testExplosionEventLong_assertEvent(1);
+                env.timewarp(env.TRAILING_STATES-1);
+                testExplosionEventLong_assertEvent(0);
+                testExplosionEventLong_assertEvent(1);
         }
 }

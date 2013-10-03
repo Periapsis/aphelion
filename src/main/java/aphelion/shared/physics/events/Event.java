@@ -49,10 +49,11 @@ import aphelion.shared.swissarmyknife.LinkedListEntry;
  */
 public abstract class Event implements EventPublic
 {
-        public final LinkedListEntry<Event> link; // This is used in the linkedlist for PhysicsEnvironment.eventHistory
+        public final LinkedListEntry<Event> link;
         
         /** if true, this event has been added to PhysicsEnvironment.
-         * Should only be modified by PhysicsEnvironment
+         * This is to prevent duplicates. 
+         * addEvent() should be called whenever an event is executed.
          */
         public boolean added = false; 
         
@@ -80,5 +81,4 @@ public abstract class Event implements EventPublic
         abstract public boolean isOld(long removeOlderThan_tick);
         
         abstract public void resetExecutionHistory(State state, State resetTo);
-        
 }

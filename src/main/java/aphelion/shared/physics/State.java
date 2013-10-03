@@ -357,16 +357,16 @@ public class State
          * (but not operations) to this one.
          */
         @SuppressWarnings("unchecked")
-        void resetTo(State other)
+        void resetTo(State older)
         {
-                assert other.tick_now <= this.tick_now;
-                this.tick_now = other.tick_now;
+                assert older.tick_now <= this.tick_now;
+                this.tick_now = older.tick_now;
 
-                if (config_lastModification != other.config_lastModification)
+                if (config_lastModification != older.config_lastModification)
                 {
                         // A config change is very rare, so do not waste time if it has not been modified.
-                        config.resetTo(other.config);
-                        config_lastModification = other.config_lastModification;
+                        config.resetTo(older.config);
+                        config_lastModification = older.config_lastModification;
                         config.applyChanges();
                 }
                 
@@ -378,7 +378,7 @@ public class State
                                 actorIt.advance();
 
                                 Actor actorMine = actorIt.value();
-                                Actor actorOther = other.actors.get(actorIt.key());
+                                Actor actorOther = older.actors.get(actorIt.key());
 
                                 // actor in my state does not exist in the other state, so remove it
                                 if (actorOther == null)
@@ -394,9 +394,19 @@ public class State
                 }
 
                 // reset actors that are in the other state, but not in mine
-                if (this.actors.size() != other.actors.size())
+                if (this.actors.size() != older.actors.size())
                 {
-                        TIntObjectIterator<Actor> actorIt = other.actors.iterator();
+                        // NOTE: At the moment this branch never executes.
+                        // The only way for this condition to occur is when
+                        // ActorNew is able to execute in state 1, but not in state 0.
+                        // Unlike ActorWeapon & projectiles there is no way for this
+                        // to occur.
+                        // Please make a test case for this branch if this condition
+                        // ever becomes possible (for example when a weapon launches
+                        // a fake player, and the firing of that weapon depends on energy
+                        // or a fire delay).
+                        
+                        TIntObjectIterator<Actor> actorIt = older.actors.iterator();
                         while (actorIt.hasNext())
                         {
                                 actorIt.advance();
@@ -421,7 +431,7 @@ public class State
                         this.projectiles = new LinkedListHead<>();
 
                         // loop over all the projectiles in the state we are resetting to
-                        LinkedListEntry<Projectile> entry = other.projectiles.first;
+                        LinkedListEntry<Projectile> entry = older.projectiles.first;
                         while (entry != null)
                         {
                                 Projectile projectileOther = entry.data;
@@ -465,7 +475,7 @@ public class State
                              linkOp = linkOp.next
                         )
                         {
-                                if (linkOp.data.tick > other.tick_now)
+                                if (linkOp.data.tick > older.tick_now)
                                 {
                                         linkStart = linkOp;
                                         break;
@@ -474,7 +484,7 @@ public class State
                                 {
                                         // reset the execution history for operations that are
                                         // in the history for both states
-                                        linkOp.data.resetExecutionHistory(this, other);
+                                        linkOp.data.resetExecutionHistory(this, older);
                                 }
                         }
 
@@ -490,7 +500,7 @@ public class State
                                         linkOp = linkOp.next
                                    )
                                 {
-                                        linkOp.data.resetExecutionHistory(this, other);
+                                        linkOp.data.resetExecutionHistory(this, older);
                                         
                                         if (linkOp == linkEnd)
                                         {
@@ -505,12 +515,34 @@ public class State
                 }
                 
                 // reset the event history
-                for (LinkedListEntry<Event> linkEv = env.eventHistory.first; linkEv != null; linkEv = linkEv.next)
+                for (LinkedListEntry<Event> linkEv = env.eventHistory.first, linkNext = null;
+                     linkEv != null; 
+                     linkEv = linkNext)
                 {
-                        linkEv.data.resetExecutionHistory(this, other);
+                        linkNext = linkEv.next;
+                        
+                        Event event = linkEv.data;
+                        assert event.link == linkEv;
+                        event.resetExecutionHistory(this, older);
+                        
+                        boolean occuredSomewhere = false;
+                        for (int s = 0; s < env.TRAILING_STATES; ++s)
+                        {
+                                if (event.hasOccured(s))
+                                {
+                                        occuredSomewhere = true;
+                                        break;
+                                }
+                        }
+                        
+                        if (!occuredSomewhere)
+                        {
+                                linkEv.remove();
+                                event.added = false;
+                        }
                 }
                 
-                unknownActorRemove = (HashSet<Integer>) other.unknownActorRemove.clone();
+                unknownActorRemove = (HashSet<Integer>) older.unknownActorRemove.clone();
         }
 
         void addOperation(Operation op)

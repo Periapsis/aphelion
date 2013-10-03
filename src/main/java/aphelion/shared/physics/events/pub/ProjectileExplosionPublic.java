@@ -47,7 +47,6 @@ import aphelion.shared.physics.WEAPON_SLOT;
  */
 public interface ProjectileExplosionPublic extends EventPublic
 {
-        public boolean hasOccured(int stateid);
         public EXPLODE_REASON getReason(int stateid); // null if hasOccured = false
         public ProjectilePublic getProjectile(int stateid);
         public long getTick(int stateid);

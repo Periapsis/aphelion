@@ -43,5 +43,14 @@ package aphelion.shared.physics.events.pub;
  */
 public interface EventPublic
 {
+        boolean hasOccured(int stateid);
         
+        /** The tick this event occured at. 
+         * This value is only valid if hasOccured() returns true
+         * In a timewarp, if this value is newer than the state we are resetting to,
+         * this event is removed.
+         * @param stateid The state id
+         * @return null if it has not occured
+         */
+        long getOccuredAt(int stateid);
 }

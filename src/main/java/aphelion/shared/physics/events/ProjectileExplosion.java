@@ -356,6 +356,17 @@ public class ProjectileExplosion extends Event implements ProjectileExplosionPub
         }
 
         @Override
+        public long getOccuredAt(int stateid)
+        {
+                History hist = history[stateid];
+                if (!hist.set)
+                {
+                        return 0; // use hasOccured first
+                }
+                return hist.tick;
+        }
+        
+        @Override
         public boolean hasOccured(int stateid)
         {
                  History hist = history[stateid];
@@ -452,6 +463,8 @@ public class ProjectileExplosion extends Event implements ProjectileExplosionPub
                 History hist = history[stateid];
                 return (List<ProjectilePublic>) (Object) hist.coupledProjectiles;
         }
+
+        
 
         
 
