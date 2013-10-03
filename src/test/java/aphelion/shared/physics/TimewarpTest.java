@@ -8,6 +8,7 @@ package aphelion.shared.physics;
 
 import aphelion.shared.gameconfig.GameConfig;
 import static aphelion.shared.physics.PhysicsEnvironmentTest.MOVE_UP;
+import aphelion.shared.physics.entities.ActorPublic;
 import aphelion.shared.physics.entities.ProjectilePublic;
 import aphelion.shared.physics.events.pub.EventPublic;
 import aphelion.shared.physics.events.pub.ProjectileExplosionPublic;
@@ -96,6 +97,17 @@ public class TimewarpTest extends PhysicsTest
                 env.timewarp(env.TRAILING_STATES-1);
                 assertActorNotExists(env.getActor(ACTOR_FIRST, 0, false));
                 assertNotNull(env.getActor(ACTOR_FIRST, 1, false));
+                
+                // Soft delete
+                assertEquals(1, env.getActorCount(0));
+                
+                while(env.getTick(env.TRAILING_STATES-1) < 1 + PhysicsEnvironment.TOTAL_HISTORY)
+                {
+                        env.tick();
+                }
+                
+                // hard delete
+                assertEquals(0, env.getActorCount(0));
         }
         
         @Test

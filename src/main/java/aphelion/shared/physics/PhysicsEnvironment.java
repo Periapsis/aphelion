@@ -673,6 +673,35 @@ public class PhysicsEnvironment implements TickEvent
                 return new ActorIterator(state.actors.iterator(), state);
         }
         
+        /** Loop over all the known actors in a given state using an iterator.
+         * It is OK to reference PhysicsActorPublic for long periods of time.
+         * @param stateid A state id, 0 for the most current state. TRAILING_STATES-1 for the oldest.
+         * @return A read only iterator. Only use this iterator on the main thread, do not store the iterator.
+         */
+        public Iterable<ActorPublic> actorIterable(int stateid)
+        {
+                if (stateid < 0 || stateid >= TRAILING_STATES)
+                {
+                        throw new IllegalArgumentException("Invalid state");
+                }
+                
+                final State state = trailingStates[stateid];
+                
+                return new Iterable<ActorPublic>()
+                {
+
+                        @Override
+                        public Iterator<ActorPublic> iterator()
+                        {
+                                return new ActorIterator(state.actors.iterator(), state);
+                        }
+                };
+        }
+        
+        /** Return the actor count, including those who have been soft deleted.
+         * @param stateid
+         * @return  
+         */
         public int getActorCount(int stateid)
         {
                 State state;
