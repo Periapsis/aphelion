@@ -370,4 +370,36 @@ public class LinkedListEntry<T> implements Iterable<T> // A list is only as stro
                         current = null;
                 }
         }
+        
+        public void assertCircularConsistency()
+        {
+                if (!SwissArmyKnife.assertEnabled)
+                {
+                        return;
+                }
+                
+                if (this.previous == null || this.next == null)
+                {
+                       assert this.previous == null;
+                       assert this.next == null;
+                       return;
+                }
+                
+                LinkedListEntry prev = null;
+                LinkedListEntry link = this;
+                do
+                {
+                        assert link.head == null;
+                        assert link.next != null;
+                        assert link.previous != null;
+                        
+                        if (prev != null)
+                        {
+                                assert link.previous == prev;
+                        }
+                        
+                        link = link.next;
+                }
+                while (link != this);
+        }
 }

@@ -699,6 +699,7 @@ public class PhysicsEnvironment implements TickEvent
         }
         
         /** Return the actor count, including those who have been soft deleted.
+         * This is equal to the number of actors iterated by actorIterator()
          * @param stateid
          * @return  
          */
@@ -742,14 +743,32 @@ public class PhysicsEnvironment implements TickEvent
                 
                 final State state = trailingStates[stateid];
                 
-                return new Iterable<ProjectilePublic>() {
-
+                return new Iterable<ProjectilePublic>()
+                {
                         @Override
                         public Iterator<ProjectilePublic> iterator()
                         {
                                 return (Iterator<ProjectilePublic>) (Object) state.projectiles.iteratorReadOnly();
                         }
                 };
+        }
+        
+        /** Return the projectile count, including those who have been soft deleted.
+         * This is equal to the number of projectiles iterated by projectileIterator()
+         * This method is O(n) time and primarily intended for test cases.
+         * @param stateid
+         * @return  
+         */
+        public int calculateProjectileCount(int stateid)
+        {
+                if (stateid < 0 || stateid >= TRAILING_STATES)
+                {
+                        throw new IllegalArgumentException("Invalid state");
+                }
+                
+                final State state = trailingStates[stateid];
+                
+                return state.projectiles.calculateSize();
         }
         
         /** Loop over all the operations in the todo list of a state.

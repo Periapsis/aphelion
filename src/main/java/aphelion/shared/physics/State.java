@@ -462,6 +462,15 @@ public class State
                                 entry.data.hardRemove(tick_now);
                                 entry = next;
                         }
+                        
+                        
+                        if (SwissArmyKnife.assertEnabled)
+                        {
+                                for (Projectile p : this.projectiles)
+                                {
+                                        p.coupled.assertCircularConsistency();
+                                }
+                        }
                 }
                 
                 {

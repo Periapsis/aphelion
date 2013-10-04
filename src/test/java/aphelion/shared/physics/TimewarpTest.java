@@ -157,16 +157,13 @@ public class TimewarpTest extends PhysicsTest
                 assertVelocity(0, -3624, env.getActor(ACTOR_FIRST, 0, false));
         }
         
-        private void testProjectileCreation_assertSingleProj(int state, int x, int y)
+        private void testProjectileCreation_assertFirstProj(int state, int x, int y)
         {
-                int count = 0;
                 for (ProjectilePublic proj : env.projectileIterable(state))
                 {
-                        ++count;
                         assertPosition(x, y, proj);
+                        return;
                 }
-
-                assertEquals(1, count);
         }
         
         @Test
@@ -200,13 +197,20 @@ public class TimewarpTest extends PhysicsTest
                 env.tick(); // 1
                 env.tick(); // 2
                 
-                testProjectileCreation_assertSingleProj(0, 1000, -14246);
+                assertEquals(1, env.calculateProjectileCount(0));
+                assertEquals(0, env.calculateProjectileCount(1));
+                testProjectileCreation_assertFirstProj(0, 1000, -14246);
                 
                 env.timewarp(1);
-                testProjectileCreation_assertSingleProj(0, 1000, -14246);
+                assertEquals(1, env.calculateProjectileCount(0));
+                assertEquals(0, env.calculateProjectileCount(1));
+                testProjectileCreation_assertFirstProj(0, 1000, -14246);
+                
                 
                 env.timewarp(env.TRAILING_STATES-1);
-                testProjectileCreation_assertSingleProj(0, 1000, -14246);
+                assertEquals(1, env.calculateProjectileCount(0));
+                assertEquals(0, env.calculateProjectileCount(1));
+                testProjectileCreation_assertFirstProj(0, 1000, -14246);
                 
                 
                 
@@ -218,16 +222,22 @@ public class TimewarpTest extends PhysicsTest
                 env.tick();
                 env.tick();
                 
-                testProjectileCreation_assertSingleProj(0, 1000, -96166);
-                testProjectileCreation_assertSingleProj(1, 1000, -14246);
+                assertEquals(1, env.calculateProjectileCount(0));
+                assertEquals(1, env.calculateProjectileCount(1));
+                testProjectileCreation_assertFirstProj(0, 1000, -96166);
+                testProjectileCreation_assertFirstProj(1, 1000, -14246);
                 
                 env.timewarp(1);
-                testProjectileCreation_assertSingleProj(0, 1000, -96166);
-                testProjectileCreation_assertSingleProj(1, 1000, -14246);
+                assertEquals(1, env.calculateProjectileCount(0));
+                assertEquals(1, env.calculateProjectileCount(1));
+                testProjectileCreation_assertFirstProj(0, 1000, -96166);
+                testProjectileCreation_assertFirstProj(1, 1000, -14246);
                 
                 env.timewarp(env.TRAILING_STATES-1);
-                testProjectileCreation_assertSingleProj(0, 1000, -96166);
-                testProjectileCreation_assertSingleProj(1, 1000, -14246);
+                assertEquals(1, env.calculateProjectileCount(0));
+                assertEquals(1, env.calculateProjectileCount(1));
+                testProjectileCreation_assertFirstProj(0, 1000, -96166);
+                testProjectileCreation_assertFirstProj(1, 1000, -14246);
                 
                 
                 assertEquals(4, env.getTimewarpCount());
@@ -242,18 +252,10 @@ public class TimewarpTest extends PhysicsTest
                 env.actorWeapon(t+2, ACTOR_FIRST, WEAPON_SLOT.BOMB, false, 0, 0, 0, 0, 0); // bomb has switch delay,
                 env.actorWeapon(t+1, ACTOR_FIRST, WEAPON_SLOT.GUN, false, 0, 0, 0, 0, 0);  // gun does not
                 // after resolving inconsistencies, both weapons should have executed properly
-                
-                Logger.getAnonymousLogger().log(Level.SEVERE, "----------------------------");
-                {
-                        // assert that the inconsistency is present
-                        int count = 0;
-                        for (ProjectilePublic proj : env.projectileIterable(0))
-                        {
-                                ++count;
-                        }
 
-                        assertEquals(2, count);
-                }
+                
+                assertEquals(2, env.calculateProjectileCount(0));
+                
                 
                 assertEquals(4, env.getTimewarpCount());
                 
@@ -270,15 +272,7 @@ public class TimewarpTest extends PhysicsTest
                 env.tick();
                 assertEquals(5, env.getTimewarpCount());
                 
-                {
-                        int count = 0;
-                        for (ProjectilePublic proj : env.projectileIterable(0))
-                        {
-                                ++count;
-                        }
-
-                        assertEquals(3, count);
-                }
+                assertEquals(3, env.calculateProjectileCount(0));
                 
                 // expire the projectiles
                 while(env.getTick(env.TRAILING_STATES-1) < t + 3 + 100 + PhysicsEnvironment.TOTAL_HISTORY)
@@ -286,16 +280,113 @@ public class TimewarpTest extends PhysicsTest
                         env.tick();
                 }
                 
+                assertEquals(0, env.calculateProjectileCount(0));
+        }
+        
+        @Test
+        public void testProjectileCreationCoupled()
+        {
+                try
                 {
-                        int count = 0;
-                        for (ProjectilePublic proj : env.projectileIterable(0))
-                        {
-                                // this includes soft deleted projectiles
-                                ++count;
-                        }
-
-                        assertEquals(0, count);
+                        List<Object> yamlDocuments = GameConfig.loadYaml(""
+                                + "- weapon-slot-gun: test-noreload\n"
+                                + "  weapon-slot-bomb: test-reload\n"
+                                + "  projectile-expiration-ticks: 100\n"
+                                + "  weapon-projectiles: 50\n"
+                                + "  projectile-angle: [LINEAR, 14702688] # 735134400 / 50"
+                                
+                                + "- selector: {weapon: test-noreload}\n"
+                                + "  weapon-switch-delay: 0\n"
+                                
+                                + "- selector: {weapon: test-reload}\n"
+                                + "  weapon-switch-delay: 4\n"
+                        );
+                        env.loadConfig(env.getTick() - PhysicsEnvironment.TOTAL_HISTORY, "test", yamlDocuments);
                 }
+                catch (Exception ex)
+                {
+                        throw new Error(ex);
+                }
+                
+                
+                env.actorNew(1, ACTOR_FIRST, "Bla", 1234, "warbird");
+                env.actorWarp(1, ACTOR_FIRST, false, 1000, 90, 0, 0, 0);
+                env.actorWeapon(2, ACTOR_FIRST, WEAPON_SLOT.GUN, false, 0, 0, 0 ,0 ,0);
+                
+                env.tick(); // 1
+                env.tick(); // 2
+                
+                assertEquals(1 * 50, env.calculateProjectileCount(0));
+                
+                env.timewarp(1);
+                assertEquals(1 * 50, env.calculateProjectileCount(0));
+                
+                env.timewarp(env.TRAILING_STATES-1);
+                assertEquals(1 * 50, env.calculateProjectileCount(0));
+                
+                
+                
+                while(env.getTick() < PhysicsEnvironment.TRAILING_STATE_DELAY)
+                {
+                        env.tick();
+                }
+                
+                env.tick();
+                env.tick();
+                
+                assertEquals(1 * 50, env.calculateProjectileCount(0));
+                assertEquals(1 * 50, env.calculateProjectileCount(1));
+                
+                env.timewarp(1);
+                assertEquals(1 * 50, env.calculateProjectileCount(0));
+                assertEquals(1 * 50, env.calculateProjectileCount(1));
+                
+                env.timewarp(env.TRAILING_STATES-1);
+                assertEquals(1 * 50, env.calculateProjectileCount(0));
+                assertEquals(1 * 50, env.calculateProjectileCount(1));
+                
+                
+                assertEquals(4, env.getTimewarpCount());
+                
+                // 2 weapons, one of them has a weapon switch delay
+                // execute them in the wrong order so that only 1 fires in state 0,
+                // but both fire in state 1
+                long t = env.getTick();
+                env.tick();
+                env.tick();
+                // make sure they are both late
+                env.actorWeapon(t+2, ACTOR_FIRST, WEAPON_SLOT.BOMB, false, 0, 0, 0, 0, 0); // bomb has switch delay,
+                env.actorWeapon(t+1, ACTOR_FIRST, WEAPON_SLOT.GUN, false, 0, 0, 0, 0, 0);  // gun does not
+                // after resolving inconsistencies, both weapons should have executed properly
+
+                
+                assertEquals(2 * 50, env.calculateProjectileCount(0));
+                
+                
+                assertEquals(4, env.getTimewarpCount());
+                
+                // should detect the inconsistency and resolve it
+                // (new Projectile() should execute properly)
+                while(env.getTick(1) < t+PhysicsEnvironment.TRAILING_STATE_DELAY)
+                {
+                        env.tick();
+                }
+                assertEquals(5, env.getTimewarpCount());
+                
+                
+                env.tick();
+                env.tick();
+                assertEquals(5, env.getTimewarpCount());
+                
+                assertEquals(3 * 50, env.calculateProjectileCount(0));
+                
+                // expire the projectiles
+                while(env.getTick(env.TRAILING_STATES-1) < t + 3 + 100 + PhysicsEnvironment.TOTAL_HISTORY)
+                {
+                        env.tick();
+                }
+                
+                assertEquals(0 * 50, env.calculateProjectileCount(0));
         }
         
         private void testExplosionEventShort_assertEvent(int state)

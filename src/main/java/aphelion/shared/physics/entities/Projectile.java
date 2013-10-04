@@ -484,34 +484,40 @@ public final class Projectile extends MapEntity implements ProjectilePublic
                         assert this.owner.pid == other.owner.pid : "Projectiles should never change owners in a timewarp";
                 }
                
-                if (other.coupled.previous == null)
+                
+                
+                this.coupled.previous = null;
+                this.coupled.next = null;
+                
+                
+                if (other.coupled.previous != null && other.coupled.next != null)
                 {
-                        coupled.previous = null;
-                }
-                else
-                {
-                        // hah
                         Projectile otherPrev = other.coupled.previous.data;
+                        Projectile otherNext = other.coupled.next.data;
                         Projectile prev = (Projectile) otherPrev.crossStateList[this.state.id];
-                        coupled.previous = prev == null ? null : prev.coupled;
-                }
-                
-                if (other.coupled.next == null)
-                {
-                        coupled.next = null;
+                        Projectile next = (Projectile) otherNext.crossStateList[this.state.id];
+                        
+                        // Note that the coupled projectile might not exist yet!
+                        // it will be created at a different moment in the timewarp
+                        // therefor prev or next (or both) might be null.
+                        // State.resetTo has an assertion check to make sure the code below is proper
+                        
+                        if (prev != null)
+                        {
+                                this.coupled.previous = prev.coupled;
+                                prev.coupled.next = this.coupled;
+                        }
+                        
+                        if (next != null)
+                        {
+                                this.coupled.next = next.coupled;
+                                next.coupled.previous = this.coupled;
+                        }
                 }
                 else
                 {
-                        Projectile otherNext = other.coupled.next.data;
-                        Projectile next = (Projectile) otherNext.crossStateList[this.state.id];
-                        coupled.next = next == null ? null : next.coupled;
-                }
-                
-                
-                if (coupled.previous == null || coupled.next == null)
-                {
-                        assert coupled.previous == null;
-                        assert coupled.next == null;
+                        assert other.coupled.previous == null;
+                        assert other.coupled.next == null;
                 }
                 
                 this.expires_at_tick = other.expires_at_tick;
