@@ -70,17 +70,13 @@ import aphelion.shared.physics.valueobjects.PhysicsMovement;
 import aphelion.shared.physics.valueobjects.PhysicsShipPosition;
 import aphelion.shared.physics.valueobjects.PhysicsWarp;
 import aphelion.shared.resource.ResourceDB;
-import aphelion.shared.swissarmyknife.EscapeJava;
 import aphelion.shared.swissarmyknife.LinkedListEntry;
 import aphelion.shared.swissarmyknife.LinkedListHead;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.yaml.snakeyaml.Yaml;
 
 /**
  * Physics Engine based on TSS.
@@ -143,7 +139,6 @@ import org.yaml.snakeyaml.Yaml;
 public class PhysicsEnvironment implements TickEvent
 {
         private static final Logger log = Logger.getLogger("aphelion.shared.physics");
-        private final boolean DEBUG_LOG;
         private OutputStreamWriter debugLog;
         
         /** The maximum amount of trailing states for both client and server. */
@@ -188,42 +183,6 @@ public class PhysicsEnvironment implements TickEvent
                 {
                         TRAILING_STATES = 4;
                         // C2S operations will have to arrive within  640ms 
-                        DEBUG_LOG = false;
-                        if (DEBUG_LOG)
-                        {
-                                try
-                                {
-                                        debugLog = new OutputStreamWriter(new FileOutputStream("ServerDebugLog.java"), "utf-8");
-                                        debugLog.append(
-"package Aphelion;\n" +
-"\n" +
-"import Aphelion.Shared.Event.TickedEventLoop;\n" +
-"import Aphelion.Shared.Map.MapClassic;\n" +
-"import Aphelion.Shared.Physics.PhysicsEnvironment;\n" +
-"import Aphelion.Shared.Physics.ValueObjects.PhysicsMovement;\n" +
-"import Aphelion.Shared.Physics.WEAPON_SLOT;\n" +
-"import Aphelion.Shared.Resource.ResourceDB;\n" +
-"import java.io.File;\n" +
-"import java.util.List;\n" +
-"import org.yaml.snakeyaml.Yaml;\n" +
-"" +
-"\n" +
-"public class ServerDebugLog\n" +
-"{\n" +
-"public static void main(String[] args) throws Exception\n" +
-"{\n" +
-"\n" +
-"TickedEventLoop loop = new TickedEventLoop(10, 1, null);\n" +
-"ResourceDB resourceDB = new ResourceDB(loop);\n" +
-"resourceDB.addZip(new File(\"default.zip\"));\n" +
-"PhysicsEnvironment e = new PhysicsEnvironment(true, new MapClassic.LoadMapTask(resourceDB, false).work(\"level.map\"));\n"
-);
-                                }
-                                catch (IOException ex)
-                                {
-                                        log.log(Level.SEVERE, null, ex);
-                                }
-                        }
                 }
                 else
                 {
@@ -231,7 +190,6 @@ public class PhysicsEnvironment implements TickEvent
                         // S2C and C2S2C operations will have to arrive within 1280ms
                         // The MAX_OPERATION_AGE for clients should be atleast 2x as large as the maximum age of the server.
                         // So that it will be unlikely that a C2S2C operation that was accepted by the server, to be rejected by clients.
-                        DEBUG_LOG = false;
                 }
                 
                 // The last state does not accept new (non critical) operations
@@ -256,19 +214,6 @@ public class PhysicsEnvironment implements TickEvent
                 }
         }
         
-        private void addDebugLog(String something)
-        {
-                try
-                {
-                        debugLog.append(something);
-                        debugLog.flush();
-                }
-                catch (IOException ex)
-                {
-                        log.log(Level.SEVERE, null, ex);
-                }
-        }
-        
         /** Set the tick offset to the server.
          * Ticks are used to seed hash functions which are used to randomize things.
          * This tick value must be consistent with the server. Use this method to set 
@@ -278,7 +223,6 @@ public class PhysicsEnvironment implements TickEvent
         public void setTickOffsetToServer(long offset)
         {
                 remote_tick_offset = offset;
-                if (DEBUG_LOG) addDebugLog("e.setTickOffsetToServer("+offset+");\n");
         }
         
         public long localTickToServer(long localTick)
@@ -335,8 +279,6 @@ public class PhysicsEnvironment implements TickEvent
 
                 ++tick_now;
                 ticked_at = System.nanoTime();
-                
-                if (DEBUG_LOG) addDebugLog("e.tick(); //"+tick_now+"\n");
 
                 for (a = 0; a < TRAILING_STATES; a++)
                 {
@@ -803,20 +745,7 @@ public class PhysicsEnvironment implements TickEvent
         
         public void loadConfig(long tick, String fileIdentifier, List yamlDocuments)
         {
-                LoadConfig op;
-                
-                
-                if (DEBUG_LOG)
-                {
-                        addDebugLog("e.loadConfig("
-                                + tick
-                                + ","
-                                + "\"" + EscapeJava.escapeJava(fileIdentifier) + "\""
-                                + ",(List) new Yaml().load("
-                                + "\"" + EscapeJava.escapeJava(new Yaml().dump(yamlDocuments)) + "\""
-                                + "));\n");
-                }
-                op = new LoadConfig();
+                LoadConfig op = new LoadConfig();
                 op.tick = tick;
                 op.fileIdentifier = fileIdentifier;
                 op.yamlDocuments = yamlDocuments;
@@ -829,18 +758,7 @@ public class PhysicsEnvironment implements TickEvent
         
         public void unloadConfig(long tick, String fileIdentifier)
         {
-                UnloadConfig op;
-                
-                if (DEBUG_LOG)
-                {
-                        addDebugLog("e.unloadConfig("
-                                + tick
-                                + ","
-                                + "\"" + EscapeJava.escapeJava(fileIdentifier) + "\""
-                                + ");\n");
-                }
-                
-                op = new UnloadConfig();
+                UnloadConfig op = new UnloadConfig();
                 op.tick = tick;
                 op.fileIdentifier = fileIdentifier;
                 
@@ -850,25 +768,7 @@ public class PhysicsEnvironment implements TickEvent
         
         public void actorNew(long tick, int pid, String name, long seed, String ship)
         {
-                ActorNew op;
-
-                if (DEBUG_LOG)
-                {
-                        addDebugLog("e.actorNew("
-                                + tick
-                                + ","
-                                + pid
-                                + ","
-                                + "\"" + EscapeJava.escapeJava(name) + "\""
-                                + ","
-                                + seed
-                                + "L,"
-                                + "\"" + EscapeJava.escapeJava(ship) + "\""
-                                + ");\n");
-                        // todo sync
-                }
-                
-                op = new ActorNew();
+                ActorNew op = new ActorNew();
                 op.tick = tick;
                 op.pid = pid;
                 op.name = name;
@@ -882,12 +782,6 @@ public class PhysicsEnvironment implements TickEvent
         public void actorSync(GameOperation.ActorSync sync, long sync_tick_offset)
         {
                 assert !this.server;
-
-                if (DEBUG_LOG)
-                {
-                        addDebugLog("throw new Error();");
-                        // todo
-                }
                 
                 ActorSync op = new ActorSync();
                 op.tick = sync.getTick() - sync_tick_offset;
@@ -901,20 +795,7 @@ public class PhysicsEnvironment implements TickEvent
         
         public void actorModification(long tick, int pid, String ship)
         {
-                ActorModification op;
-
-                if (DEBUG_LOG)
-                {
-                        addDebugLog("e.actorModification("
-                                + tick
-                                + ","
-                                + pid
-                                + ","
-                                + "\"" + EscapeJava.escapeJava(ship) + "\""
-                                + ");\n");
-                }
-                
-                op = new ActorModification();
+                ActorModification op = new ActorModification();
                 op.tick = tick;
                 op.pid = pid;
                 op.ship = ship;
@@ -925,18 +806,7 @@ public class PhysicsEnvironment implements TickEvent
 
         public void actorRemove(long tick, int pid)
         {
-                ActorRemove op;
-
-                if (DEBUG_LOG)
-                {
-                        addDebugLog("e.actorRemove("
-                                + tick
-                                + ","
-                                + pid
-                                + ");\n");
-                }
-                
-                op = new ActorRemove();
+                ActorRemove op = new ActorRemove();
                 op.tick = tick;
                 op.pid = pid;
 
@@ -950,28 +820,7 @@ public class PhysicsEnvironment implements TickEvent
          */
         public boolean actorWarp(long tick, int pid, boolean hint, int x, int y, int x_vel, int y_vel, int rotation)
         {
-                ActorWarp op;
-
-                if (DEBUG_LOG)
-                {
-                        addDebugLog("e.actorWarp("
-                                + tick
-                                + ","
-                                + pid
-                                + ","
-                                + x
-                                + ","
-                                + y
-                                + ","
-                                + x_vel
-                                + ","
-                                + y_vel
-                                + ","
-                                + rotation
-                                + ");\n");
-                }
-                
-                op = new ActorWarp();
+                ActorWarp op = new ActorWarp();
                 op.tick = tick;
                 op.pid = pid;
                 op.hint = hint;
@@ -987,36 +836,7 @@ public class PhysicsEnvironment implements TickEvent
         public boolean actorWarp(
                 long tick, int pid, boolean hint, int x, int y, int x_vel, int y_vel, int rotation, boolean has_x, boolean has_y, boolean has_x_vel, boolean has_y_vel, boolean has_rotation)
         {
-                ActorWarp op;
-                
-                if (DEBUG_LOG)
-                {
-                        addDebugLog("e.actorWarp("
-                                + tick
-                                + ","
-                                + pid
-                                + ","
-                                + x
-                                + ","
-                                + y
-                                + ","
-                                + x_vel
-                                + ","
-                                + y_vel
-                                + ","
-                                + has_x
-                                + ","
-                                + has_y
-                                + ","
-                                + has_x_vel
-                                + ","
-                                + has_y_vel
-                                + ","
-                                + has_rotation
-                                + ");\n");
-                }
-
-                op = new ActorWarp();
+                ActorWarp op = new ActorWarp();
                 op.tick = tick;
                 op.pid = pid;
                 op.hint = hint;
@@ -1036,22 +856,7 @@ public class PhysicsEnvironment implements TickEvent
          */
         public boolean actorMove(long tick, int pid, PhysicsMovement move)
         {
-                ActorMove op;
-
-                if (DEBUG_LOG)
-                {
-                        addDebugLog("e.actorMove("
-                                + tick
-                                + ","
-                                + pid
-                                + ","
-                                + "PhysicsMovement.get(" + move.bits + ")"
-                                + ");\n");
-                }
-                
-                
-                
-                op = new ActorMove();
+                ActorMove op = new ActorMove();
                 op.tick = tick;
                 op.pid = pid;
                 op.move = move;
@@ -1066,32 +871,7 @@ public class PhysicsEnvironment implements TickEvent
                 int hint_x_vel, int hint_y_vel, 
                 int hint_snapped_rotation)
         {
-                ActorWeaponFire op;
-                
-                if (DEBUG_LOG)
-                {
-                        addDebugLog("e.actorWeapon("
-                                + tick
-                                + ","
-                                + pid
-                                + ","
-                                + "WEAPON_SLOT.byId(" + weapon_slot.id + ")"
-                                + ","
-                                + hint_set
-                                + ","
-                                + hint_x
-                                + ","
-                                + hint_y
-                                + ","
-                                + hint_x_vel
-                                + ","
-                                + hint_y_vel
-                                + ","
-                                + hint_snapped_rotation
-                                + ");\n");
-                }
-                
-                op = new ActorWeaponFire();
+                ActorWeaponFire op = new ActorWeaponFire();
                 op.tick = tick;
                 op.pid = pid;
                 op.weapon_slot = weapon_slot;
@@ -1114,18 +894,10 @@ public class PhysicsEnvironment implements TickEvent
                 GameOperation.WeaponSync.Projectile[] projectiles, 
                 long projectiles_tick_offset)
         {
-                WeaponSync op;
-                
                 assert !this.server;
-                
-                if (DEBUG_LOG)
-                {
-                        addDebugLog("throw new Exception(\"weaponSync\");");
-                }
-                
                 // do not modify "projectiles" after calling this method
                 
-                op = new WeaponSync();
+                WeaponSync op = new WeaponSync();
                 op.tick = tick;
                 op.pid = owner_pid;
                 op.weaponKey = weaponKey;
