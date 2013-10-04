@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<actions>
+        <action>
+                <actionName>run</actionName>
+                <goals>
+                        <goal>process-classes</goal>
+                        <goal>org.codehaus.mojo:exec-maven-plugin:1.2.1:exec</goal>
+                </goals>
+                <properties>
+                        <exec.args>-ea -server -XX:+DoEscapeAnalysis -XX:+UseG1GC -XX:MaxGCPauseMillis=15 -XX:+TieredCompilation -Djava.library.path=bin/jni -classpath %classpath aphelion.launcher.Main</exec.args>
+                        <exec.executable>java</exec.executable>
+                        <exec.workingdir>${project.build.directory}</exec.workingdir>
+                </properties>
+        </action>
+        <action>
+                <actionName>debug</actionName>
+                <goals>
+                        <goal>process-classes</goal>
+                        <goal>org.codehaus.mojo:exec-maven-plugin:1.2.1:exec</goal>
+                </goals>
+                <properties>
+                        <exec.args>-Xdebug -Xrunjdwp:transport=dt_socket,server=n,address=${jpda.address} -ea -server -XX:+DoEscapeAnalysis -XX:+UseG1GC -XX:MaxGCPauseMillis=15 -XX:+TieredCompilation -Djava.library.path=bin/jni -classpath %classpath aphelion.launcher.Main</exec.args>
+                        <exec.executable>java</exec.executable>
+                        <jpda.listen>true</jpda.listen>
+                        <exec.workingdir>${project.build.directory}</exec.workingdir>
+                </properties>
+        </action>
+        <action>
+                <actionName>profile</actionName>
+                <goals>
+                        <goal>process-classes</goal>
+                        <goal>org.codehaus.mojo:exec-maven-plugin:1.2.1:exec</goal>
+                </goals>
+                <properties>
+                        <exec.args>${profiler.args} -ea -server -XX:+DoEscapeAnalysis -XX:+UseG1GC -XX:MaxGCPauseMillis=15 -XX:+TieredCompilation -Djava.library.path=bin/jni -classpath %classpath aphelion.launcher.Main</exec.args>
+                        <exec.executable>${profiler.java}</exec.executable>
+                        <exec.workingdir>${project.build.directory}</exec.workingdir>
+                </properties>
+        </action>
+        <action>
+                <actionName>build</actionName>
+                <goals>
+                        <goal>package</goal>
+                </goals>
+        </action>
+        <action>
+                <actionName>CUSTOM-run-server</actionName>
+                <displayName>Run server</displayName>
+                <goals>
+                        <goal>process-classes</goal>
+                        <goal>org.codehaus.mojo:exec-maven-plugin:1.2.1:exec</goal>
+                </goals>
+                <properties>
+                        <exec.args>-ea -server -XX:+DoEscapeAnalysis -XX:+UseG1GC -XX:MaxGCPauseMillis=15 -XX:+TieredCompilation -Djava.library.path=bin/jni -classpath %classpath aphelion.server.ServerMain</exec.args>
+                        <exec.executable>java</exec.executable>
+                        <exec.workingdir>${project.build.directory}</exec.workingdir>
+                </properties>
+        </action>
+        
+        <action>
+                <actionName>CUSTOM-sonar</actionName>
+                <displayName>Sonar</displayName>
+                <goals>
+                        <goal>sonar:sonar</goal>
+                </goals>
+        </action>
+</actions>
