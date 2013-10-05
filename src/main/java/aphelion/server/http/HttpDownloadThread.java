@@ -152,9 +152,7 @@ class HttpDownloadThread extends Thread implements ConnectionStateChangeListener
                                 
                                 Iterator<SelectionKey> it;
                                 
-                                long now;
-                                
-                                now = System.nanoTime();
+                                long now = System.nanoTime();
                                 
                                 if (now - lastTimeoutCheck > 1000000000l)
                                 {

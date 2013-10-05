@@ -75,7 +75,7 @@ public class AnimatedColour
 			return null;
 		}
                 
-                long now = System.nanoTime();
+                long now = Graph.nanoTime();
                 long delta;
                 
                 if (firstUpdate)

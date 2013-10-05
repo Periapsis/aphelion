@@ -134,7 +134,7 @@ public class ServerMain implements LoopEvent
         }
         
         @Override
-        public void loop()
+        public void loop(long systemNanoTime, long sourceNanoTime)
         {
                 if (serverGame == null)
                 {

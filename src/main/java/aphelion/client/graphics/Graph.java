@@ -49,6 +49,23 @@ public class Graph extends Graphics
 {
         public static final Graph g = new Graph();
         
+        
+        private static long nanoTime;
+        
+        /** The time when the current graphics loop started.
+         * @return nano time as returned from System.nanoTime()
+         */
+        public static long nanoTime()
+        {
+                return nanoTime;
+        }
+        
+        /** Call me at the start of each graphics loop.
+         */
+        public static void graphicsLoop()
+        {
+        }
+        
         public void setDimensions(int width, int height)
         {
                 screenWidth = width;

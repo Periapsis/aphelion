@@ -134,20 +134,19 @@ public class WebSocketTransport implements HttpWebSocketServerListener, LoopEven
          * NOTE: when using any of the close() functions make sure loop() is called at least once before
          * forgetting about this object.
          */
-        public void loop()
+        public void loop(long systemNanoTime, long unused)
         {
-
+                // do not use unused (this method is not just called by TickedEventLoop)
                 synchronized (this.serverUnitializedWebsockets)
                 {
-                        long now = System.nanoTime();
                         Iterator<MyWebSocketImpl> it = this.serverUnitializedWebsockets.iterator();
                         while (it.hasNext())
                         {
                                 MyWebSocketImpl ws = it.next();
 
-                                if (now - ws.openedAt > SERVER_INIT_TIMEOUT)
+                                if (systemNanoTime - ws.openedAt > SERVER_INIT_TIMEOUT)
                                 {
-                                        log.log(Level.WARNING, "Dropped unitialized websocket as a server ({0}) due to timeout ({1} nanoseconds). ", new Object[] { ws.getRemoteSocketAddress(), now - ws.openedAt });
+                                        log.log(Level.WARNING, "Dropped unitialized websocket as a server ({0}) due to timeout ({1} nanoseconds). ", new Object[] { ws.getRemoteSocketAddress(), systemNanoTime - ws.openedAt });
                                         close(ws, WS_CLOSE_STATUS.INIT_TIMEOUT);
                                         it.remove();
                                 }
@@ -156,15 +155,14 @@ public class WebSocketTransport implements HttpWebSocketServerListener, LoopEven
 
                 synchronized (this.unitializedClients)
                 {
-                        long now = System.nanoTime();
                         Iterator<MyWebSocketClient> it = this.unitializedClients.iterator();
                         while (it.hasNext())
                         {
                                 MyWebSocketClient client = it.next();
 
-                                if (now - client.openedAt > CLIENT_CONNECT_TIMEOUT)
+                                if (systemNanoTime - client.openedAt > CLIENT_CONNECT_TIMEOUT)
                                 {
-                                        log.log(Level.WARNING, "Dropped unitialized websocket as a client due to timeout ({0} nanoseconds).", now - client.openedAt);
+                                        log.log(Level.WARNING, "Dropped unitialized websocket as a client due to timeout ({0} nanoseconds).", systemNanoTime - client.openedAt);
                                         
                                         // this will fail if the thread spawned by WebSocketClient; 
                                         // has not had a chance to run yet. 
@@ -458,7 +456,9 @@ public class WebSocketTransport implements HttpWebSocketServerListener, LoopEven
                 log.log(Level.INFO, "Stopping all clients...");
                 closeAll(WS_CLOSE_STATUS.NORMAL);
                 
-                loop(); // make sure closeQueue is emptied
+                long nanoTime = System.nanoTime();
+                
+                loop(nanoTime, nanoTime); // make sure closeQueue is emptied
                 
                 synchronized(this.clientThreads)
                 {

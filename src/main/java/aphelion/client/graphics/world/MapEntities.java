@@ -352,7 +352,7 @@ public class MapEntities implements TickEvent, LoopEvent, Animator
         }
 
         @Override
-        public void loop()
+        public void loop(long systemNanoTime, long sourceNanoTime)
         {
                 for (int i = 0; i < animations.length; ++i)
                 {

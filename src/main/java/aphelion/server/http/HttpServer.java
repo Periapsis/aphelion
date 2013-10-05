@@ -201,7 +201,7 @@ import org.java_websocket.handshake.ClientHandshake;
         }
 
         @Override
-        public void loop()
+        public void loop(long systemNanoTime, long sourceNanoTime)
         {
                 try
                 {

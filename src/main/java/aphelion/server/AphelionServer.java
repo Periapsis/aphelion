@@ -118,10 +118,10 @@ public class AphelionServer implements LoopEvent, WebSocketTransportListener
         }
         
         @Override
-        public void loop()
+        public void loop(long systemNanoTime, long sourceNanoTime)
         {
-                httpServer.loop();
-                webSocketTransport.loop();
+                httpServer.loop(systemNanoTime, sourceNanoTime);
+                webSocketTransport.loop(systemNanoTime, sourceNanoTime);
         }
         
         public void closeAll(WS_CLOSE_STATUS code)

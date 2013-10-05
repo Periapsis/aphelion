@@ -203,7 +203,6 @@ public class TickedEventLoop implements Workable, Timerable
         @SuppressWarnings("unchecked")
         private void loop(boolean internal)
         {
-                long delta, nanoTime;
                 assert setup;
                 assert !breakdown;
                 
@@ -231,11 +230,13 @@ public class TickedEventLoop implements Workable, Timerable
                         }
                 }
                 
-                nanoTime = nanoTime();
+                long nanoTime = nanoTime();
+                long systemNanoTime = this.clockSource instanceof DefaultClockSource ? nanoTime : System.nanoTime();
+                
                 
                 for (LoopEvent event : loopEvents)
                 {
-                        event.loop();
+                        event.loop(systemNanoTime, nanoTime);
                 }
                 
 
@@ -246,7 +247,7 @@ public class TickedEventLoop implements Workable, Timerable
                 // Time = 2147483647:                   2147483647 - 2147483547 = 100
                 // Time = 2147483647+1 = -2147483648:  -2147483648 - 2147483547 = 101
                 // Time = 2147483647+2 = -2147483647:  -2147483647 - 2147483547 = 102
-                delta = nanoTime - nano;
+                long delta = nanoTime - nano;
                 while (delta >= TICK)
                 {
                         delta -= TICK;

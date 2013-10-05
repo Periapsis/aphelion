@@ -119,7 +119,7 @@ public class ServerGame implements LoopEvent, TickEvent, GameListener
         }
         
         @Override
-        public void loop()
+        public void loop(long systemNanoTime, long sourceNanoTime)
         {
         }
         

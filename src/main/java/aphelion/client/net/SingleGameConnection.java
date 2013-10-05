@@ -101,9 +101,9 @@ public class SingleGameConnection implements LoopEvent, WebSocketTransportListen
         
         
         @Override
-        public void loop()
+        public void loop(long systemNanoTime, long sourceNanoTime)
         {
-                webSocketTransport.loop();
+                webSocketTransport.loop(systemNanoTime, sourceNanoTime);
         }
         
         public void connect()

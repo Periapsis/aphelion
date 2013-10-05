@@ -102,9 +102,9 @@ public class ResourceDB implements LoopEvent
         }
 
         @Override
-        public void loop()
+        public void loop(long systemNanoTime, long sourceNanoTime)
         {
-                textureLoader.loop();
+                textureLoader.loop(systemNanoTime, sourceNanoTime);
         }
         
         public AsyncTextureLoader getTextureLoader()

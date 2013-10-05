@@ -39,6 +39,7 @@
 package aphelion.client;
 
 
+import aphelion.client.graphics.Graph;
 import aphelion.client.net.NetworkedGame;
 import aphelion.client.net.SingleGameConnection;
 import aphelion.client.resource.AsyncTexture;
@@ -101,6 +102,8 @@ public class ConnectLoop
                                 log.log(Level.WARNING, "Close requested in connect loop");
                                 return false;
                         }
+                        
+                        Graph.graphicsLoop();
                         
                         Client.initGL();
                         

@@ -205,7 +205,7 @@ public class AsyncTextureLoader implements LoopEvent
         }
 
         @Override
-        public void loop()
+        public void loop(long systemNanoTime, long sourceNanoTime)
         {
                 Integer textureID;
                 while ( (textureID = releaseQueue.poll()) != null)

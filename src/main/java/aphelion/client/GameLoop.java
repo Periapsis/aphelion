@@ -271,6 +271,8 @@ public class GameLoop
                                 break;
                         }
                         
+                        Graph.graphicsLoop();
+                        
                         
                         if (networkedGame.isReady() && localActor == null)
                         {

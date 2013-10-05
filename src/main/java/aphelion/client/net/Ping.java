@@ -313,6 +313,7 @@ public class Ping extends Thread
                 setName("Ping-" + this.getId());
                 while (true)
                 {
+                        long nanoTime = System.nanoTime();
                         try
                         {
                                 synchronized(this)
@@ -322,7 +323,7 @@ public class Ping extends Thread
                                         {
                                                 ServerData data = it.next();
 
-                                                data.webSocketTransport.loop();
+                                                data.webSocketTransport.loop(nanoTime, nanoTime);
                                                 // make sure that any value that had stopPing() called gets atleast 1 loop() call!
 
                                                 if (data.stop)
@@ -334,12 +335,11 @@ public class Ping extends Thread
 
                                 synchronized(this)
                                 {
-                                        long now = System.nanoTime();
                                         for (ServerData data : servers.values())
                                         {
-                                                if (data.lastRequest_nanos == null || now - data.lastRequest_nanos >= PING_INTERVAL_NANO)
+                                                if (data.lastRequest_nanos == null || nanoTime - data.lastRequest_nanos >= PING_INTERVAL_NANO)
                                                 {
-                                                        data.lastRequest_nanos = now;
+                                                        data.lastRequest_nanos = nanoTime;
                                                         data.send();
                                                 } 
                                         }
@@ -362,30 +362,4 @@ public class Ping extends Thread
                         }
                 }
         }
-        
-        /*private static int dbg_count = 0;
-        private static Ping dbg_ping = null;
-        public static void main(String[] args) throws Exception
-        {
-                dbg_ping = new Ping(new PingListener()
-                {
-
-                        @Override
-                        public void pingResult(URI uri, long rttNanos, int players, int playing)
-                        {
-                                System.out.println(uri + " " + (rttNanos / 1_000_000.0) + " " + players + " " + playing);
-                                ++dbg_count;
-                                
-                                if (dbg_count == 3)
-                                {
-                                        dbg_ping.interrupt();
-                                }
-                        }
-                
-                });
-                
-                dbg_ping.start();
-                dbg_ping.startPing(new URI("ws://86.87.83.47:80/aphelion"));
-        }*/
-        
 }

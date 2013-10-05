@@ -43,5 +43,10 @@ package aphelion.shared.event;
  */
 public interface LoopEvent
 {
-        void loop();
+        /** Called during a single event-loop loop.
+         * @param systemNanoTime The nanotime as returned by System.nanoTime() at the time of loop start.
+         * @param sourceNanoTime The nanotime as returned by the event loop clock source at the time of loop start.
+         *                       This param might be equal to the first param if no clock source has been configured.
+         */
+        void loop(long systemNanoTime, long sourceNanoTime);
 }

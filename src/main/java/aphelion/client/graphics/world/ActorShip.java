@@ -128,8 +128,8 @@ public class ActorShip extends MapEntity implements TickEvent, WrappedValueAbstr
                         }
                 });
                 
-                lastExhaust_nanos = System.nanoTime();
-                lastEmp_nanos = System.nanoTime();
+                lastExhaust_nanos = Graph.nanoTime();
+                lastEmp_nanos = Graph.nanoTime();
                 tryInitPhysics();
         }
         
@@ -209,8 +209,8 @@ public class ActorShip extends MapEntity implements TickEvent, WrappedValueAbstr
                 emped_image = actor.getActorConfigImage("ship-emped-image", db);
                 emped_delay = actor.getActorConfigInteger("ship-emped-delay");
                 
-                lastExhaust_nanos = System.nanoTime();
-                lastEmp_nanos = System.nanoTime();
+                lastExhaust_nanos = Graph.nanoTime();
+                lastEmp_nanos = Graph.nanoTime();
                 
                 setNameFromPhysics(actor.getName());
                 setRotationFromPhysics(physRotation); // update tile
@@ -229,7 +229,7 @@ public class ActorShip extends MapEntity implements TickEvent, WrappedValueAbstr
                         return false;
                 }
                 
-                long now = System.nanoTime();
+                long now = Graph.nanoTime();
                 
                 Graph.g.setFont(Fonts.player_name);
                 
