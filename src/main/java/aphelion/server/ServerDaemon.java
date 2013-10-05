@@ -104,7 +104,7 @@ public class ServerDaemon implements Daemon
                 
                 log.log(Level.INFO, "Deamon start");
                 
-                serverThread = new AphelionServerThread(this.ssChannel);
+                serverThread = new AphelionServerThread(false, this.ssChannel);
                 serverThread.start();
         }
 

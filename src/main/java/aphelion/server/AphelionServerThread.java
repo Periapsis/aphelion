@@ -38,7 +38,6 @@
 package aphelion.server;
 
 import aphelion.client.ErrorDialog;
-import aphelion.server.ServerMain;
 import aphelion.server.http.HttpServer;
 import aphelion.shared.swissarmyknife.ThreadSafe;
 import java.io.IOException;
@@ -56,13 +55,15 @@ public class AphelionServerThread extends Thread
         private static final Logger log = Logger.getLogger("aphelion.server");
         private ServerMain serverMain;
         private int listenPort;
+        private boolean gui;
         
         private ServerSocketChannel privateSsChannel; // If we opened it ourselves, we need to close it too
 
-        public AphelionServerThread() throws IOException
+        public AphelionServerThread(boolean gui) throws IOException
         {
                 super();
 
+                this.gui = gui;
                 // use an ephemeral port. aka a temporary port number
 
                 privateSsChannel = HttpServer.openServerChannel(new InetSocketAddress("127.0.0.1", 0));
@@ -73,10 +74,11 @@ public class AphelionServerThread extends Thread
                 listenPort = serverMain.getHTTPListeningPort();
         }
         
-        public AphelionServerThread(ServerSocketChannel ssChannel) throws IOException
+        public AphelionServerThread(boolean gui, ServerSocketChannel ssChannel) throws IOException
         {
                 super();
 
+                this.gui = gui;
                 // use an ephemeral port. aka a temporary port number
 
                 serverMain = new ServerMain(ssChannel);
@@ -100,7 +102,11 @@ public class AphelionServerThread extends Thread
                 }
                 catch (Throwable ex)
                 {
-                        new ErrorDialog().setErrorText(ex);
+                        log.log(Level.SEVERE, "", ex);
+                        if (gui)
+                        {
+                                new ErrorDialog().setErrorText(ex);
+                        }
                         throw ex;
                 }
         }

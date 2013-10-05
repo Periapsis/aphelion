@@ -96,7 +96,7 @@ public class Client
                         // singleplayer
                         // future versions might not need to run a server in sigleplayer
                         // however this is ok for now.
-                        serverThread = new AphelionServerThread();
+                        serverThread = new AphelionServerThread(false);
                         serverThread.start();
                         try
                         {
