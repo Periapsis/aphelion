@@ -38,6 +38,7 @@
 package aphelion.shared.event;
 
 import aphelion.client.ErrorDialog;
+import aphelion.shared.swissarmyknife.SwissArmyKnife;
 import aphelion.shared.swissarmyknife.ThreadSafe;
 import java.util.Iterator;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -150,10 +151,14 @@ public class Deadlock
                                         if (kill)
                                         {
                                                 log.log(Level.SEVERE, "Deadlock or infinite loop detected in thread {0}, attemping to stop ... Stack trace: \n{1}", 
-                                                        new Object[] {
+                                                        new Object[] 
+                                                        {
                                                                 thread.getName(),
                                                                 trace
-                                                });
+                                                        }
+                                                );
+                                                
+                                                SwissArmyKnife.logTraceOfAllThreads(log);
                                                 
                                                 thread.interrupt();
 

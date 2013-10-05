@@ -39,6 +39,7 @@ package aphelion.server;
 
 import aphelion.client.ErrorDialog;
 import aphelion.server.http.HttpServer;
+import aphelion.shared.swissarmyknife.SwissArmyKnife;
 import aphelion.shared.swissarmyknife.ThreadSafe;
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -102,7 +103,10 @@ public class AphelionServerThread extends Thread
                 }
                 catch (Throwable ex)
                 {
-                        log.log(Level.SEVERE, "", ex);
+                        log.log(Level.SEVERE, "Error while running AphelionServerThread", ex);
+                        
+                        SwissArmyKnife.logTraceOfAllThreads(log);
+                        
                         if (gui)
                         {
                                 new ErrorDialog().setErrorText(ex);

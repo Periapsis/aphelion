@@ -40,7 +40,10 @@ package aphelion.shared.swissarmyknife;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Map;
 import java.util.Random;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import org.newdawn.slick.Animation;
 import org.newdawn.slick.Image;
@@ -932,5 +935,39 @@ public final class SwissArmyKnife
                 }
                 
                 return x.compareTo(y);
+        }
+        
+        public static void logTraceOfAllThreads(Logger log)
+        {
+                if (!log.isLoggable(Level.SEVERE))
+                {
+                        return;
+                }
+                
+                Map<Thread, StackTraceElement[]> traces = Thread.getAllStackTraces();
+                for (Map.Entry<Thread, StackTraceElement[]> e : traces.entrySet())
+                {
+                        Thread thread = e.getKey();
+                        StackTraceElement[] trace = e.getValue();
+
+
+                        String text = "";
+
+                        for (StackTraceElement stack : trace)
+                        {
+                                text += stack.toString() + "\n";
+                        }
+
+                        log.log(Level.SEVERE, "Thread {0} is alive {1} and daemon {2} and interrupted {3}. Trace: {4} ", 
+                                new Object[]
+                                {
+                                        thread.getName(),
+                                        thread.isAlive(),
+                                        thread.isDaemon(),
+                                        thread.isInterrupted(),
+                                        text
+                                }
+                        );
+                }
         }
 }
