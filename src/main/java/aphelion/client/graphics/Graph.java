@@ -64,6 +64,7 @@ public class Graph extends Graphics
          */
         public static void graphicsLoop()
         {
+                nanoTime = System.nanoTime();
         }
         
         public void setDimensions(int width, int height)
