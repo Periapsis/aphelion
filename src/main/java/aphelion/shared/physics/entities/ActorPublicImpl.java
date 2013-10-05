@@ -106,7 +106,7 @@ public class ActorPublicImpl implements ActorPublic
                 
                 actor = this.actorRef == null ? null : this.actorRef.get();
                 
-                if (actor == null || actor.pid != this.pid || actor.removed)
+                if (actor == null || actor.pid != this.pid)
                 {
                         actor = state.actors.get(this.pid);
                         if (actor == null)
@@ -148,7 +148,7 @@ public class ActorPublicImpl implements ActorPublic
         }
         
         @Override
-        public boolean isDeleted()
+        public boolean isRemoved()
         {
                 Actor actor;
                 actor = getActor();
@@ -157,7 +157,20 @@ public class ActorPublicImpl implements ActorPublic
                         return true;
                 }
                 
-                return actor.removed;
+                return actor.isRemoved();
+        }
+        
+        @Override
+        public boolean isRemoved(long tick)
+        {
+                Actor actor;
+                actor = getActor();
+                if (actor == null)
+                {
+                        return true;
+                }
+                
+                return actor.isRemoved(tick);
         }
 
         @Override
@@ -558,10 +571,22 @@ public class ActorPublicImpl implements ActorPublic
                 {
                         return false;
                 }
-                else
+                
+                return actor.isDead(state.tick_now);
+        }
+        
+        @Override
+        public boolean isDead(long tick)
+        {
+                Actor actor;
+                actor = getActor();
+
+                if (actor == null)
                 {
-                        return actor.dead;
+                        return false;
                 }
+                
+                return actor.isDead(tick);
         }
 
         @Override
@@ -624,7 +649,7 @@ public class ActorPublicImpl implements ActorPublic
                 }
                 else
                 {
-                        if (actor.removed || actor.dead)
+                        if (actor.isRemoved() || actor.isDead(state.tick_now))
                         {
                                 return false;
                         }
@@ -649,7 +674,7 @@ public class ActorPublicImpl implements ActorPublic
                         return false;
                 }
                 
-                if (actor.removed || actor.dead)
+                if (actor.isRemoved() || actor.isDead(state.tick_now))
                 {
                         return false;
                 }
@@ -674,7 +699,7 @@ public class ActorPublicImpl implements ActorPublic
                         return false;
                 }
                 
-                if (actor.removed || actor.dead)
+                if (actor.isRemoved() || actor.isDead(state.tick_now))
                 {
                         return false;
                 }

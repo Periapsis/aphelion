@@ -99,7 +99,7 @@ public class Collision
          * @param map The map to use for collision
          * @param tileCollide 
          * @param collidesWith All the entities that this entity may collide with
-         * @param collidesWithFilter A filter to apply on collidesWith
+         * @param collidesWithFilter A filter to apply on collidesWith. ARG is the current tick
          * @param radius The radius in pixels * 1024 (not diameter) of the object. The radius may be 0 if it has no
          * diameter, like a bullet.
          * @param bounceFriction The velocity should decrease by this factor when bouncing (1024 = no slow down, 0 = stop)
@@ -118,7 +118,7 @@ public class Collision
                 PhysicsPointHistoryDetailed posHistoryDetails,
                 PhysicsPoint oldPos, PhysicsPoint vel,
                 PhysicsMap map, boolean tileCollide,
-                List<MapEntity> collidesWith, LoopFilter<MapEntity> collidesWithFilter,
+                List<MapEntity> collidesWith, LoopFilter<MapEntity, Long> collidesWithFilter,
                 int radius, int bounceFriction, int otherAxisFriction, 
                 int bounces_left, int activate_bounces_left)
         {
@@ -196,7 +196,7 @@ public class Collision
                                 ++a)
                         {
                                 MapEntity en = collidesWith.get(a);
-                                if (collidesWithFilter.loopFilter(en))
+                                if (collidesWithFilter.loopFilter(en, tick))
                                 {
                                         continue;
                                 }

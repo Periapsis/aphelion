@@ -92,7 +92,7 @@ public class PhysicsEnvironmentTest extends PhysicsTest
                 assertNull(env.getActor(2));
 
                 env.tick(); // 2
-                assertTrue(env.getActor(1).isDeleted());
+                assertTrue(env.getActor(1).isRemoved());
                 assertNotNull(env.getActor(2));
 
                 // late operation, should execute immediately
@@ -101,17 +101,17 @@ public class PhysicsEnvironmentTest extends PhysicsTest
 
                 // operations with the same tick should execute in the same order they are added
                 env.actorRemove(1, 3);
-                assertTrue(env.getActor(3).isDeleted());
+                assertTrue(env.getActor(3).isRemoved());
 
                 env.actorNew(3, 4, "Player 4", 1234, "Warbird"); // tick,pid
                 env.actorRemove(3, 4);
                 env.tick(); // 3
-                assertTrue(env.getActor(4).isDeleted());
+                assertTrue(env.getActor(4).isRemoved());
 
                 ActorPublic actor2 = env.getActor(2);
-                assertFalse(actor2.isDeleted());
+                assertFalse(actor2.isRemoved());
                 env.actorRemove(3, 2);
-                assertTrue(actor2.isDeleted());
+                assertTrue(actor2.isRemoved());
         }
 
         @Test

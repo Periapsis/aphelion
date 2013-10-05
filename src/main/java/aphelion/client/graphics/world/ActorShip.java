@@ -183,7 +183,7 @@ public class ActorShip extends MapEntity implements TickEvent, WrappedValueAbstr
                         return;
                 }
                 
-                if (actor.isDeleted())
+                if (actor.isRemoved())
                 {
                         return;
                 }

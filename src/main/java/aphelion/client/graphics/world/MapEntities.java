@@ -205,7 +205,7 @@ public class MapEntities implements TickEvent, LoopEvent, Animator
                 return actorShips.get(pid);
         }
         
-        public Iterator<Projectile> projectileIterator(final boolean includeRemoved)
+        public Iterator<Projectile> projectileIterator(final boolean includeNonExist)
         {
                 if (physicsEnv == null)
                 {
@@ -217,11 +217,6 @@ public class MapEntities implements TickEvent, LoopEvent, Animator
                         @Override
                         public Projectile filter(ProjectilePublic next)
                         {
-                                if (!includeRemoved && next.isRemoved())
-                                {
-                                        return null;
-                                }
-                                
                                 Projectile projectile = projectileAttachment.get(next);
                                 if (projectile == null)
                                 {
@@ -229,7 +224,11 @@ public class MapEntities implements TickEvent, LoopEvent, Animator
                                         projectileAttachment.set(next, projectile);
                                         // caveat: if a timewarp destroys and recreates a projectile, 
                                         // this data is lost
-
+                                }
+                                
+                                if (!includeNonExist && !projectile.exists)
+                                {
+                                        return null;
                                 }
                                 
                                 return projectile;
@@ -239,14 +238,14 @@ public class MapEntities implements TickEvent, LoopEvent, Animator
                 return it;
         }
         
-        public Iterable<Projectile> projectiles(final boolean includeRemoved)
+        public Iterable<Projectile> projectiles(final boolean includeNonExist)
         {
                 return new Iterable<Projectile>()
                 {
                         @Override
                         public Iterator<Projectile> iterator()
                         {
-                                return projectileIterator(includeRemoved);
+                                return projectileIterator(includeNonExist);
                         }
                 };
         }
@@ -337,7 +336,7 @@ public class MapEntities implements TickEvent, LoopEvent, Animator
                         itActor.value().tick(tick);
                 }
                 
-                Iterator<Projectile> itProjectile = projectileIterator(false);
+                Iterator<Projectile> itProjectile = projectileIterator(true);
                 while (itProjectile.hasNext())
                 {
                         itProjectile.next().tick(tick);

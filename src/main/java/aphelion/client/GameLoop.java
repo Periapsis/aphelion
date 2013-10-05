@@ -492,6 +492,8 @@ public class GameLoop
                         
                         ActorPublic physicsActor = actorShip.getActor();
                         
+                        
+                        
                         long spawnedAgo = physicsEnv.getTick() - physicsActor.getSpawnedAt();
                         
                         int renderDelay = SwissArmyKnife.clip(
@@ -509,16 +511,29 @@ public class GameLoop
                         }
                         
                         actorShip.renderingAt_ticks = physicsEnv.getTick() - renderDelay;
+                        actorShip.exists = true;
                         
-                        actorShip.exists = physicsActor.getHistoricPosition(actorPos, physicsEnv.getTick() - renderDelay, true);
-                        actorShip.exists = actorShip.exists && !physicsActor.isDead();
+                        if (physicsActor.isRemoved(actorShip.renderingAt_ticks))
+                        {
+                                actorShip.exists = false;
+                        }
                         
-                        if (actorShip.exists)
+                        if (physicsActor.isDead(actorShip.renderingAt_ticks))
+                        {
+                                actorShip.exists = false;
+                        }  
+
+                        if (physicsActor.getHistoricPosition(actorPos, physicsEnv.getTick() - renderDelay, true))
                         {
                                 actorShip.setPositionFromPhysics(actorPos.x, actorPos.y);
                                 actorShip.setRotationFromPhysics(actorPos.rot_snapped);
                                 actorShip.setNameFromPhysics(physicsActor.getName());
                         }
+                        else
+                        {
+                                actorShip.exists = false;
+                        }
+
 
                         if (physicsActor.getPosition(actorPos))
                         {
@@ -537,7 +552,7 @@ public class GameLoop
                 PhysicsPoint historicProjectilePos = new PhysicsPoint();
                 Point diff = new Point();
                 
-                Iterator<Projectile> projectileIt = mapEntities.projectileIterator(false);
+                Iterator<Projectile> projectileIt = mapEntities.projectileIterator(true);
                 while (projectileIt.hasNext())
                 {
                         Projectile projectile = projectileIt.next();
@@ -604,14 +619,23 @@ public class GameLoop
                         
                         projectile.renderingAt_ticks = physicsEnv.getTick() - renderDelay;
                         
-                        projectile.exists = physicsProjectile.getHistoricPosition(
+                        projectile.exists = true;
+                        
+                        if (physicsProjectile.isRemoved(projectile.renderingAt_ticks))
+                        {
+                                projectile.exists = false;
+                        }
+                        
+                        if (physicsProjectile.getHistoricPosition(
                                 historicProjectilePos, 
                                 projectile.renderingAt_ticks, 
-                                true);
-                        
-                        if (projectile.exists)
+                                true))
                         {
                                 projectile.setPositionFromPhysics(historicProjectilePos.x, historicProjectilePos.y);
+                        }
+                        else
+                        {
+                                projectile.exists = false;
                         }
                 }
                 
@@ -833,7 +857,7 @@ public class GameLoop
                         
                         localPid = networkedGame.getMyPid();
                         
-                        if (localActor == null || localActor.isDeleted())
+                        if (localActor == null || localActor.isRemoved())
                         {
                                 return;
                         }

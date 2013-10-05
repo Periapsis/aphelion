@@ -61,7 +61,8 @@ import java.util.Iterator;
 public interface ActorPublic
 {
         boolean hasReference();
-        boolean isDeleted();
+        boolean isRemoved();
+        boolean isRemoved(long tick);
         int getStateId();
         int getPid();
         boolean getPosition(PhysicsShipPosition pos);
@@ -77,6 +78,7 @@ public interface ActorPublic
         int randomRotation(long tick); // consistent & randomish
         int getEnergy(); // * 1024
         boolean isDead();
+        boolean isDead(long tick);
         long getSpawnedAt();
         boolean canChangeShip(); // can the player change its ship, freq, etc?
         boolean canBoost(); // can the player use boost right now (after burners)

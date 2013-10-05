@@ -87,7 +87,7 @@ public abstract class PhysicsTest
         protected void assertActorExists(ActorPublic actor)
         {
                 assertNotNull(actor);
-                assertTrue(!actor.isDeleted());
+                assertTrue(!actor.isRemoved());
         }
         
         protected void assertActorNotExists(ActorPublic actor)
@@ -97,7 +97,7 @@ public abstract class PhysicsTest
                         return;
                 }
                 
-                assertTrue(actor.isDeleted());
+                assertTrue(actor.isRemoved());
         }
         
         protected void assertProjectileExists(ProjectilePublic actor)

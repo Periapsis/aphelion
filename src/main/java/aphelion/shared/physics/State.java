@@ -113,7 +113,7 @@ public class State
                                 actor.moveHistory.setHistory(tick_now, null);
                         }
                         
-                        if (actor.removed)
+                        if (actor.isRemoved())
                         {
                                 // Can we really remove the actor now?
                                 if (env.tick_now - actor.removedAt_tick > env.TRAILING_STATES * PhysicsEnvironment.TRAILING_STATE_DELAY)
@@ -121,7 +121,7 @@ public class State
                                         boolean activeSomewhere = false;
                                         for (int s = 0; s < actor.crossStateList.length; ++s)
                                         {
-                                                if (actor.crossStateList[s] != null && !actor.crossStateList[s].removed)
+                                                if (actor.crossStateList[s] != null && !actor.crossStateList[s].isRemoved())
                                                 {
                                                         activeSomewhere = true;
                                                         break;
@@ -160,13 +160,13 @@ public class State
                                 continue; // skip dead reckoning
                         }
                         
-                        if (actor.dead)
+                        if (actor.isDead(tick_now))
                         {
                                 if (this.tick_now >= actor.spawnAt_tick)
                                 {
                                         assert this.tick_now == actor.spawnAt_tick;
                                         PhysicsPoint spawn = new PhysicsPoint();
-                                        actor.dead = false;
+                                        actor.dead.setAbsoluteValue(0, actor.spawnAt_tick, 0);
                                         
                                         if (actor.empUntil_tick != null && actor.empUntil_tick >= actor.spawnAt_tick)
                                         {
@@ -206,7 +206,7 @@ public class State
                         
                         // do not bother if the projectile index is not 0
                         // in this case, it has already been checked (thanks to combined)
-                        if (projectile.removed)
+                        if (projectile.isRemoved())
                         {
                                 // NOTE: this removal checking has been optimized to turn 
                                 // "n * (n-1)" checks into "n" checks (in the case of coupled 
@@ -226,7 +226,7 @@ public class State
                                                 for (int s = 0; s < coupledProjectile.crossStateList.length; ++s)
                                                 {
                                                         if (coupledProjectile.crossStateList[s] != null 
-                                                                && !coupledProjectile.crossStateList[s].removed)
+                                                                && !coupledProjectile.crossStateList[s].isRemoved())
                                                         {
                                                                 activeSomewhere = true;
                                                                 break ACTIVE_CHECK;

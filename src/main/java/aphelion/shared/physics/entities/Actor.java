@@ -121,8 +121,9 @@ public class Actor extends MapEntity
         
         
         public Long empUntil_tick;
-        public boolean dead = false;
-        public long spawnAt_tick; // only valid if dead = true
+        
+        public final RollingHistorySerialInteger dead;
+        public Long spawnAt_tick;
         
         // IF AN ATTRIBUTE IS ADDED, DO NOT FORGET TO UPDATE resetTo()
         // (except config, publicWrapper, etc)
@@ -326,6 +327,9 @@ public class Actor extends MapEntity
                 rotHistory = new PhysicsPointHistory(createdAt_tick, HISTORY_LENGTH);
                 energy = new RollingHistorySerialInteger(createdAt_tick, HISTORY_LENGTH, ENERGY_SETTER.values().length);
                 energy.setMinimum(createdAt_tick, 0);
+                dead = new RollingHistorySerialInteger(createdAt_tick, HISTORY_LENGTH, 1);
+                dead.setMinimum(createdAt_tick, 0);
+                dead.setMaximum(createdAt_tick, 1);
                 
                 actorConfigSelection = state.config.newSelection();
                 
@@ -391,6 +395,7 @@ public class Actor extends MapEntity
                 {
                         s.setLastWeaponFire(lastWeaponFire.weaponKey);
                 }
+                
                 s.setEnergy(energy.get(state.tick_now));
                 
                 if (empUntil_tick == null)
@@ -401,8 +406,17 @@ public class Actor extends MapEntity
                 {
                         s.setEmpUntilTick(this.empUntil_tick);
                 }
-                s.setDead(dead);
-                s.setSpawnAtTick(this.spawnAt_tick);
+                
+                s.setDead(dead.get(state.tick_now) == 1);
+                
+                if (this.spawnAt_tick == null)
+                {
+                        s.clearSpawnAtTick();
+                }
+                else
+                {
+                        s.setSpawnAtTick(this.spawnAt_tick);
+                }
                 
         }
         
@@ -482,10 +496,36 @@ public class Actor extends MapEntity
                 {
                         this.empUntil_tick = initFromSync_set(this.empUntil_tick, null);
                 }
-                this.dead = initFromSync_set(this.dead, s.getDead());
-                this.spawnAt_tick = initFromSync_set(this.spawnAt_tick, s.getSpawnAtTick() - tick_offset);
+                
+                
+                this.dead.setAbsoluteValue(0, operation_tick, s.getDead() ? 1 : 0);
+                
+                if (s.hasSpawnAtTick())
+                {
+                        this.spawnAt_tick = initFromSync_set(this.spawnAt_tick, s.getSpawnAtTick() - tick_offset);
+                }
+                else
+                {
+                        this.spawnAt_tick = initFromSync_set(this.spawnAt_tick, null);
+                }
                 
                 return tmp_initFromSync_dirty;
+        }
+        
+        public boolean isDead(long tick)
+        {
+                return dead.get(tick) == 1;
+        }
+        
+        public void died(long tick)
+        {
+                dead.setAbsoluteValue(0, tick, 1);
+                spawnAt_tick = tick + respawnDelay.get();
+                if (spawnAt_tick <= tick)
+                {
+                        // can not be respawned in this tick (or in the past)
+                        spawnAt_tick = tick + 1;
+                }
         }
         
         /** Perform dead reckoning on this actor for the specified number of ticks.
@@ -732,14 +772,16 @@ public class Actor extends MapEntity
                 
                 energy.set(other.energy);
                 empUntil_tick = other.empUntil_tick;
-                dead = other.dead;
+                dead.set(other.dead);
                 spawnAt_tick = other.spawnAt_tick;
         }
+        
+        
         
         public boolean canFireWeapon(WEAPON_SLOT weapon, long tick)
         {
                 Actor.WeaponConfig config = this.weaponSlots[weapon.id].config;
-                if (this.dead)
+                if (isDead(tick))
                 {
                         return false;
                 }
@@ -800,18 +842,18 @@ public class Actor extends MapEntity
         
         public void tickEnergy()
         {
-                int recharge = this.recharge.get();
-                if (dead)
+                int effectiveRecharge = this.recharge.get();
+                if (isDead(state.tick_now))
                 {
-                        recharge = 0;
+                        effectiveRecharge = 0;
                 }
                 
                 if (this.empUntil_tick != null && state.tick_now <= this.empUntil_tick)
                 {
-                        recharge = 0;
+                        effectiveRecharge = 0;
                 }
                 
-                energy.setRelativeValue(ENERGY_SETTER.RECHARGE.id, state.tick_now, recharge);
+                energy.setRelativeValue(ENERGY_SETTER.RECHARGE.id, state.tick_now, effectiveRecharge);
                 energy.setMinimum(state.tick_now, 0);
                 energy.setMaximum(state.tick_now, this.getMaxEnergy());
         }
@@ -936,7 +978,7 @@ public class Actor extends MapEntity
                                 continue;
                         }
                         
-                        if (proj.removed && proj.removedAt_tick <= tick)
+                        if (proj.isRemoved(tick))
                         {
                                 continue;
                         }

@@ -161,7 +161,7 @@ public class ProjectileExplosion extends Event implements ProjectileExplosionPub
                         
                         for(Projectile coupledProjectile : explodedProjectile.coupled)
                         {
-                                if (coupledProjectile.removed)
+                                if (coupledProjectile.isRemoved(tick))
                                 {
                                         continue;
                                 }
@@ -215,13 +215,7 @@ public class ProjectileExplosion extends Event implements ProjectileExplosionPub
                         if (actorHit.energy.get(tick) <= 0)
                         {
                                 hist.killed_pids.add(actorHit.pid);
-                                actorHit.dead = true;
-                                actorHit.spawnAt_tick = tick + actorHit.respawnDelay.get();
-                                if (actorHit.spawnAt_tick <= tick)
-                                {
-                                        // can not be respawned in this tick (or in the past)
-                                        actorHit.spawnAt_tick = tick + 1;
-                                }
+                                actorHit.died(tick);
                         }
 
                         actorHit.applyEmp(tick, explodedProjectile.cfg(explodedConfig.projectile_empTime, tick));

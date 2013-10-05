@@ -40,14 +40,15 @@ package aphelion.shared.swissarmyknife;
 /**
  *
  * @param <T> 
+ * @param <ARG> 
  * @author Joris
  */
-public interface LoopFilter<T>
+public interface LoopFilter<T, ARG>
 {
-        public static final LoopFilter NO_FILTER = new LoopFilter() {
-
+        public static final LoopFilter NO_FILTER = new LoopFilter()
+        {
                 @Override
-                public boolean loopFilter(Object obj)
+                public boolean loopFilter(Object obj, Object argument)
                 {
                         return false;
                 }
@@ -56,7 +57,8 @@ public interface LoopFilter<T>
         /** This method is called for every loop iteration. 
          * 
          * @param obj 
+         * @param argument Optional argument
          * @return true if this object should be skipped
          */
-        boolean loopFilter(T obj);
+        boolean loopFilter(T obj, ARG argument);
 }

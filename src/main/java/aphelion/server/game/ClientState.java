@@ -293,7 +293,7 @@ public class ClientState
                         assert actor.hasReference();
 
 
-                        if (actor.isDeleted())
+                        if (actor.isRemoved())
                         {
                                 continue;
                         }

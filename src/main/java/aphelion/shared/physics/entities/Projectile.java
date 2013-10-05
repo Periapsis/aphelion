@@ -143,7 +143,7 @@ public final class Projectile extends MapEntity implements ProjectilePublic
                 p.setBounceOtherAxisFriction(bounceOtherAxisFriction);
                 p.setProxDist(proxDist); 
                 p.setProxExplodeDelay(proxExplodeDelay); 
-                p.setProxActivatedBy(proxActivatedBy == null || proxActivatedBy.removed ? 0 : proxActivatedBy.pid); 
+                p.setProxActivatedBy(proxActivatedBy == null || proxActivatedBy.isRemoved() ? 0 : proxActivatedBy.pid); 
                 p.setProxLastSeenDist(proxLastSeenDist); 
                 p.setProxLastSeenDistTick(proxLastSeenDist_tick); 
                 p.setProxActivatedAtTick(proxActivatedAt_tick);
@@ -266,7 +266,7 @@ public final class Projectile extends MapEntity implements ProjectilePublic
                 {
                         long tick = tick_now + t;
                         
-                        if (this.removed)
+                        if (this.isRemoved(tick))
                         {
                                 updatePositionHistory(tick);
                                 continue;
@@ -371,13 +371,13 @@ public final class Projectile extends MapEntity implements ProjectilePublic
                         // Proximity bombs 
                         // (unlike continuum prox bombs still take part in regular collision unless 
                         //  disabled by config)
-                        if (proxDist > 0 && (this.proxActivatedBy == null || this.proxActivatedBy.removed))
+                        if (proxDist > 0 && (this.proxActivatedBy == null || this.proxActivatedBy.isRemoved(tick)))
                         {
                                 long proxDistSq = proxDist * (long) proxDist;
 
                                 for (Actor actor : state.actorsList)
                                 {
-                                        if (this.collidesWithFilter.loopFilter(actor))
+                                        if (this.collidesWithFilter.loopFilter(actor, tick))
                                         {
                                                 continue;
                                         }
@@ -437,7 +437,7 @@ public final class Projectile extends MapEntity implements ProjectilePublic
         
         public void explodeWithoutHit(long tick, ProjectileExplosionPublic.EXPLODE_REASON reason)
         {
-                if (this.removed && tick >= this.removedAt_tick)
+                if (this.isRemoved(tick))
                 {
                         assert false;
                 }
@@ -575,7 +575,7 @@ public final class Projectile extends MapEntity implements ProjectilePublic
                 
                 for (Actor actor : state.actorsList)
                 {
-                        if (actor.removed || actor.dead) { continue; }
+                        if (actor.isRemoved(tick) || actor.isDead(tick)) { continue; }
                         if (actor == except) { continue; }
                         if (actor == this.owner && !damageSelf) { continue; }
                         
@@ -595,13 +595,7 @@ public final class Projectile extends MapEntity implements ProjectilePublic
                                 }
                                 else
                                 {
-                                        actor.dead = true;
-                                        actor.spawnAt_tick = tick + actor.respawnDelay.get();
-                                        if (actor.spawnAt_tick <= tick)
-                                        {
-                                                // can not be respawned in this tick (or in the past)
-                                                actor.spawnAt_tick = tick + 1;
-                                        }
+                                        actor.died(tick);
                                         killed.add(actor.pid);
                                 }
                         }
@@ -625,7 +619,7 @@ public final class Projectile extends MapEntity implements ProjectilePublic
                 
                 for (Actor actor : state.actorsList)
                 {
-                        if (actor.removed || actor.dead) { continue; }
+                        if (actor.isRemoved(tick) || actor.isDead(tick)) { continue; }
                         if (actor == except) { continue; }
                         if (actor == this.owner && !damageSelf) { continue; }
                         
@@ -674,16 +668,17 @@ public final class Projectile extends MapEntity implements ProjectilePublic
                 return (List<MapEntity>) (Object) state.actorsList;
         }
 
-        public final LoopFilter<MapEntity> collidesWithFilter = new LoopFilter<MapEntity>() {
-
+        // second arg = tick
+        public final LoopFilter<MapEntity, Long> collidesWithFilter = new LoopFilter<MapEntity, Long>()
+        {
                 @Override
-                public boolean loopFilter(MapEntity en)
+                public boolean loopFilter(MapEntity en, Long arg)
                 {
                         if (en instanceof Actor)
                         {
                                 Actor actor = (Actor) en;
                                 
-                                if (actor.removed || actor.dead)
+                                if (actor.isRemoved(arg) || actor.isDead(arg))
                                 {
                                         return true;
                                 }
@@ -788,12 +783,6 @@ public final class Projectile extends MapEntity implements ProjectilePublic
         public Iterator<ProjectilePublic> getCoupledProjectiles()
         {
                 return (Iterator<ProjectilePublic>) (Object) coupled.iteratorReadOnly();
-        }
-
-        @Override
-        public boolean isRemoved()
-        {
-                return this.removed;
         }
 
         public int configSeed(long tick)

@@ -53,7 +53,7 @@ import aphelion.shared.physics.valueobjects.PhysicsPositionVector;
 public abstract class MapEntity
 {
         public long createdAt_tick;
-        public boolean removed = false;
+        protected boolean removed = false;
         /** valid if removed = true */
         public long removedAt_tick;
         
@@ -100,6 +100,21 @@ public abstract class MapEntity
                 }
                 
                 removed = true;
+        }
+        
+        public boolean isRemoved()
+        {
+                return this.removed;
+        }
+        
+        public boolean isRemoved(long tick)
+        {
+                if (this.removed)
+                {
+                        return this.removedAt_tick <= tick;
+                }
+                
+                return false;
         }
         
         public MapEntity getOlderEntity(long tick, boolean ignoreSoftDelete, boolean lookAtOtherStates)

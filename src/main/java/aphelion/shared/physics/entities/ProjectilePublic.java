@@ -58,6 +58,7 @@ import java.util.Iterator;
 public interface ProjectilePublic extends Attachable
 {
         boolean isRemoved();
+        boolean isRemoved(long tick);
         
         int getStateId();
         
