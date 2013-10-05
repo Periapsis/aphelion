@@ -37,7 +37,6 @@
  */
 package aphelion.shared.swissarmyknife;
 
-import aphelion.shared.swissarmyknife.RollingHistorySerialInteger;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
@@ -67,6 +66,10 @@ public class RollingHistorySerialIntegerTest
                 hist.setRelativeValue(0, 101, 20);
                 assertEquals(10, hist.get(100));
                 assertEquals(30, hist.get(101));
+                
+                // 102 has not been set yet but get() must function as if it had been set to 0
+                assertEquals(30, hist.get(102));
+                assertEquals(101, hist.getMostRecentTick());
                 
                 // test setter IDs
                 hist.setRelativeValue(0, 102, 5);
