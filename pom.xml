@@ -108,8 +108,18 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
                                 </configuration>-->
                                 <executions>
                                         <execution>
+                                                <id>protobuf-compile</id>
+                                                <phase>generate-sources</phase>
                                                 <goals>
                                                         <goal>compile</goal>
+                                                                                                                
+                                                </goals>
+                                        </execution>
+                                        <execution>
+                                                <id>protobuf-testCompile</id>
+                                                <phase>generate-test-sources</phase>
+                                                <goals>                                       
+                                                        <goal>compile</goal>                                                
                                                         <goal>testCompile</goal>
                                                 </goals>
                                         </execution>
