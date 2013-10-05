@@ -58,6 +58,8 @@ import org.apache.commons.daemon.DaemonInitException;
 public class ServerDaemon implements Daemon
 {
         private static final Logger log = Logger.getLogger("aphelion.daemon");
+        
+        private static final int EX_SOFTWARE = 70; //  sysexits.h
 
         private ServerSocketChannel ssChannel;
         private AphelionServerThread serverThread;
@@ -107,7 +109,7 @@ public class ServerDaemon implements Daemon
                         public void deadlockAfterStop(TickedEventLoop eventLoop, Thread thread)
                         {
                                 log.log(Level.INFO, "Exit");
-                                System.exit(0);
+                                System.exit(EX_SOFTWARE);
                         }
                 });
         }
@@ -129,7 +131,7 @@ public class ServerDaemon implements Daemon
                         public void serverThreadFailure(Throwable ex)
                         {
                                 log.log(Level.INFO, "Exit");
-                                System.exit(0);
+                                System.exit(EX_SOFTWARE);
                         }
                 });
                 serverThread.start();
