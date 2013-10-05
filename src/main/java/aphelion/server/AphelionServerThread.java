@@ -57,8 +57,14 @@ public class AphelionServerThread extends Thread
         private ServerMain serverMain;
         private int listenPort;
         private boolean gui;
+        private FailureListener failureListener;
         
         private ServerSocketChannel privateSsChannel; // If we opened it ourselves, we need to close it too
+        
+        public static interface FailureListener
+        {
+                void serverThreadFailure(Throwable ex);
+        }
 
         public AphelionServerThread(boolean gui) throws IOException
         {
@@ -88,6 +94,11 @@ public class AphelionServerThread extends Thread
                 listenPort = serverMain.getHTTPListeningPort();
         }
 
+        public void setFailureListener(FailureListener failureListener)
+        {
+                this.failureListener = failureListener;
+        }
+
         public int getHTTPListeningPort()
         {
                 return listenPort;
@@ -111,6 +122,12 @@ public class AphelionServerThread extends Thread
                         {
                                 new ErrorDialog().setErrorText(ex);
                         }
+                        
+                        if (failureListener != null)
+                        {
+                                failureListener.serverThreadFailure(ex);
+                        }
+                        
                         throw ex;
                 }
         }

@@ -41,6 +41,7 @@ package aphelion.server;
 
 import aphelion.server.http.HttpServer;
 import aphelion.shared.event.Deadlock;
+import aphelion.shared.event.TickedEventLoop;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.channels.ServerSocketChannel;
@@ -60,6 +61,7 @@ public class ServerDaemon implements Daemon
 
         private ServerSocketChannel ssChannel;
         private AphelionServerThread serverThread;
+        private Thread main;
         
         @Override
         public void init(DaemonContext dc) throws DaemonInitException, Exception
@@ -93,7 +95,21 @@ public class ServerDaemon implements Daemon
                 InetSocketAddress listen = new InetSocketAddress(hostname, port);
                 this.ssChannel = HttpServer.openServerChannel(listen);
                 
-                Deadlock.start(false, null);
+                Deadlock.start(false, new Deadlock.DeadLockListener()
+                {
+                        @Override
+                        public boolean deadlockDetected(TickedEventLoop eventLoop, Thread thread)
+                        {
+                                return true; // force stop of the offending thread
+                        }
+
+                        @Override
+                        public void deadlockAfterStop(TickedEventLoop eventLoop, Thread thread)
+                        {
+                                log.log(Level.INFO, "Exit");
+                                System.exit(0);
+                        }
+                });
         }
 
         @Override
@@ -101,17 +117,28 @@ public class ServerDaemon implements Daemon
         {
                 // No longer super user
                 // This method must return after starting threads
+                main = Thread.currentThread();
                 
-                log.log(Level.INFO, "Deamon start");
+                log.log(Level.INFO, "Deamon start (thread {0})", Thread.currentThread().getName());
                 
                 serverThread = new AphelionServerThread(false, this.ssChannel);
+                serverThread.setDaemon(true);
+                serverThread.setFailureListener(new AphelionServerThread.FailureListener()
+                {
+                        @Override
+                        public void serverThreadFailure(Throwable ex)
+                        {
+                                log.log(Level.INFO, "Exit");
+                                System.exit(0);
+                        }
+                });
                 serverThread.start();
         }
 
         @Override
         public void stop() throws Exception
         {
-                log.log(Level.INFO, "Deamon stop");
+                log.log(Level.INFO, "Deamon stop", Thread.currentThread().getName());
                 serverThread.stopServer();
         }
 
