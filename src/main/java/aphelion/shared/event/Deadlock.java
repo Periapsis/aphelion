@@ -40,7 +40,7 @@ package aphelion.shared.event;
 import aphelion.client.ErrorDialog;
 import aphelion.shared.swissarmyknife.ThreadSafe;
 import java.util.Iterator;
-import java.util.LinkedList;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -51,13 +51,38 @@ import java.util.logging.Logger;
 public class Deadlock
 {
         private static final Logger log = Logger.getLogger("aphelion.eventloop.deadlock");
-        private final static LinkedList<TickedEventLoop> eventLoops = new LinkedList<>();
+        private final static CopyOnWriteArrayList<TickedEventLoop> eventLoops = new CopyOnWriteArrayList<>();
         private static DeadlockThread thread;
         private static boolean gui;
+        private static DeadLockListener listener;
         
-        public static void start(boolean showGUI)
+        /** If an event loop has not updated its watchdog counter for this many milliseconds, do something. */
+        private static final int CHECK_INTERVAL_MILLIS = 5000;
+        
+        public static interface DeadLockListener
+        {
+                /** Called if a deadlock has been detect in an event loop.
+                 * At this point the event loop is no longer monitored. 
+                 * If the deadlock is resolved by this method, it should call Deadlock.add() to 
+                 * re-add the event loop.
+                 * If this method returns true the thread is forcefully stopped instead.
+                 * @param eventLoop
+                 * @param thread
+                 * @return True if the thread should be forcefully stopped 
+                 */
+                boolean deadlockDetected(TickedEventLoop eventLoop, Thread thread);
+                
+                /** Called after a deadlock has been detected and the thread has been forcefully stopped.
+                 * @param eventLoop
+                 * @param thread  
+                 */
+                void deadlockAfterStop(TickedEventLoop eventLoop, Thread thread);
+        }
+        
+        public static void start(boolean showGUI, DeadLockListener deadlockListener)
         {
                 gui = showGUI;
+                listener = deadlockListener;
                 if (thread != null)
                 {
                         throw new IllegalStateException();
@@ -76,19 +101,13 @@ public class Deadlock
         @ThreadSafe
         public static void add(TickedEventLoop eventLoop)
         {
-                synchronized (eventLoops)
-                {
-                        eventLoops.add(eventLoop);
-                }
+                eventLoops.add(eventLoop);
         }
 
         @ThreadSafe
         public static void remove(TickedEventLoop eventLoop)
         {
-                synchronized (eventLoops)
-                {
-                        eventLoops.remove(eventLoop);
-                }
+                eventLoops.remove(eventLoop);
         }
 
         private static class DeadlockThread extends Thread
@@ -101,61 +120,82 @@ public class Deadlock
 
                         while (true)
                         {
-                                synchronized (eventLoops)
+                                it = eventLoops.iterator();
+                                while (it.hasNext())
                                 {
-                                        it = eventLoops.iterator();
-                                        while (it.hasNext())
-                                        {
-                                                eventLoop = it.next();
+                                        eventLoop = it.next();
 
-                                                if (eventLoop.deadlock_tick == eventLoop.deadlock_tick_lastseen)
-                                                {
-                                                        it.remove();
-                                                        String trace = "";
-                                                        Thread thread = eventLoop.myThread;
-                                                        
-                                                        for (StackTraceElement stack : thread.getStackTrace())
-                                                        {
-                                                                trace += stack.toString() + "\n";
-                                                        }
-                                                        
-                                                        log.log(Level.SEVERE, "Deadlock or infinite loop detected in thread {0}. Stack trace: \n{1}" , 
-                                                                new Object[] {
-                                                                        thread.getName(),
-                                                                        trace
-                                                                });
-                                                        
-                                                        System.out.println("Attemping interrupt");
-                                                        thread.interrupt();
-                                                        
-                                                        try
-                                                        {
-                                                                Thread.sleep(1000);
-                                                        }
-                                                        catch (InterruptedException ex)
-                                                        {
-                                                                return;
-                                                        }
-                                                        
-                                                        System.out.println("Attemping stop");
-                                                        thread.stop();
-                                                        
-                                                        
-                                                        if (gui)
-                                                        {
-                                                                ErrorDialog diag;
-                                                                diag = new ErrorDialog();
-                                                                diag.setTitle("Deadlock: " + thread.getName());
-                                                                diag.setErrorText(trace);
-                                                        }
-                                                }
+                                        if (eventLoop.deadlock_tick != eventLoop.deadlock_tick_lastseen)
+                                        {
                                                 eventLoop.deadlock_tick_lastseen = eventLoop.deadlock_tick;
+                                                continue;
+                                        }
+                                        
+                                        eventLoops.remove(eventLoop);
+                                        String trace = "";
+                                        Thread thread = eventLoop.myThread;
+
+                                        for (StackTraceElement stack : thread.getStackTrace())
+                                        {
+                                                trace += stack.toString() + "\n";
+                                        }
+
+                                        boolean kill = true;
+
+                                        if (listener != null)
+                                        {
+                                                kill = listener.deadlockDetected(eventLoop, thread);
+                                        }
+
+                                        if (kill)
+                                        {
+                                                log.log(Level.SEVERE, "Deadlock or infinite loop detected in thread {0}, attemping to stop ... Stack trace: \n{1}", 
+                                                        new Object[] {
+                                                                thread.getName(),
+                                                                trace
+                                                });
+                                                
+                                                thread.interrupt();
+
+                                                try
+                                                {
+                                                        Thread.sleep(1000);
+                                                }
+                                                catch (InterruptedException ex)
+                                                {
+                                                        return;
+                                                }
+
+                                                log.log(Level.SEVERE, "Attemping stop of thread {0}", thread.getName());
+                                                thread.stop();
+
+                                                if (listener != null)
+                                                {
+                                                        listener.deadlockAfterStop(eventLoop, thread);
+                                                }
+
+                                                if (gui)
+                                                {
+                                                        ErrorDialog diag;
+                                                        diag = new ErrorDialog();
+                                                        diag.setTitle("Deadlock: " + thread.getName());
+                                                        diag.setErrorText(trace);
+                                                }
+                                        }
+                                        else
+                                        {
+                                                log.log(Level.SEVERE, "Deadlock or infinite loop detected in thread {0} (no action). Stack trace: \n{1}", 
+                                                        new Object[] {
+                                                                thread.getName(),
+                                                                trace
+                                                });
                                         }
                                 }
+
                                 
                                 try
                                 {
-                                        Thread.sleep(5000);
+                                        Thread.sleep(CHECK_INTERVAL_MILLIS);
                                 }
                                 catch (InterruptedException ex)
                                 {

@@ -280,7 +280,7 @@ public class Client
         {
                 UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
                 
-                Deadlock.start(true);
+                Deadlock.start(true, null);
                 
                 Client client;
                 client = new Client();

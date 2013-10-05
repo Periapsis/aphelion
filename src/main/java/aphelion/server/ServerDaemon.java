@@ -93,7 +93,7 @@ public class ServerDaemon implements Daemon
                 InetSocketAddress listen = new InetSocketAddress(hostname, port);
                 this.ssChannel = HttpServer.openServerChannel(listen);
                 
-                Deadlock.start(false);
+                Deadlock.start(false, null);
         }
 
         @Override

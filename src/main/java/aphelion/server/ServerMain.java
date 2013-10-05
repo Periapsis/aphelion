@@ -172,7 +172,7 @@ public class ServerMain implements LoopEvent
                 
                 try (ServerSocketChannel ssChannel = HttpServer.openServerChannel(new InetSocketAddress(hostname, port)))
                 {
-                        Deadlock.start(false);
+                        Deadlock.start(false, null);
                         ServerMain main = new ServerMain(ssChannel);
                         main.setup();
                         main.run();
