@@ -58,7 +58,7 @@ public class Deadlock
         private static DeadLockListener listener;
         
         /** If an event loop has not updated its watchdog counter for this many milliseconds, do something. */
-        private static final int CHECK_INTERVAL_MILLIS = 5000;
+        private static final int CHECK_INTERVAL_MILLIS = 30000;
         
         public static interface DeadLockListener
         {
@@ -118,6 +118,8 @@ public class Deadlock
                 {
                         Iterator<TickedEventLoop> it;
                         TickedEventLoop eventLoop;
+                        
+                        setName("Deadlock-" + this.getId());
 
                         while (true)
                         {
