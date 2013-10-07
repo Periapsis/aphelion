@@ -275,15 +275,15 @@ class HttpDownloadThread extends Thread implements ConnectionStateChangeListener
         @ThreadSafe
         void addNewChannel(SocketChannel sChannel) throws IOException
         {
-                if (selector == null) throw new IllegalStateException();
                 newChannels.add(sChannel);
                 
                 try
                 {
                         selector.wakeup();
                 }
-                catch (IllegalStateException ex)
+                catch (IllegalStateException | NullPointerException ex)
                 {
+                        // Thread has not started yet, or it just stopped
                 }
         }
 }
