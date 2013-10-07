@@ -125,7 +125,7 @@ public class WebSocketTest
                                 new URI("ws://127.0.0.1:"+server.getHTTPListeningPort()+"/aphelion"), 
                                 loop, 
                                 new testSingleGameWebSocket_ClientGameListener(), 
-                                1); // 1 connection; TODO: test with multiple
+                                1); // 1 connection;
 
                         loop.addLoopEvent(client);
                         client.connect();
@@ -143,6 +143,8 @@ public class WebSocketTest
 
                         client.close(WS_CLOSE_STATUS.NORMAL);
                         server.closeAll(WS_CLOSE_STATUS.NORMAL);
+                        server.stop();
+                        client.stop();
                 }
         }
         
@@ -365,6 +367,8 @@ public class WebSocketTest
                         assertEquals(465, serverPidSum);
                         client.close(WS_CLOSE_STATUS.NORMAL);
                         server.closeAll(WS_CLOSE_STATUS.NORMAL);
+                        server.stop();
+                        client.stop();
                 }
         }
         

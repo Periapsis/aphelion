@@ -222,6 +222,7 @@ class HttpDownloadThread extends Thread implements ConnectionStateChangeListener
                         }
                         
                         selector.close();
+                        selector = null;
                 }
                 catch (IOException ex)
                 {
@@ -276,6 +277,13 @@ class HttpDownloadThread extends Thread implements ConnectionStateChangeListener
         {
                 if (selector == null) throw new IllegalStateException();
                 newChannels.add(sChannel);
-                selector.wakeup();
+                
+                try
+                {
+                        selector.wakeup();
+                }
+                catch (IllegalStateException ex)
+                {
+                }
         }
 }

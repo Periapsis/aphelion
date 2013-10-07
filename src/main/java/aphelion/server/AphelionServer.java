@@ -56,12 +56,10 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
-import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.ServerSocketChannel;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.java_websocket.framing.CloseFrame;
 
 /** 
  * @author Joris
@@ -81,6 +79,7 @@ public class AphelionServer implements LoopEvent, WebSocketTransportListener
         private GameListener gameClientListener;
         
         private boolean hasSetup = false;
+        private boolean stop = false;
         
         private volatile int ping_players = -1;
         private volatile int ping_playing = -1;
@@ -105,6 +104,11 @@ public class AphelionServer implements LoopEvent, WebSocketTransportListener
         
         public void setup() throws IOException
         {
+                if (stop)
+                {
+                        throw new IllegalStateException();
+                }
+                
                 hasSetup = true;
                 httpServer.setup();
         }
@@ -120,6 +124,11 @@ public class AphelionServer implements LoopEvent, WebSocketTransportListener
         @Override
         public void loop(long systemNanoTime, long sourceNanoTime)
         {
+                if (stop)
+                {
+                        throw new IllegalStateException();
+                }
+                
                 httpServer.loop(systemNanoTime, sourceNanoTime);
                 webSocketTransport.loop(systemNanoTime, sourceNanoTime);
         }
@@ -138,6 +147,7 @@ public class AphelionServer implements LoopEvent, WebSocketTransportListener
         {
                 closeAll(WS_CLOSE_STATUS.NORMAL);
                 httpServer.stop(); // thread join
+                stop = true;
                 log.log(Level.INFO, "AphelionServer has stopped");
         }
         

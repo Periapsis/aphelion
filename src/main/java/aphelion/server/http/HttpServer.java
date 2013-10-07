@@ -90,6 +90,7 @@ import org.java_websocket.handshake.ClientHandshake;
         static final long HTTP_TIMEOUT = 10;
         private static final Logger log = Logger.getLogger("aphelion.server.http");
         public volatile HttpWebSocketServerListener websocketListener;
+        private boolean stop = false;
         File httpdocs;
         ServerSocketChannel ssChannel;
         HttpDownloadThread downloadThread;
@@ -143,6 +144,11 @@ import org.java_websocket.handshake.ClientHandshake;
 
         public void setup() throws IOException
         {
+                if (stop)
+                {
+                        throw new IllegalStateException();
+                }
+                
                 downloadThread.start();
                 for (HttpWebSocketServer s : websocketServers)
                 {
@@ -197,12 +203,19 @@ import org.java_websocket.handshake.ClientHandshake;
                 {
                 }
                 
+                downloadThread = null;
+                stop = true;
                 log.log(Level.INFO, "HttpServer has stopped");
         }
 
         @Override
         public void loop(long systemNanoTime, long sourceNanoTime)
         {
+                if (stop)
+                {
+                        throw new IllegalStateException();
+                }
+                
                 try
                 {
                         SocketChannel sChannel;

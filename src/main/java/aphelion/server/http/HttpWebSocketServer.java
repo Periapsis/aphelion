@@ -377,7 +377,13 @@ class HttpWebSocketServer extends WebSocketAdapter implements Runnable
         @Override
         public final void onWebsocketClose(WebSocket conn, int code, String reason, boolean remote)
         {
-                selector.wakeup();
+                try
+                {
+                        selector.wakeup();
+                }
+                catch (IllegalStateException ex)
+                {
+                }
 
                 if (this.connections.remove(conn))
                 {
@@ -400,7 +406,13 @@ class HttpWebSocketServer extends WebSocketAdapter implements Runnable
         {
                 WebSocketImpl conn = (WebSocketImpl) w;
                 conn.key.interestOps(SelectionKey.OP_READ | SelectionKey.OP_WRITE);
-                selector.wakeup();
+                try
+                {
+                        selector.wakeup();
+                }
+                catch (IllegalStateException ex)
+                {
+                }
         }
 
         public boolean onConnect(SelectionKey key)
@@ -441,7 +453,13 @@ class HttpWebSocketServer extends WebSocketAdapter implements Runnable
                         throw new IllegalStateException();
                 }
                 newChannels.add(new NewChannel(sChannel, prependData));
-                selector.wakeup();
+                try
+                {
+                        selector.wakeup();
+                }
+                catch (IllegalStateException ex)
+                {
+                }
         }
 
         @Override
