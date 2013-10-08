@@ -149,7 +149,7 @@ import org.java_websocket.handshake.ClientHandshake;
                         throw new IllegalStateException();
                 }
                 
-                downloadThread.start();
+                downloadThread.startWaitReady();
                 for (HttpWebSocketServer s : websocketServers)
                 {
                         s.start();

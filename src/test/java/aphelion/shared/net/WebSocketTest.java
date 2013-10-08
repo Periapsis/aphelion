@@ -118,7 +118,6 @@ public class WebSocketTest
                         AphelionServer server = new AphelionServer(ssChannel, new File("./www"), loop);
                         loop.addLoopEvent(server);
                         server.setGameClientListener(new testSingleGameWebSocket_ServerGameListener());
-                        server.setup();
 
                         // set up the client
                         SingleGameConnection client = new SingleGameConnection(
@@ -128,6 +127,7 @@ public class WebSocketTest
                                 1); // 1 connection;
 
                         loop.addLoopEvent(client);
+                        server.setup();
                         client.connect();
 
                         loop.run();

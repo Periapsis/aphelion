@@ -60,6 +60,7 @@ import java.util.logging.Logger;
 class HttpDownloadThread extends Thread implements ConnectionStateChangeListener
 {
         private static final Logger log = Logger.getLogger("aphelion.server.http");
+        private volatile boolean ready = false;
         private Selector selector;
         private File httpdocs;
         private UpgradeWebSocketHandler upgradeWebSocketHandler;
@@ -118,6 +119,23 @@ class HttpDownloadThread extends Thread implements ConnectionStateChangeListener
                 }
         }
         
+        public void startWaitReady()
+        {
+                this.start();
+                while (!ready)
+                {
+                        try
+                        {
+                                Thread.sleep(1);
+                        }
+                        catch (InterruptedException ex)
+                        {
+                                Thread.currentThread().interrupt();
+                                return;
+                        }
+                }
+        }
+        
         static interface UpgradeWebSocketHandler { void upgradeWebSocketHandler(SocketChannel sChannel, ByteBuffer prependData); }
 
         @Override
@@ -127,6 +145,7 @@ class HttpDownloadThread extends Thread implements ConnectionStateChangeListener
                 try
                 {
                         selector = Selector.open();
+                        ready = true;
 
                         while (!this.isInterrupted())
                         {
