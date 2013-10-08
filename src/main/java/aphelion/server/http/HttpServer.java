@@ -152,7 +152,7 @@ import org.java_websocket.handshake.ClientHandshake;
                 downloadThread.startWaitReady();
                 for (HttpWebSocketServer s : websocketServers)
                 {
-                        s.start();
+                        s.startWaitReady();
                 }
                 
                 log.log(Level.INFO, "Http server setup at {0}:{1,number,#}", new Object[] { ssChannel.socket().getInetAddress(), getListeningPort(ssChannel) });

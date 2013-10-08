@@ -77,6 +77,7 @@ class HttpWebSocketServer extends WebSocketAdapter implements Runnable
 {
         private static final Logger log = Logger.getLogger("aphelion.server.http");
         public Thread thread = new Thread(this);
+        private volatile boolean ready = false;
         private Selector selector;
         private ConcurrentLinkedQueue<NewChannel> newChannels = new ConcurrentLinkedQueue<>();
         private HttpWebSocketServerListener listener;
@@ -117,9 +118,22 @@ class HttpWebSocketServer extends WebSocketAdapter implements Runnable
         }
 
         @ThreadSafe
-        public void start()
+        public void startWaitReady()
         {
                 thread.start();
+                
+                while (!ready)
+                {
+                        try
+                        {
+                                Thread.sleep(1);
+                        }
+                        catch (InterruptedException ex)
+                        {
+                                Thread.currentThread().interrupt();
+                                return;
+                        }
+                }
         }
 
         @ThreadSafe
@@ -205,7 +219,7 @@ class HttpWebSocketServer extends WebSocketAdapter implements Runnable
 
                 return false; // false = there is more to write, but give other connections a chance to write something
         }
-
+        
         @Override
         public void run()
         {
@@ -224,6 +238,8 @@ class HttpWebSocketServer extends WebSocketAdapter implements Runnable
                                 log.log(Level.SEVERE, "Unable to open selector", ex);
                                 return;
                         }
+                        
+                        ready = true;
 
                         while (!thread.isInterrupted())
                         {
@@ -448,17 +464,15 @@ class HttpWebSocketServer extends WebSocketAdapter implements Runnable
         @ThreadSafe
         void addNewChannel(SocketChannel sChannel, ByteBuffer prependData)
         {
-                if (selector == null)
-                {
-                        throw new IllegalStateException();
-                }
                 newChannels.add(new NewChannel(sChannel, prependData));
                 try
                 {
                         selector.wakeup();
                 }
-                catch (IllegalStateException ex)
+                catch (IllegalStateException | NullPointerException ex)
                 {
+                        // Thread has not started yet, or it just stopped
+                        assert false;
                 }
         }
 
