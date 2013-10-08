@@ -284,6 +284,7 @@ class HttpDownloadThread extends Thread implements ConnectionStateChangeListener
                 catch (IllegalStateException | NullPointerException ex)
                 {
                         // Thread has not started yet, or it just stopped
+                        assert false;
                 }
         }
 }
