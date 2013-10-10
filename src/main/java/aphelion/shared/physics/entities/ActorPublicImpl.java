@@ -58,6 +58,7 @@ import aphelion.shared.physics.valueobjects.PhysicsShipPosition;
 import aphelion.shared.physics.WEAPON_SLOT;
 import aphelion.shared.resource.ResourceDB;
 import java.lang.ref.WeakReference;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -126,13 +127,24 @@ public class ActorPublicImpl implements ActorPublic
                                         Iterator<Map.Entry<String, ConfigSelection>> it 
                                                 = this.weaponConfigSelections_lastSeen.entrySet().iterator();
                                         
+                                        ArrayList<ConfigSelection> resolveME = new ArrayList<>(weaponConfigSelections_lastSeen.size() + 1);
+                                        resolveME.add(actor.actorConfigSelection);
+                                        
                                         while (it.hasNext())
                                         {
                                                 Map.Entry<String, ConfigSelection> entry = it.next();
                                                 ConfigSelection newSelection = actor.getWeaponConfig(entry.getKey()).configSelection;
                                                 newSelection.adoptAllValues(entry.getValue());
                                                 entry.setValue(newSelection);
+                                                resolveME.add(newSelection);
                                         }
+                                        
+                                        
+                                        for (ConfigSelection sel : resolveME)
+                                        {
+                                                sel.resolveAllValues();
+                                        }
+                                        
                                 }
                         }
                         

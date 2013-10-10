@@ -63,6 +63,10 @@ public class ConfigSelection
                 this.config = config;
         }
         
+        /** Adopt values from another config selection.
+         * The other config selection will have all its values removed.
+         * Make sure to call resolveAllValues() afterwards.
+         */
         public void adoptAllValues(ConfigSelection other)
         {
                 if (other == null) { return; }
