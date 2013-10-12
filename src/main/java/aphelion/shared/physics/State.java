@@ -52,6 +52,8 @@ import gnu.trove.iterator.TIntObjectIterator;
 import gnu.trove.map.hash.TIntObjectHashMap;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -78,6 +80,7 @@ public class State
         
         public final TIntObjectHashMap<Actor> actors = new TIntObjectHashMap<>(ACTOR_INITIALCAPACITY); // actor id -> entity
         public final ArrayList<Actor> actorsList = new ArrayList<>(ACTOR_INITIALCAPACITY);
+        public final LinkedList<Actor> actorsRemovedDuringReset = new LinkedList<>();
         
         public LinkedListHead<Projectile> projectiles = new LinkedListHead<>();
         public final LinkedListHead<Operation> history = new LinkedListHead<>(); // ordered by tick ascending
@@ -351,6 +354,28 @@ public class State
                 config.tick(tick_now); // used for cleanup
                 tickOperations(true); // sync operations
         }
+        
+        /** Lookup an actor that was removed as part of the current timewarp.
+         * This list is cleared after the timewarp has been completed.
+         * If an actor is recreated as part of a timewarp, a new actor object 
+         * should not be created.
+         * Otherwide references (external to physics) might break.
+         * The method used here works properly because PIDs may not be reused.
+         * @param pid
+         * @return  
+         */
+        public Actor getActorRemovedDuringReset(int pid)
+        {
+                for (Actor removedActor : this.actorsRemovedDuringReset)
+                {
+                        if (removedActor.pid == pid)
+                        {
+                                return removedActor;       
+                        }
+                }
+                
+                return null;
+        }
 
         /**
          * Copy everything from the other state (Actors, Projectiles, config, etc)
@@ -386,6 +411,7 @@ public class State
                                         actorIt.remove();
                                         boolean removed = this.actorsList.remove(actorMine);
                                         assert removed;
+                                        this.actorsRemovedDuringReset.add(actorMine);
                                         continue;
                                 }
 
@@ -417,7 +443,13 @@ public class State
                                 // actor that is in the other state, does not exist in mine
                                 if (actorMine == null)
                                 {
-                                        actorMine = new Actor(this, actorOther.crossStateList, actorOther.pid, actorOther.createdAt_tick);
+                                        actorMine = this.getActorRemovedDuringReset(actorOther.pid);
+                
+                                        if (actorMine == null)
+                                        {
+                                                actorMine = new Actor(this, actorOther.crossStateList, actorOther.pid, actorOther.createdAt_tick);
+                                        }
+                                        
                                         actorMine.resetTo(this, actorOther);
                                 }
                         }

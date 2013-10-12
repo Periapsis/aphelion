@@ -6,16 +6,14 @@
 package aphelion.shared.physics;
 
 
+import aphelion.shared.gameconfig.GCInteger;
 import aphelion.shared.gameconfig.GameConfig;
 import static aphelion.shared.physics.PhysicsEnvironmentTest.MOVE_UP;
-import aphelion.shared.physics.entities.ActorPublic;
 import aphelion.shared.physics.entities.ProjectilePublic;
 import aphelion.shared.physics.events.pub.EventPublic;
 import aphelion.shared.physics.events.pub.ProjectileExplosionPublic;
 import aphelion.shared.physics.valueobjects.PhysicsPoint;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.junit.*;
 import static org.junit.Assert.*;
 
@@ -28,12 +26,32 @@ public class TimewarpTest extends PhysicsTest
         @Test
         public void testActorCreation()
         {
+                try
+                {
+                        List<Object> yamlDocuments = GameConfig.loadYaml(""
+                                + "- selector: {ship: warbird}\n"
+                                + "  test-actor-creation-test: 1944619\n"
+                                + "- selector: {ship: javelin}\n"
+                                + "  test-actor-creation-test: 391385\n"
+                        );
+                        env.loadConfig(env.getTick() - PhysicsEnvironment.TOTAL_HISTORY, "test", yamlDocuments);
+                }
+                catch (Exception ex)
+                {
+                        throw new Error(ex);
+                }
+                
+                // todo also test change
+                
                 env.actorNew(1, ACTOR_FIRST, "Bla", 1234, "warbird");
                 env.actorWarp(1, ACTOR_FIRST, false, 1000, 90, 0, 0, 0);
                 
-                env.timewarp(1); // todo list should remain intact
+                env.timewarp(1);
                 env.tick(); // tick 1, it should now create the actor
                 this.assertPosition(1000, 90, env.getActor(ACTOR_FIRST, 0, false));
+                
+                GCInteger testGC = env.getActor(ACTOR_FIRST, 0, false).getActorConfigInteger("test-actor-creation-test");
+                assertEquals(1944619, testGC.get());
                 
                 assertEquals(1, env.getActorCount(0));
                 
@@ -45,10 +63,16 @@ public class TimewarpTest extends PhysicsTest
                 assertEquals(1, env.getActorCount(0));
                 this.assertPosition(1000, 90, env.getActor(ACTOR_FIRST, 0, false));
                 
+                assertEquals(1944619, testGC.get());
+                
+                env.actorModification(3, ACTOR_FIRST, "javelin");
+                
                 while(env.getTick() < PhysicsEnvironment.TRAILING_STATE_DELAY)
                 {
                         env.tick();
                 }
+                
+                assertEquals(391385, testGC.get());
                 
                 assertEquals(1, env.getActorCount(0));
                 
@@ -63,6 +87,8 @@ public class TimewarpTest extends PhysicsTest
                 assertEquals(1, env.getActorCount(0));
                 this.assertPosition(1000, 90, env.getActor(ACTOR_FIRST, 0, false));
                 this.assertPosition(1000, 90, env.getActor(ACTOR_FIRST, 1, false));
+                
+                assertEquals(391385, testGC.get());
         }
         
         @Test

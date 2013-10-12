@@ -43,6 +43,7 @@ import aphelion.shared.physics.entities.Actor;
 import aphelion.shared.physics.PhysicsEnvironment;
 import aphelion.shared.physics.entities.MapEntity;
 import aphelion.shared.physics.State;
+import java.util.Iterator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -96,7 +97,17 @@ public class ActorNew extends Operation implements ActorNewPublic
                         }
                 }
                 
-                actor = new Actor(state, crossStateList, pid, this.tick);
+                actor = state.getActorRemovedDuringReset(pid);
+                
+                if (actor == null)
+                {
+                        actor = new Actor(state, crossStateList, pid, this.tick);
+                }
+                else
+                {
+                        actor.resetTo(state, new Actor(state, crossStateList, pid, this.tick));
+                }
+                
                 crossStateList[state.id] = (MapEntity) actor;
                 actor.name = name;
                 actor.seed = seed;

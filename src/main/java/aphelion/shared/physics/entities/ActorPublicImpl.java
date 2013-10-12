@@ -74,20 +74,12 @@ public class ActorPublicImpl implements ActorPublic
         WeakReference<Actor> actorRef;
         final int pid;
         private final State state;
-        
-        // The actor (and its config selection) may get destroyed in a timewarp
-        // Any config values that were retreived by non physics code will then stop 
-        // being updated properly (such as when the actor changes ship / freq, etc).
-        // If the actor object changes, adopt all the old values.
-        private ConfigSelection actorConfigSelection_lastSeen;
-        private HashMap<String, ConfigSelection> weaponConfigSelections_lastSeen = new HashMap<>();
 
         public ActorPublicImpl(Actor actor, State state)
         {
                 this.actorRef = new WeakReference<>(actor);
                 this.pid = actor.pid;
                 this.state = state;
-                this.actorConfigSelection_lastSeen = actor.actorConfigSelection;
         }
         
         public ActorPublicImpl(int pid, State state)
@@ -117,35 +109,6 @@ public class ActorPublicImpl implements ActorPublic
                         else
                         {
                                 this.actorRef = new WeakReference<>(actor);
-                                
-                                if (this.actorConfigSelection_lastSeen != actor.actorConfigSelection)
-                                {
-                                        actor.actorConfigSelection.adoptAllValues(actorConfigSelection_lastSeen);
-                                        this.actorConfigSelection_lastSeen = actor.actorConfigSelection;
-                                        
-                                        // Adopt weapon config
-                                        Iterator<Map.Entry<String, ConfigSelection>> it 
-                                                = this.weaponConfigSelections_lastSeen.entrySet().iterator();
-                                        
-                                        ArrayList<ConfigSelection> resolveME = new ArrayList<>(weaponConfigSelections_lastSeen.size() + 1);
-                                        resolveME.add(actor.actorConfigSelection);
-                                        
-                                        while (it.hasNext())
-                                        {
-                                                Map.Entry<String, ConfigSelection> entry = it.next();
-                                                ConfigSelection newSelection = actor.getWeaponConfig(entry.getKey()).configSelection;
-                                                newSelection.adoptAllValues(entry.getValue());
-                                                entry.setValue(newSelection);
-                                                resolveME.add(newSelection);
-                                        }
-                                        
-                                        
-                                        for (ConfigSelection sel : resolveME)
-                                        {
-                                                sel.resolveAllValues();
-                                        }
-                                        
-                                }
                         }
                         
                 }
@@ -341,8 +304,7 @@ public class ActorPublicImpl implements ActorPublic
         @Override
         public GCString getWeaponKey(WEAPON_SLOT slot)
         {
-                Actor actor;
-                actor = getActor();
+                Actor actor = getActor();
 
                 if (actor == null)
                 {
@@ -357,108 +319,109 @@ public class ActorPublicImpl implements ActorPublic
         @Override
         public GCInteger getActorConfigInteger(String name)
         {
-                if (actorConfigSelection_lastSeen == null)
+                Actor actor = getActor();
+                if (actor == null)
                 {
                         return null;
                 }
                 
-                return actorConfigSelection_lastSeen.getInteger(name);
+                return actor.actorConfigSelection.getInteger(name);
         }
 
         @Override
         public GCString getActorConfigString(String name)
         {
-                if (actorConfigSelection_lastSeen == null)
+                Actor actor = getActor();
+                if (actor == null)
                 {
                         return null;
                 }
                 
-                return actorConfigSelection_lastSeen.getString(name);
+                return actor.actorConfigSelection.getString(name);
         }
 
         @Override
         public GCBoolean getActorConfigBoolean(String name)
         {
-                if (actorConfigSelection_lastSeen == null)
+                Actor actor = getActor();
+                if (actor == null)
                 {
                         return null;
                 }
                 
-                return actorConfigSelection_lastSeen.getBoolean(name);
+                return actor.actorConfigSelection.getBoolean(name);
         }
         
         @Override
         public GCIntegerList getActorConfigIntegerList(String name)
         {
-                if (actorConfigSelection_lastSeen == null)
+                Actor actor = getActor();
+                if (actor == null)
                 {
                         return null;
                 }
                 
-                return actorConfigSelection_lastSeen.getIntegerList(name);
+                return actor.actorConfigSelection.getIntegerList(name);
         }
 
         @Override
         public GCStringList getActorConfigStringList(String name)
         {
-                if (actorConfigSelection_lastSeen == null)
+                Actor actor = getActor();
+                if (actor == null)
                 {
                         return null;
                 }
                 
-                return actorConfigSelection_lastSeen.getStringList(name);
+                return actor.actorConfigSelection.getStringList(name);
         }
 
         @Override
         public GCBooleanList getActorConfigBooleanList(String name)
         {
-                if (actorConfigSelection_lastSeen == null)
+                Actor actor = getActor();
+                if (actor == null)
                 {
                         return null;
                 }
                 
-                return actorConfigSelection_lastSeen.getBooleanList(name);
+                return actor.actorConfigSelection.getBooleanList(name);
         }
         
         @Override
         public GCImage getActorConfigImage(String name, ResourceDB db)
         {
-                if (actorConfigSelection_lastSeen == null)
+                Actor actor = getActor();
+                if (actor == null)
                 {
                         return null;
                 }
                 
-                return actorConfigSelection_lastSeen.getImage(name, db);
+                return actor.actorConfigSelection.getImage(name, db);
         }
         
         @Override
         public GCColour getActorConfigColour(String name)
         {
-                if (actorConfigSelection_lastSeen == null)
+                Actor actor = getActor();
+                if (actor == null)
                 {
                         return null;
                 }
                 
-                return actorConfigSelection_lastSeen.getColour(name);
+                return actor.actorConfigSelection.getColour(name);
         }
         
         
         private ConfigSelection getWeaponSelection(String weaponKey)
         {
-                ConfigSelection ret = weaponConfigSelections_lastSeen.get(weaponKey);
-                if (ret == null)
+                Actor actor = getActor();
+                if (actor == null)
                 {
-                        Actor actor = getActor();
-                        if (actor == null)
-                        {
-                                return null;
-                        }
-                        
-                        ret = actor.getWeaponConfig(weaponKey).configSelection;
-                        weaponConfigSelections_lastSeen.put(weaponKey, ret);
+                        return null;
                 }
-                
-                return ret;
+
+                return actor.getWeaponConfig(weaponKey).configSelection;
         }
         
         @Override
