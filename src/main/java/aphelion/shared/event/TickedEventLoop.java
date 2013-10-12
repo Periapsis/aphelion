@@ -62,7 +62,7 @@ public class TickedEventLoop implements Workable, Timerable
         
         // used by deadlock
         Thread myThread;
-        volatile long deadlock_tick = 0;
+        volatile long deadlock_tick = 0; // can be updated as often as desired
         volatile long deadlock_tick_lastseen = -1;
         
         // tick and loop events are not added to or removed frequently
@@ -206,6 +206,8 @@ public class TickedEventLoop implements Workable, Timerable
                 assert setup;
                 assert !breakdown;
                 
+                ++deadlock_tick;
+                
                 if (!internal)
                 {
                         // Check for completed work
@@ -227,6 +229,8 @@ public class TickedEventLoop implements Workable, Timerable
                                 {
                                         t.runFromMain.run();
                                 }
+                                
+                                ++deadlock_tick;
                         }
                 }
                 
@@ -237,6 +241,7 @@ public class TickedEventLoop implements Workable, Timerable
                 for (LoopEvent event : loopEvents)
                 {
                         event.loop(systemNanoTime, nanoTime);
+                        ++deadlock_tick;
                 }
                 
 
@@ -253,8 +258,8 @@ public class TickedEventLoop implements Workable, Timerable
                         delta -= TICK;
                         nano += TICK;
                         ++tick;
-                        ++deadlock_tick;
                         tick();
+                        ++deadlock_tick;
                 }
         }
         
