@@ -71,49 +71,40 @@ import java.util.Map;
  */
 public class ActorPublicImpl implements ActorPublic
 {
-        WeakReference<Actor> actorRef;
+        Actor privateActor;
         final int pid;
         private final State state;
 
         public ActorPublicImpl(Actor actor, State state)
         {
-                this.actorRef = new WeakReference<>(actor);
+                this.privateActor = actor;
                 this.pid = actor.pid;
                 this.state = state;
         }
         
         public ActorPublicImpl(int pid, State state)
         {
-                this.actorRef = null;
+                this.privateActor = null;
                 this.pid = pid;
                 this.state = state;
         }
         
         Actor getActor()
         {
-                Actor actor;
                 if (pid == 0)
                 {
                         return null;
                 }
                 
-                actor = this.actorRef == null ? null : this.actorRef.get();
+                assert privateActor.pid == this.pid;
                 
-                if (actor == null || actor.pid != this.pid)
+                if (privateActor == null)
                 {
-                        actor = state.actors.get(this.pid);
-                        if (actor == null)
-                        {
-                                this.actorRef = null;
-                        }
-                        else
-                        {
-                                this.actorRef = new WeakReference<>(actor);
-                        }
-                        
+                        // might return null
+                        privateActor = state.actors.get(this.pid);
                 }
                 
-                return actor;
+                return privateActor;
         }
         
         @Override
@@ -125,8 +116,7 @@ public class ActorPublicImpl implements ActorPublic
         @Override
         public boolean isRemoved()
         {
-                Actor actor;
-                actor = getActor();
+                Actor actor = getActor();
                 if (actor == null)
                 {
                         return true;
@@ -138,8 +128,7 @@ public class ActorPublicImpl implements ActorPublic
         @Override
         public boolean isRemoved(long tick)
         {
-                Actor actor;
-                actor = getActor();
+                Actor actor = getActor();
                 if (actor == null)
                 {
                         return true;
@@ -167,8 +156,7 @@ public class ActorPublicImpl implements ActorPublic
         @Override
         public boolean getPosition(PhysicsShipPosition pos)
         {
-                Actor actor;
-                actor = getActor();
+                Actor actor = getActor();
                 pos.set = false;
                 if (actor == null)
                 {
@@ -196,8 +184,7 @@ public class ActorPublicImpl implements ActorPublic
         @Override
         public boolean getHistoricPosition(PhysicsShipPosition pos, long tick, boolean lookAtOtherStates)
         {
-                Actor actor;
-                actor = getActor();
+                Actor actor = getActor();
                 pos.set = false;
                 
                 if (actor == null)
@@ -211,8 +198,7 @@ public class ActorPublicImpl implements ActorPublic
         @Override
         public PhysicsMoveable getHistoricMovement(long tick, boolean lookAtOtherStates)
         {
-                Actor actor;
-                actor = getActor();
+                Actor actor = getActor();
                 
                 if (actor == null)
                 {
@@ -225,8 +211,7 @@ public class ActorPublicImpl implements ActorPublic
         @Override
         public String getName()
         {
-                Actor actor;
-                actor = getActor();
+                Actor actor = getActor();
                 if (actor == null)
                 {
                         return null; // deleted
@@ -240,8 +225,7 @@ public class ActorPublicImpl implements ActorPublic
         @Override
         public boolean canFireWeapon(WEAPON_SLOT weapon)
         {
-                Actor actor;
-                actor = getActor();
+                Actor actor = getActor();
                 
                 if (actor == null)
                 {
@@ -256,8 +240,7 @@ public class ActorPublicImpl implements ActorPublic
         @Override
         public int getRadius()
         {
-                Actor actor;
-                actor = getActor();
+                Actor actor = getActor();
 
                 if (actor == null)
                 {
@@ -272,8 +255,7 @@ public class ActorPublicImpl implements ActorPublic
         @Override
         public void findSpawnPoint(PhysicsPoint result, long tick)
         {
-                Actor actor;
-                actor = getActor();
+                Actor actor = getActor();
 
                 if (actor == null)
                 {
@@ -288,8 +270,7 @@ public class ActorPublicImpl implements ActorPublic
         @Override
         public int randomRotation(long tick)
         {
-                Actor actor;
-                actor = getActor();
+                Actor actor = getActor();
 
                 if (actor == null)
                 {
@@ -523,8 +504,7 @@ public class ActorPublicImpl implements ActorPublic
         @Override
         public int getEnergy()
         {
-                Actor actor;
-                actor = getActor();
+                Actor actor = getActor();
 
                 if (actor == null)
                 {
@@ -539,8 +519,7 @@ public class ActorPublicImpl implements ActorPublic
         @Override
         public boolean isDead()
         {
-                Actor actor;
-                actor = getActor();
+                Actor actor = getActor();
 
                 if (actor == null)
                 {
@@ -553,8 +532,7 @@ public class ActorPublicImpl implements ActorPublic
         @Override
         public boolean isDead(long tick)
         {
-                Actor actor;
-                actor = getActor();
+                Actor actor = getActor();
 
                 if (actor == null)
                 {
@@ -567,8 +545,7 @@ public class ActorPublicImpl implements ActorPublic
         @Override
         public long getSeed()
         {
-                Actor actor;
-                actor = getActor();
+                Actor actor = getActor();
 
                 if (actor == null)
                 {
@@ -583,8 +560,7 @@ public class ActorPublicImpl implements ActorPublic
         @Override
         public long getSpawnedAt()
         {
-                Actor actor;
-                actor = getActor();
+                Actor actor = getActor();
 
                 if (actor == null)
                 {
@@ -599,8 +575,7 @@ public class ActorPublicImpl implements ActorPublic
         @Override
         public String getShip()
         {
-                Actor actor;
-                actor = getActor();
+                Actor actor = getActor();
 
                 if (actor == null)
                 {
@@ -615,8 +590,7 @@ public class ActorPublicImpl implements ActorPublic
         @Override
         public boolean canChangeShip()
         {
-                Actor actor;
-                actor = getActor();
+                Actor actor = getActor();
 
                 if (actor == null)
                 {
@@ -641,8 +615,7 @@ public class ActorPublicImpl implements ActorPublic
         @Override
         public boolean canBoost()
         {
-                Actor actor;
-                actor = getActor();
+                Actor actor = getActor();
 
                 if (actor == null)
                 {
@@ -666,8 +639,7 @@ public class ActorPublicImpl implements ActorPublic
         @Override
         public boolean isEmped()
         {
-                Actor actor;
-                actor = getActor();
+                Actor actor = getActor();
 
                 if (actor == null)
                 {
@@ -690,8 +662,7 @@ public class ActorPublicImpl implements ActorPublic
         @Override
         public Iterator<ProjectilePublic> projectileIterator()
         {
-                Actor actor;
-                actor = getActor();
+                Actor actor = getActor();
 
                 if (actor == null)
                 {
@@ -704,8 +675,7 @@ public class ActorPublicImpl implements ActorPublic
         @Override
         public boolean getSync(GameOperation.ActorSync.Builder b)
         {
-                Actor actor;
-                actor = getActor();
+                Actor actor = getActor();
 
                 if (actor == null)
                 {
@@ -715,8 +685,4 @@ public class ActorPublicImpl implements ActorPublic
                 actor.getSync(b);
                 return true;
         }
-
-        
-
-
 }
