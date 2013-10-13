@@ -376,13 +376,31 @@ public class State
                 
                 return null;
         }
+        
+        public void timewarp(State older)
+        {
+                long wasTick = this.tick_now;
+
+                this.resetTo(older);
+
+                long tick = this.tick_now + 1;
+                while (tick <= wasTick)
+                {
+                        this.tick(tick);
+                        tick++;
+                }
+
+                this.actorsRemovedDuringReset.clear();
+
+                assert this.tick_now == wasTick;
+        }
 
         /**
          * Copy everything from the other state (Actors, Projectiles, config, etc)
          * (but not operations) to this one.
          */
         @SuppressWarnings("unchecked")
-        void resetTo(State older)
+        private void resetTo(State older)
         {
                 assert older.tick_now <= this.tick_now;
                 this.tick_now = older.tick_now;

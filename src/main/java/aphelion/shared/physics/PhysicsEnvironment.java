@@ -342,19 +342,7 @@ public class PhysicsEnvironment implements TickEvent
                         State newer = this.trailingStates[s - 1];
                         
                         older.needTimewarpToThisState = false;
-
-                        long wasTick = newer.tick_now;
-                        
-                        newer.resetTo(older);
-
-                        long tick = newer.tick_now + 1;
-                        while (tick <= this.tick_now - newer.delay)
-                        {
-                                newer.tick(tick);
-                                tick++;
-                        }
-                        
-                        assert newer.tick_now == wasTick;
+                        newer.timewarp(older);
                 }
                 
                 long end = System.nanoTime();
