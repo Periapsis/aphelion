@@ -373,7 +373,7 @@ public class ActorShip extends MapEntity implements TickEvent, WrappedValueAbstr
                                         y + image.getHeight() / 2f); 
                         }
 
-                        int energy = this.actor.getEnergy() / 1024;
+                        int energy = this.actor.getEnergy(this.renderingAt_tick) / 1024;
                         if(energy < this.maxEnergy.get() / 2)
                         {
                                 Graph.g.setColor(Color.yellow);

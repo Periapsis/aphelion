@@ -518,6 +518,21 @@ public class ActorPublicImpl implements ActorPublic
                         return actor.energy.get(state.tick_now);
                 }
         }
+        
+        @Override
+        public int getEnergy(long tick)
+        {
+                Actor actor = getActor();
+
+                if (actor == null)
+                {
+                        return 0;
+                }
+                else
+                {
+                        return actor.energy.get(tick);
+                }
+        }
 
         @Override
         public boolean isDead()

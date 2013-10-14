@@ -78,6 +78,7 @@ public interface ActorPublic
         void findSpawnPoint(PhysicsPoint result, long tick); // consistent & randomish
         int randomRotation(long tick); // consistent & randomish
         int getEnergy(); // * 1024
+        int getEnergy(long tick); // * 1024
         boolean isDead();
         boolean isDead(long tick);
         long getSpawnAt();
