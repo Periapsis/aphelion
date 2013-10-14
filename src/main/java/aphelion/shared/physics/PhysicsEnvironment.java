@@ -866,6 +866,11 @@ public class PhysicsEnvironment implements TickEvent
                 op.tick = tick;
                 op.pid = pid;
                 op.move = move;
+                
+                if (move == null)
+                {
+                        throw new IllegalArgumentException();
+                }
 
                 return addOperation(op);
         }
@@ -881,6 +886,12 @@ public class PhysicsEnvironment implements TickEvent
                 op.tick = tick;
                 op.pid = pid;
                 op.weapon_slot = weapon_slot;
+                
+                if (weapon_slot == null)
+                {
+                        throw new IllegalArgumentException();
+                }
+                
                 if (hint_set)
                 {
                         op.hint_set = hint_set;

@@ -40,15 +40,16 @@ package aphelion.server;
 
 import aphelion.server.game.ServerGame;
 import aphelion.server.http.HttpServer;
-import aphelion.shared.event.Deadlock;
-import aphelion.shared.event.LoopEvent;
-import aphelion.shared.event.TickedEventLoop;
-import aphelion.shared.event.WorkerTask;
+import aphelion.shared.event.*;
 import aphelion.shared.gameconfig.LoadYamlTask;
 import aphelion.shared.map.MapClassic;
 import aphelion.shared.map.MapClassic.LoadMapTask;
+import aphelion.shared.net.protobuf.GameOperation;
+import aphelion.shared.net.protobuf.GameS2C;
 import aphelion.shared.physics.PhysicsEnvironment;
+import aphelion.shared.physics.valueobjects.PhysicsMovement;
 import aphelion.shared.resource.ResourceDB;
+import aphelion.shared.swissarmyknife.SwissArmyKnife;
 import java.io.File;
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -61,13 +62,17 @@ import java.util.logging.Logger;
  *
  * @author Joris
  */
-public class ServerMain implements LoopEvent
+public class ServerMain implements LoopEvent, TickEvent
 {
         private static final Logger log = Logger.getLogger("aphelion.server");
         private TickedEventLoop loop;
         private ServerSocketChannel listen;
         private AphelionServer server;
         private ServerGame serverGame;
+        private PhysicsEnvironment physicsEnv;
+        
+        private static final int DUMMY_1_PID = -1;
+        private static final int DUMMY_2_PID = -2;
         
         public ServerMain(ServerSocketChannel listen)
         {                
@@ -95,7 +100,7 @@ public class ServerMain implements LoopEvent
                         throw (IOException) ex.getCause();
                 }
                 
-                PhysicsEnvironment physicsEnv = new PhysicsEnvironment(true, map);
+                physicsEnv = new PhysicsEnvironment(true, map);
                 
                 for (LoadYamlTask.Return ret : gameConfig)
                 {
@@ -103,9 +108,12 @@ public class ServerMain implements LoopEvent
                 }
                 gameConfig = null;
                 
-                // TMP:
-                physicsEnv.actorNew(0, -1, "Dummy", 1, "warbird");
-                physicsEnv.actorWarp(0, -1, false, 512 * 16 * 1024, 448 * 16 * 1024, 0, 10000, 0);
+                // dummy for testing
+                physicsEnv.actorNew(0, DUMMY_1_PID, "Dummy", 1, "javelin");
+                physicsEnv.actorWarp(0, DUMMY_1_PID, false, 512 * 16 * 1024, 448 * 16 * 1024, 0, 10000, 0);
+                
+                physicsEnv.actorNew(0, DUMMY_2_PID, "Dummy 2", 1, "terrier");
+                physicsEnv.actorWarp(0, DUMMY_2_PID, false, 512 * 16 * 1024, 448 * 16 * 1024, 0, -10000, 0); 
                 
                 serverGame = new ServerGame(physicsEnv, loop);
                 loop.addLoopEvent(serverGame);
@@ -113,6 +121,7 @@ public class ServerMain implements LoopEvent
                 server.setGameClientListener(serverGame);
                 
                 loop.addLoopEvent(this);
+                loop.addTickEvent(this);
                 server.setup();
         }
         
@@ -144,6 +153,50 @@ public class ServerMain implements LoopEvent
                 {
                         server.setPingPlayerCount(serverGame.getPlayerCount(), -1);
                         // todo playing
+                }
+        }
+
+        @Override
+        public void tick(long tick)
+        {
+                if (tick % 20 == 0) // dummy
+                {
+                        GameS2C.S2C.Builder s2c = GameS2C.S2C.newBuilder();
+                        
+                        {
+                                GameOperation.ActorMove.Builder moveBuilder = s2c.addActorMoveBuilder();
+
+                                moveBuilder.setTick(physicsEnv.getTick()-20);
+                                moveBuilder.setPid(DUMMY_1_PID);
+                                moveBuilder.setDirect(true);
+
+                                PhysicsMovement move = PhysicsMovement.get(SwissArmyKnife.random.nextInt(32));
+                                for (int i = 20; i > 0; --i)
+                                {
+                                        physicsEnv.actorMove(physicsEnv.getTick()-i, DUMMY_1_PID, move);
+                                        moveBuilder.addMove(move.bits);
+                                }
+                        }
+                        
+                        {
+                                GameOperation.ActorMove.Builder moveBuilder = s2c.addActorMoveBuilder();
+
+                                moveBuilder.setTick(physicsEnv.getTick()-20);
+                                moveBuilder.setPid(DUMMY_2_PID);
+                                moveBuilder.setDirect(true);
+
+                                PhysicsMovement move = tick % 1000 < 500 
+                                                       ? PhysicsMovement.get(false, false, false, true, false) 
+                                                       : PhysicsMovement.get(false, false, true, false, false);
+                                
+                                for (int i = 20; i > 0; --i)
+                                {
+                                        physicsEnv.actorMove(physicsEnv.getTick()-i, DUMMY_2_PID, move);
+                                        moveBuilder.addMove(move.bits);
+                                }
+                        }
+                        
+                        serverGame.broadcast(s2c);
                 }
         }
         
