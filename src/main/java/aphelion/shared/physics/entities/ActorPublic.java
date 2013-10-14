@@ -63,6 +63,7 @@ public interface ActorPublic
         boolean hasReference();
         boolean isRemoved();
         boolean isRemoved(long tick);
+        long getCreatedAt();
         int getStateId();
         int getPid();
         boolean getPosition(PhysicsShipPosition pos);
@@ -79,7 +80,7 @@ public interface ActorPublic
         int getEnergy(); // * 1024
         boolean isDead();
         boolean isDead(long tick);
-        long getSpawnedAt();
+        long getSpawnAt();
         boolean canChangeShip(); // can the player change its ship, freq, etc?
         boolean canBoost(); // can the player use boost right now (after burners)
         boolean isEmped();

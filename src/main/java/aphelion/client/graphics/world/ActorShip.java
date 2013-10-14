@@ -137,16 +137,16 @@ public class ActorShip extends MapEntity implements TickEvent, WrappedValueAbstr
         
         public void calculateRenderAtTick(PhysicsEnvironment physicsEnv)
         {
-                long spawnedAgo = physicsEnv.getTick() - actor.getSpawnedAt();
+                long createdAgo = physicsEnv.getTick() - actor.getCreatedAt();
                 
                 currentRenderDelay = SwissArmyKnife.clip(
                         this.renderDelay.get(),
                         0, 
                         physicsEnv.TRAILING_STATES * PhysicsEnvironment.TRAILING_STATE_DELAY - 1);
                 
-                if (currentRenderDelay > spawnedAgo)
+                if (currentRenderDelay > createdAgo)
                 {
-                        currentRenderDelay = (int) spawnedAgo;
+                        currentRenderDelay = (int) createdAgo;
                         if (currentRenderDelay < 0)
                         {
                                 currentRenderDelay = 0;

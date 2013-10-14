@@ -561,7 +561,7 @@ public class ActorPublicImpl implements ActorPublic
         }
 
         @Override
-        public long getSpawnedAt()
+        public long getSpawnAt()
         {
                 Actor actor = getActor();
 
@@ -687,5 +687,18 @@ public class ActorPublicImpl implements ActorPublic
                 
                 actor.getSync(b);
                 return true;
+        }
+
+        @Override
+        public long getCreatedAt()
+        {
+                Actor actor = getActor();
+
+                if (actor == null)
+                {
+                        return 0;
+                }
+                
+                return actor.createdAt_tick;
         }
 }
