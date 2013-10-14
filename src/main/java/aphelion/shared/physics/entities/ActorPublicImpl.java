@@ -96,12 +96,15 @@ public class ActorPublicImpl implements ActorPublic
                         return null;
                 }
                 
-                assert privateActor.pid == this.pid;
-                
                 if (privateActor == null)
                 {
                         // might return null
                         privateActor = state.actors.get(this.pid);
+                }
+                
+                if (privateActor != null)
+                {
+                        assert privateActor.pid == this.pid;
                 }
                 
                 return privateActor;

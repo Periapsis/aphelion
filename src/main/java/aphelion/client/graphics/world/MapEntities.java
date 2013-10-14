@@ -250,6 +250,11 @@ public class MapEntities implements TickEvent, LoopEvent, Animator
                 };
         }
         
+        public Projectile physicsProjectileToGraphics(ProjectilePublic proj)
+        {
+                return projectileAttachment.get(proj);
+        }
+        
         public ActorShip findNearestActor(Point pos, boolean includeLocal)
         {
                 TIntObjectIterator<ActorShip> it = actorShips.iterator();

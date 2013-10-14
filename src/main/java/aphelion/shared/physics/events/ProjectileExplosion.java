@@ -69,6 +69,7 @@ public class ProjectileExplosion extends Event implements ProjectileExplosionPub
         // it will be set as an attribute in every projectile.
         private ArrayList<MapEntity[]> chained_crossStateLists; // projectile index -> state id -> map entity
         
+        
         public ProjectileExplosion()
         {
                 for (int a = 0; a < PhysicsEnvironment.MAX_TRAILING_STATES; ++a)
@@ -79,6 +80,7 @@ public class ProjectileExplosion extends Event implements ProjectileExplosionPub
         
         public void execute(long tick, State state, Projectile explodedProjectile, EXPLODE_REASON reason, Actor actorHit, PhysicsPoint tileHit)
         {
+                super.execute(tick, state);
                 assert state == explodedProjectile.state;
                 
                 boolean doSplash = false;
@@ -334,22 +336,6 @@ public class ProjectileExplosion extends Event implements ProjectileExplosionPub
         }
 
         @Override
-        public boolean isOld(long removeOlderThan_tick)
-        {
-                long highestTick = 0;
-                
-                for (int a = 0; a < PhysicsEnvironment.MAX_TRAILING_STATES; ++a)
-                {
-                        if (history[a].set && history[a].tick > highestTick)
-                        {
-                                highestTick = history[a].tick;
-                        }
-                }
-                
-                return highestTick < removeOlderThan_tick;
-        }
-
-        @Override
         public long getOccuredAt(int stateid)
         {
                 History hist = history[stateid];
@@ -372,13 +358,6 @@ public class ProjectileExplosion extends Event implements ProjectileExplosionPub
         {
                 History hist = history[stateid];
                 return hist.reason;
-        }
-
-        @Override
-        public long getTick(int stateid)
-        {
-                History hist = history[stateid];
-                return hist.tick;
         }
 
         @Override
@@ -436,6 +415,13 @@ public class ProjectileExplosion extends Event implements ProjectileExplosionPub
                 History hist = history[stateid];
                 return hist.killed_pids;
         }
+        
+        @Override
+        public int getKilledSize(int stateid)
+        {
+                History hist = history[stateid];
+                return hist.killed_pids.size();
+        }
 
         @Override
         public void getHitTile(int stateid, PhysicsPoint tile)
@@ -458,8 +444,12 @@ public class ProjectileExplosion extends Event implements ProjectileExplosionPub
                 return (List<ProjectilePublic>) (Object) hist.coupledProjectiles;
         }
 
-        
-
+        @Override
+        public int getCoupledProjectilesSize(int stateid)
+        {
+                History hist = history[stateid];
+                return hist.coupledProjectiles.size();
+        }
         
 
         private static class History

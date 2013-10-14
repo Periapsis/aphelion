@@ -55,11 +55,21 @@ public abstract class MapAnimation extends MapEntity implements TickEvent
         final LinkedListEntry<MapAnimation> link = new LinkedListEntry<>(null, this);
         public Camera camera;
         boolean animating;
+        protected boolean done;
         final public Point vel = new Point(0, 0);
                 
         public MapAnimation(ResourceDB db)
         {
                 super(db);
+        }
+        
+        /** Mark that animation is done.
+         * After calling this method, isDone() should always return true.
+         * Using this method animations can be stopped prematurely.
+         */
+        public void setDone()
+        {
+                done = true;
         }
         
         /** Done animating?.

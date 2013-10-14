@@ -427,7 +427,7 @@ public class TimewarpTest extends PhysicsTest
                                 assert ev.hasOccured(state);
                                 assertEquals(ACTOR_FIRST, ev.getFireActor(state));
                                 assertEquals(ACTOR_SECOND, ev.getHitActor(state));
-                                assertEquals(4, ev.getTick(state));
+                                assertEquals(4, ev.getOccuredAt(state));
                                 
                                 PhysicsPoint pos = new PhysicsPoint();
                                 ev.getPosition(state, pos);
@@ -509,7 +509,7 @@ public class TimewarpTest extends PhysicsTest
                                 assert ev.hasOccured(state);
                                 assertEquals(ACTOR_FIRST, ev.getFireActor(state));
                                 assertEquals(ACTOR_SECOND, ev.getHitActor(state));
-                                assertEquals(21, ev.getTick(state));
+                                assertEquals(21, ev.getOccuredAt(state));
                                 
                                 PhysicsPoint pos = new PhysicsPoint();
                                 ev.getPosition(state, pos);

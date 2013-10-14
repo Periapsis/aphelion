@@ -209,6 +209,18 @@ public abstract class MapEntity
         
         public void resetTo(State myState, MapEntity other)
         {
+                assert other.crossStateList == this.crossStateList;
+                
+                if (other.crossStateList[myState.id] != null)
+                {
+                        assert other.crossStateList[myState.id] == this;
+                }
+                
+                if (this.crossStateList[other.state.id] != null)
+                {
+                        assert this.crossStateList[other.state.id] == other;
+                }
+                
                 this.debug_id_with_reset = other.debug_id_with_reset;
                 createdAt_tick = other.createdAt_tick;
                 this.removed = other.removed;

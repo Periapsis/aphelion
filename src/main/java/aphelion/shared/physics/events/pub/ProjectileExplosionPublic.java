@@ -47,9 +47,12 @@ import aphelion.shared.physics.WEAPON_SLOT;
  */
 public interface ProjectileExplosionPublic extends EventPublic
 {
-        public EXPLODE_REASON getReason(int stateid); // null if hasOccured = false
+        /** The projectile that caused this event. 
+         * @param stateid 
+         * @return 
+         */
         public ProjectilePublic getProjectile(int stateid);
-        public long getTick(int stateid);
+        public EXPLODE_REASON getReason(int stateid); // null if hasOccured = false
         public void getPosition(int stateid, PhysicsPoint pos);
         public void getVelocity(int stateid, PhysicsPoint vel);
         
@@ -68,6 +71,12 @@ public interface ProjectileExplosionPublic extends EventPublic
          */
         public Iterable<Integer> getKilled(int stateid);
         
+        /** The number of actors that will be iterated over using getKilled().
+         * @param stateid
+         * @return  
+         */
+        public int getKilledSize(int stateid);
+        
         /** Who did it hit?.
          * @param stateid
          * @return actor id (pid) or 0 if an actor was not hit
@@ -81,16 +90,36 @@ public interface ProjectileExplosionPublic extends EventPublic
         public int getFireActor(int stateid);
         
         /** Coupled projectiles that were also removed as a result of this event.
+         * @param stateid 
          * @return 
          */
         public Iterable<ProjectilePublic> getCoupledProjectiles(int stateid);
         
+        /** The number of projectiles that will be iterated over using getCoupledProjectiles().
+         * @param stateid
+         * @return  
+         */
+        public int getCoupledProjectilesSize(int stateid);
+        
         public static enum EXPLODE_REASON
         {
+                /** Caused by projectile-expiration-ticks . */
                 EXPIRATION,
+                
+                /** Caused by projectile-prox-explode-ticks . */
                 PROX_DELAY,
+                
+                /** Caused by projectile-prox-distance . */
                 PROX_DIST,
+                
+                /** Caused by projectile-hit-tile . 
+                  * Other projectiles removed as part of projectile-hit-tile-coupled do not fire seperate events.
+                  */
                 HIT_TILE,
+                
+                /** Caused by projectile-hit-ship . 
+                 * Other projectiles removed as part of projectile-hit-ship-coupled do not fire seperate events.
+                 */
                 HIT_SHIP;
         }
 }

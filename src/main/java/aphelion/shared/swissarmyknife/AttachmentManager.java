@@ -46,7 +46,7 @@ import java.util.ArrayList;
  */
 public class AttachmentManager
 {
-        ArrayList<AttachmentConsumer> consumers = new ArrayList<AttachmentConsumer>();
+        ArrayList<AttachmentConsumer> consumers = new ArrayList<>();
         
         public AttachmentData getNewDataContainer()
         {

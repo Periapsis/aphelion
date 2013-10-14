@@ -74,6 +74,11 @@ public class RenderDelay implements TickEvent
                 {
                         lastUpdate = tick;
                 }
+                else if (updateDelay == 0)
+                {
+                        lastUpdate = tick;
+                        renderDelay = desired;
+                }
                 else
                 {
                         if (tick - lastUpdate > updateDelay)

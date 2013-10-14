@@ -41,6 +41,9 @@ package aphelion.shared.physics.events;
 
 import aphelion.shared.physics.events.pub.EventPublic;
 import aphelion.shared.physics.State;
+import static aphelion.shared.physics.entities.Projectile.attachmentManager;
+import aphelion.shared.swissarmyknife.AttachmentData;
+import aphelion.shared.swissarmyknife.AttachmentManager;
 import aphelion.shared.swissarmyknife.LinkedListEntry;
 
 /**
@@ -49,17 +52,36 @@ import aphelion.shared.swissarmyknife.LinkedListEntry;
  */
 public abstract class Event implements EventPublic
 {
+        public static final AttachmentManager attachmentManager = new AttachmentManager();
+        private AttachmentData attachments = attachmentManager.getNewDataContainer();
+        
         public final LinkedListEntry<Event> link;
         
         /** if true, this event has been added to PhysicsEnvironment.
          * This is to prevent duplicates. 
          * addEvent() should be called whenever an event is executed.
          */
-        public boolean added = false; 
+        public boolean inEnvList = false;
+        
+        protected long highestExecutionTick = Long.MIN_VALUE;
         
         protected Event()
         {
                 link = new LinkedListEntry<>(null, this);
+        }
+        
+        @Override
+        public final AttachmentData getAttachments()
+        {
+                return attachments;
+        }
+        
+        public void execute(long tick, State state)
+        {
+                if (tick > highestExecutionTick)
+                {
+                        highestExecutionTick = tick;
+                }
         }
         
         /** Has this event been executed consistently between the given two states?. 
@@ -78,7 +100,17 @@ public abstract class Event implements EventPublic
          *        If equal to or newer than the time value, return false.
          * @return True if the event should be removed (GC or whatever)
          */
-        abstract public boolean isOld(long removeOlderThan_tick);
+        public boolean isOld(long removeOlderThan_tick)
+        {
+                // If a timewarp causes this event to not be executed anymore,
+                // still keep this event in the PhysicsEnvironment list for a while.
+                // This works because highestExecutionTick is never reset.
+                
+                // Keeping an event that is gone because of a timewarp is useful,
+                // for example to cancel animations.
+                
+                return this.highestExecutionTick < removeOlderThan_tick;
+        }
         
         abstract public void resetExecutionHistory(State state, State resetTo);
 }

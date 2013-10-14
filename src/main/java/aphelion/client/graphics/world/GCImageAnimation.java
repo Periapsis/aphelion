@@ -64,7 +64,12 @@ public class GCImageAnimation extends MapAnimation
         @Override
         public boolean isDone()
         {
-                if (image.isTextureError())
+                if (done)
+                {
+                        return true;
+                }
+                
+                if (image != null && image.isTextureError())
                 {
                         return true;
                 }
@@ -81,6 +86,11 @@ public class GCImageAnimation extends MapAnimation
         public boolean render(Camera camera, int iteration)
         {
                 if (iteration > 0)
+                {
+                        return false;
+                }
+                
+                if (isDone())
                 {
                         return false;
                 }

@@ -102,13 +102,17 @@ public class ActorNew extends Operation implements ActorNewPublic
                 if (actor == null)
                 {
                         actor = new Actor(state, crossStateList, pid, this.tick);
+                        crossStateList[state.id] = (MapEntity) actor;
                 }
                 else
                 {
-                        actor.resetTo(state, new Actor(state, crossStateList, pid, this.tick));
+                        // use a dummy empty actor to reset everything to default values
+                        Actor other = new Actor(state, crossStateList, pid, this.tick);
+                        crossStateList[state.id] = null; // skip assertion in resetTo
+                        actor.resetTo(state, other);
+                        crossStateList[state.id] = (MapEntity) actor;
                 }
                 
-                crossStateList[state.id] = (MapEntity) actor;
                 actor.name = name;
                 actor.seed = seed;
                 actor.seed_high = (int) (actor.seed >> 32);

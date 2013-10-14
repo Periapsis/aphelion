@@ -37,12 +37,24 @@
  */
 package aphelion.shared.physics.events.pub;
 
+import aphelion.shared.swissarmyknife.Attachable;
+import aphelion.shared.swissarmyknife.AttachmentData;
+
 /**
  *
  * @author Joris
  */
-public interface EventPublic
+public interface EventPublic extends Attachable
 {
+        /** Has this event occured at the given state?.
+         * Other getters will probably not return sensible values if 
+         * false is returned here.
+         * It is possible for an event to have not occured at all as the
+         * result of a timewarp, even if this method returned true at the time 
+         * of previous invocations.
+         * @param stateid
+         * @return  
+         */
         boolean hasOccured(int stateid);
         
         /** The tick this event occured at. 

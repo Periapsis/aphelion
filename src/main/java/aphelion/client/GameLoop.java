@@ -47,11 +47,7 @@ import aphelion.client.graphics.screen.Camera;
 import aphelion.client.graphics.screen.EnergyBar;
 import aphelion.client.graphics.screen.Gauges;
 import aphelion.client.graphics.screen.StatusDisplay;
-import aphelion.client.graphics.world.ActorShip;
-import aphelion.client.graphics.world.GCImageAnimation;
-import aphelion.client.graphics.world.MapEntities;
-import aphelion.client.graphics.world.Projectile;
-import aphelion.client.graphics.world.StarField;
+import aphelion.client.graphics.world.*;
 import aphelion.client.resource.AsyncTexture;
 import aphelion.shared.event.TickEvent;
 import aphelion.shared.event.TickedEventLoop;
@@ -79,6 +75,8 @@ import aphelion.shared.swissarmyknife.Point;
 import aphelion.shared.swissarmyknife.SwissArmyKnife;
 import aphelion.shared.map.MapClassic;
 import aphelion.shared.map.tile.TileType;
+import aphelion.shared.physics.events.Event;
+import aphelion.shared.swissarmyknife.AttachmentConsumer;
 
 import java.util.Calendar;
 import java.util.Iterator;
@@ -329,7 +327,7 @@ public class GameLoop
                         {
                                 loadingTex = null;
                                 
-                                updateEntities();
+                                updateGraphicsFromPhysics();
                                 
                                 if (localShip == null || localActor == null)
                                 {
@@ -475,7 +473,7 @@ public class GameLoop
                 camera.renderEntities(mapEntities.animations(RENDER_LAYER.AFTER_LOCAL_SHIP, camera));
         }
         
-        private void updateEntities()
+        private void updateGraphicsFromPhysics()
         {
                 PhysicsShipPosition actorPos = new PhysicsShipPosition();
                 
@@ -494,38 +492,20 @@ public class GameLoop
                         
                         ActorPublic physicsActor = actorShip.getActor();
                         
-                        
-                        
-                        long spawnedAgo = physicsEnv.getTick() - physicsActor.getSpawnedAt();
-                        
-                        int renderDelay = SwissArmyKnife.clip(
-                                actorShip.renderDelay.get(), 
-                                0, 
-                                physicsEnv.TRAILING_STATES * PhysicsEnvironment.TRAILING_STATE_DELAY - 1);
-                        
-                        if (renderDelay > spawnedAgo)
-                        {
-                                renderDelay = (int) spawnedAgo;
-                                if (renderDelay < 0)
-                                {
-                                        renderDelay = 0;
-                                }
-                        }
-                        
-                        actorShip.renderingAt_ticks = physicsEnv.getTick() - renderDelay;
+                        actorShip.calculateRenderAtTick(physicsEnv);
                         actorShip.exists = true;
                         
-                        if (physicsActor.isRemoved(actorShip.renderingAt_ticks))
+                        if (physicsActor.isRemoved(actorShip.renderingAt_tick))
                         {
                                 actorShip.exists = false;
                         }
                         
-                        if (physicsActor.isDead(actorShip.renderingAt_ticks))
+                        if (physicsActor.isDead(actorShip.renderingAt_tick))
                         {
                                 actorShip.exists = false;
                         }  
 
-                        if (physicsActor.getHistoricPosition(actorPos, physicsEnv.getTick() - renderDelay, true))
+                        if (physicsActor.getHistoricPosition(actorPos, actorShip.renderingAt_tick, true))
                         {
                                 actorShip.setPositionFromPhysics(actorPos.x, actorPos.y);
                                 actorShip.setRotationFromPhysics(actorPos.rot_snapped);
@@ -614,23 +594,18 @@ public class GameLoop
                         }
                         
                         // get the actual current smoothed render delay
-                        int renderDelay = SwissArmyKnife.clip(
-                                projectile.renderDelay.get(), 
-                                0, 
-                                physicsEnv.TRAILING_STATES * PhysicsEnvironment.TRAILING_STATE_DELAY - 1);
-                        
-                        projectile.renderingAt_ticks = physicsEnv.getTick() - renderDelay;
+                        projectile.calculateRenderAtTick(physicsEnv);
                         
                         projectile.exists = true;
                         
-                        if (physicsProjectile.isRemoved(projectile.renderingAt_ticks))
+                        if (physicsProjectile.isRemoved(projectile.renderingAt_tick))
                         {
                                 projectile.exists = false;
                         }
                         
                         if (physicsProjectile.getHistoricPosition(
                                 historicProjectilePos, 
-                                projectile.renderingAt_ticks, 
+                                projectile.renderingAt_tick, 
                                 true))
                         {
                                 projectile.setPositionFromPhysics(historicProjectilePos.x, historicProjectilePos.y);
@@ -641,100 +616,31 @@ public class GameLoop
                         }
                 }
                 
-                PhysicsPoint pos = new PhysicsPoint();
-                while (true)
+                
+                
+                for (EventPublic event : physicsEnv.eventIterable())
                 {
-                        EventPublic event_ = physicsEnv.nextEvent();
-                        if (event_ == null) { break; }
-                        
-                        if (event_ instanceof ProjectileExplosionPublic)
+                        if (event instanceof ProjectileExplosionPublic)
                         {
-                                ProjectileExplosionPublic event = (ProjectileExplosionPublic) event_;
-                                ProjectilePublic projectile = event.getProjectile(0);
-                                if (projectile == null) { continue; }
-                                
-                                for (Integer pid : event.getKilled(0))
-                                {
-                                        ActorPublic actor = physicsEnv.getActor(pid);
-                                        if (actor == null) continue;
-
-                                        GCImage image = actor.getActorConfigImage("ship-explosion-animation", resourceDB);
-                                        
-                                        if (image != null && actor.getPosition(actorPos))
-                                        {
-                                                GCImageAnimation anim = new GCImageAnimation(resourceDB, image);
-                                                anim.setPositionFromPhysics(actorPos.x, actorPos.y);
-                                                anim.setVelocityFromPhysics(actorPos.x_vel, actorPos.y_vel);
-                                                mapEntities.addAnimation(RENDER_LAYER.AFTER_LOCAL_SHIP, anim, null);
-                                        }
-                                }
-                                
-                                PhysicsPoint tileHit = new PhysicsPoint();
-                                event.getHitTile(0, tileHit);
-
-                                GCImage hitImage;
-                                EXPLODE_REASON reason = event.getReason(0);
-                                switch (reason)
-                                {
-                                        case EXPIRATION:
-                                                hitImage = projectile.getWeaponConfigImage(
-                                                        "projectile-expiration-animation", 
-                                                        resourceDB);
-                                                break;
-
-                                        case PROX_DELAY:
-                                                hitImage = projectile.getWeaponConfigImage(
-                                                        "projectile-prox-animation", 
-                                                        resourceDB);
-                                                break;
-
-                                        case PROX_DIST:
-                                                hitImage = projectile.getWeaponConfigImage(
-                                                        "projectile-prox-animation", 
-                                                        resourceDB);
-                                                break;
-
-                                        case HIT_TILE:
-                                                hitImage = projectile.getWeaponConfigImage(
-                                                        "projectile-hit-tile-animation", 
-                                                        resourceDB);
-                                                break;
-
-                                        case HIT_SHIP:
-                                                hitImage = projectile.getWeaponConfigImage(
-                                                        "projectile-hit-ship-animation", 
-                                                        resourceDB);
-                                                break;
-
-                                        default:
-                                                assert false;
-                                                return;
-                                }
-                                
-                                
-                                if (hitImage != null)
-                                {
-                                        event.getPosition(0, pos);
-                                        if (pos.set)
-                                        {
-                                                GCImageAnimation anim = new GCImageAnimation(resourceDB, hitImage);
-
-                                                anim.setPositionFromPhysics(pos);
-                                                mapEntities.addAnimation(RENDER_LAYER.AFTER_LOCAL_SHIP, anim, null);
-                                        }
-
-                                        for (ProjectilePublic coupledProjectile : event.getCoupledProjectiles(0))
-                                        {
-                                                coupledProjectile.getHistoricPosition(pos, event.getTick(0), false);
-
-                                                GCImageAnimation anim = new GCImageAnimation(resourceDB, hitImage);
-
-                                                anim.setPositionFromPhysics(pos);
-                                                mapEntities.addAnimation(RENDER_LAYER.AFTER_LOCAL_SHIP, anim, null);
-                                        }
-                                }
+                                explosionEvent((ProjectileExplosionPublic) event);
                         }
                 }
+        }
+        
+        private static final AttachmentConsumer<ProjectileExplosionPublic, ProjectileExplosionTracker> explosionAnimations 
+                = new AttachmentConsumer<>(Event.attachmentManager);
+        
+        private void explosionEvent(ProjectileExplosionPublic event)
+        {
+                ProjectileExplosionTracker tracker = explosionAnimations.get(event);
+                
+                if (tracker == null)
+                {
+                        tracker = new ProjectileExplosionTracker(resourceDB, physicsEnv, mapEntities);
+                        explosionAnimations.set(event, tracker);
+                }
+                
+                tracker.update(event);
         }
         
         private class MyKeyboard implements TickEvent

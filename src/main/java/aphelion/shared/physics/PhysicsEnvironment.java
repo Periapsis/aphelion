@@ -169,8 +169,6 @@ public class PhysicsEnvironment implements TickEvent
         private PhysicsMap map;
         State[] trailingStates; // delay = index * TRAILING_STATE_DURATION
         final LinkedListHead<Event> eventHistory = new LinkedListHead<>(); // ordered by the order of appending
-        private LinkedListEntry<Event> eventHistory_lastSeen = null; // last seen by nextEvent()
-        
         
         private int timewarps = 0; // used for debugging
         public long debug_entities = 0;
@@ -249,7 +247,7 @@ public class PhysicsEnvironment implements TickEvent
                 return ticked_at;
         }
         
-        /** The number of times tick() has been called in a particular state
+        /** The number of times tick() has been called in a particular state.
          * Tick values are sent over the network in order to synchronize events.
          *
          * @param stateid A state id, 0 for the most current state. TRAILING_STATES-1 for the oldest. 
@@ -263,6 +261,33 @@ public class PhysicsEnvironment implements TickEvent
                 }
                 
                 return trailingStates[stateid].tick_now;
+        }
+        
+        /** Return the state that is currently at the specified tick.
+         * If the given tick does not match any state exactly, the tick value
+         * is rounded up.
+         * 
+         * Suppose the current tick is 100 and TRAILING_STATE_DELAY is 4:
+         * Tick 100, 99, 98, 97 will return state id 0.
+         * Tick 96, 95, 94, 93 will return state id 1.
+         * Et cetera.
+         * 
+         * This is the same way historic values are looked up.
+         * 
+         * @param tick Absolute tick
+         * @return state id The state id or -1 if the given tick value was out of range
+         */
+        public int getState(long tick)
+        {
+                int ticks_ago = (int) (this.tick_now - tick);
+                int state_id = ticks_ago / PhysicsEnvironment.TRAILING_STATE_DELAY;
+                
+                if (state_id < 0 || state_id >= TRAILING_STATES)
+                {
+                        return -1;
+                }
+                
+                return state_id;
         }
 
         @Override
@@ -404,15 +429,8 @@ public class PhysicsEnvironment implements TickEvent
                         linkEvNext = linkEv.next;
                         if (linkEv.data.isOld(oldestState.tick_now))
                         {
-                                if (eventHistory_lastSeen == linkEv)
-                                {
-                                        eventHistory_lastSeen = linkEv.previous;
-                                }
-                                
                                 linkEv.remove();
-                                linkEv.data.added = false;
-                                
-                                
+                                linkEv.data.inEnvList = false;       
                         }
                         
                         linkEv = linkEvNext;
@@ -906,45 +924,14 @@ public class PhysicsEnvironment implements TickEvent
         
         /** Register the occurrence of an event. 
          * This should only be called by physics.
+         * Call me anytime you execute an event.
          * @param event 
          */
         public void addEvent(Event event)
         {
-                if (event.added) { return; }
-                event.added = true;
+                if (event.inEnvList) { return; }
+                event.inEnvList = true;
                 eventHistory.append(event.link);
-        }
-
-        /** Return the next event that has occured. 
-         * This event will never be returned again.
-         * If this method is not called regurarly you may miss events because events
-         * are discarded after haven been executed in every state. (see Event.isOld())
-         * @return 
-         */
-        public EventPublic nextEvent()
-        {
-                if (this.eventHistory_lastSeen == null)
-                {
-                        eventHistory_lastSeen = this.eventHistory.first;
-                }
-                else
-                {
-                        if (eventHistory_lastSeen.next == null)
-                        {
-                                return null;
-                        }
-                        else
-                        {
-                                eventHistory_lastSeen = eventHistory_lastSeen.next;
-                        }
-                }
-                
-                if (eventHistory_lastSeen == null)
-                {
-                        return null;
-                }
-                
-                return (EventPublic) eventHistory_lastSeen.data;
         }
         
         /** Iterate over all events that have not yet been discarded.

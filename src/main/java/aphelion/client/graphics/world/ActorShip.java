@@ -55,6 +55,7 @@ import aphelion.shared.physics.valueobjects.PhysicsMoveable;
 import aphelion.shared.physics.valueobjects.PhysicsMovement;
 import aphelion.shared.physics.valueobjects.PhysicsPoint;
 import aphelion.shared.swissarmyknife.Point;
+import aphelion.shared.swissarmyknife.SwissArmyKnife;
 
 import org.newdawn.slick.Color;
 import org.newdawn.slick.Image;
@@ -81,7 +82,8 @@ public class ActorShip extends MapEntity implements TickEvent, WrappedValueAbstr
         public final Point shadowPosition = new Point(0, 0);
 
         public final RenderDelay renderDelay = new RenderDelay(50); // todo move the "50" to settings
-        public long renderingAt_ticks;
+        public long currentRenderDelay;
+        public long renderingAt_tick;
         
 
         private ReusableAnimationList<ExhaustAnimation> exhaustAnimations;
@@ -131,6 +133,27 @@ public class ActorShip extends MapEntity implements TickEvent, WrappedValueAbstr
                 lastExhaust_nanos = Graph.nanoTime();
                 lastEmp_nanos = Graph.nanoTime();
                 tryInitPhysics();
+        }
+        
+        public void calculateRenderAtTick(PhysicsEnvironment physicsEnv)
+        {
+                long spawnedAgo = physicsEnv.getTick() - actor.getSpawnedAt();
+                
+                currentRenderDelay = SwissArmyKnife.clip(
+                        this.renderDelay.get(),
+                        0, 
+                        physicsEnv.TRAILING_STATES * PhysicsEnvironment.TRAILING_STATE_DELAY - 1);
+                
+                if (currentRenderDelay > spawnedAgo)
+                {
+                        currentRenderDelay = (int) spawnedAgo;
+                        if (currentRenderDelay < 0)
+                        {
+                                currentRenderDelay = 0;
+                        }
+                }
+                        
+                this.renderingAt_tick = physicsEnv.getTick() - currentRenderDelay;
         }
         
         public void setRotationFromPhysics(int physRotation)
@@ -276,7 +299,7 @@ public class ActorShip extends MapEntity implements TickEvent, WrappedValueAbstr
                         {
                                 this.lastExhaust_nanos = now;
 
-                                PhysicsMoveable moveable = actor.getHistoricMovement(this.renderingAt_ticks, true);
+                                PhysicsMoveable moveable = actor.getHistoricMovement(this.renderingAt_tick, true);
                                 PhysicsMovement move = moveable instanceof PhysicsMovement ? (PhysicsMovement) moveable : null;
                                 
                                 if (move != null && (move.up || move.down))
@@ -345,7 +368,7 @@ public class ActorShip extends MapEntity implements TickEvent, WrappedValueAbstr
                         {
                                 Graph.g.setColor(Color.yellow);
                                 Graph.g.drawString(
-                                        name + " [" + renderDelay.get() + "]",
+                                        name + " [" + currentRenderDelay + "]",
                                         x + image.getWidth(), 
                                         y + image.getHeight() / 2f); 
                         }

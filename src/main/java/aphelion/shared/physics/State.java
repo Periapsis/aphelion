@@ -597,7 +597,7 @@ public class State
                         if (!occuredSomewhere)
                         {
                                 linkEv.remove();
-                                event.added = false;
+                                event.inEnvList = false;
                         }
                 }
                 

@@ -45,6 +45,7 @@ import aphelion.shared.gameconfig.GCBoolean;
 import aphelion.shared.gameconfig.GCColour;
 import aphelion.shared.gameconfig.GCImage;
 import aphelion.shared.gameconfig.WrappedValueAbstract;
+import aphelion.shared.physics.PhysicsEnvironment;
 import aphelion.shared.physics.entities.ProjectilePublic;
 import aphelion.shared.physics.valueobjects.PhysicsPoint;
 import aphelion.shared.resource.ResourceDB;
@@ -64,7 +65,8 @@ public class Projectile extends MapEntity implements TickEvent, WrappedValueAbst
         final ProjectilePublic physicsProjectile;
         public final RenderDelay renderDelay = new RenderDelay(2); // todo move the "2" to settings
         public final Point shadowPosition = new Point(0, 0);
-        public long renderingAt_ticks;
+        public long currentRenderDelay;
+        public long renderingAt_tick;
         
         private GCImage imageNoBounce;
         private GCImage imageBounces;
@@ -93,6 +95,16 @@ public class Projectile extends MapEntity implements TickEvent, WrappedValueAbst
         public ProjectilePublic getPhysicsProjectile()
         {
                 return physicsProjectile;
+        }
+        
+        public void calculateRenderAtTick(PhysicsEnvironment physicsEnv)
+        {
+                currentRenderDelay = SwissArmyKnife.clip(
+                        this.renderDelay.get(), 
+                        0, 
+                        physicsEnv.TRAILING_STATES * PhysicsEnvironment.TRAILING_STATE_DELAY - 1);
+                        
+                this.renderingAt_tick = physicsEnv.getTick() - currentRenderDelay;
         }
         
         public void setShadowPositionFromPhysics(int x, int y)
@@ -201,7 +213,7 @@ public class Projectile extends MapEntity implements TickEvent, WrappedValueAbst
 
                                 long rand = imageTrailRandomized.get() || true ? SwissArmyKnife.fastRandomIsh() : 0;
 
-                                long tick = this.renderingAt_ticks - (rand & 0b11); // 0, 1, 2, 3
+                                long tick = this.renderingAt_tick - (rand & 0b11); // 0, 1, 2, 3
                                 rand >>= 2;
 
                                 for (int tile = 0; 
