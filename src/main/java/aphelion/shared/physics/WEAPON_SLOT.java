@@ -57,6 +57,7 @@ public enum WEAPON_SLOT
         
         public final int id; // can be used as an array key
         public final String settingName;
+        private final static WEAPON_SLOT[] values = values();
 
         private WEAPON_SLOT(int id, String settingName)
         {
@@ -66,7 +67,7 @@ public enum WEAPON_SLOT
         
         public static WEAPON_SLOT byId(int id)
         {
-                return values()[id];
+                return values[id];
         }
         
         public static boolean isValidId(int id)
