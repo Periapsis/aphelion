@@ -59,6 +59,11 @@ public class AttachmentConsumer<A extends Attachable, TYPE>
         @SuppressWarnings("unchecked")
         public synchronized TYPE get(A attachable)
         {
+                if (attachable == null)
+                {
+                        return null;
+                }
+                
                 ArrayList list = attachable.getAttachments().data;
                 
                 if (index >= list.size())
@@ -72,6 +77,11 @@ public class AttachmentConsumer<A extends Attachable, TYPE>
         @SuppressWarnings("unchecked")
         public synchronized void set(A attachable, TYPE data)
         {
+                if (attachable == null)
+                {
+                        throw new IllegalArgumentException();
+                }
+                 
                 ArrayList list = attachable.getAttachments().data;
                 
                 list.ensureCapacity(index+1);

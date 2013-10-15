@@ -217,14 +217,7 @@ public class MapEntities implements TickEvent, LoopEvent, Animator
                         @Override
                         public Projectile filter(ProjectilePublic next)
                         {
-                                Projectile projectile = projectileAttachment.get(next);
-                                if (projectile == null)
-                                {
-                                        projectile = new Projectile(resourceDB, next);
-                                        projectileAttachment.set(next, projectile);
-                                        // caveat: if a timewarp destroys and recreates a projectile, 
-                                        // this data is lost
-                                }
+                                Projectile projectile = physicsProjectileToGraphics(next);
                                 
                                 if (!includeNonExist && !projectile.exists)
                                 {
@@ -252,7 +245,17 @@ public class MapEntities implements TickEvent, LoopEvent, Animator
         
         public Projectile physicsProjectileToGraphics(ProjectilePublic proj)
         {
-                return projectileAttachment.get(proj);
+                if (proj == null) { return null; }
+                Projectile projectile = projectileAttachment.get(proj);
+                if (projectile == null)
+                {
+                        projectile = new Projectile(resourceDB, proj);
+                        projectileAttachment.set(proj, projectile);
+                        // caveat: if a timewarp destroys and recreates a projectile, 
+                        // this data is lost
+                }
+                
+                return projectile;
         }
         
         public ActorShip findNearestActor(Point pos, boolean includeLocal)

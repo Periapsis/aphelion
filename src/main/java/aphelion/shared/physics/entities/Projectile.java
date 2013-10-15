@@ -74,7 +74,7 @@ import java.util.List;
 public final class Projectile extends MapEntity implements ProjectilePublic
 {
         public static final AttachmentManager attachmentManager = new AttachmentManager();
-        private AttachmentData attachments = attachmentManager.getNewDataContainer();
+        private final AttachmentData attachments = attachmentManager.getNewDataContainer();
         
         public final LinkedListEntry<Projectile> projectileListLink_state = new LinkedListEntry<>(null, this);
         public final LinkedListEntry<Projectile> projectileListLink_actor = new LinkedListEntry<>(null, this);
