@@ -368,7 +368,7 @@ public class ActorShip extends MapEntity implements TickEvent, WrappedValueAbstr
                         {
                                 Graph.g.setColor(Color.yellow);
                                 Graph.g.drawString(
-                                        name + " [" + currentRenderDelay + "]",
+                                        name + (currentRenderDelay == 0 ? "" : " [" + currentRenderDelay + "]"),
                                         x + image.getWidth(), 
                                         y + image.getHeight() / 2f); 
                         }

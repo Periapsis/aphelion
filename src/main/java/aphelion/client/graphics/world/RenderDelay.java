@@ -102,6 +102,11 @@ public class RenderDelay implements TickEvent
                 return renderDelay;
         }
         
+        public int getDesired()
+        {
+                return desired;
+        }
+        
         public void set(int renderDelay)
         {
                 this.desired = renderDelay;

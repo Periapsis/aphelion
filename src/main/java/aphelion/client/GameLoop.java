@@ -53,30 +53,23 @@ import aphelion.shared.event.TickEvent;
 import aphelion.shared.event.TickedEventLoop;
 import aphelion.shared.event.WorkerTask;
 import aphelion.shared.event.WorkerTaskCallback;
-import aphelion.shared.gameconfig.GCImage;
 import aphelion.shared.gameconfig.GCStringList;
 import aphelion.shared.gameconfig.LoadYamlTask;
 import aphelion.shared.physics.entities.ActorPublic;
 import aphelion.shared.physics.entities.ProjectilePublic;
 import aphelion.shared.physics.events.pub.EventPublic;
 import aphelion.shared.physics.events.pub.ProjectileExplosionPublic;
-import aphelion.shared.physics.events.pub.ProjectileExplosionPublic.EXPLODE_REASON;
-import static aphelion.shared.physics.events.pub.ProjectileExplosionPublic.EXPLODE_REASON.EXPIRATION;
-import static aphelion.shared.physics.events.pub.ProjectileExplosionPublic.EXPLODE_REASON.HIT_SHIP;
-import static aphelion.shared.physics.events.pub.ProjectileExplosionPublic.EXPLODE_REASON.HIT_TILE;
-import static aphelion.shared.physics.events.pub.ProjectileExplosionPublic.EXPLODE_REASON.PROX_DELAY;
-import static aphelion.shared.physics.events.pub.ProjectileExplosionPublic.EXPLODE_REASON.PROX_DIST;
 import aphelion.shared.physics.PhysicsEnvironment;
 import aphelion.shared.physics.valueobjects.PhysicsMovement;
 import aphelion.shared.physics.valueobjects.PhysicsPoint;
 import aphelion.shared.physics.valueobjects.PhysicsShipPosition;
 import aphelion.shared.physics.WEAPON_SLOT;
 import aphelion.shared.swissarmyknife.Point;
-import aphelion.shared.swissarmyknife.SwissArmyKnife;
 import aphelion.shared.map.MapClassic;
 import aphelion.shared.map.tile.TileType;
 import aphelion.shared.physics.events.Event;
 import aphelion.shared.swissarmyknife.AttachmentConsumer;
+import java.lang.ref.WeakReference;
 
 import java.util.Calendar;
 import java.util.Iterator;
@@ -136,6 +129,8 @@ public class GameLoop
         private long frames;
         private long lastFrameReset;
         private long lastFps;
+        
+        final RENDER_DELAY_METHOD renderDelayMethod = RENDER_DELAY_METHOD.MINIMIZE_DELAY_CHANGES;
 
         public GameLoop(ResourceDB resourceDB, TickedEventLoop loop, SingleGameConnection connection, NetworkedGame networkedGame)
         {
@@ -475,76 +470,103 @@ public class GameLoop
         
         private void updateGraphicsFromPhysics()
         {
-                PhysicsShipPosition actorPos = new PhysicsShipPosition();
-                
-                Point localActorPos = new Point();
-                ActorShip localShip = mapEntities.getLocalShip();
-                
-                if (localShip != null && localShip.getActor() != null && localShip.getActor().getPosition(actorPos))
-                {
-                        localActorPos.set(actorPos.x, actorPos.y);
-                }
-                
                 Iterator<ActorShip> shipIt = mapEntities.shipIterator();
                 while (shipIt.hasNext())
                 {
-                        ActorShip actorShip = shipIt.next();
-                        
-                        ActorPublic physicsActor = actorShip.getActor();
-                        
-                        actorShip.calculateRenderAtTick(physicsEnv);
-                        actorShip.exists = true;
-                        
-                        if (physicsActor.isRemoved(actorShip.renderingAt_tick))
-                        {
-                                actorShip.exists = false;
-                        }
-                        
-                        if (physicsActor.isDead(actorShip.renderingAt_tick))
-                        {
-                                actorShip.exists = false;
-                        }  
-
-                        if (physicsActor.getHistoricPosition(actorPos, actorShip.renderingAt_tick, true))
-                        {
-                                actorShip.setPositionFromPhysics(actorPos.x, actorPos.y);
-                                actorShip.setRotationFromPhysics(actorPos.rot_snapped);
-                                actorShip.setNameFromPhysics(physicsActor.getName());
-                        }
-                        else
-                        {
-                                actorShip.exists = false;
-                        }
-
-
-                        if (physicsActor.getPosition(actorPos))
-                        {
-                                actorShip.setShadowPositionFromPhysics(actorPos.x, actorPos.y);
-                        }
-
-                        if (actorShip != localShip)
-                        {
-                                actorShip.updateDistanceToLocal(localActorPos);
-                        }
+                        updateShipFromPhysics(shipIt.next());
                 }
-                
-                
-                
-                ProjectilePublic.Position projectilePos = new ProjectilePublic.Position();
-                PhysicsPoint historicProjectilePos = new PhysicsPoint();
-                Point diff = new Point();
                 
                 Iterator<Projectile> projectileIt = mapEntities.projectileIterator(true);
                 while (projectileIt.hasNext())
                 {
-                        Projectile projectile = projectileIt.next();
-                        ProjectilePublic physicsProjectile = projectile.getPhysicsProjectile();
-                        
-                        if (physicsProjectile.getPosition(projectilePos))
+                        updateProjectileFromPhysics(projectileIt.next());
+                }
+                
+                for (EventPublic event : physicsEnv.eventIterable())
+                {
+                        if (event instanceof ProjectileExplosionPublic)
                         {
-                                projectile.setShadowPositionFromPhysics(projectilePos.x, projectilePos.y);
+                                explosionEvent((ProjectileExplosionPublic) event);
                         }
+                }
+        }
+        
+        private void updateShipFromPhysics(ActorShip actorShip)
+        {
+                PhysicsShipPosition actorPos = new PhysicsShipPosition();
+                Point localActorPos = new Point();
+                
+                ActorShip localShip = mapEntities.getLocalShip();
+                ActorPublic physicsActor = actorShip.getActor();
+                
+                if (localShip != null && localShip.getActor() != null 
+                    && localShip.getActor().getPosition(actorPos))
+                {
+                        localActorPos.set(actorPos.x, actorPos.y);
+                }
+                
+                if (renderDelayMethod == RENDER_DELAY_METHOD.DISABLED)
+                {
+                        actorShip.renderDelay.setImmediate(0);
+                }
+
+                actorShip.calculateRenderAtTick(physicsEnv);
+                actorShip.exists = true;
+
+                if (physicsActor.isRemoved(actorShip.renderingAt_tick))
+                {
+                        actorShip.exists = false;
+                }
+
+                if (physicsActor.isDead(actorShip.renderingAt_tick))
+                {
+                        actorShip.exists = false;
+                }  
+
+                if (physicsActor.getHistoricPosition(actorPos, actorShip.renderingAt_tick, true))
+                {
+                        actorShip.setPositionFromPhysics(actorPos.x, actorPos.y);
+                        actorShip.setRotationFromPhysics(actorPos.rot_snapped);
+                        actorShip.setNameFromPhysics(physicsActor.getName());
+                }
+                else
+                {
+                        actorShip.exists = false;
+                }
+
+
+                if (physicsActor.getPosition(actorPos))
+                {
+                        actorShip.setShadowPositionFromPhysics(actorPos.x, actorPos.y);
+                }
+
+                if (actorShip != localShip)
+                {
+                        actorShip.updateDistanceToLocal(localActorPos);
+                }
+        }
+        
+        private void updateProjectileFromPhysics(Projectile projectile)
+        {
+                ProjectilePublic.Position projectilePos = new ProjectilePublic.Position();
+                PhysicsPoint historicProjectilePos = new PhysicsPoint();
+                Point diff = new Point();
+                
+                ProjectilePublic physicsProjectile = projectile.getPhysicsProjectile();
+                ActorShip localShip = mapEntities.getLocalShip();
                         
+                if (physicsProjectile.getPosition(projectilePos))
+                {
+                        projectile.setShadowPositionFromPhysics(projectilePos.x, projectilePos.y);
+                }
+                
+                if (renderDelayMethod == RENDER_DELAY_METHOD.DISABLED 
+                    || renderDelayMethod == RENDER_DELAY_METHOD.PROJECTILE_DISABLED)
+                {
+                        projectile.renderDelay.set(0);
+                }
+                else
+                {
                         // the closest ship excluding the local one
                         // all actors should have been updated at this point
                         ActorShip closest = mapEntities.findNearestActor(projectile.pos, false);
@@ -554,6 +576,15 @@ public class GameLoop
                         }
                         else
                         {
+                                boolean switchedShip = false;
+
+                                if (projectile.renderDelayBasedOn == null 
+                                    || projectile.renderDelayBasedOn.get() != closest)
+                                {
+                                        switchedShip = true;
+                                        projectile.renderDelayBasedOn = new WeakReference<>(closest);
+                                }
+
                                 /* p = local player
                                  * r = remote player
                                  * e = entity (projectile)
@@ -568,64 +599,66 @@ public class GameLoop
                                  * d(p, e) = d(p, r) * max(0, 1 - δ(r', e') / δ(p, r) )
                                  * sqrt(a) / sqrt(b) = sqrt(a / b)
                                  */
-                                
+
                                 diff.set(closest.shadowPosition);
                                 diff.sub(projectile.shadowPosition);
                                 float distSq_rShadow_e = diff.distanceSquared();
-                                
+
                                 diff.set(localShip.pos);
                                 diff.sub(closest.pos);
                                 float distSq_p_r = diff.distanceSquared();
-                                
+
                                 double renderDelay = 
                                         closest.renderDelay.get() * 
                                         Math.max(0, 1 - Math.sqrt(distSq_rShadow_e / distSq_p_r));
-                                
+
                                 if (Double.isNaN(renderDelay))
                                 {
                                         renderDelay = 0;
                                 }
-                                
+
                                 renderDelay = Math.round(renderDelay);
-                                
-                                projectile.renderDelay.set((int) renderDelay);
-                                
+
+                                if (renderDelayMethod == RENDER_DELAY_METHOD.MAXIMIZE_LOCAL_TIME)
+                                {
+                                        projectile.renderDelay.set((int) renderDelay);
+                                }
+                                else if (renderDelayMethod == RENDER_DELAY_METHOD.MINIMIZE_DELAY_CHANGES)
+                                {
+                                        if (switchedShip || renderDelay > projectile.renderDelay.getDesired())
+                                        {
+                                                projectile.renderDelay.set((int) renderDelay);
+                                        }
+                                }
+
                                 // Alternative implementation: smooth "d(p, r)" whenever r changes
                         }
-                        
-                        // get the actual current smoothed render delay
-                        projectile.calculateRenderAtTick(physicsEnv);
-                        
-                        projectile.exists = true;
-                        
-                        if (physicsProjectile.isRemoved(projectile.renderingAt_tick))
-                        {
-                                projectile.exists = false;
-                        }
-                        
-                        if (physicsProjectile.getHistoricPosition(
-                                historicProjectilePos, 
-                                projectile.renderingAt_tick, 
-                                true))
-                        {
-                                projectile.setPositionFromPhysics(historicProjectilePos.x, historicProjectilePos.y);
-                        }
-                        else
-                        {
-                                projectile.exists = false;
-                        }
                 }
-                
-                
-                
-                for (EventPublic event : physicsEnv.eventIterable())
+
+                // get the actual current smoothed render delay
+                projectile.calculateRenderAtTick(physicsEnv);
+
+                projectile.exists = true;
+
+                if (physicsProjectile.isRemoved(projectile.renderingAt_tick))
                 {
-                        if (event instanceof ProjectileExplosionPublic)
-                        {
-                                explosionEvent((ProjectileExplosionPublic) event);
-                        }
+                        projectile.exists = false;
+                }
+
+                if (physicsProjectile.getHistoricPosition(
+                        historicProjectilePos, 
+                        projectile.renderingAt_tick, 
+                        true))
+                {
+                        projectile.setPositionFromPhysics(historicProjectilePos.x, historicProjectilePos.y);
+                }
+                else
+                {
+                        projectile.exists = false;
                 }
         }
+        
+        
         
         private static final AttachmentConsumer<ProjectileExplosionPublic, ProjectileExplosionTracker> explosionAnimations 
                 = new AttachmentConsumer<>(Event.attachmentManager);

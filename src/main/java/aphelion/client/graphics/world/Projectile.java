@@ -51,8 +51,8 @@ import aphelion.shared.physics.valueobjects.PhysicsPoint;
 import aphelion.shared.resource.ResourceDB;
 import aphelion.shared.swissarmyknife.Point;
 import aphelion.shared.swissarmyknife.SwissArmyKnife;
+import java.lang.ref.WeakReference;
 import org.newdawn.slick.Animation;
-import org.newdawn.slick.Color;
 import org.newdawn.slick.Image;
 import org.newdawn.slick.SpriteSheetCounted;
 
@@ -65,8 +65,10 @@ public class Projectile extends MapEntity implements TickEvent, WrappedValueAbst
         final ProjectilePublic physicsProjectile;
         public final RenderDelay renderDelay = new RenderDelay(2); // todo move the "2" to settings
         public final Point shadowPosition = new Point(0, 0);
+        
         public long currentRenderDelay;
         public long renderingAt_tick;
+        public WeakReference<ActorShip> renderDelayBasedOn;
         
         private GCImage imageNoBounce;
         private GCImage imageBounces;
@@ -265,9 +267,9 @@ public class Projectile extends MapEntity implements TickEvent, WrappedValueAbst
                                         anim.getWidth() * camera.zoom,
                                         anim.getHeight() * camera.zoom);
                         }
+                        
+                        //Graph.g.drawString(this.currentRenderDelay + "", screenPos.x + 5, screenPos.y + 5);
                 }
-
-                // Graph.g.drawString(renderDelay.get() + "", screenPos.x + w, screenPos.y + h);
                 
                 return iteration < 1;
         }
