@@ -88,11 +88,18 @@ public class ProjectileExplosionTracker
                 
                 assert this.event == event;
                 
+                // might be null
                 ProjectilePublic physicsProjectile_state0 = event.getProjectile(0);
-                Projectile projectile = mapEntities.physicsProjectileToGraphics(physicsProjectile_state0);
                 
                 if (firstRun)
                 {
+                        if (physicsProjectile_state0 == null)
+                        {
+                                return;
+                        }
+                        
+                        Projectile projectile = mapEntities.physicsProjectileToGraphics(physicsProjectile_state0);
+                        
                         // do not update the render delay after it has been set
                         renderDelay = projectile.currentRenderDelay;
                         renderingAt_state = physicsEnv.getState(physicsEnv.getTick() - renderDelay);
@@ -105,7 +112,8 @@ public class ProjectileExplosionTracker
                 
                 firstRun = false;
                 
-                if (event.hasOccured(renderingAt_state) && 
+                if (physicsProjectile_state0 != null &&
+                    event.hasOccured(renderingAt_state) && 
                     event.getOccuredAt(renderingAt_state) <= physicsEnv.getTick() - renderDelay)
                 {
                         if (animations == null)
@@ -115,17 +123,21 @@ public class ProjectileExplosionTracker
                 }
                 else
                 {
-                        //System.out.println("has not occured! " + (physicsEnv.getTick() - renderDelay) + " " + event.getOccuredAt(renderingAt_state));
-                        if (animations != null)
+                        // the event no longer occured (timewarp), 
+                        // remove the animations
+                        removeAnimations();
+                }
+        }
+        
+        private void removeAnimations()
+        {
+                if (animations != null)
+                {
+                        for (GCImageAnimation anim : animations)
                         {
-                                // the event no longer occured (timewarp), 
-                                // remove the animations
-                                for (GCImageAnimation anim : animations)
-                                {
-                                        anim.setDone();
-                                }
-                                animations = null;
+                                anim.setDone();
                         }
+                        animations = null;
                 }
         }
         
