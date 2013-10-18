@@ -47,6 +47,7 @@ import aphelion.shared.map.MapClassic.LoadMapTask;
 import aphelion.shared.net.protobuf.GameOperation;
 import aphelion.shared.net.protobuf.GameS2C;
 import aphelion.shared.physics.PhysicsEnvironment;
+import aphelion.shared.physics.WEAPON_SLOT;
 import aphelion.shared.physics.valueobjects.PhysicsMovement;
 import aphelion.shared.resource.ResourceDB;
 import aphelion.shared.swissarmyknife.SwissArmyKnife;
@@ -170,11 +171,21 @@ public class ServerMain implements LoopEvent, TickEvent
                                 moveBuilder.setPid(DUMMY_1_PID);
                                 moveBuilder.setDirect(true);
 
-                                PhysicsMovement move = PhysicsMovement.get(SwissArmyKnife.random.nextInt(32));
+                                PhysicsMovement move = PhysicsMovement.get(SwissArmyKnife.random.nextInt(16));
                                 for (int i = 20; i > 0; --i)
                                 {
                                         physicsEnv.actorMove(physicsEnv.getTick()-i, DUMMY_1_PID, move);
                                         moveBuilder.addMove(move.bits);
+                                }
+                                
+                                
+                                if (tick % 1000 == 0 && SwissArmyKnife.random.nextInt(3) == 0)
+                                {
+                                        physicsEnv.actorWeapon(physicsEnv.getTick(), DUMMY_1_PID, WEAPON_SLOT.BOMB, false, 0, 0, 0, 0, 0);
+                                        GameOperation.ActorWeapon.Builder weaponBuilder = s2c.addActorWeaponBuilder();
+                                        weaponBuilder.setTick(physicsEnv.getTick());
+                                        weaponBuilder.setPid(DUMMY_1_PID);
+                                        weaponBuilder.setSlot(WEAPON_SLOT.BOMB.id);
                                 }
                         }
                         
