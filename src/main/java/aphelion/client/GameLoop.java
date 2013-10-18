@@ -563,7 +563,7 @@ public class GameLoop
                 if (renderDelayMethod == RENDER_DELAY_METHOD.DISABLED 
                     || renderDelayMethod == RENDER_DELAY_METHOD.PROJECTILE_DISABLED)
                 {
-                        projectile.renderDelay.set(0);
+                        projectile.currentRenderDelay = 0;
                 }
                 else
                 {
@@ -572,7 +572,7 @@ public class GameLoop
                         ActorShip closest = mapEntities.findNearestActor(projectile.pos, false);
                         if (closest == null || localShip == null)
                         {
-                                projectile.renderDelay.set(0);
+                                projectile.currentRenderDelay = 0;
                         }
                         else
                         {
@@ -621,13 +621,13 @@ public class GameLoop
 
                                 if (renderDelayMethod == RENDER_DELAY_METHOD.MAXIMIZE_LOCAL_TIME)
                                 {
-                                        projectile.renderDelay.set((int) renderDelay);
+                                        projectile.currentRenderDelay = (int) renderDelay;
                                 }
                                 else if (renderDelayMethod == RENDER_DELAY_METHOD.MINIMIZE_DELAY_CHANGES)
                                 {
-                                        if (switchedShip || renderDelay > projectile.renderDelay.getDesired())
+                                        if (switchedShip || renderDelay > projectile.currentRenderDelay)
                                         {
-                                                projectile.renderDelay.set((int) renderDelay);
+                                                projectile.currentRenderDelay = (int) renderDelay;
                                         }
                                 }
 

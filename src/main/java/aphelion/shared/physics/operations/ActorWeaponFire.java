@@ -64,7 +64,7 @@ public class ActorWeaponFire extends Operation implements ActorWeaponFirePublic
         
         private boolean[] usedHint = new boolean[PhysicsEnvironment.MAX_TRAILING_STATES];
         
-        // this list is only kept her temporary.
+        // this list is only kept here temporary.
         // it will be set as an attribute in every projectile.
         private ArrayList<MapEntity[]> crossStateLists; // projectile index -> state id -> map entity
 

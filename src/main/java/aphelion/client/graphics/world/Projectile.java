@@ -57,13 +57,15 @@ import org.newdawn.slick.Image;
 import org.newdawn.slick.SpriteSheetCounted;
 
 /**
- *
+ * The graphic counter part of physics.Projectile. 
+ * Note that there are a few cases where in a physics.Projectile might 
+ * be destroyed and immediately recreated in a timewarp. At the moment this also means
+ * graphics.Projectile is lost too. Be careful with storing state long term.
  * @author Joris
  */
-public class Projectile extends MapEntity implements TickEvent, WrappedValueAbstract.ChangeListener
+public class Projectile extends MapEntity implements WrappedValueAbstract.ChangeListener
 {
         final ProjectilePublic physicsProjectile;
-        public final RenderDelay renderDelay = new RenderDelay(2); // todo move the "2" to settings
         public final Point shadowPosition = new Point(0, 0);
         
         public long currentRenderDelay;
@@ -102,7 +104,7 @@ public class Projectile extends MapEntity implements TickEvent, WrappedValueAbst
         public void calculateRenderAtTick(PhysicsEnvironment physicsEnv)
         {
                 currentRenderDelay = SwissArmyKnife.clip(
-                        this.renderDelay.get(), 
+                        currentRenderDelay,
                         0, 
                         physicsEnv.TRAILING_STATES * PhysicsEnvironment.TRAILING_STATE_DELAY - 1);
                         
@@ -272,11 +274,5 @@ public class Projectile extends MapEntity implements TickEvent, WrappedValueAbst
                 }
                 
                 return iteration < 1;
-        }
-
-        @Override
-        public void tick(long tick)
-        {
-                renderDelay.tick(tick);
         }
 }

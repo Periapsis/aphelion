@@ -344,12 +344,6 @@ public class MapEntities implements TickEvent, LoopEvent, Animator
                         itActor.value().tick(tick);
                 }
                 
-                Iterator<Projectile> itProjectile = projectileIterator(true);
-                while (itProjectile.hasNext())
-                {
-                        itProjectile.next().tick(tick);
-                }
-                
                 for (LinkedListHead<MapAnimation> animationList : animations)
                 {
                         for (MapAnimation anim : animationList)
