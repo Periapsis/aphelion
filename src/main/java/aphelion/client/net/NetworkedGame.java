@@ -102,8 +102,8 @@ public class NetworkedGame implements GameListener, TickEvent
         /** The tick difference between the local PhysicsEnvironment ticks and the servers PhysicsEnvironment ticks. */
         private long physics_tick_offset;
         
-        private long sendMove_lastSent_tick;
-        private RollingHistory<PhysicsMovement> sendMove_history;
+        private long sendMove_lastSent_tick; // physicsEnv.getTick()
+        private RollingHistory<PhysicsMovement> sendMove_history; // physicsEnv.getTick()
         
         private long clockSync_lastSync_nano;
         private long clockSync_lastRTT_nano;
@@ -233,8 +233,6 @@ public class NetworkedGame implements GameListener, TickEvent
                 }
 
                 this.state = newState;
-                
-                //System.out.println("Client new state: " + newState);
 
                 GameC2S.C2S.Builder c2s;
                 
@@ -620,11 +618,11 @@ public class NetworkedGame implements GameListener, TickEvent
         {
                 long now = System.nanoTime();
                 
-                if (sendMove_history != null && tick - sendMove_lastSent_tick >= SEND_MOVE_DELAY)
+                if (sendMove_history != null)
                 {
                         // we might have move operations queued but the caller is not
                         // calling sendMove() anymore
-                        sendMove(sendMove_history.getMostRecentTick() + 1, PhysicsMovement.NONE);
+                        sendMove(physicsEnv.getTick(), null);
                 }
                 
                 if (isReady() && !isDownloading())
@@ -684,11 +682,20 @@ public class NetworkedGame implements GameListener, TickEvent
                 clockSync_lastSync_nano = System.nanoTime();
         }
         
+        /** Queue a move to be sent to the server.
+         * Moves into the past, or changing previously sent moves is not allowed.
+         * 
+         * @param tick The tick at which the move occurred (based on physicsEnv.getTick() )
+         * @param move A move. 
+         * Null is a special value which is only used to make 
+         * sure the queue gets emptied in time (this is called for 
+         * every possible tick by NetworkedGame.tick() ).
+         */
         public void sendMove(long tick, PhysicsMovement move)
-        {
+        {        
                 if (sendMove_history == null)
                 {
-                        if (!move.hasEffect())
+                        if (move == null || !move.hasEffect())
                         {
                                 return;
                         }
@@ -696,19 +703,56 @@ public class NetworkedGame implements GameListener, TickEvent
                         sendMove_history = new RollingHistory<>(tick, SEND_MOVE_DELAY + SEND_MOVE_OVERLAP);
                         sendMove_lastSent_tick = tick - 1;
                 }
-                else if (tick <= sendMove_history.getMostRecentTick())
+                else if (tick < sendMove_history.getOldestTick())
                 {
                         throw new IllegalStateException();
+                        // Too far into the past
                 }
                 
-                if (move.hasEffect())
-                {
-                        sendMove_history.setHistory(tick, move);
-                }
+                sendMove_history.setHistory(tick, move);
+                
                 
                 if (tick - sendMove_lastSent_tick < SEND_MOVE_DELAY)
                 {
                         return; //queue
+                }
+                
+                // Skip trailing and leading NONE / null moves.
+                // note that this is not just an optimalization!
+                // Trailing NONE's need to be skipped because a 
+                // NONE may be overriden at a (slightly) later moment.
+                
+                long first_tick = sendMove_history.getOldestTick();
+                while (true)
+                {
+                        PhysicsMovement m = sendMove_history.get(first_tick);
+                        if (m != null && m != PhysicsMovement.NONE)
+                        {
+                                break;
+                        }
+                        
+                        ++first_tick;
+                        
+                        if (first_tick > sendMove_history.getMostRecentTick())
+                        {
+                                return; // history is completely empty
+                        }
+                }
+                
+                long last_tick = sendMove_history.getMostRecentTick();
+                while (true)
+                {
+                        PhysicsMovement m = sendMove_history.get(last_tick);
+                        if (m != null && m != PhysicsMovement.NONE)
+                        {
+                                break;
+                        }
+                        
+                        --last_tick;
+                        
+                        
+                        // should have returned already in the previous loop
+                        assert last_tick >= sendMove_history.getOldestTick(); 
                 }
                 
                 sendMove_lastSent_tick = tick;
@@ -716,40 +760,21 @@ public class NetworkedGame implements GameListener, TickEvent
                 GameC2S.C2S.Builder c2s = GameC2S.C2S.newBuilder();
                 GameOperation.ActorMove.Builder actorMove = c2s.addActorMoveBuilder();
                 actorMove.setPid(myPid);
+                actorMove.setTick(physicsLocalTickToServer(first_tick));
                 actorMove.setDirect(true);
                 
-                
-                boolean first = true; // used to remove NONE movements at the front of the list (which are implicit)
-                boolean addedSomethingInteresting = false;
-                
-                for (long t = sendMove_history.getOldestTick(); 
-                     t <= sendMove_history.getMostRecentTick(); 
-                     ++t)
+                for (long t = first_tick; t <= last_tick; ++t)
                 {
                         PhysicsMovement m = sendMove_history.get(t);
-                        if (m == null || !m.hasEffect())
+                        if (m == null)
                         {
-                                if (!first)
-                                {
-                                        actorMove.addMove(PhysicsMovement.NONE.bits);
-                                }
+                                m = PhysicsMovement.NONE;
                         }
-                        else
-                        {
-                                if (first)
-                                {
-                                        first = false;
-                                        actorMove.setTick(physicsLocalTickToServer(t));
-                                }
-                                addedSomethingInteresting = true;
-                                actorMove.addMove(m.bits);
-                        }
+                        actorMove.addMove(m.bits);
                 }
-                
-                if (addedSomethingInteresting)
-                {
-                        game.send(c2s);
-                }
+
+                game.send(c2s);
+
         }
         
         public void sendActorWeapon(long tick, WEAPON_SLOT weaponSlot, PhysicsShipPosition positionHint)
