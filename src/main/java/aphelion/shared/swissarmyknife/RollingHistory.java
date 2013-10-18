@@ -52,6 +52,11 @@ public class RollingHistory<T>
         
         public RollingHistory(long initial_tick, int history_length)
         {
+                if (history_length < 1)
+                {
+                        throw new IllegalArgumentException();
+                }
+                
                 this.HISTORY_LENGTH = history_length;
                 this.history_tick = initial_tick;
                 history = (T[]) new Object[HISTORY_LENGTH];
@@ -59,6 +64,14 @@ public class RollingHistory<T>
         
         protected void updated() {}
         
+        /** Set the history value for a particular tick.
+         * If this tick is greater than getMostRecentTick(), 
+         * the oldest value might be removed if the history length has been reached.
+         * If this tick is too old, nothing is set and this method returns -1;
+         * @param tick
+         * @param value
+         * @return The index in the internal array that the value was set on. or -1 on failure
+         */
         public int setHistory(long tick, T value)
         {
                 while (tick > history_tick)
@@ -91,6 +104,11 @@ public class RollingHistory<T>
                 return index;
         }
         
+        /** Get a value relative to getMostRecentTick().
+         * @param ticks_ago Relative tick value
+         * @return historic value previously set by setHistory()
+         * @throws IllegalArgumentException if ticks_ago &lt; 0 || ticks_ago &gt;= HISTORY_LENGTH
+         */
         public T getRelative(int ticks_ago) throws IllegalArgumentException
         {
                 if (ticks_ago < 0 || ticks_ago >= HISTORY_LENGTH)
@@ -104,6 +122,10 @@ public class RollingHistory<T>
                 return history[index];
         }
         
+        /** Get a value.
+         * @param tick Absolute tick value
+         * @return historic value previously set by setHistory() or null if there is no value for this tick.
+         */
         public T get(long tick)
         {
                 long ticks_ago = history_tick - tick;
@@ -118,11 +140,27 @@ public class RollingHistory<T>
                 return history[index];
         }
         
+        /** The highest tick we have a value for.
+         * @return tick
+         */
         public long getMostRecentTick()
         {
                 return history_tick;
         }
         
+        /** The oldest tick we might a value for.
+         * This value might be null or have never been actually set.
+         * @return tick
+         */
+        public long getOldestTick()
+        {
+                return history_tick - HISTORY_LENGTH + 1;
+        }
+        
+        /** Set this instance to be identical to another instance.
+         * This method avoids triggering garbage collection (versus .clone()).
+         * @param other 
+         */
         public void set(RollingHistory<T> other)
         {
                 if (other.HISTORY_LENGTH > this.HISTORY_LENGTH)

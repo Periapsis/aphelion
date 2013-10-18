@@ -65,6 +65,8 @@ public class PhysicsMovement implements PhysicsMoveable
                                 );
                 }
         }
+        
+        public static final PhysicsMovement NONE = get(0);
 
         private PhysicsMovement(boolean up, boolean down, boolean left, boolean right, boolean boost)
         {

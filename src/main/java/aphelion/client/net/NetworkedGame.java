@@ -58,6 +58,7 @@ import aphelion.shared.swissarmyknife.SwissArmyKnife;
 import aphelion.shared.event.ClockSource;
 import aphelion.shared.event.TickEvent;
 import aphelion.shared.event.TickedEventLoop;
+import aphelion.shared.swissarmyknife.RollingHistory;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -71,27 +72,47 @@ import java.util.logging.Logger;
 public class NetworkedGame implements GameListener, TickEvent
 {
         private static final Logger log = Logger.getLogger("aphelion.net");
-        private static final int SEND_MOVE_DELAY = 5; // in ticks
-        private static final long CLOCKSYNC_DELAY = 1 * 30 * 1000000000L; // in nano seconds. clock sync also measures lag
+        
+        /** How often to send our queued move operations to the server. (in ticks) */
+        private static final int SEND_MOVE_DELAY = 5;
+        
+        /** How many move operations to send that were already sent previously. 
+         * If, for example, SEND_MOVE_DELAY is 5 and SEND_MOVE_OVERLAP is 10, a 
+         * maximum of 15 move operations will be sent every 5 ticks.
+         * And each move operation will be sent a total of 3 times.
+         */
+        private static final int SEND_MOVE_OVERLAP = 10;
+        
+        /** How often to sync the clock (in nanoseconds).
+         * The clock sync is also used to measure round trip latency.
+         */
+        private static final long CLOCKSYNC_DELAY = 30 * 1000_000_000L;
         
         private ResourceDB resourceDB;
         private TickedEventLoop loop;
-        private String nickname;
         private PhysicsEnvironment physicsEnv;
         private MapEntities mapEntities;
         private GameProtocolConnection game;
         private ClockSync clockSync;
         private int initial_timeSync_count = 0;
+        
+        private String nickname;
         private STATE state;
         private int myPid = -1;
-        private long physics_tick_offset; // the tick difference between the local PhysicsEnvironment ticks and the servers PhysicsEnvironment ticks
-        private GameC2S.C2S.Builder pendingOutgoingMove;
+        /** The tick difference between the local PhysicsEnvironment ticks and the servers PhysicsEnvironment ticks. */
+        private long physics_tick_offset;
+        
+        private long sendMove_lastSent_tick;
+        private RollingHistory<PhysicsMovement> sendMove_history;
+        
         private long clockSync_lastSync_nano;
         private long clockSync_lastRTT_nano;
+        
         private LinkedList<GameS2C.S2C> arenaSyncOperationQueue;
         private HashSet<Integer> unknownActorRemove = new HashSet<>(); // Assumes PIDs are unique. ActorNew is never called twice with the same PID.
+        
         private WS_CLOSE_STATUS disconnect_code; // null if unknown
-        private String disconnect_reason; // null unknown
+        private String disconnect_reason; // null if unknown
         private AuthenticateResponse.ERROR auth_error;
         private String auth_error_desc;
         
@@ -599,14 +620,11 @@ public class NetworkedGame implements GameListener, TickEvent
         {
                 long now = System.nanoTime();
                 
-                if (this.pendingOutgoingMove != null)
+                if (sendMove_history != null && tick - sendMove_lastSent_tick >= SEND_MOVE_DELAY)
                 {
-                        if (physicsCurrentServerTicks() - pendingOutgoingMove.getActorMoveBuilder(0).getTick() 
-                                >= SEND_MOVE_DELAY)
-                        {
-                                game.send(pendingOutgoingMove);
-                                pendingOutgoingMove = null;       
-                        }
+                        // we might have move operations queued but the caller is not
+                        // calling sendMove() anymore
+                        sendMove(sendMove_history.getMostRecentTick() + 1, PhysicsMovement.NONE);
                 }
                 
                 if (isReady() && !isDownloading())
@@ -668,43 +686,74 @@ public class NetworkedGame implements GameListener, TickEvent
         
         public void sendMove(long tick, PhysicsMovement move)
         {
-                if (!move.hasEffect())
+                if (sendMove_history == null)
                 {
-                        return;
+                        if (!move.hasEffect())
+                        {
+                                return;
+                        }
+                        
+                        sendMove_history = new RollingHistory<>(tick, SEND_MOVE_DELAY + SEND_MOVE_OVERLAP);
+                        sendMove_lastSent_tick = tick - 1;
+                }
+                else if (tick <= sendMove_history.getMostRecentTick())
+                {
+                        throw new IllegalStateException();
                 }
                 
-                long serverTick = physicsLocalTickToServer(tick);
-                
-                if (this.pendingOutgoingMove == null)
+                if (move.hasEffect())
                 {
-                        pendingOutgoingMove = GameC2S.C2S.newBuilder();
-                        GameOperation.ActorMove.Builder actorMove = pendingOutgoingMove.addActorMoveBuilder();
-                        actorMove.setTick(serverTick);
-                        actorMove.setPid(myPid);
-                        actorMove.setDirect(true);
+                        sendMove_history.setHistory(tick, move);
                 }
                 
-                GameOperation.ActorMove.Builder actorMove = pendingOutgoingMove.getActorMoveBuilder(0);
-                
-                for (long t = actorMove.getTick() + actorMove.getMoveCount(); t < serverTick; ++t)
+                if (tick - sendMove_lastSent_tick < SEND_MOVE_DELAY)
                 {
-                        // fill the gap
-                        actorMove.addMove(0);
+                        return; //queue
                 }
                 
-                actorMove.addMove(move.bits);
+                sendMove_lastSent_tick = tick;
                 
-                if (physicsCurrentServerTicks() - actorMove.getTick() >= SEND_MOVE_DELAY)
+                GameC2S.C2S.Builder c2s = GameC2S.C2S.newBuilder();
+                GameOperation.ActorMove.Builder actorMove = c2s.addActorMoveBuilder();
+                actorMove.setPid(myPid);
+                actorMove.setDirect(true);
+                
+                
+                boolean first = true; // used to remove NONE movements at the front of the list (which are implicit)
+                boolean addedSomethingInteresting = false;
+                
+                for (long t = sendMove_history.getOldestTick(); 
+                     t <= sendMove_history.getMostRecentTick(); 
+                     ++t)
                 {
-                        game.send(pendingOutgoingMove);
-                        pendingOutgoingMove = null;
+                        PhysicsMovement m = sendMove_history.get(t);
+                        if (m == null || !m.hasEffect())
+                        {
+                                if (!first)
+                                {
+                                        actorMove.addMove(PhysicsMovement.NONE.bits);
+                                }
+                        }
+                        else
+                        {
+                                if (first)
+                                {
+                                        first = false;
+                                        actorMove.setTick(physicsLocalTickToServer(t));
+                                }
+                                addedSomethingInteresting = true;
+                                actorMove.addMove(m.bits);
+                        }
+                }
+                
+                if (addedSomethingInteresting)
+                {
+                        game.send(c2s);
                 }
         }
         
         public void sendActorWeapon(long tick, WEAPON_SLOT weaponSlot, PhysicsShipPosition positionHint)
         {
-                // todo weapon id                
-                
                 long serverTick = physicsLocalTickToServer(tick);
                 
                 GameC2S.C2S.Builder c2s = GameC2S.C2S.newBuilder();
