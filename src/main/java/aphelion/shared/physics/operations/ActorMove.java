@@ -82,6 +82,11 @@ public class ActorMove extends Operation implements ActorMovePublic
                         return true;
                 }
                 
+                if (actor.isDead(tick))  // ignore operation
+                {
+                        return true;
+                }
+                
                 // note: this is only checked within the current state,
                 // a timewarp will take care of the rest
                 if (actor.moveHistory.get(this.tick) != null)
