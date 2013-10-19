@@ -10,6 +10,7 @@ import aphelion.shared.gameconfig.GCInteger;
 import aphelion.shared.gameconfig.GameConfig;
 import static aphelion.shared.physics.PhysicsEnvironmentTest.MOVE_UP;
 import aphelion.shared.physics.entities.ProjectilePublic;
+import aphelion.shared.physics.events.pub.ActorDiedPublic;
 import aphelion.shared.physics.events.pub.EventPublic;
 import aphelion.shared.physics.events.pub.ProjectileExplosionPublic;
 import aphelion.shared.physics.valueobjects.PhysicsPoint;
@@ -433,13 +434,21 @@ public class TimewarpTest extends PhysicsTest
                                 ev.getPosition(state, pos);
                                 assertPointEquals(45664, 90, pos);
                         }
+                        else if (e instanceof ActorDiedPublic)
+                        {
+                                ActorDiedPublic ev = (ActorDiedPublic) e;
+                                assert ev.hasOccured(state);
+                                assertEquals(4, ev.getOccuredAt(state));
+                                assertEquals(ACTOR_SECOND, ev.getDied(state));
+                                assert ev.getCause(state) instanceof ProjectileExplosionPublic;
+                        }
                         else
                         {
                                 assert false;
                         }
                 }
                 
-                assertEquals(1, events);
+                assertEquals(2, events);
         }
         
         @Test
@@ -515,13 +524,21 @@ public class TimewarpTest extends PhysicsTest
                                 ev.getPosition(state, pos);
                                 assertPointEquals(385664, 90, pos);
                         }
+                        else if (e instanceof ActorDiedPublic)
+                        {
+                                ActorDiedPublic ev = (ActorDiedPublic) e;
+                                assert ev.hasOccured(state);
+                                assertEquals(21, ev.getOccuredAt(state));
+                                assertEquals(ACTOR_SECOND, ev.getDied(state));
+                                assert ev.getCause(state) instanceof ProjectileExplosionPublic;
+                        }
                         else
                         {
                                 assert false;
                         }
                 }
                 
-                assertEquals(1, events);
+                assertEquals(2, events);
         }
         
         @Test
