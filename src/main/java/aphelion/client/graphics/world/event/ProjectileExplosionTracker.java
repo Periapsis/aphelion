@@ -35,9 +35,12 @@
  * the terms and conditions of the license of that module. An independent
  * module is a module which is not derived from or based on this library.
  */
-package aphelion.client.graphics.world;
+package aphelion.client.graphics.world.event;
 
 import aphelion.client.RENDER_LAYER;
+import aphelion.client.graphics.world.GCImageAnimation;
+import aphelion.client.graphics.world.MapEntities;
+import aphelion.client.graphics.world.Projectile;
 import aphelion.shared.gameconfig.GCImage;
 import aphelion.shared.physics.PhysicsEnvironment;
 import aphelion.shared.physics.entities.ActorPublic;
@@ -58,7 +61,7 @@ import java.util.ArrayList;
  *
  * @author Joris
  */
-public class ProjectileExplosionTracker
+public class ProjectileExplosionTracker implements EventTracker
 {
         private ResourceDB resourceDB;
         private PhysicsEnvironment physicsEnv;
@@ -70,7 +73,7 @@ public class ProjectileExplosionTracker
         private long renderDelay;
         private int renderingAt_state;
         
-        private ArrayList<GCImageAnimation> animations;
+        private ArrayList<GCImageAnimation> projectileAnimations;
 
         public ProjectileExplosionTracker(ResourceDB resourceDB, PhysicsEnvironment physicsEnv, MapEntities mapEntities)
         {
@@ -112,11 +115,15 @@ public class ProjectileExplosionTracker
                 
                 firstRun = false;
                 
+                
+                
+                // using the render delay of the projectile
+                
                 if (physicsProjectile_state0 != null &&
                     event.hasOccured(renderingAt_state) && 
                     event.getOccuredAt(renderingAt_state) <= physicsEnv.getTick() - renderDelay)
                 {
-                        if (animations == null)
+                        if (projectileAnimations == null)
                         {
                                 spawnAnimations();
                         }
@@ -131,48 +138,25 @@ public class ProjectileExplosionTracker
         
         private void removeAnimations()
         {
-                if (animations != null)
+                if (projectileAnimations != null)
                 {
-                        for (GCImageAnimation anim : animations)
+                        for (GCImageAnimation anim : projectileAnimations)
                         {
                                 anim.setDone();
                         }
-                        animations = null;
+                        projectileAnimations = null;
                 }
         }
         
         private void spawnAnimations()
         {
                 final PhysicsPoint pos = new PhysicsPoint();
-                final PhysicsShipPosition actorPos = new PhysicsShipPosition();
                 
                 ProjectilePublic physicsProjectile_state0 = event.getProjectile(0);
                 
                 long occuredAt_tick = event.getOccuredAt(renderingAt_state);
                 
-                animations = new ArrayList<>(
-                        event.getKilledSize(renderingAt_state)
-                        + 1
-                        + event.getCoupledProjectilesSize(renderingAt_state)
-                );
-                
-
-                for (Integer pid : event.getKilled(renderingAt_state))
-                {
-                        ActorPublic actor = physicsEnv.getActor(pid);
-                        if (actor == null) continue;
-
-                        GCImage image = actor.getActorConfigImage("ship-explosion-animation", resourceDB);
-
-                        if (image != null && actor.getHistoricPosition(actorPos, occuredAt_tick, false))
-                        {
-                                GCImageAnimation anim = new GCImageAnimation(resourceDB, image);
-                                anim.setPositionFromPhysics(actorPos.x, actorPos.y);
-                                anim.setVelocityFromPhysics(actorPos.x_vel, actorPos.y_vel);
-                                mapEntities.addAnimation(RENDER_LAYER.AFTER_LOCAL_SHIP, anim, null);
-                                animations.add(anim);
-                        }
-                }
+                projectileAnimations = new ArrayList<>(1 + event.getCoupledProjectilesSize(renderingAt_state));
 
                 PhysicsPoint tileHit = new PhysicsPoint();
                 event.getHitTile(renderingAt_state, tileHit);
@@ -226,7 +210,7 @@ public class ProjectileExplosionTracker
 
                                 anim.setPositionFromPhysics(pos);
                                 mapEntities.addAnimation(RENDER_LAYER.AFTER_LOCAL_SHIP, anim, null);
-                                animations.add(anim);
+                                projectileAnimations.add(anim);
                         }
 
                         for (ProjectilePublic coupledProjectile : event.getCoupledProjectiles(renderingAt_state))
@@ -237,7 +221,7 @@ public class ProjectileExplosionTracker
 
                                 anim.setPositionFromPhysics(pos);
                                 mapEntities.addAnimation(RENDER_LAYER.AFTER_LOCAL_SHIP, anim, null);
-                                animations.add(anim);
+                                projectileAnimations.add(anim);
                         }
                 }
         }

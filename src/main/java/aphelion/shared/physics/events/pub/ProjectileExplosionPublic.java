@@ -90,6 +90,7 @@ public interface ProjectileExplosionPublic extends EventPublic
         public int getFireActor(int stateid);
         
         /** Coupled projectiles that were also removed as a result of this event.
+         * (excluding the projectile returned from getProjectile())
          * @param stateid 
          * @return 
          */

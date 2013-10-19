@@ -584,6 +584,13 @@ public class PhysicsEnvironment implements TickEvent
                         throw new IllegalArgumentException("Invalid state");
                 }
                 
+                if (pid == 0)
+                {
+                        // pid 0 is a special value that is never assigned
+                        // always return null even if nofail is set
+                        return null;
+                }
+                
                 state = trailingStates[stateid];
                 
                 actor = state.actors.get(pid);

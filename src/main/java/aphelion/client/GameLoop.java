@@ -39,6 +39,7 @@
 package aphelion.client;
 
 
+import aphelion.client.graphics.world.event.ProjectileExplosionTracker;
 import aphelion.client.graphics.Graph;
 import aphelion.client.net.NetworkedGame;
 import aphelion.client.net.SingleGameConnection;
@@ -48,6 +49,8 @@ import aphelion.client.graphics.screen.EnergyBar;
 import aphelion.client.graphics.screen.Gauges;
 import aphelion.client.graphics.screen.StatusDisplay;
 import aphelion.client.graphics.world.*;
+import aphelion.client.graphics.world.event.ActorDiedTracker;
+import aphelion.client.graphics.world.event.EventTracker;
 import aphelion.client.resource.AsyncTexture;
 import aphelion.shared.event.TickEvent;
 import aphelion.shared.event.TickedEventLoop;
@@ -68,6 +71,7 @@ import aphelion.shared.swissarmyknife.Point;
 import aphelion.shared.map.MapClassic;
 import aphelion.shared.map.tile.TileType;
 import aphelion.shared.physics.events.Event;
+import aphelion.shared.physics.events.pub.ActorDiedPublic;
 import aphelion.shared.swissarmyknife.AttachmentConsumer;
 import java.lang.ref.WeakReference;
 
@@ -118,6 +122,8 @@ public class GameLoop
         private Camera radarCamera;
         private Camera bigMapCamera;
         private MapEntities mapEntities;
+        private static final AttachmentConsumer<EventPublic, EventTracker> eventTrackers 
+                = new AttachmentConsumer<>(Event.attachmentManager);
         
         // Screen Graphics
         private EnergyBar energyBar;
@@ -486,7 +492,27 @@ public class GameLoop
                 {
                         if (event instanceof ProjectileExplosionPublic)
                         {
-                                explosionEvent((ProjectileExplosionPublic) event);
+                                ProjectileExplosionTracker tracker = (ProjectileExplosionTracker) eventTrackers.get(event);
+                
+                                if (tracker == null)
+                                {
+                                        tracker = new ProjectileExplosionTracker(resourceDB, physicsEnv, mapEntities);
+                                        eventTrackers.set(event, tracker);
+                                }
+
+                                tracker.update((ProjectileExplosionPublic) event);
+                        }
+                        else if (event instanceof ActorDiedPublic)
+                        {
+                                ActorDiedTracker tracker = (ActorDiedTracker) eventTrackers.get(event);
+                                
+                                if (tracker == null)
+                                {
+                                        tracker = new ActorDiedTracker(resourceDB, physicsEnv, mapEntities);
+                                        eventTrackers.set(event, tracker);
+                                }
+
+                                tracker.update((ActorDiedPublic) event);
                         }
                 }
         }
@@ -657,24 +683,7 @@ public class GameLoop
                         projectile.exists = false;
                 }
         }
-        
-        
-        
-        private static final AttachmentConsumer<ProjectileExplosionPublic, ProjectileExplosionTracker> explosionAnimations 
-                = new AttachmentConsumer<>(Event.attachmentManager);
-        
-        private void explosionEvent(ProjectileExplosionPublic event)
-        {
-                ProjectileExplosionTracker tracker = explosionAnimations.get(event);
-                
-                if (tracker == null)
-                {
-                        tracker = new ProjectileExplosionTracker(resourceDB, physicsEnv, mapEntities);
-                        explosionAnimations.set(event, tracker);
-                }
-                
-                tracker.update(event);
-        }
+
         
         private class MyKeyboard implements TickEvent
         {

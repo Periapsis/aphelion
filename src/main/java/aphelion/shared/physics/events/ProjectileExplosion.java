@@ -52,7 +52,9 @@ import aphelion.shared.physics.valueobjects.PhysicsPoint;
 import aphelion.shared.physics.valueobjects.PhysicsShipPosition;
 import aphelion.shared.swissarmyknife.LinkedListEntry;
 import aphelion.shared.swissarmyknife.SwissArmyKnife;
+import gnu.trove.map.hash.TIntObjectHashMap;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -69,6 +71,14 @@ public class ProjectileExplosion extends Event implements ProjectileExplosionPub
         // it will be set as an attribute in every projectile.
         private ArrayList<MapEntity[]> chained_crossStateLists; // projectile index -> state id -> map entity
         
+        /** The died events this event has spawned.
+          * This hash map should not be touched by resetExecutionHistory() or isConsistent().
+          * It is used to make sure the same event is not added multiple times when a 
+          * timewarp occurs.
+          * PhysicsEnvironment will handle resetting the history of ActorDied, that does
+          * not has to be performed here.
+          */
+        final TIntObjectHashMap<ActorDied> diedEvents = new TIntObjectHashMap<>(4);
         
         public ProjectileExplosion()
         {
@@ -161,8 +171,13 @@ public class ProjectileExplosion extends Event implements ProjectileExplosionPub
                         // it hit an actor or a tile
                         // remove our coupled projectiles
                         
-                        for(Projectile coupledProjectile : explodedProjectile.coupled)
+                        for (Projectile coupledProjectile : explodedProjectile.coupled)
                         {
+                                if (coupledProjectile == explodedProjectile)
+                                {
+                                        continue;
+                                }
+                                
                                 if (coupledProjectile.isRemoved(tick))
                                 {
                                         continue;
@@ -192,7 +207,6 @@ public class ProjectileExplosion extends Event implements ProjectileExplosionPub
                                 hist.coupledProjectiles.add(coupledProjectile);
                         }
                 }
-                
                 
                 hist.projectile = explodedProjectile;
                 hist.hit_x = explodedProjectile.pos.pos.x;
@@ -231,6 +245,18 @@ public class ProjectileExplosion extends Event implements ProjectileExplosionPub
                         explodedProjectile.doSplashEmp(actorHit, tick);
                 }
                 
+                for (Integer killed_pid : hist.killed_pids)
+                {
+                        ActorDied diedEvent = diedEvents.get(killed_pid);
+                        if (diedEvent == null)
+                        {
+                                diedEvent = new ActorDied();
+                                diedEvents.put(killed_pid, diedEvent);
+                        }
+                        
+                        state.env.addEvent(diedEvent);
+                        diedEvent.execute(tick, state, state.actors.get(killed_pid), this);
+                }
                 
                 // Fire a chained weapon
                 String weapon = chainWeapon.isSet() ? explodedProjectile.cfg(chainWeapon, tick) : "";
@@ -413,7 +439,7 @@ public class ProjectileExplosion extends Event implements ProjectileExplosionPub
         public Iterable<Integer> getKilled(int stateid)
         {
                 History hist = history[stateid];
-                return hist.killed_pids;
+                return Collections.unmodifiableList(hist.killed_pids);
         }
         
         @Override
