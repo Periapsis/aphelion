@@ -58,7 +58,8 @@ public abstract class MapEntity
         public long removedAt_tick;
         
         /** Set if this entity was removed during State.resetTo(). 
-         * It is very likely this entity will be reused if this attribute is set
+         * It is very likely this entity will be reused if this attribute is set.
+         * This attribute is used for assertions and should not be modified in MapEntity.resetTo
          */
         public boolean removedDuringReset = false;
         
