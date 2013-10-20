@@ -536,6 +536,7 @@ public class State
                         {
                                 LinkedListEntry<Projectile> next = entry.next;
                                 entry.data.hardRemove(tick_now);
+                                entry.data.removedDuringReset = true;
                                 entry = next;
                         }
                         
