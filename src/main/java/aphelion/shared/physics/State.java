@@ -41,6 +41,7 @@ import aphelion.shared.gameconfig.ConfigSelection;
 import aphelion.shared.gameconfig.GameConfig;
 import aphelion.shared.physics.entities.Projectile;
 import aphelion.shared.physics.entities.Actor;
+import aphelion.shared.physics.entities.MapEntity;
 import aphelion.shared.physics.events.Event;
 import aphelion.shared.physics.events.pub.ProjectileExplosionPublic.EXPLODE_REASON;
 import aphelion.shared.physics.operations.Operation;
@@ -359,19 +360,37 @@ public class State
          * This list is cleared after the timewarp has been completed.
          * If an actor is recreated as part of a timewarp, a new actor object 
          * should not be created.
-         * Otherwide references (external to physics) might break.
+         * Otherwise references (external to physics) might break.
          * The method used here works properly because PIDs may not be reused.
          * @param pid
-         * @return  
+         * @param tick The tick that should represent the new creation tick for this actor
+         * @param crossStateList The cross state list the actor should be linked to
+         * @return An actor reset to default values, as if the constructor had just been called.
+         * Or null in which case you need to create a new Actor.
          */
-        public Actor getActorRemovedDuringReset(int pid)
+        public Actor getActorRemovedDuringReset(int pid, long tick, MapEntity[] crossStateList)
         {
+                Actor actor = null;
                 for (Actor removedActor : this.actorsRemovedDuringReset)
                 {
                         if (removedActor.pid == pid)
                         {
-                                return removedActor;       
+                                actor = removedActor;
+                                break;
                         }
+                }
+                
+                if (actor != null)
+                {
+                        assert actor.removedDuringReset;
+                        // use a dummy empty actor to reset everything to default values
+
+                        Actor other = new Actor(this, crossStateList, pid, tick);
+                        crossStateList[this.id] = null; // skip assertion in resetTo
+                        actor.resetTo(this, other);
+                        crossStateList[this.id] = (MapEntity) actor;
+                        actor.removedDuringReset = false;
+                        return actor;
                 }
                 
                 return null;
@@ -402,6 +421,7 @@ public class State
         @SuppressWarnings("unchecked")
         private void resetTo(State older)
         {
+                long old_tick_now = this.tick_now;
                 assert older.tick_now <= this.tick_now;
                 this.tick_now = older.tick_now;
 
@@ -426,10 +446,16 @@ public class State
                                 // actor in my state does not exist in the other state, so remove it
                                 if (actorOther == null)
                                 {
+                                        actorMine.softRemove(old_tick_now);
                                         actorIt.remove();
                                         boolean removed = this.actorsList.remove(actorMine);
                                         assert removed;
+                                        
+                                        actorMine.crossStateList[this.id] = null;
+                                        
+                                        actorMine.removedDuringReset = true;
                                         this.actorsRemovedDuringReset.add(actorMine);
+                                        
                                         continue;
                                 }
 
@@ -461,7 +487,7 @@ public class State
                                 // actor that is in the other state, does not exist in mine
                                 if (actorMine == null)
                                 {
-                                        actorMine = this.getActorRemovedDuringReset(actorOther.pid);
+                                        actorMine = this.getActorRemovedDuringReset(actorOther.pid, tick_now, actorOther.crossStateList);
                 
                                         if (actorMine == null)
                                         {

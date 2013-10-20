@@ -97,19 +97,11 @@ public class ActorNew extends Operation implements ActorNewPublic
                         }
                 }
                 
-                actor = state.getActorRemovedDuringReset(pid);
+                actor = state.getActorRemovedDuringReset(pid, this.tick, crossStateList);
                 
                 if (actor == null)
                 {
                         actor = new Actor(state, crossStateList, pid, this.tick);
-                        crossStateList[state.id] = (MapEntity) actor;
-                }
-                else
-                {
-                        // use a dummy empty actor to reset everything to default values
-                        Actor other = new Actor(state, crossStateList, pid, this.tick);
-                        crossStateList[state.id] = null; // skip assertion in resetTo
-                        actor.resetTo(state, other);
                         crossStateList[state.id] = (MapEntity) actor;
                 }
                 

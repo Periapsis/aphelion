@@ -57,6 +57,11 @@ public abstract class MapEntity
         /** valid if removed = true */
         public long removedAt_tick;
         
+        /** Set if this entity was removed during State.resetTo(). 
+         * It is very likely this entity will be reused if this attribute is set
+         */
+        public boolean removedDuringReset = false;
+        
         public final State state;
         public final MapEntity[] crossStateList;
         
