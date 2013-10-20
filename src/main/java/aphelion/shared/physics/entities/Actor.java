@@ -776,7 +776,15 @@ public class Actor extends MapEntity
                 spawnAt_tick = other.spawnAt_tick;
         }
         
-        
+        public void resetToEmpty(long tick)
+        {
+                // use an empty actor to reset everything to default values
+                
+                Actor dummy = new Actor(this.state, crossStateList, pid, tick);
+                crossStateList[this.state.id] = null; // skip assertion in resetTo
+                this.resetTo(this.state, dummy);
+                crossStateList[this.state.id] = (MapEntity) this;
+        }
         
         public boolean canFireWeapon(WEAPON_SLOT weapon, long tick)
         {

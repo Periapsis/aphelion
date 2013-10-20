@@ -364,11 +364,10 @@ public class State
          * The method used here works properly because PIDs may not be reused.
          * @param pid
          * @param tick The tick that should represent the new creation tick for this actor
-         * @param crossStateList The cross state list the actor should be linked to
          * @return An actor reset to default values, as if the constructor had just been called.
          * Or null in which case you need to create a new Actor.
          */
-        public Actor getActorRemovedDuringReset(int pid, long tick, MapEntity[] crossStateList)
+        public Actor getActorRemovedDuringReset(int pid, long tick)
         {
                 Actor actor = null;
                 for (Actor removedActor : this.actorsRemovedDuringReset)
@@ -383,12 +382,7 @@ public class State
                 if (actor != null)
                 {
                         assert actor.removedDuringReset;
-                        // use a dummy empty actor to reset everything to default values
-
-                        Actor other = new Actor(this, crossStateList, pid, tick);
-                        crossStateList[this.id] = null; // skip assertion in resetTo
-                        actor.resetTo(this, other);
-                        crossStateList[this.id] = (MapEntity) actor;
+                        actor.resetToEmpty(tick);
                         actor.removedDuringReset = false;
                         return actor;
                 }
@@ -487,12 +481,14 @@ public class State
                                 // actor that is in the other state, does not exist in mine
                                 if (actorMine == null)
                                 {
-                                        actorMine = this.getActorRemovedDuringReset(actorOther.pid, tick_now, actorOther.crossStateList);
+                                        actorMine = this.getActorRemovedDuringReset(actorOther.pid, tick_now);
                 
                                         if (actorMine == null)
                                         {
                                                 actorMine = new Actor(this, actorOther.crossStateList, actorOther.pid, actorOther.createdAt_tick);
                                         }
+                                        
+                                        assert actorMine.crossStateList == actorOther.crossStateList;
                                         
                                         actorMine.resetTo(this, actorOther);
                                 }
