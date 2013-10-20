@@ -58,7 +58,22 @@ public class WeaponSync extends Operation implements WeaponSyncPublic
 {
         private static final Logger log = Logger.getLogger("aphelion.shared.physics");
         
-        private ArrayList<MapEntity[]> crossStateLists; // projectile index -> state id -> map entity
+        /** crossStateList is a temporary list that is passed to the MapEntity constructor.
+         * This list is used to track the same MapEntity instance across states.
+         * This attribute (MapEntity.crossStateList) references the same array object 
+         * for each instance.
+         * 
+         * projectile index -> crossStateList (state id -> map entity)
+        */
+        private ArrayList<MapEntity[]> crossStateLists;
+        
+        /** The entities this operation has spawned.
+         * This list contains exactly the same data as "crossStateLists", however it 
+         * is local to this object. If a projectile is removed, this list is not modified.
+         * (Unlike the arrays in crossStateLists). they
+         */
+        private ArrayList<Projectile[]> spawnedEntitiesList;
+        
         
         public String weaponKey;
         public GameOperation.WeaponSync.Projectile[] projectiles;
@@ -85,39 +100,74 @@ public class WeaponSync extends Operation implements WeaponSyncPublic
                         return true;
                 }
                 
+                int projectile_count = projectiles.length;
+                
                 if (crossStateLists == null)
                 {
-                        crossStateLists = new ArrayList(projectiles.length);
+                        assert spawnedEntitiesList == null;
+                        crossStateLists = new ArrayList(projectile_count);
+                        spawnedEntitiesList = new ArrayList(projectile_count);
                 }
                 else
                 {
-                        crossStateLists.ensureCapacity(projectiles.length);
+                        assert spawnedEntitiesList != null;
+                        crossStateLists.ensureCapacity(projectile_count);
+                        spawnedEntitiesList.ensureCapacity(projectile_count);
                 }
                 
                 Actor.WeaponConfig config = actor.getWeaponConfig(weaponKey);
                 
                 LinkedListEntry<Projectile> coupled_last = null;
-                for (int i = 0; i < projectiles.length; ++i)
+                for (int p = 0; p < projectile_count; ++p)
                 {
                         MapEntity[] crossStateList;
-                        if (i < crossStateLists.size())
+                        Projectile[] spawnedEntities;
+                        if (p < crossStateLists.size())
                         {
-                                crossStateList = crossStateLists.get(i);
+                                assert p < spawnedEntitiesList.size();
+                                crossStateList = crossStateLists.get(p);
+                                spawnedEntities = spawnedEntitiesList.get(p);
                         }
                         else
                         {
                                 crossStateList = new MapEntity[PhysicsEnvironment.MAX_TRAILING_STATES];
                                 crossStateLists.add(crossStateList);
-                                assert i == crossStateLists.size() - 1;
+                                
+                                spawnedEntities = new Projectile[PhysicsEnvironment.MAX_TRAILING_STATES];
+                                spawnedEntitiesList.add(spawnedEntities);
+                                
+                                assert p == crossStateLists.size() - 1;
+                                assert p == spawnedEntitiesList.size() - 1;
                         }
                         
-                        Projectile projectile = new Projectile(
-                                state, 
-                                crossStateList, 
-                                actor, 
-                                this.tick, 
-                                config, 
-                                projectiles[i].getIndex());
+                        
+                        Projectile projectile;
+                        
+                        if (spawnedEntities[state.id] != null && spawnedEntities[state.id].removedDuringReset)
+                        {
+                                projectile = spawnedEntities[state.id];
+                                projectile.resetToEmpty(tick);
+                                projectile.removedDuringReset = false;
+                        }
+                        else
+                        {
+                                projectile = new Projectile(
+                                        state, 
+                                        crossStateList, 
+                                        actor, 
+                                        this.tick, 
+                                        config,
+                                        p);
+                        }
+                        
+                        assert projectile.state == state;
+                        assert projectile.owner == actor;
+                        assert projectile.config == config;
+                        assert projectile.projectile_index == p;
+                        assert crossStateList[state.id] == projectile;
+                        
+                        spawnedEntities[state.id] = projectile;
+                        
                         
                         if (coupled_last == null)
                         {
@@ -131,7 +181,7 @@ public class WeaponSync extends Operation implements WeaponSyncPublic
                         coupled_last = projectile.coupled;
                         
                         crossStateList[state.id] = (MapEntity) projectile;
-                        projectile.initFromSync(projectiles[i], this.tick, projectiles_tick_offset);
+                        projectile.initFromSync(projectiles[p], this.tick, projectiles_tick_offset);
                         
                         if (projectile.expires_at_tick <= state.tick_now)
                         {

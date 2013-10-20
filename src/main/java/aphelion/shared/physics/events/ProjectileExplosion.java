@@ -67,9 +67,21 @@ public class ProjectileExplosion extends Event implements ProjectileExplosionPub
         private static final Logger log = Logger.getLogger("aphelion.shared.physics");
         private History[] history = new History[PhysicsEnvironment.MAX_TRAILING_STATES];
         
-        // this list is only kept her temporary.
-        // it will be set as an attribute in every projectile.
+        /** crossStateList is a temporary list that is passed to the MapEntity constructor.
+         * This list is used to track the same MapEntity instance across states.
+         * This attribute (MapEntity.crossStateList) references the same array object 
+         * for each instance.
+         * 
+         * projectile index -> crossStateList (state id -> map entity)
+        */
         private ArrayList<MapEntity[]> chained_crossStateLists; // projectile index -> state id -> map entity
+        
+        /** The entities this operation has spawned.
+         * This list contains exactly the same data as "crossStateLists", however it 
+         * is local to this object. If a projectile is removed, this list is not modified.
+         * (Unlike the arrays in crossStateLists). they
+         */
+        private ArrayList<Projectile[]> chained_spawnedEntitiesList;
         
         /** The died events this event has spawned.
           * This hash map should not be touched by resetExecutionHistory() or isConsistent().
@@ -274,57 +286,92 @@ public class ProjectileExplosion extends Event implements ProjectileExplosionPub
                         
                         if (chained_crossStateLists == null)
                         {
+                                assert chained_spawnedEntitiesList == null;
                                 chained_crossStateLists = new ArrayList(projectile_count);
+                                chained_spawnedEntitiesList = new ArrayList(projectile_count);
                         }
                         else
                         {
+                                assert chained_spawnedEntitiesList != null;
                                 chained_crossStateLists.ensureCapacity(projectile_count);
+                                chained_spawnedEntitiesList.ensureCapacity(projectile_count);
                         }
                         
                         LinkedListEntry<Projectile> coupled_last = null;
                         for (int p = 0; p < projectile_count; ++p)
                         {
                                 MapEntity[] crossStateList;
+                                Projectile[] spawnedEntities;
                                 if (p < chained_crossStateLists.size())
                                 {
+                                        assert p < chained_spawnedEntitiesList.size();
                                         crossStateList = chained_crossStateLists.get(p);
+                                        spawnedEntities = chained_spawnedEntitiesList.get(p);
                                 }
                                 else
                                 {
                                         crossStateList = new MapEntity[PhysicsEnvironment.MAX_TRAILING_STATES];
                                         chained_crossStateLists.add(crossStateList);
+
+                                        spawnedEntities = new Projectile[PhysicsEnvironment.MAX_TRAILING_STATES];
+                                        chained_spawnedEntitiesList.add(spawnedEntities);
+
                                         assert p == chained_crossStateLists.size() - 1;
+                                        assert p == chained_spawnedEntitiesList.size() - 1;
                                 }
                                 
-                                Projectile chainedProjectile = new Projectile(
-                                        state, 
-                                        crossStateList, 
-                                        explodedProjectile.owner, 
-                                        tick,
-                                        chainConfig,
-                                        p);
                                 
-                                if (coupled_last == null)
+                                
+                                Projectile projectile;
+                        
+                                if (spawnedEntities[state.id] != null && spawnedEntities[state.id].removedDuringReset)
                                 {
-                                        chainedProjectile.coupled.beginCircular();
+                                        projectile = spawnedEntities[state.id];
+                                        projectile.resetToEmpty(tick);
+                                        projectile.removedDuringReset = false;
                                 }
                                 else
                                 {
-                                        coupled_last.append(chainedProjectile.coupled);
+                                        projectile = new Projectile(
+                                                state, 
+                                                crossStateList, 
+                                                explodedProjectile.owner, 
+                                                tick, 
+                                                chainConfig,
+                                                p);
                                 }
-                                coupled_last = chainedProjectile.coupled;
+
+                                assert projectile.state == state;
+                                assert projectile.owner == explodedProjectile.owner;
+                                assert projectile.config == chainConfig;
+                                assert projectile.projectile_index == p;
+                                assert crossStateList[state.id] == projectile;
+
+                                spawnedEntities[state.id] = projectile;
+
+                      
                                 
-                                chainedProjectile.initFire(tick, actorPos);
+                                if (coupled_last == null)
+                                {
+                                        projectile.coupled.beginCircular();
+                                }
+                                else
+                                {
+                                        coupled_last.append(projectile.coupled);
+                                }
+                                coupled_last = projectile.coupled;
                                 
-                                state.projectiles.append(chainedProjectile.projectileListLink_state);
-                                chainedProjectile.owner.projectiles.append(chainedProjectile.projectileListLink_actor);
+                                projectile.initFire(tick, actorPos);
+                                
+                                state.projectiles.append(projectile.projectileListLink_state);
+                                projectile.owner.projectiles.append(projectile.projectileListLink_actor);
 
 
-                                chainedProjectile.updatePositionHistory(tick);
+                                projectile.updatePositionHistory(tick);
 
                                 // dead reckon current position so that it is no longer late
                                 // the position at the tick of this operation should not be dead reckoned, therefor +1
-                                chainedProjectile.performDeadReckoning(state.env.getMap(), tick + 1, state.tick_now - tick);
+                                projectile.performDeadReckoning(state.env.getMap(), tick + 1, state.tick_now - tick);
                         }
                 }
                 

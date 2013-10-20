@@ -512,6 +512,8 @@ public class State
                                 {
                                         // pretend that the owner is null for now, resetTo() will resolve this
                                         projectileMine = new Projectile(this, projectileOther.crossStateList, null, projectileOther.createdAt_tick, null, projectileOther.projectile_index);
+                                        // A previous object probably did not exist,
+                                        // so it is not possible to reuse it.
                                 }
                                 else
                                 {

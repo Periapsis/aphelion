@@ -546,6 +546,15 @@ public final class Projectile extends MapEntity implements ProjectilePublic
                 // do not reset references to events
         }
         
+        public void resetToEmpty(long tick)
+        {
+                Projectile dummy = new Projectile(this.state, crossStateList, this.owner, tick, this.config, this.projectile_index);
+                
+                crossStateList[this.state.id] = null; // skip assertion in resetTo
+                this.resetTo(this.state, dummy);
+                crossStateList[this.state.id] = (MapEntity) this;
+        }
+        
         public int getSplashDamage(Actor actor, int damage, int range, long rangeSq)
         {
                 long distSq = this.pos.pos.distanceSquared(actor.pos.pos);

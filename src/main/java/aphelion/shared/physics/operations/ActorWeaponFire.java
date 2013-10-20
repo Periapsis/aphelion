@@ -64,9 +64,21 @@ public class ActorWeaponFire extends Operation implements ActorWeaponFirePublic
         
         private boolean[] usedHint = new boolean[PhysicsEnvironment.MAX_TRAILING_STATES];
         
-        // this list is only kept here temporary.
-        // it will be set as an attribute in every projectile.
-        private ArrayList<MapEntity[]> crossStateLists; // projectile index -> state id -> map entity
+        /** crossStateList is a temporary list that is passed to the MapEntity constructor.
+         * This list is used to track the same MapEntity instance across states.
+         * This attribute (MapEntity.crossStateList) references the same array object 
+         * for each instance.
+         * 
+         * projectile index -> crossStateList (state id -> map entity)
+        */
+        private ArrayList<MapEntity[]> crossStateLists;
+        
+        /** The entities this operation has spawned.
+         * This list contains exactly the same data as "crossStateLists", however it 
+         * is local to this object. If a projectile is removed, this list is not modified.
+         * (Unlike the arrays in crossStateLists). they
+         */
+        private ArrayList<Projectile[]> spawnedEntitiesList;
 
         public WEAPON_SLOT weapon_slot;
         
@@ -110,10 +122,7 @@ public class ActorWeaponFire extends Operation implements ActorWeaponFirePublic
         @Override
         public boolean execute(State state, long ticks_late)
         {
-                Actor actor;
-                Projectile projectile;
-                
-                actor = state.actors.get(pid);
+                Actor actor = state.actors.get(pid);
                 
                 if (actor == null) // ignore operation
                 {
@@ -133,11 +142,15 @@ public class ActorWeaponFire extends Operation implements ActorWeaponFirePublic
                 
                 if (crossStateLists == null)
                 {
+                        assert spawnedEntitiesList == null;
                         crossStateLists = new ArrayList(projectile_count);
+                        spawnedEntitiesList = new ArrayList(projectile_count);
                 }
                 else
                 {
+                        assert spawnedEntitiesList != null;
                         crossStateLists.ensureCapacity(projectile_count);
+                        spawnedEntitiesList.ensureCapacity(projectile_count);
                 }
                 
                 if (fireHistories == null)
@@ -179,15 +192,23 @@ public class ActorWeaponFire extends Operation implements ActorWeaponFirePublic
                 for (int p = 0; p < projectile_count; ++p)
                 {
                         MapEntity[] crossStateList;
+                        Projectile[] spawnedEntities;
                         if (p < crossStateLists.size())
                         {
+                                assert p < spawnedEntitiesList.size();
                                 crossStateList = crossStateLists.get(p);
+                                spawnedEntities = spawnedEntitiesList.get(p);
                         }
                         else
                         {
                                 crossStateList = new MapEntity[PhysicsEnvironment.MAX_TRAILING_STATES];
                                 crossStateLists.add(crossStateList);
+                                
+                                spawnedEntities = new Projectile[PhysicsEnvironment.MAX_TRAILING_STATES];
+                                spawnedEntitiesList.add(spawnedEntities);
+                                
                                 assert p == crossStateLists.size() - 1;
+                                assert p == spawnedEntitiesList.size() - 1;
                         }
                         
                         PhysicsPositionVector[] fireHistory;
@@ -208,13 +229,33 @@ public class ActorWeaponFire extends Operation implements ActorWeaponFirePublic
                                 }
                         }                      
                         
-                        projectile = new Projectile(
-                                state, 
-                                crossStateList, 
-                                actor, 
-                                this.tick, 
-                                config,
-                                p);
+                        Projectile projectile;
+                        
+                        if (spawnedEntities[state.id] != null && spawnedEntities[state.id].removedDuringReset)
+                        {
+                                projectile = spawnedEntities[state.id];
+                                projectile.resetToEmpty(tick);
+                                projectile.removedDuringReset = false;
+                        }
+                        else
+                        {
+                                projectile = new Projectile(
+                                        state, 
+                                        crossStateList, 
+                                        actor, 
+                                        this.tick, 
+                                        config,
+                                        p);
+                        }
+                        
+                        assert projectile.state == state;
+                        assert projectile.owner == actor;
+                        assert projectile.config == config;
+                        assert projectile.projectile_index == p;
+                        assert crossStateList[state.id] == projectile;
+                        
+                        spawnedEntities[state.id] = projectile;
+                        
                         
                         if (coupled_last == null)
                         {
