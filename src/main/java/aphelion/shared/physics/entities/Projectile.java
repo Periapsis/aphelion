@@ -109,6 +109,12 @@ public final class Projectile extends MapEntity implements ProjectilePublic
         public long proxLastSeenDist_tick;
         public long proxActivatedAt_tick;
         
+        /** The explosion event this projectile might have spawned. 
+         * In case a timewarp destroys an event, this attribute is used to 
+         * make sure a possible recreated event uses the same object. (which is
+         * useful for external code to track the event, but also useful incase
+         * ProjectileExplosion has state that needs to be kept regardless of timewarps).
+         */
         public WeakReference<ProjectileExplosion> explosionEvent;
 
         public Projectile(State state, 
