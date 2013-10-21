@@ -219,7 +219,7 @@ public class TimewarpTest extends PhysicsTest
                 
                 env.actorNew(1, ACTOR_FIRST, "Bla", 1234, "warbird");
                 env.actorWarp(1, ACTOR_FIRST, false, 1000, 90, 0, 0, 0);
-                env.actorWeapon(2, ACTOR_FIRST, WEAPON_SLOT.GUN, false, 0, 0, 0 ,0 ,0);
+                env.actorWeapon(2, ACTOR_FIRST, WEAPON_SLOT.GUN, false, 0, 0, 0, 0, 0);
                 
                 env.tick(); // 1
                 env.tick(); // 2
@@ -227,18 +227,21 @@ public class TimewarpTest extends PhysicsTest
                 assertEquals(1, env.calculateProjectileCount(0));
                 assertEquals(0, env.calculateProjectileCount(1));
                 testProjectileCreation_assertFirstProj(0, 1000, -14246);
+                ProjectilePublic firstProjectile = env.projectileIterator(0).next();
+                
                 
                 env.timewarp(1);
                 assertEquals(1, env.calculateProjectileCount(0));
                 assertEquals(0, env.calculateProjectileCount(1));
                 testProjectileCreation_assertFirstProj(0, 1000, -14246);
+                assertContains(env.projectileIterator(0), firstProjectile);
                 
                 
                 env.timewarp(env.TRAILING_STATES-1);
                 assertEquals(1, env.calculateProjectileCount(0));
                 assertEquals(0, env.calculateProjectileCount(1));
                 testProjectileCreation_assertFirstProj(0, 1000, -14246);
-                
+                assertContains(env.projectileIterator(0), firstProjectile);
                 
                 
                 while(env.getTick() < PhysicsEnvironment.TRAILING_STATE_DELAY)
@@ -253,19 +256,21 @@ public class TimewarpTest extends PhysicsTest
                 assertEquals(1, env.calculateProjectileCount(1));
                 testProjectileCreation_assertFirstProj(0, 1000, -96166);
                 testProjectileCreation_assertFirstProj(1, 1000, -14246);
+                assertContains(env.projectileIterator(0), firstProjectile);
                 
                 env.timewarp(1);
                 assertEquals(1, env.calculateProjectileCount(0));
                 assertEquals(1, env.calculateProjectileCount(1));
                 testProjectileCreation_assertFirstProj(0, 1000, -96166);
                 testProjectileCreation_assertFirstProj(1, 1000, -14246);
+                assertContains(env.projectileIterator(0), firstProjectile);
                 
                 env.timewarp(env.TRAILING_STATES-1);
                 assertEquals(1, env.calculateProjectileCount(0));
                 assertEquals(1, env.calculateProjectileCount(1));
                 testProjectileCreation_assertFirstProj(0, 1000, -96166);
                 testProjectileCreation_assertFirstProj(1, 1000, -14246);
-                
+                assertContains(env.projectileIterator(0), firstProjectile);
                 
                 assertEquals(4, env.getTimewarpCount());
                 
@@ -300,6 +305,7 @@ public class TimewarpTest extends PhysicsTest
                 assertEquals(5, env.getTimewarpCount());
                 
                 assertEquals(3, env.calculateProjectileCount(0));
+                assertContains(env.projectileIterator(0), firstProjectile);
                 
                 // expire the projectiles
                 while(env.getTick(env.TRAILING_STATES-1) < t + 3 + 100 + PhysicsEnvironment.TOTAL_HISTORY)

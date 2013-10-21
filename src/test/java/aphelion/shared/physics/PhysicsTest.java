@@ -13,6 +13,7 @@ import aphelion.shared.physics.entities.ProjectilePublic;
 import aphelion.shared.physics.valueobjects.PhysicsMovement;
 import aphelion.shared.physics.valueobjects.PhysicsPoint;
 import aphelion.shared.physics.valueobjects.PhysicsShipPosition;
+import java.util.Iterator;
 import java.util.List;
 import org.junit.After;
 import static org.junit.Assert.assertEquals;
@@ -50,6 +51,7 @@ public abstract class PhysicsTest
                 env = null;
         }
         
+        
         private ConfigSelection applyTestSettings(PhysicsEnvironment env)
         {
                 List<Object> yamlDocuments;
@@ -84,13 +86,39 @@ public abstract class PhysicsTest
                 return env.newConfigSelection(0);
         }
         
-        protected void assertActorExists(ActorPublic actor)
+        public static void assertContains(Iterator it, Object something)
+        {
+                while (it.hasNext())
+                {
+                        if (it.next() == something)
+                        {
+                                return;
+                        }
+                }
+                
+                assert false;
+        }
+        
+        public static void assertContains(Iterable it, Object something)
+        {
+                for (Object o : it)
+                {
+                        if (o == something)
+                        {
+                                return;
+                        }
+                }
+                
+                assert false;
+        }
+        
+        protected static void assertActorExists(ActorPublic actor)
         {
                 assertNotNull(actor);
                 assertTrue(!actor.isRemoved());
         }
         
-        protected void assertActorNotExists(ActorPublic actor)
+        protected static void assertActorNotExists(ActorPublic actor)
         {
                 if (actor == null)
                 {
@@ -100,13 +128,13 @@ public abstract class PhysicsTest
                 assertTrue(actor.isRemoved());
         }
         
-        protected void assertProjectileExists(ProjectilePublic actor)
+        protected static void assertProjectileExists(ProjectilePublic actor)
         {
                 assertNotNull(actor);
                 assertTrue(!actor.isRemoved());
         }
         
-        protected void assertProjectileNotExists(ProjectilePublic actor)
+        protected static void assertProjectileNotExists(ProjectilePublic actor)
         {
                 if (actor == null)
                 {
@@ -116,7 +144,7 @@ public abstract class PhysicsTest
                 assertTrue(actor.isRemoved());
         }
         
-        protected void assertPointEquals(int x, int y, PhysicsPoint point)
+        protected static void assertPointEquals(int x, int y, PhysicsPoint point)
         {
                 if (x != point.x || y != point.y)
                 {
