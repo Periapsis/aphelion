@@ -54,7 +54,7 @@ public enum RENDER_DELAY_METHOD
        MAXIMIZE_LOCAL_TIME,
 
        /** Try to minimize the number of delay changes for projectiles by not decreasing the render delay
-        * as long as the same ship remains closest.
+        * if the projectile is moving away from the local player.
         */
        MINIMIZE_DELAY_CHANGES,
        ;

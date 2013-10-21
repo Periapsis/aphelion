@@ -53,6 +53,7 @@ import aphelion.shared.swissarmyknife.Point;
 import aphelion.shared.swissarmyknife.SwissArmyKnife;
 import java.lang.ref.WeakReference;
 import org.newdawn.slick.Animation;
+import org.newdawn.slick.Color;
 import org.newdawn.slick.Image;
 import org.newdawn.slick.SpriteSheetCounted;
 
@@ -63,11 +64,13 @@ import org.newdawn.slick.SpriteSheetCounted;
  * graphics.Projectile is lost too. Be careful with storing state long term.
  * @author Joris
  */
-public class Projectile extends MapEntity implements WrappedValueAbstract.ChangeListener
+public class Projectile extends MapEntity implements WrappedValueAbstract.ChangeListener, TickEvent
 {
         final ProjectilePublic physicsProjectile;
         public final Point shadowPosition = new Point(0, 0);
+        public final Point shadowPosition_prev = new Point(0, 0);
         
+        public final RenderDelay renderDelay = new RenderDelay(2); // todo move the "2" to settings
         public long currentRenderDelay;
         public long renderingAt_tick;
         public WeakReference<ActorShip> renderDelayBasedOn;
@@ -104,7 +107,7 @@ public class Projectile extends MapEntity implements WrappedValueAbstract.Change
         public void calculateRenderAtTick(PhysicsEnvironment physicsEnv)
         {
                 currentRenderDelay = SwissArmyKnife.clip(
-                        currentRenderDelay,
+                        renderDelay.get(),
                         0, 
                         physicsEnv.TRAILING_STATES * PhysicsEnvironment.TRAILING_STATE_DELAY - 1);
                         
@@ -113,8 +116,15 @@ public class Projectile extends MapEntity implements WrappedValueAbstract.Change
         
         public void setShadowPositionFromPhysics(int x, int y)
         {
+                shadowPosition_prev.set(shadowPosition);
                 shadowPosition.x = x / 1024f;
                 shadowPosition.y = y / 1024f;
+        }
+
+        @Override
+        public void tick(long tick)
+        {
+                renderDelay.tick(tick);
         }
         
         private void updateAnimObjects()
@@ -270,6 +280,7 @@ public class Projectile extends MapEntity implements WrappedValueAbstract.Change
                                         anim.getHeight() * camera.zoom);
                         }
                         
+                        //Graph.g.setColor(Color.red);
                         //Graph.g.drawString(this.currentRenderDelay + "", screenPos.x + 5, screenPos.y + 5);
                 }
                 

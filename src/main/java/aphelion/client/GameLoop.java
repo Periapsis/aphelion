@@ -533,7 +533,7 @@ public class GameLoop
                 
                 if (renderDelayMethod == RENDER_DELAY_METHOD.DISABLED)
                 {
-                        actorShip.renderDelay.setImmediate(0);
+                        actorShip.renderDelay.set(0);
                 }
 
                 actorShip.calculateRenderAtTick(physicsEnv);
@@ -576,7 +576,6 @@ public class GameLoop
         {
                 ProjectilePublic.Position projectilePos = new ProjectilePublic.Position();
                 PhysicsPoint historicProjectilePos = new PhysicsPoint();
-                Point diff = new Point();
                 
                 ProjectilePublic physicsProjectile = projectile.getPhysicsProjectile();
                 ActorShip localShip = mapEntities.getLocalShip();
@@ -589,7 +588,7 @@ public class GameLoop
                 if (renderDelayMethod == RENDER_DELAY_METHOD.DISABLED 
                     || renderDelayMethod == RENDER_DELAY_METHOD.PROJECTILE_DISABLED)
                 {
-                        projectile.currentRenderDelay = 0;
+                        projectile.renderDelay.set(0);
                 }
                 else
                 {
@@ -598,7 +597,7 @@ public class GameLoop
                         ActorShip closest = mapEntities.findNearestActor(projectile.pos, false);
                         if (closest == null || localShip == null)
                         {
-                                projectile.currentRenderDelay = 0;
+                                projectile.renderDelay.set(0);
                         }
                         else
                         {
@@ -626,6 +625,7 @@ public class GameLoop
                                  * sqrt(a) / sqrt(b) = sqrt(a / b)
                                  */
 
+                                Point diff = new Point();
                                 diff.set(closest.shadowPosition);
                                 diff.sub(projectile.shadowPosition);
                                 float distSq_rShadow_e = diff.distanceSquared();
@@ -647,17 +647,33 @@ public class GameLoop
 
                                 if (renderDelayMethod == RENDER_DELAY_METHOD.MAXIMIZE_LOCAL_TIME)
                                 {
-                                        projectile.currentRenderDelay = (int) renderDelay;
+                                        projectile.renderDelay.set((int) renderDelay);
                                 }
                                 else if (renderDelayMethod == RENDER_DELAY_METHOD.MINIMIZE_DELAY_CHANGES)
                                 {
-                                        if (switchedShip || renderDelay > projectile.currentRenderDelay)
+                                        Point prevPos = new Point(projectile.shadowPosition_prev);
+                                        prevPos.sub(localShip.pos);
+                                        
+                                        Point nextPos = new Point(projectile.shadowPosition);
+                                        nextPos.sub(localShip.pos);
+                                        
+                                        boolean movingAway = nextPos.distanceSquared() > prevPos.distanceSquared();
+                                        
+                                        if (movingAway)
                                         {
-                                                projectile.currentRenderDelay = (int) renderDelay;
+                                                // if the distance to the local ship is increasing:
+                                                // only increase the render delay, do not decrease it.
+                                                // unless the calculation has switched to a different ship
+                                                if (switchedShip || renderDelay > projectile.renderDelay.getDesired())
+                                                {
+                                                        projectile.renderDelay.set((int) renderDelay);
+                                                }
+                                        }
+                                        else
+                                        {
+                                                projectile.renderDelay.set((int) renderDelay);
                                         }
                                 }
-
-                                // Alternative implementation: smooth "d(p, r)" whenever r changes
                         }
                 }
 
