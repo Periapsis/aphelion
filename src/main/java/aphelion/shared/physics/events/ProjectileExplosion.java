@@ -48,6 +48,7 @@ import aphelion.shared.physics.entities.ProjectilePublic;
 import aphelion.shared.physics.events.pub.ProjectileExplosionPublic;
 import aphelion.shared.physics.PhysicsEnvironment;
 import aphelion.shared.physics.State;
+import aphelion.shared.physics.entities.*;
 import aphelion.shared.physics.valueobjects.PhysicsPoint;
 import aphelion.shared.physics.valueobjects.PhysicsShipPosition;
 import aphelion.shared.swissarmyknife.LinkedListEntry;
@@ -67,21 +68,7 @@ public class ProjectileExplosion extends Event implements ProjectileExplosionPub
         private static final Logger log = Logger.getLogger("aphelion.shared.physics");
         private History[] history = new History[PhysicsEnvironment.MAX_TRAILING_STATES];
         
-        /** crossStateList is a temporary list that is passed to the MapEntity constructor.
-         * This list is used to track the same MapEntity instance across states.
-         * This attribute (MapEntity.crossStateList) references the same array object 
-         * for each instance.
-         * 
-         * projectile index -> crossStateList (state id -> map entity)
-        */
-        private ArrayList<MapEntity[]> chained_crossStateLists; // projectile index -> state id -> map entity
-        
-        /** The entities this operation has spawned.
-         * This list contains exactly the same data as "crossStateLists", however it 
-         * is local to this object. If a projectile is removed, this list is not modified.
-         * (Unlike the arrays in crossStateLists). they
-         */
-        private ArrayList<Projectile[]> chained_spawnedEntitiesList;
+        private final ProjectileFactory chained_factory = new ProjectileFactory();
         
         /** The died events this event has spawned.
           * This hash map should not be touched by resetExecutionHistory() or isConsistent().
@@ -278,89 +265,20 @@ public class ProjectileExplosion extends Event implements ProjectileExplosionPub
                         Actor.WeaponConfig chainConfig = explodedProjectile.owner.getWeaponConfig(weapon);
                         
                         int projectile_count = SwissArmyKnife.clip(chainConfig.projectiles.get(), 1, 1024);
+                        chained_factory.hintProjectileCount(projectile_count);
                         
                         PhysicsShipPosition actorPos = new PhysicsShipPosition();
                         actorPos.setPositionVectory(explodedProjectile.pos);
                         actorPos.rot = 0; // todo PhysicsTrig.atan2() based on velocity vector
                         actorPos.rot_snapped = 0;
                         
-                        if (chained_crossStateLists == null)
-                        {
-                                assert chained_spawnedEntitiesList == null;
-                                chained_crossStateLists = new ArrayList(projectile_count);
-                                chained_spawnedEntitiesList = new ArrayList(projectile_count);
-                        }
-                        else
-                        {
-                                assert chained_spawnedEntitiesList != null;
-                                chained_crossStateLists.ensureCapacity(projectile_count);
-                                chained_spawnedEntitiesList.ensureCapacity(projectile_count);
-                        }
+                        Projectile[] projectiles = chained_factory.constructProjectiles(state, explodedProjectile.owner, tick, chainConfig, projectile_count);
+                        assert projectiles.length == projectile_count;
                         
-                        LinkedListEntry<Projectile> coupled_last = null;
+                        
                         for (int p = 0; p < projectile_count; ++p)
                         {
-                                MapEntity[] crossStateList;
-                                Projectile[] spawnedEntities;
-                                if (p < chained_crossStateLists.size())
-                                {
-                                        assert p < chained_spawnedEntitiesList.size();
-                                        crossStateList = chained_crossStateLists.get(p);
-                                        spawnedEntities = chained_spawnedEntitiesList.get(p);
-                                }
-                                else
-                                {
-                                        crossStateList = new MapEntity[PhysicsEnvironment.MAX_TRAILING_STATES];
-                                        chained_crossStateLists.add(crossStateList);
-
-                                        spawnedEntities = new Projectile[PhysicsEnvironment.MAX_TRAILING_STATES];
-                                        chained_spawnedEntitiesList.add(spawnedEntities);
-
-                                        assert p == chained_crossStateLists.size() - 1;
-                                        assert p == chained_spawnedEntitiesList.size() - 1;
-                                }
-                                
-                                
-                                
-                                Projectile projectile;
-                        
-                                if (spawnedEntities[state.id] != null && spawnedEntities[state.id].removedDuringReset)
-                                {
-                                        projectile = spawnedEntities[state.id];
-                                        projectile.resetToEmpty(tick);
-                                        projectile.removedDuringReset = false;
-                                }
-                                else
-                                {
-                                        projectile = new Projectile(
-                                                state, 
-                                                crossStateList, 
-                                                explodedProjectile.owner, 
-                                                tick, 
-                                                chainConfig,
-                                                p);
-                                }
-
-                                assert projectile.state == state;
-                                assert projectile.owner == explodedProjectile.owner;
-                                assert projectile.config == chainConfig;
-                                assert projectile.projectile_index == p;
-                                assert crossStateList[state.id] == projectile;
-
-                                spawnedEntities[state.id] = projectile;
-
-                      
-                                
-                                if (coupled_last == null)
-                                {
-                                        projectile.coupled.beginCircular();
-                                }
-                                else
-                                {
-                                        coupled_last.append(projectile.coupled);
-                                }
-                                coupled_last = projectile.coupled;
-                                
+                                Projectile projectile = projectiles[p];
                                 projectile.initFire(tick, actorPos);
                                 
                                 state.projectiles.append(projectile.projectileListLink_state);

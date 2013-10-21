@@ -925,7 +925,7 @@ public class PhysicsEnvironment implements TickEvent
                 op.tick = tick;
                 op.pid = owner_pid;
                 op.weaponKey = weaponKey;
-                op.projectiles = projectiles;
+                op.syncProjectiles = projectiles;
                 op.projectiles_tick_offset = projectiles_tick_offset;
                 return addOperation(op);
         }
