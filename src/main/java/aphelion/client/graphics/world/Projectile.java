@@ -59,9 +59,6 @@ import org.newdawn.slick.SpriteSheetCounted;
 
 /**
  * The graphic counter part of physics.Projectile. 
- * Note that there are a few cases where in a physics.Projectile might 
- * be destroyed and immediately recreated in a timewarp. At the moment this also means
- * graphics.Projectile is lost too. Be careful with storing state long term.
  * @author Joris
  */
 public class Projectile extends MapEntity implements WrappedValueAbstract.ChangeListener, TickEvent
