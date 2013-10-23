@@ -528,7 +528,7 @@ public class PhysicsEnvironment implements TickEvent
         {
                 int a;
 
-                if (operation.ignorable && operation.tick < this.tick_now - MAX_OPERATION_AGE)
+                if (operation.ignorable && operation.tick <= this.tick_now - MAX_OPERATION_AGE)
                 {
                         log.log(Level.WARNING, "Operation about actor {1} at {2} dropped, too old ({0}). now = {3}", new Object[] {
                                 server ? "server" : "client",
