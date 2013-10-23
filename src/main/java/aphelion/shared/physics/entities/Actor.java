@@ -845,7 +845,9 @@ public class Actor extends MapEntity
         
         public int getMaxEnergy()
         {
-                return this.maxEnergy.get() * 1024;
+                int nrg = this.maxEnergy.get() * 1024;
+                if (nrg < 1) { nrg = 1; }
+                return nrg;
         }
         
         public void tickEnergy()
