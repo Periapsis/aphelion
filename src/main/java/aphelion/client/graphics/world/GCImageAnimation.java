@@ -102,7 +102,7 @@ public class GCImageAnimation extends MapAnimation
                 
                 if (anim == null)
                 {
-                        // we are not done loading yet
+                        // not done loading yet
                         return false;
                 }
                 
@@ -125,6 +125,28 @@ public class GCImageAnimation extends MapAnimation
                         anim.getHeight() * camera.zoom);
                 
                 return false;
+        }
+
+        @Override
+        public void noRender()
+        {
+                if (isDone())
+                {
+                        return;
+                }
+                
+                if (anim == null)
+                {
+                        anim = image.newAnimation();
+                }
+                
+                if (anim == null)
+                {
+                        // not done loading yet
+                        return;
+                }
+                
+                anim.updateNoDraw();
         }
         
         @Override
