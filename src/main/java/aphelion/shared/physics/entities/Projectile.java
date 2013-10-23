@@ -555,15 +555,28 @@ public final class Projectile extends MapEntity implements ProjectilePublic
                 crossStateList[this.state.id] = (MapEntity) this;
         }
         
-        public int getSplashDamage(Actor actor, int damage, int range, long rangeSq)
+        public int getSplashDamage(Actor actor, long tick, int damage, int range, long rangeSq)
         {
-                long distSq = this.pos.pos.distanceSquared(actor.pos.pos);
+                PhysicsPoint myPos = new PhysicsPoint();
+                PhysicsPoint actorPos = new PhysicsPoint();
+                
+                if (!this.getHistoricPosition(myPos, tick, false))
+                {
+                        return 0;
+                }
+                
+                if (!actor.getHistoricPosition(actorPos, tick, false))
+                {
+                        return 0;
+                }
+                
+                long distSq = myPos.distanceSquared(actorPos);
                 if (distSq >= rangeSq)
                 {
                         return 0; // out of range
                 }
 
-                long ldist = this.pos.pos.distance(actor.pos.pos, distSq);
+                long ldist = myPos.distance(actorPos, distSq);
                 assert ldist >= 0;
                 int dist = ldist > Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) ldist;
                 assert range >= dist;
@@ -596,7 +609,7 @@ public final class Projectile extends MapEntity implements ProjectilePublic
                         
                         // todo team
 
-                        int effectiveDamage = getSplashDamage(actor, damage, splash, splashSq);
+                        int effectiveDamage = getSplashDamage(actor, tick, damage, splash, splashSq);
                         
                         actor.energy.addRelativeValue(
                                 Actor.ENERGY_SETTER.OTHER.id, 
@@ -640,7 +653,7 @@ public final class Projectile extends MapEntity implements ProjectilePublic
                         
                         // todo team
 
-                        actor.applyEmp(tick, getSplashDamage(actor, damage, splash, splashSq));
+                        actor.applyEmp(tick, getSplashDamage(actor, tick, damage, splash, splashSq));
                 }
         }
 
