@@ -155,14 +155,14 @@ public final class Projectile extends MapEntity implements ProjectilePublic
                 p.setProxActivatedAtTick(proxActivatedAt_tick);
         }
         
-        public void initFromSync(GameOperation.WeaponSync.Projectile s, long tick_now, long tick_offset)
+        public void initFromSync(GameOperation.WeaponSync.Projectile s, long tick_now)
         {
                 assert projectile_index == s.getIndex();
                 pos.pos.x = s.getX(); 
                 pos.pos.y = s.getY();
                 pos.vel.x = s.getXVel(); 
                 pos.vel.y = s.getYVel();
-                expires_at_tick = s.getExpiresAt() - tick_offset;
+                expires_at_tick = s.getExpiresAt();
                 bounces_left = s.getBouncesLeft(); 
                 activate_bounces_left = s.getActivateBouncesLeft();
                 collideTile = s.getCollideTile();
@@ -173,8 +173,8 @@ public final class Projectile extends MapEntity implements ProjectilePublic
                 proxExplodeDelay = s.getProxExplodeDelay(); 
                 proxActivatedBy = s.getProxActivatedBy() == 0 ? null : state.actors.get(s.getProxActivatedBy());
                 proxLastSeenDist = s.getProxLastSeenDist();
-                proxLastSeenDist_tick = s.getProxLastSeenDistTick() - tick_offset;
-                proxActivatedAt_tick = s.getProxActivatedAtTick() - tick_offset;
+                proxLastSeenDist_tick = s.getProxLastSeenDistTick();
+                proxActivatedAt_tick = s.getProxActivatedAtTick();
         }
         
         public void hardRemove(long tick)

@@ -39,10 +39,7 @@
 package aphelion.server.game;
 
 import aphelion.server.game.ClientState.STATE;
-import aphelion.shared.event.LoopEvent;
-import aphelion.shared.event.TickEvent;
-import aphelion.shared.event.TimerEvent;
-import aphelion.shared.event.Timerable;
+import aphelion.shared.event.*;
 import aphelion.shared.net.protocols.GameListener;
 import aphelion.shared.net.protocols.GameProtocolConnection;
 import aphelion.shared.net.WS_CLOSE_STATUS;
@@ -82,7 +79,7 @@ public class ServerGame implements LoopEvent, TickEvent, GameListener
         private final static int SYNC_SOME_ACTOR_EVERY_TICKS = 25; // 0.25 sec
         
         public final PhysicsEnvironment physicsEnv;
-        public final Timerable timerable;
+        public final TickedEventLoop loop;
         
         // Simply raise this value to get the next pid, do not reuse them for now.
         // This way we would go into negative pids after 248 days if we would get a new player every 10ms.
@@ -94,13 +91,12 @@ public class ServerGame implements LoopEvent, TickEvent, GameListener
         
 
         
-        public ServerGame(PhysicsEnvironment physicsEnv, Timerable timerable)
+        public ServerGame(PhysicsEnvironment physicsEnv, TickedEventLoop loop)
         {
                 this.physicsEnv = physicsEnv;
-                this.timerable = timerable;
+                this.loop = loop;
                 
-                // send a sync every 5 seconds
-                timerable.addTimerEvent(SYNC_SOME_ACTOR_EVERY_TICKS, actorSyncTimer);
+                loop.addTimerEvent(SYNC_SOME_ACTOR_EVERY_TICKS, actorSyncTimer);
         }
         
         public void addReadyPlayer(GameProtocolConnection gameConn)

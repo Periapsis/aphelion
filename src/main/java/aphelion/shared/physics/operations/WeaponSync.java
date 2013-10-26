@@ -64,7 +64,6 @@ public class WeaponSync extends Operation implements WeaponSyncPublic
         
         public String weaponKey;
         public GameOperation.WeaponSync.Projectile[] syncProjectiles;
-        public long projectiles_tick_offset;
         
         public WeaponSync()
         {
@@ -98,7 +97,7 @@ public class WeaponSync extends Operation implements WeaponSyncPublic
                 for (int p = 0; p < projectile_count; ++p)
                 {
                         Projectile projectile = projectiles[p];
-                        projectile.initFromSync(syncProjectiles[p], this.tick, projectiles_tick_offset);
+                        projectile.initFromSync(syncProjectiles[p], this.tick);
                         
                         if (projectile.expires_at_tick <= state.tick_now)
                         {

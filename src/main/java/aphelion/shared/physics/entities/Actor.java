@@ -431,16 +431,16 @@ public class Actor extends MapEntity
                 return newVal;
         }
         
-        public boolean initFromSync(GameOperation.ActorSync s, long tick_offset)
+        public boolean initFromSync(GameOperation.ActorSync s)
         {
                 tmp_initFromSync_dirty = false;
-                long operation_tick = s.getTick() - tick_offset;
+                long operation_tick = s.getTick();
                 assert operation_tick <= state.tick_now;
                 
                 // make sure  the energy used for matching does not get modified by a side effect
                 int myEnergy = this.energy.get(operation_tick);
                 
-                this.nextSwitchedWeaponFire_tick = initFromSync_set(this.nextSwitchedWeaponFire_tick, s.getNextSwitchedWeaponFireTick() - tick_offset);
+                this.nextSwitchedWeaponFire_tick = initFromSync_set(this.nextSwitchedWeaponFire_tick, s.getNextSwitchedWeaponFireTick());
                 
                 
                 PhysicsWarp warp = new PhysicsWarp(s.getX(), s.getY(), s.getXVel(), s.getYVel(), s.getRotation());
@@ -465,7 +465,7 @@ public class Actor extends MapEntity
                         WeaponConfig c = this.getWeaponConfig(s.getNextWeaponFireKey(i));
                         try
                         {
-                                c.nextWeaponFire_tick = initFromSync_set(c.nextWeaponFire_tick, s.getNextWeaponFireTick(i) - tick_offset);
+                                c.nextWeaponFire_tick = initFromSync_set(c.nextWeaponFire_tick, s.getNextWeaponFireTick(i));
                         }
                         catch (IndexOutOfBoundsException ex)
                         {
@@ -490,7 +490,7 @@ public class Actor extends MapEntity
                 
                 if (s.hasEmpUntilTick())
                 {
-                        this.empUntil_tick = initFromSync_set(this.empUntil_tick, s.getEmpUntilTick() - tick_offset);
+                        this.empUntil_tick = initFromSync_set(this.empUntil_tick, s.getEmpUntilTick());
                 }
                 else
                 {
@@ -502,7 +502,7 @@ public class Actor extends MapEntity
                 
                 if (s.hasSpawnAtTick())
                 {
-                        this.spawnAt_tick = initFromSync_set(this.spawnAt_tick, s.getSpawnAtTick() - tick_offset);
+                        this.spawnAt_tick = initFromSync_set(this.spawnAt_tick, s.getSpawnAtTick());
                 }
                 else
                 {
@@ -931,7 +931,6 @@ public class Actor extends MapEntity
         
         public int randomRotation(long tick)
         {
-                tick = state.env.localTickToServer(tick);
                 int tick_low = (int) tick; // low bits
                 
                 int hash = SwissArmyKnife.jenkinMix(seed_high, seed_low, tick_low);
@@ -941,7 +940,6 @@ public class Actor extends MapEntity
         
         public void findSpawnPoint(PhysicsPoint resultTile, long tick)
         {
-                tick = state.env.localTickToServer(tick);
                 int tileRadius = radius.get() * 2 / PhysicsMap.TILE_PIXELS;
                 
                 state.findRandomPointOnMap(

@@ -222,9 +222,10 @@ public class ClientState
                 {
                         GameS2C.S2C.Builder s2c = GameS2C.S2C.newBuilder();
                         GameS2C.ArenaSync.Builder inArena = s2c.addArenaSyncBuilder();
-
+                        
                         inArena.setCurrentTicks(physicsEnv.getTick());
-                        inArena.setCurrentNanoTime(physicsEnv.getTickedAt());
+                        // currentNano returns the time at which the tick began, not System.nanoTime()
+                        inArena.setCurrentNanoTime(serverGame.loop.currentNano());
                         inArena.setName(nickname);
                         inArena.setYourPid(pid);
                         inArena.setYourSeed(seed);

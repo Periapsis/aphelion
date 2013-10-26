@@ -100,7 +100,6 @@ public class NetworkedGame implements GameListener, TickEvent
         private STATE state;
         private int myPid = -1;
         /** The tick difference between the local PhysicsEnvironment ticks and the servers PhysicsEnvironment ticks. */
-        private long physics_tick_offset;
         
         private long sendMove_lastSent_tick; // physicsEnv.getTick()
         private RollingHistory<PhysicsMovement> sendMove_history; // physicsEnv.getTick()
@@ -108,8 +107,9 @@ public class NetworkedGame implements GameListener, TickEvent
         private long clockSync_lastSync_nano;
         private long clockSync_lastRTT_nano;
         
+        /** This list is used to queue any physics operations we receive before ArenaSync has been received. */
         private LinkedList<GameS2C.S2C> arenaSyncOperationQueue;
-        private HashSet<Integer> unknownActorRemove = new HashSet<>(); // Assumes PIDs are unique. ActorNew is never called twice with the same PID.
+        private final HashSet<Integer> unknownActorRemove = new HashSet<>(); // Assumes PIDs are unique. ActorNew is never called twice with the same PID.
         
         private WS_CLOSE_STATUS disconnect_code; // null if unknown
         private String disconnect_reason; // null if unknown
@@ -156,7 +156,7 @@ public class NetworkedGame implements GameListener, TickEvent
                 nextState(STATE.ESTABLISHING);
         }
 
-        public void registerArenaResources(PhysicsEnvironment physicsEnv, MapEntities mapEntities)
+        public void arenaLoaded(PhysicsEnvironment physicsEnv, MapEntities mapEntities)
         {
                 if (this.state != STATE.WAIT_FOR_ARENALOAD)
                 {
@@ -179,6 +179,11 @@ public class NetworkedGame implements GameListener, TickEvent
                 // all states before WAIT_FOR_ARENALOAD count as "connecting"
                 // DISCONNECTED should return false!
                 return !state.hasOccured(STATE.WAIT_FOR_ARENALOAD);
+        }
+        
+        public boolean hasArenaSynced()
+        {
+                return state.hasOccured(STATE.RECEIVED_ARENASYNC);
         }
         
         public boolean isDownloading()
@@ -409,26 +414,22 @@ public class NetworkedGame implements GameListener, TickEvent
                         // should only receive this message once (for now)
                         this.myPid = msg.getYourPid();
                         
+                        // The current server time
                         long serverNow = clockSync.nanoTime();
                         
                         // how many ticks ago was the ArenSync message sent by the server? (rounded up)
                         long tickLatency = SwissArmyKnife.divideCeil(serverNow - msg.getCurrentNanoTime(), loop.TICK);
 
-                        // At what tick was our event loop we when the server sent that message?
+                        // At what tick was our event loop when the server sent that message?
                         long loopTick = loop.currentTick() - tickLatency;
                         
                         // make sure our loop is synchronized to the servers time value
                         loop.synchronize(msg.getCurrentNanoTime(), loopTick);
                         
-                        // At what tick was our physics environment when the server sent that message? (negative is OK)
-                        long physicsTick = physicsEnv.getTick() - tickLatency;
+                        // At what tick is the server now? (loop.synchronize will wait or fast forward ahead to compensate for latency)                     
+                        physicsEnv.skipForward(msg.getCurrentTicks() + tickLatency);
                         
-                        // By how many ticks must we shift all incomming and outgoing networked physics operations?
-                        this.physics_tick_offset = msg.getCurrentTicks() - physicsTick;
-                        
-                        physicsEnv.setTickOffsetToServer(physics_tick_offset);
-                        
-                        physicsEnv.actorNew(physicsTick, myPid, msg.getName(), msg.getYourSeed(), msg.getShip());
+                        physicsEnv.actorNew(msg.getCurrentTicks(), myPid, msg.getName(), msg.getYourSeed(), msg.getShip());
                         
                         ActorShip ship = new ActorShip(this.resourceDB, physicsEnv.getActor(myPid, 0, true), true, mapEntities); 
                         mapEntities.addShip(ship);
@@ -483,7 +484,7 @@ public class NetworkedGame implements GameListener, TickEvent
                 {
                         log.log(Level.INFO, "Received ActorNew {0} {1}", new Object[] { msg.getTick(), msg.getPid()});
                         physicsEnv.actorNew(
-                                physicsServerTickToLocal(msg.getTick()), 
+                                msg.getTick(), 
                                 msg.getPid(), msg.getName(), msg.getSeed(), msg.getShip()
                                 );
                         
@@ -501,12 +502,12 @@ public class NetworkedGame implements GameListener, TickEvent
                 
                 for (GameOperation.ActorSync msg : s2c.getActorSyncList())
                 {
-                        physicsEnv.actorSync(msg, physics_tick_offset);
+                        physicsEnv.actorSync(msg);
                 }
                 
                 for (GameOperation.ActorModification msg : s2c.getActorModificationList())
                 {
-                        long tick = physicsServerTickToLocal(msg.getTick());
+                        long tick = msg.getTick();
                         
                         physicsEnv.actorModification(tick, msg.getPid(), msg.getShip());
                 }
@@ -514,7 +515,7 @@ public class NetworkedGame implements GameListener, TickEvent
                 for (GameOperation.ActorRemove msg : s2c.getActorRemoveList())
                 {
                         log.log(Level.INFO, "Received ActorRemove {0} {1}", new Object[] { msg.getTick(), msg.getPid()});
-                        physicsEnv.actorRemove(physicsServerTickToLocal(msg.getTick()), msg.getPid());
+                        physicsEnv.actorRemove(msg.getTick(), msg.getPid());
                         
                         ActorShip ship = mapEntities.getActorShip(msg.getPid());
                         if (ship == null)
@@ -533,7 +534,7 @@ public class NetworkedGame implements GameListener, TickEvent
                 {
                         //log.log(Level.INFO, "Received ActorWarp {0} {1}", new Object[] { msg.getTick(), msg.getPid()});
                         physicsEnv.actorWarp(
-                                physicsServerTickToLocal(msg.getTick()), msg.getPid(), msg.getHint(),
+                                msg.getTick(), msg.getPid(), msg.getHint(),
                                 msg.getX(), msg.getY(), msg.getXVel(), msg.getYVel(), msg.getRotation(),
                                 msg.hasX(), msg.hasY(), msg.hasXVel(), msg.hasYVel(), msg.hasRotation());
                 }
@@ -541,7 +542,7 @@ public class NetworkedGame implements GameListener, TickEvent
                 for (GameOperation.ActorMove msg : s2c.getActorMoveList())
                 {
                         //log.log(Level.INFO, "Received ActorMove {0} {1}", new Object[] { msg.getTick(), msg.getPid()});
-                        long tick = physicsServerTickToLocal(msg.getTick());
+                        long tick = msg.getTick();
                         
                         for (int move : msg.getMoveList())
                         {
@@ -570,7 +571,7 @@ public class NetworkedGame implements GameListener, TickEvent
                                         }
                                         else
                                         {
-                                                ship.renderDelay.setByPositionUpdate(physicsEnv.getTick(), physicsServerTickToLocal(msg.getTick()));
+                                                ship.renderDelay.setByPositionUpdate(physicsEnv.getTick(), msg.getTick());
                                         }
                                 }
                         }
@@ -578,7 +579,7 @@ public class NetworkedGame implements GameListener, TickEvent
                 
                 for (GameOperation.ActorWeapon msg : s2c.getActorWeaponList())
                 {
-                        long tick = physicsServerTickToLocal(msg.getTick());
+                        long tick = msg.getTick();
                         
                         boolean has_hint = msg.hasX() && msg.hasY() && msg.hasXVel() && msg.hasYVel() && msg.hasSnappedRotation();
                         
@@ -600,14 +601,13 @@ public class NetworkedGame implements GameListener, TickEvent
                 
                 for (GameOperation.WeaponSync msg : s2c.getWeaponSyncList())
                 {
-                        long tick = physicsServerTickToLocal(msg.getTick());
+                        long tick = msg.getTick();
                         
                         physicsEnv.weaponSync(
                                 tick, 
                                 msg.getPid(), 
                                 msg.getWeaponKey(),
-                                msg.getProjectilesList().toArray(new GameOperation.WeaponSync.Projectile[0]),
-                                this.physics_tick_offset);
+                                msg.getProjectilesList().toArray(new GameOperation.WeaponSync.Projectile[0]));
                 }
                 
                 
@@ -646,31 +646,6 @@ public class NetworkedGame implements GameListener, TickEvent
                 }
                 
                 return myPid;
-        }
-        
-        public long physicsServerTickToLocal(long serverTick)
-        {
-                if (!state.hasOccured(STATE.RECEIVED_ARENASYNC))
-                {
-                        throw new IllegalStateException();
-                }
-                
-                return serverTick - this.physics_tick_offset;
-        }
-        
-        public long physicsLocalTickToServer(long localTick)
-        {
-                if (!state.hasOccured(STATE.RECEIVED_ARENASYNC))
-                {
-                        throw new IllegalStateException();
-                }
-                
-                return localTick + this.physics_tick_offset;
-        }
-        
-        public long physicsCurrentServerTicks()
-        {
-                return physicsLocalTickToServer(physicsEnv.getTick());
         }
 
         public void sendTimeSync()
@@ -760,7 +735,7 @@ public class NetworkedGame implements GameListener, TickEvent
                 GameC2S.C2S.Builder c2s = GameC2S.C2S.newBuilder();
                 GameOperation.ActorMove.Builder actorMove = c2s.addActorMoveBuilder();
                 actorMove.setPid(myPid);
-                actorMove.setTick(physicsLocalTickToServer(first_tick));
+                actorMove.setTick(first_tick);
                 actorMove.setDirect(true);
                 
                 for (long t = first_tick; t <= last_tick; ++t)
@@ -779,12 +754,10 @@ public class NetworkedGame implements GameListener, TickEvent
         
         public void sendActorWeapon(long tick, WEAPON_SLOT weaponSlot, PhysicsShipPosition positionHint)
         {
-                long serverTick = physicsLocalTickToServer(tick);
-                
                 GameC2S.C2S.Builder c2s = GameC2S.C2S.newBuilder();
                 GameOperation.ActorWeapon.Builder actorWeapon = c2s.addActorWeaponBuilder();
                 
-                actorWeapon.setTick(serverTick);
+                actorWeapon.setTick(tick);
                 actorWeapon.setPid(myPid);
                 actorWeapon.setSlot(weaponSlot.id);
                 
@@ -819,12 +792,15 @@ public class NetworkedGame implements GameListener, TickEvent
                 }
                 clockSync_lastRTT_nano = receivedAt - message.getClientTime();
                 clockSync.addResponse(receivedAt, message.getClientTime(), message.getServerTime());
+                
+                
 
                 if (log.isLoggable(Level.INFO))
                 {
-                        log.log(Level.INFO, "Received a time response. Request sent {0}ms ago;", new Object[]
+                        log.log(Level.INFO, "Received a time response. Request sent {0}ms ago; Offset {1}", new Object[]
                         {
-                                (receivedAt - message.getClientTime()) / 1000000d
+                                (receivedAt - message.getClientTime()) / 1000000d,
+                                clockSync.getOffset()
                         });
                 }
                 

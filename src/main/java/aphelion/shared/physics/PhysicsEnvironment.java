@@ -37,35 +37,14 @@
  */
 package aphelion.shared.physics;
 
-import aphelion.shared.physics.entities.ProjectilePublic;
-import aphelion.shared.physics.entities.ActorPublicImpl;
-import aphelion.shared.physics.entities.ActorPublic;
-import aphelion.shared.physics.entities.Actor;
-import aphelion.shared.physics.entities.ActorIterator;
-import aphelion.shared.physics.operations.ActorWeaponFire;
-import aphelion.shared.physics.operations.ActorRemove;
-import aphelion.shared.physics.operations.ActorNew;
-import aphelion.shared.physics.operations.WeaponSync;
-import aphelion.shared.physics.operations.ActorMove;
-import aphelion.shared.physics.operations.Operation;
-import aphelion.shared.physics.operations.ActorWarp;
+import aphelion.shared.physics.entities.*;
+import aphelion.shared.physics.operations.*;
 import aphelion.shared.event.TickEvent;
-import aphelion.shared.gameconfig.ConfigSelection;
-import aphelion.shared.gameconfig.GCBoolean;
-import aphelion.shared.gameconfig.GCBooleanList;
-import aphelion.shared.gameconfig.GCImage;
-import aphelion.shared.gameconfig.GCInteger;
-import aphelion.shared.gameconfig.GCIntegerList;
-import aphelion.shared.gameconfig.GCString;
-import aphelion.shared.gameconfig.GCStringList;
+import aphelion.shared.gameconfig.*;
 import aphelion.shared.net.protobuf.GameOperation;
-import aphelion.shared.physics.events.Event;
+import aphelion.shared.physics.events.*;
 import aphelion.shared.physics.events.pub.EventPublic;
-import aphelion.shared.physics.operations.ActorModification;
-import aphelion.shared.physics.operations.ActorSync;
-import aphelion.shared.physics.operations.LoadConfig;
 import aphelion.shared.physics.operations.pub.OperationPublic;
-import aphelion.shared.physics.operations.UnloadConfig;
 import aphelion.shared.physics.valueobjects.PhysicsMovement;
 import aphelion.shared.physics.valueobjects.PhysicsShipPosition;
 import aphelion.shared.physics.valueobjects.PhysicsWarp;
@@ -162,11 +141,10 @@ public class PhysicsEnvironment implements TickEvent
         public static final int MAX_POSITION = 1073741823; // 2^30-1
 
         
-        long tick_now = 0;
+        long tick_now;
         long ticked_at;
-        private long remote_tick_offset = 0;
         private long lastTimewarp_tick = 0;
-        private PhysicsMap map;
+        private final PhysicsMap map;
         State[] trailingStates; // delay = index * TRAILING_STATE_DURATION
         final LinkedListHead<Event> eventHistory = new LinkedListHead<>(); // ordered by the order of appending
         
@@ -175,8 +153,6 @@ public class PhysicsEnvironment implements TickEvent
 
         public PhysicsEnvironment(boolean server, PhysicsMap map)
         {
-                int a;
-
                 if (server)
                 {
                         TRAILING_STATES = 4;
@@ -198,34 +174,31 @@ public class PhysicsEnvironment implements TickEvent
 
                 trailingStates = new State[TRAILING_STATES];
 
-                for (a = 0; a < TRAILING_STATES; a++)
+                for (int s = 0; s < TRAILING_STATES; s++)
                 {
-                        trailingStates[a] = new State(
+                        trailingStates[s] = new State(
                                 this, 
-                                a, 
-                                a * TRAILING_STATE_DELAY, 
-                                a < TRAILING_STATES - 2, // do not allow hints in the last 2 trailing states
-                                a == TRAILING_STATES - 1  // force late config execution in the last trailing state
+                                s, 
+                                s * TRAILING_STATE_DELAY, 
+                                s < TRAILING_STATES - 2, // do not allow hints in the last 2 trailing states
+                                s == TRAILING_STATES - 1  // force late config execution in the last trailing state
                                 );
                         
-                        trailingStates[a].tick_now = this.tick_now - (a * TRAILING_STATE_DELAY);
+                        trailingStates[s].tick_now = this.tick_now - (s * TRAILING_STATE_DELAY);
                 }
         }
         
-        /** Set the tick offset to the server.
-         * Ticks are used to seed hash functions which are used to randomize things.
-         * This tick value must be consistent with the server. Use this method to set 
-         * the offset to the server. This value should remain 0 for the server instance.
-         * @param offset 
+        /** Used to sync up the internal tick count with the server tick count.
+         * @param tick
          */
-        public void setTickOffsetToServer(long offset)
+        public void skipForward(long tick)
         {
-                remote_tick_offset = offset;
-        }
-        
-        public long localTickToServer(long localTick)
-        {
-                return localTick + this.remote_tick_offset;
+                if (this.tick_now != 0)
+                {
+                        throw new IllegalStateException();
+                }
+                
+                this.tick_now = tick;
         }
 
         /** The number of times tick() has been called.
@@ -299,17 +272,14 @@ public class PhysicsEnvironment implements TickEvent
 
         public void tick() // make sure this is called in such a way ticks are synchronised between peers
         {
-                int a;
-                long tick;
-
                 ++tick_now;
                 ticked_at = System.nanoTime();
 
-                for (a = 0; a < TRAILING_STATES; a++)
+                for (int s = 0; s < TRAILING_STATES; s++)
                 {
-                        debug_current_state = a;
-                        tick = this.tick_now - (a * TRAILING_STATE_DELAY);
-                        this.trailingStates[a].tick(tick);
+                        debug_current_state = s;
+                        long tick = this.tick_now - (s * TRAILING_STATE_DELAY);
+                        this.trailingStates[s].tick(tick);
                 }
 
                 
@@ -792,15 +762,14 @@ public class PhysicsEnvironment implements TickEvent
                 assert ret;
         }
         
-        public void actorSync(GameOperation.ActorSync sync, long sync_tick_offset)
+        public void actorSync(GameOperation.ActorSync sync)
         {
                 assert !this.server;
                 
                 ActorSync op = new ActorSync();
-                op.tick = sync.getTick() - sync_tick_offset;
+                op.tick = sync.getTick();
                 op.pid = sync.getPid();
                 op.sync = sync;
-                op.sync_tick_offset = sync_tick_offset;
 
                 boolean ret = addOperation(op);
                 assert ret; // atleast the oldest state must accept the sync
@@ -915,8 +884,7 @@ public class PhysicsEnvironment implements TickEvent
         public boolean weaponSync(long tick, 
                 int owner_pid, 
                 String weaponKey, 
-                GameOperation.WeaponSync.Projectile[] projectiles, 
-                long projectiles_tick_offset)
+                GameOperation.WeaponSync.Projectile[] projectiles)
         {
                 assert !this.server;
                 // do not modify "projectiles" after calling this method
@@ -926,7 +894,6 @@ public class PhysicsEnvironment implements TickEvent
                 op.pid = owner_pid;
                 op.weaponKey = weaponKey;
                 op.syncProjectiles = projectiles;
-                op.projectiles_tick_offset = projectiles_tick_offset;
                 return addOperation(op);
         }
         

@@ -55,7 +55,6 @@ public class ActorSync extends Operation implements ActorSyncPublic
 {
         private static final Logger log = Logger.getLogger("aphelion.shared.physics");
         public GameOperation.ActorSync sync;
-        public long sync_tick_offset;
         
         private int[] executionCount = new int[PhysicsEnvironment.MAX_TRAILING_STATES];
         
@@ -86,7 +85,7 @@ public class ActorSync extends Operation implements ActorSyncPublic
                 if (this.tick == actor.createdAt_tick)
                 {
                         // always execute it, this is the sync for a new actor
-                        actor.initFromSync(sync, sync_tick_offset);
+                        actor.initFromSync(sync);
                         ++executionCount[state.id];
                 }
                 else
@@ -121,7 +120,7 @@ public class ActorSync extends Operation implements ActorSyncPublic
                         }
                         
                         // initFromSync returns true if something was changed
-                        dirty = actor.initFromSync(sync, sync_tick_offset);
+                        dirty = actor.initFromSync(sync);
                         
                         // If something changed, force a timwarp!
                         // this works because a consistency check for this tick is done 

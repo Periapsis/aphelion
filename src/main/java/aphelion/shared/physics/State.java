@@ -336,7 +336,6 @@ public class State
         
         void tick(long tick_now)
         {
-                assert this.tick_now == tick_now - 1;
                 this.tick_now = tick_now;
 
                 // 1. Dead reckoning

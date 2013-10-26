@@ -166,17 +166,14 @@ public class GameLoop
         
         public void loaded()
         {
-        	
                 physicsEnv = new PhysicsEnvironment(false, mapClassic);
                 mapEntities.setPhysicsEnv(physicsEnv);
-
-                loop.prependTickEvent(physicsEnv); // must come before keyboard input, which generates new events
                 loop.addTickEvent(myKeyboard);
                 
                 for (LoadYamlTask.Return ret : yamlGameConfigTemp)
                 {
                         physicsEnv.loadConfig(
-                                physicsEnv.getTick() - PhysicsEnvironment.TOTAL_HISTORY,
+                                -PhysicsEnvironment.TOTAL_HISTORY,
                                 ret.fileIdentifier, 
                                 ret.yamlDocuments);
                 }
@@ -184,7 +181,7 @@ public class GameLoop
                 
                 this.ships = physicsEnv.getGlobalConfigStringList(0, "ships");
                 
-                networkedGame.registerArenaResources(physicsEnv, mapEntities);
+                networkedGame.arenaLoaded(physicsEnv, mapEntities);
                 loadedResources = true;
         }
         
@@ -255,8 +252,10 @@ public class GameLoop
                 loop.addLoopEvent(mapEntities);
                 
                 boolean first = true;
+                boolean tickingPhysics = false;
                 lastFrameReset = System.nanoTime();
                 frames = 60;
+                
                 
                 while (!loop.isInterruped())
                 {
@@ -272,6 +271,15 @@ public class GameLoop
                         
                         Graph.graphicsLoop();
                         
+                        if (!tickingPhysics && networkedGame.hasArenaSynced())
+                        {
+                                // Do not tick() on physics until ArenaSync has been received.
+                                // The server tick count is not known until ArenaSync has been received.
+                                
+                                // must come before keyboard input, which generates new events, therefor prepend
+                                loop.prependTickEvent(physicsEnv); 
+                                tickingPhysics = true;
+                        }
                         
                         if (networkedGame.isReady() && localActor == null)
                         {
@@ -374,7 +382,7 @@ public class GameLoop
                                 Graph.g.drawString(String.format("%d (%2dms) %4d %d %3dms",
                                         lastFps, 
                                         frameTimeDelta, 
-                                        physicsEnv.localTickToServer(physicsEnv.getTick()),
+                                        physicsEnv.getTick(),
                                         physicsEnv.getTimewarpCount(),
                                         networkedGame.getlastRTTNano() / 1000_000L), 0, 0);
                                 
