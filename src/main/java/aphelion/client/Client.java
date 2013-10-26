@@ -127,7 +127,9 @@ public class Client
 
                 // use the default time source for now
                 // availableProcessors is including HT (for example "8" on a quad core)
-                loop = new TickedEventLoop(10, Runtime.getRuntime().availableProcessors(), null);
+                int processors = Runtime.getRuntime().availableProcessors();
+                if (processors < 2) { processors = 2; } // minimum of two workers
+                loop = new TickedEventLoop(10, processors, null);
 
                 resourceDB = new ResourceDB(loop);
                 loop.addLoopEvent(resourceDB);

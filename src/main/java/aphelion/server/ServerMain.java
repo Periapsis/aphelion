@@ -82,7 +82,9 @@ public class ServerMain implements LoopEvent, TickEvent
         
         public void setup() throws IOException
         {
-                loop = new TickedEventLoop(10, Runtime.getRuntime().availableProcessors(), null);
+                int processors = Runtime.getRuntime().availableProcessors();
+                if (processors < 2) { processors = 2; } // minimum of two workers
+                loop = new TickedEventLoop(10, processors, null);
                 server = new AphelionServer(listen, new File("./www"), loop);
                 loop.addLoopEvent(server);
                 
