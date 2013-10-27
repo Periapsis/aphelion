@@ -51,6 +51,8 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.ByteBuffer;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JOptionPane;
@@ -96,7 +98,10 @@ public class Client
                         // singleplayer
                         // future versions might not need to run a server in sigleplayer
                         // however this is ok for now.
-                        serverThread = new AphelionServerThread(false);
+                        
+                        Map<String, Object> singlePlayerConfig = new HashMap<>();
+                        
+                        serverThread = new AphelionServerThread(false, singlePlayerConfig);
                         serverThread.start();
                         try
                         {

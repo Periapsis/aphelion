@@ -44,6 +44,7 @@ import aphelion.shared.swissarmyknife.ThreadSafe;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.channels.ServerSocketChannel;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -54,9 +55,9 @@ import java.util.logging.Logger;
 public class AphelionServerThread extends Thread
 {
         private static final Logger log = Logger.getLogger("aphelion.server");
-        private ServerMain serverMain;
-        private int listenPort;
-        private boolean gui;
+        private final ServerMain serverMain;
+        private final int listenPort;
+        private final boolean gui;
         private FailureListener failureListener;
         
         private ServerSocketChannel privateSsChannel; // If we opened it ourselves, we need to close it too
@@ -66,7 +67,7 @@ public class AphelionServerThread extends Thread
                 void serverThreadFailure(Throwable ex);
         }
 
-        public AphelionServerThread(boolean gui) throws IOException
+        public AphelionServerThread(boolean gui, Map<String, Object> config) throws IOException
         {
                 super();
 
@@ -75,20 +76,20 @@ public class AphelionServerThread extends Thread
 
                 privateSsChannel = HttpServer.openServerChannel(new InetSocketAddress("127.0.0.1", 0));
                 
-                serverMain = new ServerMain(privateSsChannel);
+                serverMain = new ServerMain(privateSsChannel, config);
                 // run setup() in this thread so that a client thread will be able to connect immediately
                 serverMain.setup();
                 listenPort = serverMain.getHTTPListeningPort();
         }
         
-        public AphelionServerThread(boolean gui, ServerSocketChannel ssChannel) throws IOException
+        public AphelionServerThread(boolean gui, ServerSocketChannel ssChannel, Map<String, Object> config) throws IOException
         {
                 super();
 
                 this.gui = gui;
                 // use an ephemeral port. aka a temporary port number
 
-                serverMain = new ServerMain(ssChannel);
+                serverMain = new ServerMain(ssChannel, config);
                 // run setup() in this thread so that a client thread will be able to connect immediately
                 serverMain.setup();
                 listenPort = serverMain.getHTTPListeningPort();

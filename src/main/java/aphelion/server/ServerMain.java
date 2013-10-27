@@ -52,12 +52,16 @@ import aphelion.shared.physics.valueobjects.PhysicsMovement;
 import aphelion.shared.resource.ResourceDB;
 import aphelion.shared.swissarmyknife.SwissArmyKnife;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.channels.ServerSocketChannel;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.yaml.snakeyaml.Yaml;
+import org.yaml.snakeyaml.constructor.SafeConstructor;
 
 /**
  *
@@ -67,17 +71,19 @@ public class ServerMain implements LoopEvent, TickEvent
 {
         private static final Logger log = Logger.getLogger("aphelion.server");
         private TickedEventLoop loop;
-        private ServerSocketChannel listen;
+        private final ServerSocketChannel listen;
         private AphelionServer server;
         private ServerGame serverGame;
         private PhysicsEnvironment physicsEnv;
+        private final Map<String, Object> config;
         
         private static final int DUMMY_1_PID = -1;
         private static final int DUMMY_2_PID = -2;
         
-        public ServerMain(ServerSocketChannel listen)
+        public ServerMain(ServerSocketChannel listen, Map<String, Object> config)
         {                
                 this.listen = listen;
+                this.config = config;
         }
         
         public void setup() throws IOException
@@ -215,31 +221,22 @@ public class ServerMain implements LoopEvent, TickEvent
         
         public static void main(String[] args) throws IOException
         {
-                String hostname;
-                int port;
-                
-                if (args.length >= 1)
+                if (args.length < 1)
                 {
-                        port = Integer.parseInt(args[0]); // may throw
-                }
-                else
-                {
-                        port = 80;
+                        throw new IllegalArgumentException("The first argument should be the path to a yaml config file");
                 }
                 
-                if (args.length >= 2)
-                {
-                        hostname = args[1];
-                }
-                else
-                {
-                        hostname = "0.0.0.0";
-                }
+                Yaml yaml = new Yaml(new SafeConstructor());
+                // might throw IOException, ClassCastException, etc
+                Map<String, Object> config = (Map<String, Object>) yaml.load(new FileInputStream(args[0])); 
                 
-                try (ServerSocketChannel ssChannel = HttpServer.openServerChannel(new InetSocketAddress(hostname, port)))
+                String address = config.containsKey("bind-address") ? (String) config.get("bind-address") : "0.0.0.0";
+                int port = config.containsKey("bind-port") ? (int) config.get("bind-port") : 80;
+                
+                try (ServerSocketChannel ssChannel = HttpServer.openServerChannel(new InetSocketAddress(address, port)))
                 {
                         Deadlock.start(false, null);
-                        ServerMain main = new ServerMain(ssChannel);
+                        ServerMain main = new ServerMain(ssChannel, config);
                         main.setup();
                         main.run();
                         Deadlock.stop();

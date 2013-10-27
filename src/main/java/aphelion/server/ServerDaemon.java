@@ -42,14 +42,18 @@ package aphelion.server;
 import aphelion.server.http.HttpServer;
 import aphelion.shared.event.Deadlock;
 import aphelion.shared.event.TickedEventLoop;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.channels.ServerSocketChannel;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.commons.daemon.Daemon;
 import org.apache.commons.daemon.DaemonContext;
 import org.apache.commons.daemon.DaemonInitException;
+import org.yaml.snakeyaml.Yaml;
+import org.yaml.snakeyaml.constructor.SafeConstructor;
 
 /**
  *
@@ -65,36 +69,30 @@ public class ServerDaemon implements Daemon
         private AphelionServerThread serverThread;
         private Thread main;
         
+        private Map<String, Object> config;
+        
         @Override
         public void init(DaemonContext dc) throws DaemonInitException, Exception
         {
-                // At this point we are running as a super user. 
-                // Do priviliged stuff like opening a socket ports < 1024
+                // At this point we are running as root
+                // Do priviliged stuff like opening a socket port < 1024
                 
                 String[] args = dc.getArguments();
                 
-                String hostname;
-                int port;
-                
-                if (args.length >= 1)
+                if (args.length < 1)
                 {
-                        port = Integer.parseInt(args[0]); // may throw
-                }
-                else
-                {
-                        port = 80;
+                        throw new IllegalArgumentException("The first argument should be the path to a yaml config file");
                 }
                 
-                if (args.length >= 2)
-                {
-                        hostname = args[1];
-                }
-                else
-                {
-                        hostname = "0.0.0.0";
-                }
+                Yaml yaml = new Yaml(new SafeConstructor());
+                // might throw IOException, ClassCastException, etc
+                this.config = (Map<String, Object>) yaml.load(new FileInputStream(args[0])); 
                 
-                InetSocketAddress listen = new InetSocketAddress(hostname, port);
+                String address = config.containsKey("bind-address") ? (String) config.get("bind-address") : "0.0.0.0";
+                int port = config.containsKey("bind-port") ? (int) config.get("bind-port") : 80;
+                
+                
+                InetSocketAddress listen = new InetSocketAddress(address, port);
                 this.ssChannel = HttpServer.openServerChannel(listen);
                 
                 Deadlock.start(false, new Deadlock.DeadLockListener()
@@ -123,7 +121,7 @@ public class ServerDaemon implements Daemon
                 
                 log.log(Level.INFO, "Deamon start (thread {0})", Thread.currentThread().getName());
                 
-                serverThread = new AphelionServerThread(false, this.ssChannel);
+                serverThread = new AphelionServerThread(false, this.ssChannel, this.config);
                 serverThread.setDaemon(true);
                 serverThread.setFailureListener(new AphelionServerThread.FailureListener()
                 {
