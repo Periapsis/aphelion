@@ -50,6 +50,7 @@ import java.nio.channels.SocketChannel;
 import java.nio.file.NoSuchFileException;
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -66,10 +67,11 @@ class HttpConnection
         ConnectionStateChangeListener stateChangeListener;
         SelectionKey key;
         SocketChannel channel;
-        File httpdocs;
+        File defaultRoute;
+        Map<String, File> routes;
         
         long nanoLastReceived;
-        private LinkedList<HttpResponse> responses = new LinkedList<HttpResponse>(); // responses that still have to be sent out
+        private final LinkedList<HttpResponse> responses = new LinkedList<>(); // responses that still have to be sent out
         private HttpResponse currentResponse; // the response that is currently being sent;
         private boolean keepAlive;
         
@@ -81,7 +83,7 @@ class HttpConnection
         boolean websocket = false;
         private ByteBuffer lineBuffer;
         ByteBuffer rawHead; // The bytes of the entire head (request-line and headers)
-        HashMap<String, String> headers = new HashMap<String, String>();
+        HashMap<String, String> headers = new HashMap<>();
 
         static enum STATE
         {
@@ -96,12 +98,13 @@ class HttpConnection
         }
        
         
-        HttpConnection(ConnectionStateChangeListener stateChangeListener, SelectionKey key, SocketChannel sChannel, File httpdocs)
+        HttpConnection(ConnectionStateChangeListener stateChangeListener, SelectionKey key, SocketChannel sChannel, File defaultRoute, Map<String, File> routes)
         {
                 this.stateChangeListener = stateChangeListener;
                 this.key = key;
                 this.channel = sChannel;
-                this.httpdocs = httpdocs;
+                this.defaultRoute = defaultRoute;
+                this.routes = routes;
 
                 setState(STATE.WAIT_FOR_REQUEST_LINE);
 
@@ -111,7 +114,7 @@ class HttpConnection
                 {
                         log.log(Level.INFO, "New TCP Connection: {0}", sChannel.getRemoteAddress());
                 }
-                catch (IOException ex)
+                catch (IOException | NullPointerException ex)
                 {
                         log.log(Level.SEVERE, null, ex);
                 }
@@ -156,30 +159,17 @@ class HttpConnection
                         if (requestReady)
                         {
                                 File file = null;
-                                boolean fileNotFound = false;
+                                
                                 try
                                 {
-                                        if (httpdocs == null)
-                                        {
-                                                throw new NoSuchFileException("httpdocs not set");
-                                        }
-                                        
-                                        file = new File(httpdocs.getPath() + File.separator + requestUri.getPath());
-                                        file = file.getCanonicalFile();
-                                        
-                                        if (!file.getPath().startsWith(httpdocs.getPath()))
-                                        {
-                                                fileNotFound = true;
-                                                log.log(Level.WARNING, "Attempt to access file outside of the httpdocs directory");
-                                        }
+                                        file = getRoute(requestUri.getPath());
                                 }
                                 catch (NoSuchFileException ex)
                                 {
-                                        fileNotFound = true;
-                                        log.log(Level.INFO, "No such file", ex);
+                                        log.log(Level.INFO, "No such file: ", ex.getMessage());
                                 }
                                 
-                                if (fileNotFound)
+                                if (file == null)
                                 {
                                         addResponse(new HttpResponse(method, (HashMap<String, String>)headers.clone(), 404, "File Not Found", !this.keepAlive, null));
                                 }
@@ -200,6 +190,82 @@ class HttpConnection
                         }
 
                 }
+        }
+        
+        private File getRoute(String requestPath) throws NoSuchFileException, IOException
+        {
+                if (requestPath == null || requestPath.isEmpty())
+                {
+                        return defaultRoute;
+                }
+                
+                
+                int start = 0;
+                while (start < requestPath.length() && requestPath.charAt(start) == '/')
+                {
+                        ++start;
+                }
+                
+                int len = requestPath.length();
+                while (len >= start && requestPath.charAt(len-1) == '/')
+                {
+                        --len;
+                }
+                
+                if (start == len)
+                {
+                        return defaultRoute;
+                }
+                
+                
+                while (len >= start)
+                {
+                        // /a/b/c/d/e.txt
+                        // first try "/a/b/c/d/e.txt"
+                        // then try "/a/b/c/d"
+                        // then try "/a/b/c" etc
+                        
+                        File routeFile = routes.get(requestPath.substring(start, len));
+                        
+                        if (routeFile == null)
+                        {
+                                len = requestPath.lastIndexOf('/', len-1);
+                                continue;
+                        }
+                        
+                        String remainingPath = requestPath.substring(len);
+                        
+                        File file = remainingPath.length() > 0 
+                                    ? new File(routeFile.getPath() + File.separator + remainingPath) 
+                                    : routeFile;
+                        
+                        file = file.getCanonicalFile();
+                        if (!file.getPath().startsWith(routeFile.getPath()))
+                        {
+                                log.log(Level.WARNING, "Attempt to access file outside of the route directory");
+                                throw new NoSuchFileException(file.getPath());
+                        }
+
+                        return file;
+
+                }
+                
+
+                if (defaultRoute == null)
+                {
+                        throw new NoSuchFileException("defaultRoute not set");
+                }
+
+                File file = new File(defaultRoute.getPath() + File.separator + requestPath);
+                file = file.getCanonicalFile();
+
+                if (!file.getPath().startsWith(defaultRoute.getPath()))
+                {
+                        log.log(Level.WARNING, "Attempt to access file outside of the route directory");
+                        throw new NoSuchFileException(file.getPath());
+                }
+                
+                return file;
         }
         
         private void addResponse(HttpResponse resp)

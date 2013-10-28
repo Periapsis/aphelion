@@ -81,7 +81,7 @@ import org.java_websocket.handshake.ClientHandshake;
  *
  * @author Joris
  */
-        public class HttpServer implements UpgradeWebSocketHandler, LoopEvent, HttpWebSocketServerListener
+public class HttpServer implements UpgradeWebSocketHandler, LoopEvent, HttpWebSocketServerListener
 {
         static final int LINEBUFFER_SIZE = 512; // Used to combine a line that spans multiple TCP segments
         static final int RCVBUFFER_SIZE = 16384;
@@ -129,6 +129,11 @@ import org.java_websocket.handshake.ClientHandshake;
                         server.setDeamon(true);
                         websocketServers.add(server);
                 }
+        }
+        
+        public void addRouteStatic(String path, File file) throws IOException, SecurityException
+        {
+                downloadThread.addRouteStatic(path, file);
         }
         
         public static ServerSocketChannel openServerChannel(InetSocketAddress listenAddr) throws IOException

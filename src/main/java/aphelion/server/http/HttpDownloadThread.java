@@ -48,7 +48,9 @@ import java.nio.channels.ClosedSelectorException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -60,25 +62,44 @@ import java.util.logging.Logger;
 class HttpDownloadThread extends Thread implements ConnectionStateChangeListener
 {
         private static final Logger log = Logger.getLogger("aphelion.server.http");
+        private volatile boolean running = false;
         private volatile boolean ready = false;
         private Selector selector;
-        private File httpdocs;
-        private UpgradeWebSocketHandler upgradeWebSocketHandler;
-        private ByteBuffer buf = ByteBuffer.allocateDirect(HttpServer.BUFFER_SIZE);
-        private ConcurrentLinkedQueue <SocketChannel> newChannels = new ConcurrentLinkedQueue<>();
+        private final File defaultRoute;
+        private final Map<String, File> routes = new HashMap<>();
+        private final UpgradeWebSocketHandler upgradeWebSocketHandler;
+        private final ByteBuffer buf = ByteBuffer.allocateDirect(HttpServer.BUFFER_SIZE);
+        private final ConcurrentLinkedQueue <SocketChannel> newChannels = new ConcurrentLinkedQueue<>();
         
         private long lastTimeoutCheck = System.nanoTime();
 
         HttpDownloadThread(File httpdocs, UpgradeWebSocketHandler upgradeWebSocketHandler)
         {
-                this.httpdocs = httpdocs;
+                this.defaultRoute = httpdocs;
                 this.upgradeWebSocketHandler = upgradeWebSocketHandler;
+        }
+        
+        /** Register a route (url path) to be served by the specified file or directory.
+         * @param path The path part of the URL that this route applies to. 
+         *             Must not begin or end with a slash
+         *             For example "assets" or "abc/def"
+         * @param file File or directory
+         */
+        public void addRouteStatic(String path, File file) throws IOException, SecurityException
+        {
+                if (running)
+                {
+                        throw new IllegalStateException();
+                        // If adding routes while the server runs is desirable, 
+                        // this.routes should become thread safe.
+                }
+                
+                routes.put(path, file.getCanonicalFile());
         }
 
         @Override
         public void connectionStateChange(HttpConnection conn, STATE oldState, STATE newState)
         {
-                //System.out.println("newState: " + newState);
                 if (newState == HttpConnection.STATE.CLOSED)
                 {
                         conn.key.attach(null);
@@ -141,6 +162,7 @@ class HttpDownloadThread extends Thread implements ConnectionStateChangeListener
         @Override
         public void run()
         {
+                running = true;
                 setName("HttpDownload-"+getId());
                 try
                 {
@@ -165,7 +187,7 @@ class HttpDownloadThread extends Thread implements ConnectionStateChangeListener
                                                 sChannel.configureBlocking(false);
                                                 sChannel.socket().setTcpNoDelay(false);
                                                 SelectionKey key = sChannel.register(selector, SelectionKey.OP_READ);
-                                                key.attach(new HttpConnection(this, key, sChannel, httpdocs));
+                                                key.attach(new HttpConnection(this, key, sChannel, defaultRoute, routes));
                                         }
                                 }
                                 
@@ -173,15 +195,16 @@ class HttpDownloadThread extends Thread implements ConnectionStateChangeListener
                                 
                                 long now = System.nanoTime();
                                 
-                                if (now - lastTimeoutCheck > 1000000000l)
+                                if (now - lastTimeoutCheck > 1_000_000_000l)
                                 {
+                                        lastTimeoutCheck = now;
                                         it = selector.keys().iterator();
                                 
                                         while (it.hasNext())
                                         {
                                                 SelectionKey key = it.next();
                                                 HttpConnection conn = (HttpConnection) key.attachment();
-                                                if (now - conn.nanoLastReceived > HttpServer.HTTP_TIMEOUT * 1000000000l)
+                                                if (now - conn.nanoLastReceived > HttpServer.HTTP_TIMEOUT * 1_000_000_000l)
                                                 {
                                                         log.log(Level.INFO, "Dropping connection {0} because of timeout", conn.channel.getRemoteAddress());
                                                         key.attach(null);

@@ -76,6 +76,7 @@ public class ServerMain implements LoopEvent, TickEvent
         private ServerGame serverGame;
         private PhysicsEnvironment physicsEnv;
         private final Map<String, Object> config;
+        private final File assetDirectory;
         
         private static final int DUMMY_1_PID = -1;
         private static final int DUMMY_2_PID = -2;
@@ -84,6 +85,20 @@ public class ServerMain implements LoopEvent, TickEvent
         {                
                 this.listen = listen;
                 this.config = config;
+                
+                try 
+                {
+                        assetDirectory = new File((String) config.get("assets-path"));
+                }
+                catch (ClassCastException | NullPointerException ex)
+                {
+                        throw new IllegalArgumentException("Missing or invalid server config entry: assets-path");
+                }
+                
+                if (!assetDirectory.canRead() || !assetDirectory.isDirectory())
+                {
+                        throw new IllegalArgumentException("The given assets-path is not a valid directory: " + assetDirectory.getAbsolutePath());
+                }
         }
         
         public void setup() throws IOException
@@ -91,7 +106,9 @@ public class ServerMain implements LoopEvent, TickEvent
                 int processors = Runtime.getRuntime().availableProcessors();
                 if (processors < 2) { processors = 2; } // minimum of two workers
                 loop = new TickedEventLoop(10, processors, null);
+                
                 server = new AphelionServer(listen, new File("./www"), loop);
+                server.addHttpRouteStatic("assets", assetDirectory);
                 loop.addLoopEvent(server);
                 
                 ResourceDB resourceDB = new ResourceDB(loop);
@@ -242,7 +259,4 @@ public class ServerMain implements LoopEvent, TickEvent
                         Deadlock.stop();
                 }
         }
-
-        
-        
 }

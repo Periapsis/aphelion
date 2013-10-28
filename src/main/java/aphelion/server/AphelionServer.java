@@ -72,9 +72,9 @@ public class AphelionServer implements LoopEvent, WebSocketTransportListener
         private final static int SERVER_PING_PROTO_VERSION = 1;
         private final static int SERVER_GAME_PROTO_VERSION = 2;
         
-        private HttpServer httpServer;
-        private Workable workable;
-        private WebSocketTransport webSocketTransport;
+        private final HttpServer httpServer;
+        private final Workable workable;
+        private final WebSocketTransport webSocketTransport;
                 
         private GameListener gameClientListener;
         
@@ -89,6 +89,11 @@ public class AphelionServer implements LoopEvent, WebSocketTransportListener
                 this.workable = workManager;
                 webSocketTransport = new WebSocketTransport(this);
                 httpServer = new HttpServer(httpListen, httpDocs, webSocketTransport);
+        }
+        
+        public void addHttpRouteStatic(String path, File file) throws IOException, SecurityException
+        {
+                httpServer.addRouteStatic(path, file);
         }
         
         public void setGameClientListener(GameListener gameClientListener)
