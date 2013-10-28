@@ -407,6 +407,23 @@ public class NetworkedGame implements GameListener, TickEvent
                 {
                         parseTimeResponse(msg, receivedAt);
                 }
+                
+                for (GameS2C.ArenaLoad msg : s2c.getArenaLoadList())
+                {
+                        log.log(Level.INFO, "Received ArenaLoad");
+                        
+                        // todo block SEND_ARENA_LOADED
+                        
+                        for (GameS2C.ResourceRequirement req : msg.getResourceRequirementList())
+                        {
+                                
+                                System.out.println(SwissArmyKnife.bytesToHex(req.getSha256().toByteArray()) + " " + req.getSize());
+                                for (GameS2C.ResourceRequirement.Mirror mirror :  req.getMirrorsList())
+                                {
+                                        System.out.println(mirror.getUrl());
+                                }
+                        }
+                }
 
                 for (GameS2C.ArenaSync msg : s2c.getArenaSyncList())
                 {

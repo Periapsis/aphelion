@@ -74,6 +74,28 @@ message TimeResponse {
 	required sfixed64 serverTime = 2;
 }
 
+message ArenaLoad {
+        // The things you have to load when you first enter the arena
+        // This is sent after the client has sent ConnectionReady
+        // The client should send ArenaLoaded after completion
+        repeated ResourceRequirement resourceRequirement = 1;       
+}
+
+message ResourceRequirement {
+        // The client should download the specified resource and load it.
+        // This is sent after the client has sent ConnectionReady
+        // The client should send ArenaLoaded after completion
+        required bytes sha256 = 1;
+        required uint64 size = 2;
+        repeated Mirror mirrors = 3;
+
+        message Mirror {
+                required string url = 1;
+                required int32 priority = 2;
+                optional string refererHeader = 3;
+        }
+}
+
 message ArenaSync {
 	// You are now in an arena, you will now receive all the data you need to start the simulation
         // This is sent after c2s ArenaLoaded
@@ -108,6 +130,7 @@ message S2C {
 	repeated Hello hello = 100;
 	repeated AuthenticateResponse authenticateResponse = 101;
 	repeated TimeResponse timeResponse = 102;
-	repeated ArenaSync arenaSync = 103;
+        repeated ArenaLoad arenaLoad = 103;
+	repeated ArenaSync arenaSync = 104;
 }
 

@@ -38,7 +38,7 @@
 
 package aphelion.server;
 
-import aphelion.server.game.Asset;
+import aphelion.shared.resource.Asset;
 import aphelion.server.game.ServerGame;
 import aphelion.server.http.HttpServer;
 import aphelion.shared.event.*;
@@ -194,7 +194,7 @@ public class ServerMain implements LoopEvent, TickEvent
                 physicsEnv.actorNew(0, DUMMY_2_PID, "Dummy 2", 1, "terrier");
                 physicsEnv.actorWarp(0, DUMMY_2_PID, false, 512 * 16 * 1024, 448 * 16 * 1024, 0, -10000, 0); 
                 
-                serverGame = new ServerGame(physicsEnv, loop);
+                serverGame = new ServerGame(physicsEnv, loop, assets);
                 loop.addLoopEvent(serverGame);
                 loop.addTickEvent(serverGame);
                 server.setGameClientListener(serverGame);

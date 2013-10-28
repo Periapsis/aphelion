@@ -37,11 +37,13 @@
  */
 package aphelion.server.game;
 
+import aphelion.shared.resource.Asset;
 import aphelion.shared.gameconfig.GCBoolean;
 import aphelion.shared.gameconfig.GCStringList;
 import aphelion.shared.net.protocols.GameProtocolConnection;
 import aphelion.shared.net.protobuf.GameOperation;
 import aphelion.shared.net.protobuf.GameS2C;
+import aphelion.shared.net.protobuf.GameS2C.ArenaLoad;
 import aphelion.shared.physics.entities.ActorPublic;
 import aphelion.shared.physics.entities.ProjectilePublic;
 import aphelion.shared.physics.operations.pub.OperationPublic;
@@ -92,17 +94,17 @@ public class ClientState
         private final ServerGame serverGame;
         private final PhysicsEnvironment physicsEnv;
         public int pid;
-        public final GameProtocolConnection game;
+        public final GameProtocolConnection gameConn;
         public STATE state;
         public String nickname;
         private GCStringList ships;
         public long lastActorSyncBroadcast_nanos;
 
-        ClientState(ServerGame serverGame, GameProtocolConnection game)
+        ClientState(ServerGame serverGame, GameProtocolConnection gameConn)
         {
                 this.serverGame = serverGame;
                 this.physicsEnv = serverGame.physicsEnv;
-                this.game = game;
+                this.gameConn = gameConn;
                 this.ships = physicsEnv.getGlobalConfigStringList(0, "ships");
         }
         
@@ -129,6 +131,7 @@ public class ClientState
                         case WAIT_FOR_CONNECTION_READY:
                                 break;
                         case RECEIVED_CONNECTION_READY:
+                                sendInitialResourceRequirements();
                                 nextState(STATE.WAIT_FOR_ARENA_LOADED);
                                 break;
                         case WAIT_FOR_ARENA_LOADED:
@@ -140,7 +143,6 @@ public class ClientState
                         case SEND_ARENA_SYNC:
                                 // never a 0 pid
                                 this.pid = serverGame.generatePid();
-                                
 
                                 doArenaSync();
 
@@ -148,11 +150,11 @@ public class ClientState
 
                                 break;
                         case READY:
-                                serverGame.addReadyPlayer(game);
+                                serverGame.addReadyPlayer(gameConn);
 
                                 break;
                         case DISCONNECTED:
-                                serverGame.removeReadyPlayer(game);
+                                serverGame.removeReadyPlayer(gameConn);
 
                                 if (pid > 0)
                                 {
@@ -171,6 +173,18 @@ public class ClientState
                 }
         }
 
+        private void sendInitialResourceRequirements()
+        {
+                GameS2C.S2C.Builder s2c = GameS2C.S2C.newBuilder();
+                ArenaLoad.Builder arenaLoad = s2c.addArenaLoadBuilder();
+                
+                for (Asset ass : serverGame.assets)
+                {
+                        ass.toProtoBuf(arenaLoad.addResourceRequirementBuilder());
+                }
+                
+                gameConn.send(s2c);
+        }
 
         private void doArenaSync()
         {
@@ -241,7 +255,7 @@ public class ClientState
                         actorWarp.setYVel(y_vel);
                         actorWarp.setRotation(rot);
 
-                        game.send(s2c);
+                        gameConn.send(s2c);
                 }
 
                 {
@@ -267,7 +281,7 @@ public class ClientState
                         actorWarp.setYVel(y_vel);
                         actorWarp.setRotation(rot);
 
-                        serverGame.broadcast(s2c, this.game);
+                        serverGame.broadcast(s2c, this.gameConn);
                 }
 
 
@@ -357,7 +371,7 @@ public class ClientState
 
                         }
 
-                        game.send(s2c);
+                        gameConn.send(s2c);
                 }
 
 
@@ -389,7 +403,7 @@ public class ClientState
                 while (s2cIt.hasNext())
                 {
                         s2cIt.advance();
-                        game.send(s2cIt.value());
+                        gameConn.send(s2cIt.value());
                 }
                 
                 lastActorSyncBroadcast_nanos = System.nanoTime();

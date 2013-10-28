@@ -38,6 +38,7 @@
 
 package aphelion.server.game;
 
+import aphelion.shared.resource.Asset;
 import aphelion.server.game.ClientState.STATE;
 import aphelion.shared.event.*;
 import aphelion.shared.net.protocols.GameListener;
@@ -61,6 +62,7 @@ import aphelion.shared.physics.WEAPON_SLOT;
 import aphelion.shared.swissarmyknife.AttachmentConsumer;
 import aphelion.shared.swissarmyknife.SwissArmyKnife;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -80,6 +82,7 @@ public class ServerGame implements LoopEvent, TickEvent, GameListener
         
         public final PhysicsEnvironment physicsEnv;
         public final TickedEventLoop loop;
+        public final List<Asset> assets;
         
         // Simply raise this value to get the next pid, do not reuse them for now.
         // This way we would go into negative pids after 248 days if we would get a new player every 10ms.
@@ -91,10 +94,11 @@ public class ServerGame implements LoopEvent, TickEvent, GameListener
         
 
         
-        public ServerGame(PhysicsEnvironment physicsEnv, TickedEventLoop loop)
+        public ServerGame(PhysicsEnvironment physicsEnv, TickedEventLoop loop, List<Asset> assets)
         {
                 this.physicsEnv = physicsEnv;
                 this.loop = loop;
+                this.assets = assets;
                 
                 loop.addTimerEvent(SYNC_SOME_ACTOR_EVERY_TICKS, actorSyncTimer);
         }

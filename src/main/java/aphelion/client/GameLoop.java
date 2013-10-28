@@ -74,6 +74,7 @@ import aphelion.shared.physics.events.Event;
 import aphelion.shared.physics.events.pub.ActorDiedPublic;
 import aphelion.shared.swissarmyknife.AttachmentConsumer;
 import java.lang.ref.WeakReference;
+import java.util.Arrays;
 
 import java.util.Calendar;
 import java.util.Iterator;
@@ -189,7 +190,7 @@ public class GameLoop
         {
                 loop.addWorkerTask(
                         new MapClassic.LoadMapTask(resourceDB, true), 
-                        "level.map", 
+                        "singleplayer.map", 
                         new WorkerTaskCallback<MapClassic>()
                 {
                         @Override
@@ -212,9 +213,10 @@ public class GameLoop
                         }
                 });
                 
+                
                 loop.addWorkerTask(
                         new LoadYamlTask(resourceDB), 
-                        resourceDB.getKeysByPrefix("gameconfig."), 
+                        Arrays.asList(new String[] {"singleplayer.gameconfig"}),
                         new WorkerTaskCallback<List<LoadYamlTask.Return>>()
                 {
                         @Override

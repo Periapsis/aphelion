@@ -35,10 +35,12 @@
  * the terms and conditions of the license of that module. An independent
  * module is a module which is not derived from or based on this library.
  */
-package aphelion.server.game;
+package aphelion.shared.resource;
 
 import aphelion.server.ServerConfigException;
+import aphelion.shared.net.protobuf.GameS2C.ResourceRequirement;
 import aphelion.shared.swissarmyknife.SwissArmyKnife;
+import com.google.protobuf.ByteString;
 import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -55,9 +57,11 @@ public class Asset
 {
         private static final Logger log = Logger.getLogger("aphelion.server");
 
+        public final String configPath;
         public final File file;
         public final long size;
         public final byte[] hash;
+        public final ByteString hash_protobuf;
         private List<Mirror> mirrors;
 
         public Asset(File assetDirectory, Object yamlEntry) throws ServerConfigException
@@ -65,8 +69,8 @@ public class Asset
                 try
                 {
                         Map<String, Object> config = (Map<String, Object>) yamlEntry;
-
-                        file = new File(assetDirectory + File.separator + (String) config.get("path")).getCanonicalFile();
+                        configPath = (String) config.get("path");
+                        file = new File(assetDirectory + File.separator + configPath).getCanonicalFile();
 
                         if (!file.canRead() || !file.isFile())
                         {
@@ -75,6 +79,7 @@ public class Asset
 
                         size = file.length();
                         hash = SwissArmyKnife.fileHash("SHA-256", file);
+                        hash_protobuf = ByteString.copyFrom(hash);
                         
                         List yamlMirrors = (List) config.get("mirrors");
                         if (yamlMirrors != null)
@@ -93,6 +98,32 @@ public class Asset
                 }
         }
         
+        public void toProtoBuf(ResourceRequirement.Builder builder)
+        {
+                builder.setSha256(hash_protobuf);
+                builder.setSize(size);
+                
+                {
+                        // always add our own server
+                        ResourceRequirement.Mirror.Builder mirrorBuilder = builder.addMirrorsBuilder();
+                        mirrorBuilder.setUrl("/assets/" + configPath);
+                        mirrorBuilder.setPriority(0);
+                }
+                
+                if (mirrors != null)
+                {
+                        for (Mirror mirror : mirrors)
+                        {
+                                ResourceRequirement.Mirror.Builder mirrorBuilder = builder.addMirrorsBuilder();
+                                mirrorBuilder.setUrl(mirror.url.toExternalForm());
+                                mirrorBuilder.setPriority(mirror.priority);
+                                if (mirror.refererHeader != null && !mirror.refererHeader.isEmpty())
+                                {
+                                        mirrorBuilder.setRefererHeader(mirror.refererHeader);
+                                }
+                        }
+                }
+        }
         
 
         public static class Mirror

@@ -57,7 +57,7 @@ public class LoadYamlTask extends WorkerTask<Iterable<String>, List<Return>>
 {
         private static final Logger log = Logger.getLogger("aphelion.config");
 
-        private ResourceDB db;
+        private final ResourceDB db;
 
         public LoadYamlTask(ResourceDB db)
         {
