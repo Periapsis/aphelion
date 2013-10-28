@@ -38,6 +38,7 @@
 
 package aphelion.server;
 
+import aphelion.server.game.Asset;
 import aphelion.server.game.ServerGame;
 import aphelion.server.http.HttpServer;
 import aphelion.shared.event.*;
@@ -53,15 +54,19 @@ import aphelion.shared.resource.ResourceDB;
 import aphelion.shared.swissarmyknife.SwissArmyKnife;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.channels.ServerSocketChannel;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.constructor.SafeConstructor;
+import org.yaml.snakeyaml.error.YAMLException;
 
 /**
  *
@@ -70,13 +75,18 @@ import org.yaml.snakeyaml.constructor.SafeConstructor;
 public class ServerMain implements LoopEvent, TickEvent
 {
         private static final Logger log = Logger.getLogger("aphelion.server");
-        private TickedEventLoop loop;
         private final ServerSocketChannel listen;
+        private final Map<String, Object> config;
+        
+        private TickedEventLoop loop;
         private AphelionServer server;
         private ServerGame serverGame;
         private PhysicsEnvironment physicsEnv;
-        private final Map<String, Object> config;
-        private final File assetDirectory;
+        
+        private File assetDirectory;
+        private List<Asset> assets;
+        private String mapResource;
+        private List<String> gameConfigResources;
         
         private static final int DUMMY_1_PID = -1;
         private static final int DUMMY_2_PID = -2;
@@ -85,40 +95,83 @@ public class ServerMain implements LoopEvent, TickEvent
         {                
                 this.listen = listen;
                 this.config = config;
-                
-                try 
-                {
-                        assetDirectory = new File((String) config.get("assets-path"));
-                }
-                catch (ClassCastException | NullPointerException ex)
-                {
-                        throw new IllegalArgumentException("Missing or invalid server config entry: assets-path");
-                }
-                
-                if (!assetDirectory.canRead() || !assetDirectory.isDirectory())
-                {
-                        throw new IllegalArgumentException("The given assets-path is not a valid directory: " + assetDirectory.getAbsolutePath());
-                }
         }
         
-        public void setup() throws IOException
+        public void setup() throws IOException, ServerConfigException
         {
                 int processors = Runtime.getRuntime().availableProcessors();
                 if (processors < 2) { processors = 2; } // minimum of two workers
                 loop = new TickedEventLoop(10, processors, null);
                 
                 server = new AphelionServer(listen, new File("./www"), loop);
+                
+                
+                try
+                {
+                        assetDirectory = new File((String) config.get("assets-path")).getCanonicalFile();
+                        
+                        if (!assetDirectory.canRead() || !assetDirectory.isDirectory())
+                        {
+                                throw new ServerConfigException("assets-path is unreadable or not a directory: " + assetDirectory);
+                        }
+                        
+                        // todo: multiple arenas (seperate directories with arena config?)
+                        Map<String, Object> arena = (Map<String, Object>) config.get("arena");
+                        
+                        List configAssets = (List) arena.get("assets");
+                        this.assets = new ArrayList<>(configAssets.size());
+                        for (Object c : configAssets)
+                        {
+                                this.assets.add(new Asset(assetDirectory, c));
+                        }
+                        
+                        mapResource = (String) arena.get("map");
+                        
+                        gameConfigResources = new ArrayList<>((List<String>) arena.get("game-config"));
+                        
+                }
+                catch (ClassCastException | NullPointerException ex)
+                {
+                        throw new ServerConfigException("Missing or invalid server config entry: assets-path");
+                }
+                catch (IOException ex)
+                {
+                        throw new ServerConfigException("The given assets-path is not a valid directory: " + assetDirectory.getAbsolutePath(), ex);
+                }
+                
+                
                 server.addHttpRouteStatic("assets", assetDirectory);
+                
                 loop.addLoopEvent(server);
                 
                 ResourceDB resourceDB = new ResourceDB(loop);
-                resourceDB.addZip(new File("assets/singleplayer.zip"));
+                
+                for (Asset ass : this.assets)
+                {
+                        resourceDB.addZip(ass.file);
+                }
+                
+                if (!resourceDB.resourceExists(mapResource))
+                {
+                        throw new ServerConfigException("Resource does not exist: " + mapResource);
+                }
+                
+                for (String key : gameConfigResources)
+                {
+                        if (!resourceDB.resourceExists(key))
+                        {
+                                throw new ServerConfigException("Resource does not exist: " + mapResource);
+                        }
+                }
+                
+                
                 MapClassic map;
                 List<LoadYamlTask.Return> gameConfig;
+                
                 try
                 {
-                        map = new LoadMapTask(resourceDB, false).work("level.map");
-                        gameConfig = new LoadYamlTask(resourceDB).work(resourceDB.getKeysByPrefix("gameconfig."));
+                        map = new LoadMapTask(resourceDB, false).work(mapResource);
+                        gameConfig = new LoadYamlTask(resourceDB).work(gameConfigResources);
                 }
                 catch (WorkerTask.WorkerException ex)
                 {
@@ -236,7 +289,7 @@ public class ServerMain implements LoopEvent, TickEvent
                 }
         }
         
-        public static void main(String[] args) throws IOException
+        public static void main(String[] args) throws IOException, ServerConfigException
         {
                 if (args.length < 1)
                 {
@@ -244,11 +297,30 @@ public class ServerMain implements LoopEvent, TickEvent
                 }
                 
                 Yaml yaml = new Yaml(new SafeConstructor());
-                // might throw IOException, ClassCastException, etc
-                Map<String, Object> config = (Map<String, Object>) yaml.load(new FileInputStream(args[0])); 
                 
-                String address = config.containsKey("bind-address") ? (String) config.get("bind-address") : "0.0.0.0";
-                int port = config.containsKey("bind-port") ? (int) config.get("bind-port") : 80;
+                Map<String, Object> config;
+                String address;
+                int port;
+                
+                try
+                {
+                        config = (Map<String, Object>) yaml.load(new FileInputStream(args[0])); 
+                }
+                catch (FileNotFoundException | ClassCastException | YAMLException ex)
+                {
+                        // Note: YAMLException is a RunTimeException
+                        throw new ServerConfigException("Unable to read server config", ex);
+                }
+                
+                try
+                {
+                        address = config.containsKey("bind-address") ? (String) config.get("bind-address") : "0.0.0.0";
+                        port = config.containsKey("bind-port") ? (int) config.get("bind-port") : 80;
+                }
+                catch (ClassCastException ex)
+                {
+                        throw new ServerConfigException("Invalid bind-address or bind-port", ex);
+                }
                 
                 try (ServerSocketChannel ssChannel = HttpServer.openServerChannel(new InetSocketAddress(address, port)))
                 {

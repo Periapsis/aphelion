@@ -41,6 +41,7 @@ import aphelion.server.AphelionServerThread;
 import aphelion.client.graphics.Graph;
 import aphelion.client.net.NetworkedGame;
 import aphelion.client.resource.AsyncTexture;
+import aphelion.server.ServerConfigException;
 import aphelion.shared.event.Deadlock;
 import aphelion.shared.resource.ResourceDB;
 import aphelion.shared.event.TickedEventLoop;
@@ -86,12 +87,13 @@ public class Client
                 QUITTING
         }
 
-        /** @param uri if null, singleplayer
+        /** *  @param uri if null, singleplayer
          * @param nickname 
          * @throws LWJGLException
          * @throws IOException
+         * @throws aphelion.server.ServerConfigException
          */
-        public void run(URI uri, final String nickname) throws LWJGLException, IOException
+        public void run(URI uri, final String nickname) throws LWJGLException, IOException, ServerConfigException
         {
                 if (uri == null)
                 {

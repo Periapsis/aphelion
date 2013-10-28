@@ -588,8 +588,8 @@ public class MapClassic implements PhysicsMap
          */
         public static class LoadMapTask extends WorkerTask<String, MapClassic>
         {
-                private ResourceDB db;
-                private boolean graphics;
+                private final ResourceDB db;
+                private final boolean graphics;
 
                 public LoadMapTask(ResourceDB db, boolean graphics)
                 {
@@ -603,7 +603,12 @@ public class MapClassic implements PhysicsMap
                         MapClassic map = new MapClassic(db, graphics);
                         try
                         {
-                                map.read(db.getBytesSync(argument), graphics);
+                                byte[] bytes = db.getBytesSync(argument);
+                                if (bytes == null)
+                                {
+                                        throw new WorkerException("Resource does not exist (map)");
+                                }
+                                map.read(bytes, graphics);
                                 if (graphics)
                                 {
                                         map.renderRadar(false);

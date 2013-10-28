@@ -49,6 +49,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.constructor.SafeConstructor;
+import org.yaml.snakeyaml.error.YAMLException;
 
 /**
  *
@@ -73,7 +74,7 @@ public class GameConfig implements TickEvent
                 return sel;
         }
         
-        public static List<Object> loadYaml(InputStream in) throws Exception
+        public static List<Object> loadYaml(InputStream in) throws YAMLException
         {
                 // SafeConstructor because we may not trust the server or a moderator
                 Yaml yaml = new Yaml(new SafeConstructor());
@@ -87,7 +88,7 @@ public class GameConfig implements TickEvent
                 return ret;
         }
         
-        public static List<Object> loadYaml(String str) throws Exception
+        public static List<Object> loadYaml(String str) throws YAMLException
         {
                 // SafeConstructor because we may not trust the server or a moderator
                 Yaml yaml = new Yaml(new SafeConstructor());

@@ -67,7 +67,7 @@ public class AphelionServerThread extends Thread
                 void serverThreadFailure(Throwable ex);
         }
 
-        public AphelionServerThread(boolean gui, Map<String, Object> config) throws IOException
+        public AphelionServerThread(boolean gui, Map<String, Object> config) throws IOException, ServerConfigException
         {
                 super();
 
@@ -82,7 +82,7 @@ public class AphelionServerThread extends Thread
                 listenPort = serverMain.getHTTPListeningPort();
         }
         
-        public AphelionServerThread(boolean gui, ServerSocketChannel ssChannel, Map<String, Object> config) throws IOException
+        public AphelionServerThread(boolean gui, ServerSocketChannel ssChannel, Map<String, Object> config) throws IOException, ServerConfigException
         {
                 super();
 

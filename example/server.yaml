@@ -29,13 +29,13 @@ arena:
                         # The next one is tried.
                         # When the priorities are equal, a random one is picked.
                         # The inbuilt http server is always available with a fixed priority of 0
-                        - [5, "https://www.dropbox.com/s/epo28dhr7uh/test-arena.zip?dl=1"]
+                        - {priority: 5, url: "https://www.dropbox.com/s/epo28dhr7uh/test-arena.zip?dl=1"}
                   
                 - path: classic-graphics.zip
                   mirrors:
-                        - [1, "https://mirror1.example.com/classic-graphics.zip"]
-                        - [1, "https://mirror2.example.com/classic-graphics.zip"]
-                        - [1, "https://mirror3.example.com/classic-graphics.zip"]
+                        - {priority: 1, url: "https://mirror1.example.com/classic-graphics.zip"}
+                        - {priority: 1, url: "https://mirror2.example.com/classic-graphics.zip"}
+                        - {priority: 1, url: "https://mirror3.example.com/classic-graphics.zip"}
                         - priority: 1
                           url: "https://mydownloadsite.abc/downloads/classic-graphics.zip"
                           referer: "https://mydownloadsite.abc/downloads/"

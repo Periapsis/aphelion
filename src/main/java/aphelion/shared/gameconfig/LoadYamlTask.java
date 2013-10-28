@@ -47,6 +47,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.yaml.snakeyaml.error.YAMLException;
 
 /** Parse a yaml document from a resource file in a worker thread.
  * argument is resource key, return value is a list of yaml documents.
@@ -82,7 +83,7 @@ public class LoadYamlTask extends WorkerTask<Iterable<String>, List<Return>>
                                 ret.yamlDocuments = GameConfig.loadYaml(in);
                                 retList.add(ret);
                         }
-                        catch(Exception ex)
+                        catch(YAMLException ex)
                         {
                                 throw new WorkerException(ex);
                         }

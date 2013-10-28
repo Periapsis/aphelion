@@ -37,9 +37,9 @@
  */
 package aphelion.shared.swissarmyknife;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Map;
 import java.util.Random;
 import java.util.logging.Level;
@@ -969,5 +969,46 @@ public final class SwissArmyKnife
                                 }
                         );
                 }
+        }
+        
+        /** Read a file and calculate its hash.
+         * 
+         * @param algorithm The MessageDigest algorithm, such as "SHA-256"
+         * @param file
+         * @return 
+         * @throws java.io.IOException File not found or unreadable
+         * @throws RuntimeException if no Provider supports a MessageDigestSpi implementation for the specified algorithm.
+         */
+        public static byte[] fileHash(String algorithm, File file) throws IOException
+        {
+                MessageDigest md;
+                try
+                {
+                        md =  MessageDigest.getInstance("SHA-256");
+                }
+                catch (NoSuchAlgorithmException ex)
+                {
+                        throw new RuntimeException(ex);
+                }
+                
+                
+                byte[] buf = new byte[131072];
+                
+                try(InputStream f = new FileInputStream(file))
+                {
+                        while (true)
+                        {
+                                int read = f.read(buf);
+                                if (read < 0)
+                                {
+                                        break;
+                                }
+
+                                md.update(buf, 0, read);
+                        }
+                }
+                
+                return md.digest();
+                
         }
 }
