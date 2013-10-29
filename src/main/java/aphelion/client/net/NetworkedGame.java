@@ -37,6 +37,7 @@
  */
 package aphelion.client.net;
 
+import aphelion.client.AssetCache;
 import aphelion.client.graphics.world.ActorShip;
 import aphelion.shared.resource.ResourceDB;
 import aphelion.client.graphics.world.MapEntities;
@@ -58,10 +59,11 @@ import aphelion.shared.swissarmyknife.SwissArmyKnife;
 import aphelion.shared.event.ClockSource;
 import aphelion.shared.event.TickEvent;
 import aphelion.shared.event.TickedEventLoop;
+import aphelion.shared.resource.Asset;
 import aphelion.shared.swissarmyknife.RollingHistory;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.LinkedList;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -88,13 +90,16 @@ public class NetworkedGame implements GameListener, TickEvent
          */
         private static final long CLOCKSYNC_DELAY = 30 * 1000_000_000L;
         
-        private ResourceDB resourceDB;
-        private TickedEventLoop loop;
+        private final ResourceDB resourceDB;
+        private final TickedEventLoop loop;
         private PhysicsEnvironment physicsEnv;
         private MapEntities mapEntities;
-        private GameProtocolConnection game;
+        private GameProtocolConnection gameConn;
         private ClockSync clockSync;
         private int initial_timeSync_count = 0;
+        
+        private final AssetCache assetCache;
+        private final List<Asset> assets = new ArrayList<>();
         
         private String nickname;
         private STATE state;
@@ -126,11 +131,13 @@ public class NetworkedGame implements GameListener, TickEvent
                 INITIAL_TIME_SYNC (5), // Busy with the initial time sync
                 INITIAL_TIME_SYNC_DONE (6),
                 SEND_CONNECTION_READY (7),
-                WAIT_FOR_ARENALOAD (8), // we are loading the map, etc
-                SEND_ARENA_LOADED (9),
-                WAIT_FOR_ARENASYNC (10), // server is busy sending us arena sync data
-                RECEIVED_ARENASYNC (11),
-                READY (12), // ready to play the game
+                WAIT_FOR_ARENALOAD (8),
+                RECEIVED_ARENALOAD (9),
+                ARENA_LOADING (10), // we are loading the map, etc
+                SEND_ARENA_LOADED (11),
+                WAIT_FOR_ARENASYNC (12), // server is busy sending us arena sync data
+                RECEIVED_ARENASYNC (13),
+                READY (14), // ready to play the game
                 AUTH_FAILED (20),
                 DISCONNECTED (21);
                 
@@ -154,11 +161,20 @@ public class NetworkedGame implements GameListener, TickEvent
                 this.nickname = nickname;
                 loop.addTickEvent(this);
                 nextState(STATE.ESTABLISHING);
+                try
+                {
+                        assetCache = new AssetCache();
+                }
+                catch (IOException ex)
+                {
+                        // Should not fail
+                        throw new Error(ex);
+                }
         }
 
         public void arenaLoaded(PhysicsEnvironment physicsEnv, MapEntities mapEntities)
         {
-                if (this.state != STATE.WAIT_FOR_ARENALOAD)
+                if (this.state != STATE.ARENA_LOADING)
                 {
                         throw new IllegalStateException();
                 }
@@ -178,17 +194,12 @@ public class NetworkedGame implements GameListener, TickEvent
         {
                 // all states before WAIT_FOR_ARENALOAD count as "connecting"
                 // DISCONNECTED should return false!
-                return !state.hasOccured(STATE.WAIT_FOR_ARENALOAD);
+                return !state.hasOccured(STATE.ARENA_LOADING);
         }
         
         public boolean hasArenaSynced()
         {
                 return state.hasOccured(STATE.RECEIVED_ARENASYNC);
-        }
-        
-        public boolean isDownloading()
-        {
-                return false;
         }
 
         public boolean isReady()
@@ -259,7 +270,7 @@ public class NetworkedGame implements GameListener, TickEvent
                                 Authenticate.Builder auth = c2s.addAuthenticateBuilder();
                                 auth.setAuthMethod(Authenticate.AUTH_METHOD.NONE);
                                 auth.setNickname(nickname);
-                                game.send(c2s);
+                                gameConn.send(c2s);
                                 
                                 nextState(STATE.WAIT_AUTHENTICATE);
                                 break;
@@ -278,19 +289,21 @@ public class NetworkedGame implements GameListener, TickEvent
                         case SEND_CONNECTION_READY:
                                 c2s = GameC2S.C2S.newBuilder();
                                 ConnectionReady.Builder readyRequest = c2s.addConnectionReadyBuilder();
-                                game.send(c2s);
+                                gameConn.send(c2s);
 
                                 nextState(STATE.WAIT_FOR_ARENALOAD);
 
                                 break;
-                        
                         case WAIT_FOR_ARENALOAD:
+                                break;
+                                
+                        case ARENA_LOADING:
                                 break;
                         
                         case SEND_ARENA_LOADED:
                                 c2s = GameC2S.C2S.newBuilder();
                                 GameC2S.ArenaLoaded.Builder loadedRequest = c2s.addArenaLoadedBuilder();
-                                game.send(c2s);
+                                gameConn.send(c2s);
                                 
                                 nextState(STATE.WAIT_FOR_ARENASYNC);
                                 break;
@@ -315,7 +328,7 @@ public class NetworkedGame implements GameListener, TickEvent
                                 break;
 
                         case AUTH_FAILED:
-                                game.requestClose(WS_CLOSE_STATUS.NORMAL);
+                                gameConn.requestClose(WS_CLOSE_STATUS.NORMAL);
                                 break;
                                 
                         case DISCONNECTED:
@@ -341,7 +354,7 @@ public class NetworkedGame implements GameListener, TickEvent
                         return;
                 }
 
-                this.game = game;
+                this.gameConn = game;
                 clockSync = new ClockSync(30); // limit of 30 means a half hour of history at most.
 
                 nextState(STATE.ESTABLISHED);
@@ -373,7 +386,7 @@ public class NetworkedGame implements GameListener, TickEvent
                         return;
                 }
 
-                if (game != this.game)
+                if (game != this.gameConn)
                 {
                         log.log(Level.SEVERE, "Received a message for an invalid GameProtocol (session token). Ignoring message");
                         assert false;
@@ -384,7 +397,7 @@ public class NetworkedGame implements GameListener, TickEvent
                 {
                         if (state != STATE.WAIT_AUTHENTICATE)
                         {
-                                log.log(Level.SEVERE, "Received an operation in an invalid state");
+                                log.log(Level.SEVERE, "Received AuthenticateResponse in an invalid state");
                                 return;
                         }
                         
@@ -412,16 +425,31 @@ public class NetworkedGame implements GameListener, TickEvent
                 {
                         log.log(Level.INFO, "Received ArenaLoad");
                         
+                        if (state != STATE.WAIT_FOR_ARENALOAD)
+                        {
+                                log.log(Level.SEVERE, "Received ArenaLoad in an invalid state");
+                                return;
+                        }
+                        
                         // todo block SEND_ARENA_LOADED
                         
                         for (GameS2C.ResourceRequirement req : msg.getResourceRequirementList())
                         {
-                                
-                                System.out.println(SwissArmyKnife.bytesToHex(req.getSha256().toByteArray()) + " " + req.getSize());
-                                for (GameS2C.ResourceRequirement.Mirror mirror :  req.getMirrorsList())
+                                try
                                 {
-                                        System.out.println(mirror.getUrl());
+                                        assets.add(new Asset(assetCache, req));
                                 }
+                                catch (MalformedURLException ex)
+                                {
+                                        log.log(Level.SEVERE, "Received a malformed url from the server", ex);
+                                        
+                                        this.disconnect_code = WS_CLOSE_STATUS.MALFORMED_PACKET;
+                                        this.disconnect_reason = "Received a malformed url from the server";
+                                        this.gameConn.requestClose(disconnect_code, disconnect_reason);
+                                        nextState(STATE.DISCONNECTED);
+                                        return;
+                                }
+                                
                         }
                 }
 
@@ -642,7 +670,7 @@ public class NetworkedGame implements GameListener, TickEvent
                         sendMove(physicsEnv.getTick(), null);
                 }
                 
-                if (isReady() && !isDownloading())
+                if (isReady())
                 {
                         if (now - clockSync_lastSync_nano > CLOCKSYNC_DELAY)
                         {
@@ -664,13 +692,18 @@ public class NetworkedGame implements GameListener, TickEvent
                 
                 return myPid;
         }
+        
+        public Iterable<Asset> getRequiredAssets()
+        {
+                return assets;
+        }
 
         public void sendTimeSync()
         {
                 GameC2S.C2S.Builder c2s = GameC2S.C2S.newBuilder();
                 TimeRequest.Builder timeRequest = c2s.addTimeRequestBuilder();
                 timeRequest.setClientTime(System.nanoTime());
-                game.send(c2s);
+                gameConn.send(c2s);
                 clockSync_lastSync_nano = System.nanoTime();
         }
         
@@ -765,7 +798,7 @@ public class NetworkedGame implements GameListener, TickEvent
                         actorMove.addMove(m.bits);
                 }
 
-                game.send(c2s);
+                gameConn.send(c2s);
 
         }
         
@@ -787,7 +820,7 @@ public class NetworkedGame implements GameListener, TickEvent
                         actorWeapon.setSnappedRotation(positionHint.rot_snapped);
                 }
                 
-                game.send(c2s);
+                gameConn.send(c2s);
         }
 
         public long getlastRTTNano()
@@ -850,6 +883,6 @@ public class NetworkedGame implements GameListener, TickEvent
                         command.setResponseCode(responseCode);
                 }
                 command.addAllArguments(Arrays.asList(args));
-                game.send(c2s);
+                gameConn.send(c2s);
         }
 }

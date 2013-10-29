@@ -143,7 +143,10 @@ public enum WS_CLOSE_STATUS
         INIT_TIMEOUT                    (4004),
         
         /** The server unexpectedly created a new session for the client. The client is now closing the old ones  */
-        CLOSING_PREVIOUS_SESSION        (4005);
+        CLOSING_PREVIOUS_SESSION        (4005),
+        
+        /** Encountered a malformed protocol packet (generic). */
+        MALFORMED_PACKET (4006);
         
         // Also see org.java_websocket.framing.CloseFrame
         

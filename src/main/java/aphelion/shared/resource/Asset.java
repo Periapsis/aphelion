@@ -37,6 +37,7 @@
  */
 package aphelion.shared.resource;
 
+import aphelion.client.AssetCache;
 import aphelion.server.ServerConfigException;
 import aphelion.shared.net.protobuf.GameS2C.ResourceRequirement;
 import aphelion.shared.swissarmyknife.SwissArmyKnife;
@@ -60,12 +61,13 @@ public class Asset
         public final String configPath;
         public final File file;
         public final long size;
-        public final byte[] hash;
-        public final ByteString hash_protobuf;
-        private List<Mirror> mirrors;
+        public final byte[] sha256_hash;
+        public final ByteString sha256_protobuf;
+        private final List<Mirror> mirrors;
 
         public Asset(File assetDirectory, Object yamlEntry) throws ServerConfigException
         {
+                // Server
                 try
                 {
                         Map<String, Object> config = (Map<String, Object>) yamlEntry;
@@ -78,8 +80,8 @@ public class Asset
                         }
 
                         size = file.length();
-                        hash = SwissArmyKnife.fileHash("SHA-256", file);
-                        hash_protobuf = ByteString.copyFrom(hash);
+                        sha256_hash = SwissArmyKnife.fileHash("SHA-256", file);
+                        sha256_protobuf = ByteString.copyFrom(sha256_hash);
                         
                         List yamlMirrors = (List) config.get("mirrors");
                         if (yamlMirrors != null)
@@ -91,16 +93,38 @@ public class Asset
                                         mirrors.add(new Mirror(yamlMirror));
                                 }
                         }
+                        else
+                        {
+                                mirrors = null;
+                        }
                 }
                 catch (ClassCastException | IOException ex)
                 {
                         throw new ServerConfigException(ex);
                 }
         }
+
+        public Asset(AssetCache assets, ResourceRequirement protobuf) throws MalformedURLException
+        {
+                // client
+                sha256_protobuf = protobuf.getSha256();
+                sha256_hash = sha256_protobuf.toByteArray();
+                size = protobuf.getSize();
+                this.configPath = null;
+                this.file = assets.getAsset(sha256_hash, size);
+                
+                this.mirrors = new ArrayList<>(protobuf.getMirrorsCount());
+                for (ResourceRequirement.Mirror m : protobuf.getMirrorsList())
+                {
+                        this.mirrors.add(new Mirror(m));
+                }
+        }
+        
+        
         
         public void toProtoBuf(ResourceRequirement.Builder builder)
         {
-                builder.setSha256(hash_protobuf);
+                builder.setSha256(sha256_protobuf);
                 builder.setSize(size);
                 
                 {
@@ -114,13 +138,7 @@ public class Asset
                 {
                         for (Mirror mirror : mirrors)
                         {
-                                ResourceRequirement.Mirror.Builder mirrorBuilder = builder.addMirrorsBuilder();
-                                mirrorBuilder.setUrl(mirror.url.toExternalForm());
-                                mirrorBuilder.setPriority(mirror.priority);
-                                if (mirror.refererHeader != null && !mirror.refererHeader.isEmpty())
-                                {
-                                        mirrorBuilder.setRefererHeader(mirror.refererHeader);
-                                }
+                                mirror.toProtoBuf(builder.addMirrorsBuilder());
                         }
                 }
         }
@@ -134,6 +152,7 @@ public class Asset
 
                 public Mirror(Object configMirror) throws ServerConfigException
                 {
+                        // server
                         try
                         {
                                 Map<String, Object> config = (Map<String, Object>) configMirror;
@@ -145,6 +164,25 @@ public class Asset
                         {
                                 throw new ServerConfigException(ex);
                         }
-                }       
+                }
+                
+                public Mirror(ResourceRequirement.Mirror protobuf) throws MalformedURLException
+                {
+                        // client
+                        
+                        url = new URL(protobuf.getUrl());
+                        priority = protobuf.getPriority();
+                        refererHeader = protobuf.hasRefererHeader() ? protobuf.getRefererHeader() : null;
+                }
+                
+                public void toProtoBuf(ResourceRequirement.Mirror.Builder builder)
+                {
+                        builder.setUrl(url.toExternalForm());
+                        builder.setPriority(priority);
+                        if (refererHeader != null && !refererHeader.isEmpty())
+                        {
+                                builder.setRefererHeader(refererHeader);
+                        }
+                }
         }
 }

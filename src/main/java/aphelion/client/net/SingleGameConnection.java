@@ -70,10 +70,10 @@ public class SingleGameConnection implements LoopEvent, WebSocketTransportListen
         
         private final static int CLIENT_PROTO_VERSION = 3; // use 0 to disable checking
         
-        private URI uri;
-        private Workable workable;
-        private WebSocketTransport webSocketTransport;
-        private GameListener gameClientListener;
+        private final URI uri;
+        private final Workable workable;
+        private final WebSocketTransport webSocketTransport;
+        private final GameListener gameClientListener;
         private GameProtocolConnection game;
         private final int desired_sockets; //TODO: set me to 5
 
