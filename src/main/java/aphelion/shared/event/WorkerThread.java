@@ -37,9 +37,8 @@
  */
 package aphelion.shared.event;
 
-import aphelion.shared.event.WorkerTask.WorkerException;
+import aphelion.shared.event.promise.PromiseException;
 import java.util.concurrent.ArrayBlockingQueue;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -75,22 +74,13 @@ class WorkerThread extends Thread
                                         task.error = null;
                                         task.ret = task.work(task.argument);
                                 }
-                                catch (WorkerException ex)
+                                catch (PromiseException ex)
                                 {
                                         task.error = ex;
                                 }
                                 
-                                if (task.callback != null)
-                                {
-                                        workable.taskCompleted(task);
-                                }
-                                else
-                                {
-                                        if (task.error != null)
-                                        {
-                                                log.log(Level.SEVERE, "Uncaught worker exception!", task.error);
-                                        }
-                                }
+                                
+                                workable.taskCompleted(task);
                         }
                 }
                 catch (InterruptedException ex)

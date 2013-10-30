@@ -90,7 +90,7 @@ public class Asset
                                 
                                 for (Object yamlMirror : yamlMirrors)
                                 {
-                                        mirrors.add(new Mirror(yamlMirror));
+                                        mirrors.add(new Mirror((Map<String, Object>) yamlMirror));
                                 }
                         }
                         else
@@ -150,12 +150,11 @@ public class Asset
                 public final int priority;
                 public final String refererHeader;
 
-                public Mirror(Object configMirror) throws ServerConfigException
+                public Mirror(Map<String, Object> config) throws ServerConfigException
                 {
                         // server
                         try
                         {
-                                Map<String, Object> config = (Map<String, Object>) configMirror;
                                 url = new URL((String) config.get("url"));
                                 priority = (int) config.get("priority");
                                 refererHeader = (String) config.get("referer"); // null is okay

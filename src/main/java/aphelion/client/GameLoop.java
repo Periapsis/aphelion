@@ -54,8 +54,7 @@ import aphelion.client.graphics.world.event.EventTracker;
 import aphelion.client.resource.AsyncTexture;
 import aphelion.shared.event.TickEvent;
 import aphelion.shared.event.TickedEventLoop;
-import aphelion.shared.event.WorkerTask;
-import aphelion.shared.event.WorkerTaskCallback;
+import aphelion.shared.event.promise.*;
 import aphelion.shared.gameconfig.GCStringList;
 import aphelion.shared.gameconfig.LoadYamlTask;
 import aphelion.shared.physics.entities.ActorPublic;
@@ -96,14 +95,14 @@ public class GameLoop
 {
         private static final Logger log = Logger.getLogger("aphelion.client");
         
-        private ResourceDB resourceDB;
-        private TickedEventLoop loop;
+        private final ResourceDB resourceDB;
+        private final TickedEventLoop loop;
         private boolean loadedResources = false;
         private boolean connectionError = false;
         
         // Network:
-        private SingleGameConnection connection;
-        private NetworkedGame networkedGame;
+        private final SingleGameConnection connection;
+        private final NetworkedGame networkedGame;
         
         // Input:
         private MyKeyboard myKeyboard;
@@ -111,7 +110,6 @@ public class GameLoop
         // Physics:
         private PhysicsEnvironment physicsEnv;
         private ActorPublic localActor;
-        private List<LoadYamlTask.Return> yamlGameConfigTemp;
         private GCStringList ships;
         
         // Map:
@@ -157,82 +155,75 @@ public class GameLoop
                 return connectionError;
         }
         
-        public void tryLoaded()
-        {
-                if (mapClassic != null && yamlGameConfigTemp != null && !loadedResources)
-                {
-                        loaded();
-                }
-        }
-        
-        public void loaded()
-        {
-                physicsEnv = new PhysicsEnvironment(false, mapClassic);
-                mapEntities.setPhysicsEnv(physicsEnv);
-                loop.addTickEvent(myKeyboard);
-                
-                for (LoadYamlTask.Return ret : yamlGameConfigTemp)
-                {
-                        physicsEnv.loadConfig(
-                                -PhysicsEnvironment.TOTAL_HISTORY,
-                                ret.fileIdentifier, 
-                                ret.yamlDocuments);
-                }
-                yamlGameConfigTemp = null;
-                
-                this.ships = physicsEnv.getGlobalConfigStringList(0, "ships");
-                
-                networkedGame.arenaLoaded(physicsEnv, mapEntities);
-                loadedResources = true;
-        }
-        
         public void loop()
         {
-                loop.addWorkerTask(
-                        new MapClassic.LoadMapTask(resourceDB, true), 
-                        "singleplayer.map", 
-                        new WorkerTaskCallback<MapClassic>()
+                AbstractPromise loadMapPromise = 
+                loop.addWorkerTask(new MapClassic.LoadMapTask(resourceDB, true), "singleplayer.map")
+                .then(new PromiseResolved()
                 {
                         @Override
-                        public void taskCompleted(WorkerTask.WorkerException error, MapClassic ret)
+                        public Object resolved(Object ret) throws PromiseException
                         {
-                                if (error != null)
-                                {
-                                        log.log(Level.SEVERE, "Error while reading map", error);
-                                        loop.interrupt();
-                                        // TODO
-                                        return;
-                                }
-                                
                                 log.log(Level.INFO, "Map loaded");
-                                mapClassic = ret;
+                                mapClassic = (MapClassic) ret;
                                 // should work fine for lvl files < 2 GiB
                                 stars = new StarField((int) mapClassic.getLevelSize(), resourceDB);
-                                
-                                tryLoaded();
+                                return mapClassic;
+                        }
+                });
+                
+                AbstractPromise loadConfigPromise = 
+                loop.addWorkerTask(new LoadYamlTask(resourceDB), Arrays.asList(new String[] {"singleplayer.gameconfig"}))
+                .then(new PromiseResolved()
+                {
+                        @Override
+                        public Object resolved(Object ret) throws PromiseException
+                        {
+                                 log.log(Level.INFO, "Game config read");
+                                 
+                                 // ret is List<LoadYamlTask.Return>
+                                 return ret;
                         }
                 });
                 
                 
-                loop.addWorkerTask(
-                        new LoadYamlTask(resourceDB), 
-                        Arrays.asList(new String[] {"singleplayer.gameconfig"}),
-                        new WorkerTaskCallback<List<LoadYamlTask.Return>>()
+                All allLoadedPromise = new All(loop, loadMapPromise, loadConfigPromise);
+                
+                allLoadedPromise.then(new PromiseResolved()
                 {
                         @Override
-                        public void taskCompleted(WorkerTask.WorkerException error, List<LoadYamlTask.Return> ret)
+                        public Object resolved(Object ret_) throws PromiseException
                         {
-                                if (error != null)
-                                {
-                                        log.log(Level.SEVERE, "Error while reading game config", error);
-                                        loop.interrupt();
-                                        // TODO
-                                        return;
-                                }
+                                List ret = (List) ret_;
+                                List<LoadYamlTask.Return> loadYamlResult = (List<LoadYamlTask.Return>) ret.get(1);
                                 
-                                log.log(Level.INFO, "Game config read");
-                                yamlGameConfigTemp = ret;
-                                tryLoaded();
+                                physicsEnv = new PhysicsEnvironment(false, mapClassic);
+                                mapEntities.setPhysicsEnv(physicsEnv);
+                                loop.addTickEvent(myKeyboard);
+
+                                for (LoadYamlTask.Return yamlResult : loadYamlResult)
+                                {
+                                        physicsEnv.loadConfig(
+                                                -PhysicsEnvironment.TOTAL_HISTORY,
+                                                yamlResult.fileIdentifier, 
+                                                yamlResult.yamlDocuments);
+                                }
+
+                                ships = physicsEnv.getGlobalConfigStringList(0, "ships");
+
+                                networkedGame.arenaLoaded(physicsEnv, mapEntities);
+                                loadedResources = true;
+                                
+                                return null;
+                        }
+                }, new PromiseRejected()
+                {
+                        @Override
+                        public void rejected(PromiseException error)
+                        {
+                                log.log(Level.SEVERE, "Error while loading the arena", error);
+                                loop.interrupt();
+                                // TODO?
                         }
                 });
                 

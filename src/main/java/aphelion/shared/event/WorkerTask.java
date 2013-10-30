@@ -37,6 +37,10 @@
  */
 package aphelion.shared.event;
 
+import aphelion.shared.event.promise.AbstractPromise;
+import aphelion.shared.event.promise.Promise;
+import aphelion.shared.event.promise.PromiseException;
+
 /**
  *
  * @param <ARGUMENT> 
@@ -45,35 +49,13 @@ package aphelion.shared.event;
  */
 public abstract class WorkerTask<ARGUMENT, RETURN>
 {
-        public abstract RETURN work(ARGUMENT argument) throws WorkerException;
+        public abstract RETURN work(ARGUMENT argument) throws PromiseException;
         
         // Set by event loop
         ARGUMENT argument;
-        WorkerTaskCallback<RETURN> callback;
+        AbstractPromise promise;
         
         // Set by worker thread
-        WorkerException error;
+        PromiseException error;
         RETURN ret;
-        
-        public static class WorkerException extends Exception
-        {
-                public WorkerException()
-                {
-                }
-                
-                public WorkerException(String message)
-                {
-                        super(message);
-                }
-                
-                public WorkerException(Throwable cause)
-                {
-                        super(cause);
-                }
-                
-                public WorkerException(String message, Throwable cause)
-                {
-                        super(message, cause);
-                }
-        }
 }

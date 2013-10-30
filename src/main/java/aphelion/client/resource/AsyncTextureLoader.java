@@ -42,8 +42,9 @@ import aphelion.shared.resource.ResourceDB;
 import aphelion.shared.event.LoopEvent;
 import aphelion.shared.event.Workable;
 import aphelion.shared.event.WorkerTask;
-import aphelion.shared.event.WorkerTask.WorkerException;
-import aphelion.shared.event.WorkerTaskCallback;
+import aphelion.shared.event.promise.PromiseException;
+import aphelion.shared.event.promise.PromiseRejected;
+import aphelion.shared.event.promise.PromiseResolved;
 import aphelion.shared.swissarmyknife.ThreadSafe;
 import java.io.BufferedInputStream;
 import java.io.IOException;
@@ -166,10 +167,10 @@ public class AsyncTextureLoader implements LoopEvent
                         {
                                 texture = new AsyncTexture(this, resourceKey, GL11.GL_TEXTURE_2D);
                                 texture.target = GL11.GL_TEXTURE_2D;
-                                workable.addWorkerTask(new TextureWorker(db), resourceKey, new TextureCallback(texture));
+                                TextureCallback cb = new TextureCallback(texture);
+                                workable.addWorkerTask(new TextureWorker(db), resourceKey).then(cb, cb);
                                 pending.incrementAndGet();
-
-                                textureCache.put(resourceKey, new WeakReference<AsyncTexture>(texture));
+                                textureCache.put(resourceKey, new WeakReference<>(texture));
                         }
 
                         if (++cleanupCounter > 10)
@@ -231,7 +232,7 @@ public class AsyncTextureLoader implements LoopEvent
                 }
                 
                 @Override
-                public Object[] work(String resourceKey) throws WorkerException
+                public Object[] work(String resourceKey) throws PromiseException
                 {
                         // avoid the resource cache, AsyncTextureLoader has its own cache
                         InputStream in = db.getInputStreamSync(resourceKey); 
@@ -278,14 +279,14 @@ public class AsyncTextureLoader implements LoopEvent
                         catch (IOException | UnsatisfiedLinkError ex)
                         {
                                 log.log(Level.SEVERE, "Exception while parsing image for texture " + resourceKey, ex);
-                                throw new WorkerException(ex);
+                                throw new PromiseException(ex);
                         }
                 }       
         }
         
-        private class TextureCallback implements WorkerTaskCallback<Object[]>
+        private class TextureCallback implements PromiseResolved, PromiseRejected
         {
-                private AsyncTexture texture;
+                private final AsyncTexture texture;
 
                 TextureCallback(AsyncTexture texture)
                 {
@@ -293,14 +294,11 @@ public class AsyncTextureLoader implements LoopEvent
                 }
                 
                 @Override
-                public void taskCompleted(WorkerException error, Object[] ret)
+                public Object resolved(Object ret_) throws PromiseException
                 {
                         pending.decrementAndGet();
-                        if (error != null)
-                        {
-                                texture.error = true;
-                                return; // already logged
-                        }
+                        
+                        Object[] ret = (Object[]) ret_;
                         
                         ByteBuffer textureBytes = (ByteBuffer) ret[0];
                         int imageWidth = (Integer) ret[1];
@@ -319,7 +317,7 @@ public class AsyncTextureLoader implements LoopEvent
                         {
                                 texture.error = true;
                                 log.log(Level.SEVERE, "Attempt to allocate a texture too big for the current hardware");
-                                return;
+                                return null;
                         }
                         
                         texture.textureID = InternalTextureLoader.createTextureID();
@@ -351,10 +349,19 @@ public class AsyncTextureLoader implements LoopEvent
                         texture.loaded();
                         
                         log.log(Level.INFO, "Texture {0} loaded. {1}", new Object[] { texture.getResourceKey(), hasAlpha});
+                        
+                        return null;
+                }
+
+                @Override
+                public void rejected(PromiseException error)
+                {
+                        pending.decrementAndGet();
+                        texture.error = true;
                 }
                 
         }
         
         @SuppressWarnings("serial")
-        public static class InvalidResourceKeyException extends WorkerException { }
+        public static class InvalidResourceKeyException extends PromiseException { }
 }

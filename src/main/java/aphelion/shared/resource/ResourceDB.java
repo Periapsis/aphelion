@@ -42,7 +42,8 @@ import aphelion.client.resource.AsyncTextureLoader;
 import aphelion.shared.event.LoopEvent;
 import aphelion.shared.event.Workable;
 import aphelion.shared.event.WorkerTask;
-import aphelion.shared.event.WorkerTaskCallback;
+import aphelion.shared.event.promise.AbstractPromise;
+import aphelion.shared.event.promise.PromiseException;
 import aphelion.shared.swissarmyknife.SwissArmyKnife;
 import aphelion.shared.swissarmyknife.ThreadSafe;
 import java.io.ByteArrayInputStream;
@@ -258,7 +259,7 @@ public class ResourceDB implements LoopEvent
         
         /** Returns the resource as a byte array asynchronously using a callback.
          * @param key The resource key
-         * @param callback The callback that should be fired on the main thread 
+         * @return The promise that will be fired on the main thread 
          * when the resource has been read. The byte array given should be 
          * considered immutable. If the byte array is null, the resource does 
          * not exist or an unexpected error occurred.
@@ -266,13 +267,13 @@ public class ResourceDB implements LoopEvent
          * during construction
          */
         @ThreadSafe
-        public void getBytes(String key, WorkerTaskCallback<byte[]> callback)
+        public AbstractPromise getBytes(String key)
         {
                 if (workable == null)
                 {
                         throw new IllegalStateException();
                 }
-                workable.addWorkerTask(new GetBytesTask(), key, callback);
+                return workable.addWorkerTask(new GetBytesTask(), key);
         }
         
         /** Returns the location of a resource on the filesystem.
@@ -327,15 +328,15 @@ public class ResourceDB implements LoopEvent
          * InputStream to API's that require it.
          * This also takes advantage of our resource cache.
          * @param key The resource key
-         * @param callback 
+         * @return 
          */
-        public void getWrappedInputStream(String key, WorkerTaskCallback<InputStream> callback)
+        public AbstractPromise getWrappedInputStream(String key)
         {
                 if (workable == null)
                 {
                         throw new IllegalStateException();
                 }
-                workable.addWorkerTask(new WrappedInputStreamTask(), key, callback);
+                return workable.addWorkerTask(new WrappedInputStreamTask(), key);
         }
         
         /** Add a resource as a file that is not part of a zip file.
@@ -419,7 +420,7 @@ public class ResourceDB implements LoopEvent
         private class GetBytesTask extends WorkerTask<String, byte[]>
         {
                 @Override
-                public byte[] work(String argument) throws WorkerException
+                public byte[] work(String argument) throws PromiseException
                 {
                         return getBytesSync(argument);
                 }
@@ -428,7 +429,7 @@ public class ResourceDB implements LoopEvent
         private class WrappedInputStreamTask extends WorkerTask<String, InputStream>
         {
                 @Override
-                public InputStream work(String argument) throws WorkerException
+                public InputStream work(String argument) throws PromiseException
                 {
                         byte[] bytes = getBytesSync(argument);
                         if (bytes == null)

@@ -37,6 +37,8 @@
  */
 package aphelion.shared.event;
 
+import aphelion.shared.event.promise.AbstractPromise;
+import aphelion.shared.event.promise.Promise;
 import aphelion.shared.swissarmyknife.ThreadSafe;
 
 /**
@@ -45,7 +47,8 @@ import aphelion.shared.swissarmyknife.ThreadSafe;
  */
 public interface Workable
 {
-        /** Adds a task to be executed by a worker thread
+        /** Adds a task to be executed by a worker thread. This method should 
+         * (for now?) only be called from the main/event loop thread.
          * 
          * Tasks are not supposed to access data shared by the non worker threads,
          * the only interaction takes place using "argument" and the return value in the callback
@@ -56,12 +59,10 @@ public interface Workable
          *                 This argument should ofcourse be safe to use in another thread.
          *                 The type of this argument should be the same as the &lt;ARGUMENT&gt;
          *                 generic in your WorkerTask.
-         * @param callback Is fired from the main thread (not a worker thread). Its &lt;RETURN&gt; generic 
-         *                 is of the same type as the WorkerTask &lt;RETURN&gt; generic.
+         * @return The promise that will be resolved (or rejected) after completion.
          * @throws IllegalStateException If this class was constructed with 0 worker threads.
          */
-        @ThreadSafe
-        public void addWorkerTask(WorkerTask task, Object argument, WorkerTaskCallback callback);
+        public AbstractPromise addWorkerTask(WorkerTask task, Object argument);
         
         /** Schedule a method to be called on the main thread.
          * The "main" thread is the the thread that is running the event loop.

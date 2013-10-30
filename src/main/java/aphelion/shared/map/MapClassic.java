@@ -40,11 +40,11 @@ package aphelion.shared.map;
 
 import aphelion.shared.resource.ResourceDB;
 import aphelion.shared.event.WorkerTask;
+import aphelion.shared.event.promise.PromiseException;
 import aphelion.shared.map.tile.classic.TileClassicFactory;
 import aphelion.shared.map.tile.TileFactory;
 import aphelion.shared.map.tile.TileType;
 import aphelion.shared.physics.PhysicsMap;
-import aphelion.shared.physics.valueobjects.PhysicsPoint;
 import aphelion.shared.swissarmyknife.Colori;
 import aphelion.shared.swissarmyknife.SWASlickImageBuffer;
 import aphelion.shared.swissarmyknife.SwissArmyKnife;
@@ -598,7 +598,7 @@ public class MapClassic implements PhysicsMap
                 }
                 
                 @Override
-                public MapClassic work(String argument) throws WorkerException
+                public MapClassic work(String argument) throws PromiseException
                 {
                         MapClassic map = new MapClassic(db, graphics);
                         try
@@ -606,7 +606,7 @@ public class MapClassic implements PhysicsMap
                                 byte[] bytes = db.getBytesSync(argument);
                                 if (bytes == null)
                                 {
-                                        throw new WorkerException("Resource does not exist (map)");
+                                        throw new PromiseException("Resource does not exist (map)");
                                 }
                                 map.read(bytes, graphics);
                                 if (graphics)
@@ -616,7 +616,7 @@ public class MapClassic implements PhysicsMap
                         }
                         catch (IOException ex)
                         {
-                                throw new WorkerException(ex);
+                                throw new PromiseException(ex);
                         }
                         return map;
                 }

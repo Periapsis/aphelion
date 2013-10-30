@@ -40,6 +40,7 @@ package aphelion.shared.gameconfig;
 
 
 import aphelion.shared.event.WorkerTask;
+import aphelion.shared.event.promise.PromiseException;
 import aphelion.shared.gameconfig.LoadYamlTask.Return;
 import aphelion.shared.resource.ResourceDB;
 import java.io.InputStream;
@@ -65,7 +66,7 @@ public class LoadYamlTask extends WorkerTask<Iterable<String>, List<Return>>
         }
         
         @Override
-        public List<Return> work(Iterable<String> dbKeys) throws WorkerException
+        public List<Return> work(Iterable<String> dbKeys) throws PromiseException
         {
                 LinkedList<Return> retList = new LinkedList();
                 for (String key : dbKeys)
@@ -85,7 +86,7 @@ public class LoadYamlTask extends WorkerTask<Iterable<String>, List<Return>>
                         }
                         catch(YAMLException ex)
                         {
-                                throw new WorkerException(ex);
+                                throw new PromiseException(ex);
                         }
                 }
                 

@@ -37,6 +37,8 @@
  */
 package aphelion.shared.event;
 
+import aphelion.shared.event.promise.AbstractPromise;
+import aphelion.shared.event.promise.Promise;
 import aphelion.shared.swissarmyknife.LinkedListEntry;
 import aphelion.shared.swissarmyknife.LinkedListHead;
 import aphelion.shared.swissarmyknife.ThreadSafe;
@@ -220,9 +222,16 @@ public class TickedEventLoop implements Workable, Timerable
                                         break;
                                 }
 
-                                if (t.task != null && t.task.callback != null)
+                                if (t.task != null)
                                 {
-                                        t.task.callback.taskCompleted(t.task.error, t.task.ret);
+                                        if (t.task.error != null)
+                                        {
+                                                t.task.promise.reject(t.task.error);
+                                        }
+                                        else
+                                        {
+                                                t.task.promise.resolve(t.task.ret);
+                                        }
                                 }
 
                                 if (t.runFromMain != null)
@@ -300,18 +309,35 @@ public class TickedEventLoop implements Workable, Timerable
                         try
                         {
                                 // Check for completed work
+                                boolean first = true;
                                 while (true)
                                 {
                                         TaskCompleteEntry t;
-                                        t = completedTasks.poll(1, TimeUnit.MILLISECONDS);
+                                        if (first)
+                                        {
+                                                t = completedTasks.poll(1, TimeUnit.MILLISECONDS);
+                                                first = false;
+                                        }
+                                        else
+                                        {
+                                                t = completedTasks.poll();
+                                        }
+                                        
                                         if (t == null)
                                         {
                                                 break;
                                         }
                                         
-                                        if (t.task != null && t.task.callback != null)
+                                        if (t.task != null)
                                         {
-                                                t.task.callback.taskCompleted(t.task.error, t.task.ret);
+                                                if (t.task.error != null)
+                                                {
+                                                        t.task.promise.reject(t.task.error);
+                                                }
+                                                else
+                                                {
+                                                        t.task.promise.resolve(t.task.ret);
+                                                }
                                         }
                                         
                                         if (t.runFromMain != null)
@@ -517,26 +543,9 @@ public class TickedEventLoop implements Workable, Timerable
                 long interval; // in ticks
         }
         
-        /** Adds a task to be executed by a worker thread
-         * 
-         * Tasks are not supposed to access data shared by the non worker threads,
-         * the only interaction takes place using "argument" and the return value in the callback
-         * (the callback runs in the EventLoop thread)
-         * @param task An instance that handles the execution of the actual task. 
-         *             Its sole method is called from one of the worker threads.
-         * @param argument An optional argument that is passed to the worker thread. 
-         *                 This argument should ofcourse be safe to use in another thread.
-         *                 The type of this argument should be the same as the &lt;ARGUMENT&gt;
-         *                 generic in your WorkerTask.
-         * @param callback Is fired from this thread (not a worker thread). Its &lt;RETURN&gt; generic 
-         *                 is of the same type as the WorkerTask &lt;RETURN&gt; generic.
-         * @throws IllegalArgumentException If this class was constructed with 0 worker threads.
-         * @throws IllegalStateException If the work queue is full
-         */
         @Override
-        @ThreadSafe
         @SuppressWarnings("unchecked")
-        public void addWorkerTask(WorkerTask task, Object argument, WorkerTaskCallback callback) throws IllegalArgumentException, IllegalStateException
+        public AbstractPromise addWorkerTask(WorkerTask task, Object argument) throws IllegalArgumentException, IllegalStateException
         {
                 if (workerThreads == null || workerThreads.length <= 0)
                 {
@@ -544,8 +553,9 @@ public class TickedEventLoop implements Workable, Timerable
                 }
                 
                 task.argument = argument;
-                task.callback = callback;
+                task.promise = new Promise(this);
                 tasks.add(task); // throws an exception if full
+                return task.promise;
         }
         
         @ThreadSafe

@@ -40,7 +40,8 @@ package aphelion.shared.net.protocols;
 
 import aphelion.shared.event.Workable;
 import aphelion.shared.event.WorkerTask;
-import aphelion.shared.event.WorkerTaskCallback;
+import aphelion.shared.event.promise.AbstractPromise;
+import aphelion.shared.event.promise.PromiseException;
 import aphelion.shared.net.PROTOCOL;
 import aphelion.shared.net.SessionToken;
 import aphelion.shared.net.WS_CLOSE_STATUS;
@@ -101,7 +102,7 @@ public class GameProtocolConnection implements Attachable
         }
         
         @ThreadSafe
-        public void send(GameS2C.S2COrBuilder s2c, WorkerTaskCallback<Object> callback)
+        public AbstractPromise send(GameS2C.S2COrBuilder s2c)
         {
                 if (!server)
                 {
@@ -109,30 +110,18 @@ public class GameProtocolConnection implements Attachable
                 }
                 
                 // callback is fired when the message has been sent to the socket
-                workable.addWorkerTask(new EncodeS2CWork(), s2c, callback);
+                return workable.addWorkerTask(new EncodeS2CWork(), s2c);
         }
         
         @ThreadSafe
-        public void send(GameC2S.C2SOrBuilder c2s, WorkerTaskCallback<Object> callback)
+        public AbstractPromise send(GameC2S.C2SOrBuilder c2s)
         {
                 if (server)
                 {
                         throw new IllegalStateException();
                 }
                 
-                workable.addWorkerTask(new EncodeC2SWork(), c2s, callback);
-        }
-        
-        @ThreadSafe
-        public void send(GameS2C.S2COrBuilder s2c)
-        {
-                send(s2c, null);
-        }
-        
-        @ThreadSafe
-        public void send(GameC2S.C2SOrBuilder c2s)
-        {
-                send(c2s, null);
+                return workable.addWorkerTask(new EncodeC2SWork(), c2s);
         }
         
         public void requestClose(WS_CLOSE_STATUS code, String message)
@@ -218,7 +207,7 @@ public class GameProtocolConnection implements Attachable
                                         {
                                                 work.work(s2c);
                                         }
-                                        catch (WorkerTask.WorkerException ex)
+                                        catch (PromiseException ex)
                                         {
                                                 log.log(Level.SEVERE, "Unexpected exception", ex);
                                         }
@@ -279,7 +268,7 @@ public class GameProtocolConnection implements Attachable
         {
                 
                 @Override
-                public Object work(GameS2C.S2COrBuilder s2cOrBuilder) throws WorkerTask.WorkerException
+                public Object work(GameS2C.S2COrBuilder s2cOrBuilder) throws PromiseException
                 {
                         byte[] result;
                         
@@ -321,7 +310,7 @@ public class GameProtocolConnection implements Attachable
                                 }
                                 catch (IOException ex)
                                 {
-                                        throw new WorkerTask.WorkerException(ex);
+                                        throw new PromiseException(ex);
                                 }
                                 
                                 // assert that there are no bytes left
@@ -337,7 +326,7 @@ public class GameProtocolConnection implements Attachable
                         }
                         catch (WebSocketTransport.NoSuitableConnection ex)
                         {
-                                throw new WorkerTask.WorkerException(ex);
+                                throw new PromiseException(ex);
                         }
 
                         return null; // callback return argument is not used
@@ -347,7 +336,7 @@ public class GameProtocolConnection implements Attachable
         private class EncodeC2SWork extends WorkerTask<GameC2S.C2SOrBuilder, Object>
         {
                 @Override
-                public Object work(GameC2S.C2SOrBuilder c2sOrBuilder) throws WorkerTask.WorkerException
+                public Object work(GameC2S.C2SOrBuilder c2sOrBuilder) throws PromiseException
                 {
                         byte[] result;
                         
@@ -400,7 +389,7 @@ public class GameProtocolConnection implements Attachable
                                 }
                                 catch (IOException ex)
                                 {
-                                        throw new WorkerTask.WorkerException(ex);
+                                        throw new PromiseException(ex);
                                 }
                                 
                                 // assert that there are no bytes left
@@ -416,7 +405,7 @@ public class GameProtocolConnection implements Attachable
                         }
                         catch (WebSocketTransport.NoSuitableConnection ex)
                         {
-                                throw new WorkerTask.WorkerException(ex);
+                                throw new PromiseException(ex);
                         }
 
                         return null; // callback return argument is not used

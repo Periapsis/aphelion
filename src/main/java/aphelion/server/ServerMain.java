@@ -42,6 +42,7 @@ import aphelion.shared.resource.Asset;
 import aphelion.server.game.ServerGame;
 import aphelion.server.http.HttpServer;
 import aphelion.shared.event.*;
+import aphelion.shared.event.promise.PromiseException;
 import aphelion.shared.gameconfig.LoadYamlTask;
 import aphelion.shared.map.MapClassic;
 import aphelion.shared.map.MapClassic.LoadMapTask;
@@ -59,7 +60,6 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.channels.ServerSocketChannel;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
@@ -173,7 +173,7 @@ public class ServerMain implements LoopEvent, TickEvent
                         map = new LoadMapTask(resourceDB, false).work(mapResource);
                         gameConfig = new LoadYamlTask(resourceDB).work(gameConfigResources);
                 }
-                catch (WorkerTask.WorkerException ex)
+                catch (PromiseException ex)
                 {
                         log.log(Level.SEVERE, null, ex);
                         throw (IOException) ex.getCause();
