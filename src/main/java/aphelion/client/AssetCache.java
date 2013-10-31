@@ -143,6 +143,9 @@ public class AssetCache extends ClientStorage
                 
                 File target = getFile(encodeFileName(sha_256, fileSize));
                 Files.move(tmpFile.toPath(), target.toPath());
+                target.setReadOnly();
+                target.setWritable(false, true);
+                target.setWritable(false, false);
         }
         
         
@@ -150,11 +153,9 @@ public class AssetCache extends ClientStorage
         
         public static class InvalidContentException extends Exception
         {
-
                 public InvalidContentException(String message)
                 {
                         super(message);
                 }
-                
         }
 }
