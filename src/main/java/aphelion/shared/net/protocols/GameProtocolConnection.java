@@ -49,10 +49,7 @@ import aphelion.shared.net.WebSocketTransport;
 import aphelion.shared.net.protobuf.GameC2S;
 import aphelion.shared.net.protobuf.GameC2S.TimeRequest;
 import aphelion.shared.net.protobuf.GameS2C;
-import aphelion.shared.swissarmyknife.Attachable;
-import aphelion.shared.swissarmyknife.AttachmentData;
-import aphelion.shared.swissarmyknife.AttachmentManager;
-import aphelion.shared.swissarmyknife.ThreadSafe;
+import aphelion.shared.swissarmyknife.*;
 import com.google.protobuf.CodedOutputStream;
 import com.google.protobuf.InvalidProtocolBufferException;
 import java.io.ByteArrayInputStream;
@@ -264,11 +261,10 @@ public class GameProtocolConnection implements Attachable
         private static Map<GameS2C.S2COrBuilder, byte[]> s2cCache = Collections.synchronizedMap(new WeakHashMap<GameS2C.S2COrBuilder, byte[]>());
         private static Map<GameC2S.C2SOrBuilder, byte[]> c2sCache = Collections.synchronizedMap(new WeakHashMap<GameC2S.C2SOrBuilder, byte[]>());
         
-        private class EncodeS2CWork extends WorkerTask<GameS2C.S2COrBuilder, Object>
+        private class EncodeS2CWork extends WorkerTask<GameS2C.S2COrBuilder, None>
         {
-                
                 @Override
-                public Object work(GameS2C.S2COrBuilder s2cOrBuilder) throws PromiseException
+                public None work(GameS2C.S2COrBuilder s2cOrBuilder) throws PromiseException
                 {
                         byte[] result;
                         
@@ -333,10 +329,10 @@ public class GameProtocolConnection implements Attachable
                 }
         }
         
-        private class EncodeC2SWork extends WorkerTask<GameC2S.C2SOrBuilder, Object>
+        private class EncodeC2SWork extends WorkerTask<GameC2S.C2SOrBuilder, None>
         {
                 @Override
-                public Object work(GameC2S.C2SOrBuilder c2sOrBuilder) throws PromiseException
+                public None work(GameC2S.C2SOrBuilder c2sOrBuilder) throws PromiseException
                 {
                         byte[] result;
                         

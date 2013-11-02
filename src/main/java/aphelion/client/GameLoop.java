@@ -71,9 +71,11 @@ import aphelion.shared.map.MapClassic;
 import aphelion.shared.map.tile.TileType;
 import aphelion.shared.physics.events.Event;
 import aphelion.shared.physics.events.pub.ActorDiedPublic;
+import aphelion.shared.resource.Asset;
+import aphelion.shared.resource.DownloadAssetsTask;
 import aphelion.shared.swissarmyknife.AttachmentConsumer;
+import java.io.IOException;
 import java.lang.ref.WeakReference;
-import java.util.Arrays;
 
 import java.util.Calendar;
 import java.util.Collections;
@@ -158,39 +160,63 @@ public class GameLoop
         
         public void loop()
         {
-                AbstractPromise loadMapPromise = 
-                loop.addWorkerTask(new MapClassic.LoadMapTask(resourceDB, true), networkedGame.mapResource)
-                .then(new PromiseResolved()
+                AbstractPromise downloadPromise = loop.addWorkerTask(new DownloadAssetsTask(), networkedGame.getRequiredAssets());
+                
+                downloadPromise.then(new PromiseResolved()
                 {
                         @Override
                         public Object resolved(Object ret) throws PromiseException
                         {
-                                log.log(Level.INFO, "Map loaded");
-                                mapClassic = (MapClassic) ret;
-                                // should work fine for lvl files < 2 GiB
-                                stars = new StarField((int) mapClassic.getLevelSize(), resourceDB);
-                                return mapClassic;
+                                List<Asset> assets = (List<Asset>) ret;
+                                
+                                for (Asset ass : assets)
+                                {
+                                        try
+                                        {
+                                                // ass.file is now valid
+                                                // (the DownloadAssetsTask fails even if only 1 asset fails)
+                                                resourceDB.addZip(ass.file);
+                                        }
+                                        catch (IOException ex)
+                                        {
+                                                log.log(Level.SEVERE, "Received an asset file from the server that is not a zip", ex);
+                                                throw new PromiseException("Received an asset file from the server that is not a zip", ex);
+                                        }
+                                }
+                                
+                                AbstractPromise loadMapPromise = 
+                                loop.addWorkerTask(new MapClassic.LoadMapTask(resourceDB, true), networkedGame.mapResource)
+                                .then(new PromiseResolved()
+                                {
+                                        @Override
+                                        public Object resolved(Object ret) throws PromiseException
+                                        {
+                                                log.log(Level.INFO, "Map loaded");
+                                                mapClassic = (MapClassic) ret;
+                                                // should work fine for lvl files < 2 GiB
+                                                stars = new StarField((int) mapClassic.getLevelSize(), resourceDB);
+                                                return mapClassic;
+                                        }
+                                });
+
+                                AbstractPromise loadConfigPromise = 
+                                loop.addWorkerTask(new LoadYamlTask(resourceDB), Collections.unmodifiableList(networkedGame.gameConfigResources))
+                                .then(new PromiseResolved()
+                                {
+                                        @Override
+                                        public Object resolved(Object ret) throws PromiseException
+                                        {
+                                                 log.log(Level.INFO, "Game config read");
+
+                                                 // ret is List<LoadYamlTask.Return>
+                                                 return ret;
+                                        }
+                                });
+
+                                return new All(loop, loadMapPromise, loadConfigPromise);
                         }
-                });
-                
-                AbstractPromise loadConfigPromise = 
-                loop.addWorkerTask(new LoadYamlTask(resourceDB), Collections.unmodifiableList(networkedGame.gameConfigResources))
+                })
                 .then(new PromiseResolved()
-                {
-                        @Override
-                        public Object resolved(Object ret) throws PromiseException
-                        {
-                                 log.log(Level.INFO, "Game config read");
-                                 
-                                 // ret is List<LoadYamlTask.Return>
-                                 return ret;
-                        }
-                });
-                
-                
-                All allLoadedPromise = new All(loop, loadMapPromise, loadConfigPromise);
-                
-                allLoadedPromise.then(new PromiseResolved()
                 {
                         @Override
                         public Object resolved(Object ret_) throws PromiseException
@@ -224,7 +250,7 @@ public class GameLoop
                         {
                                 log.log(Level.SEVERE, "Error while loading the arena", error);
                                 loop.interrupt();
-                                // TODO?
+                                // TODO: display a dialog to the user and go back to the launcher?
                         }
                 });
                 

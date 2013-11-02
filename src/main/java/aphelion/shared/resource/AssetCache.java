@@ -112,12 +112,6 @@ public class AssetCache
         }
         
         @ThreadSafe
-        public File getAsset(Asset ass)
-        {
-                return getAsset(ass.sha256_hash, ass.size);
-        }
-        
-        @ThreadSafe
         public File getAsset(byte[] sha_256, long fileSize)
         {
                 File file = storage.getFile(encodeFileName(sha_256, fileSize));
@@ -184,12 +178,6 @@ public class AssetCache
                 }
                 
                 return false;
-        }
-        
-        @ThreadSafe
-        public void storeAsset(File tmpFile, boolean copy, Asset ass) throws IOException, InvalidContentException
-        {
-                storeAsset(tmpFile, copy, ass.sha256_hash, ass.size);
         }
         
         /**

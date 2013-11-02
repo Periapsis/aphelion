@@ -38,6 +38,9 @@
 package aphelion.shared.swissarmyknife;
 
 import java.io.*;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URL;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Map;
@@ -1009,6 +1012,32 @@ public final class SwissArmyKnife
                 }
                 
                 return md.digest();
+        }
+        
+        public static URL websocketURItoHTTP(URI uri) throws MalformedURLException
+        {
+                String scheme;
+                switch (uri.getScheme())
+                {
+                        case "ws":
+                                scheme = "http";
+                                break;
+                        case "wss":
+                                scheme = "https";
+                                break;
+                        case "http":
+                        case "https":
+                                scheme = uri.getScheme();
+                                break;
+                        default:
+                                throw new MalformedURLException("Unknown scheme " + uri.getScheme() + " for uri " + uri);
+                }
                 
+                return new URL(
+                        scheme + 
+                        "://" + 
+                        uri.getHost() + 
+                        (uri.getPort() > 0 ? ":" + uri.getPort() : "") +
+                        uri.getRawPath());
         }
 }

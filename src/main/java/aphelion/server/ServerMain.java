@@ -162,7 +162,7 @@ public class ServerMain implements LoopEvent, TickEvent
                 {
                         try
                         {
-                                assetCache.storeAsset(ass.configFile, true, ass);
+                                ass.storeAsset(ass.configFile, true);
                         }
                         catch (AssetCache.InvalidContentException ex)
                         {

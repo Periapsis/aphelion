@@ -51,7 +51,6 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.text.ParseException;
 import java.util.ArrayList;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import javax.swing.*;
@@ -171,8 +170,8 @@ public class MainFrame extends JFrame implements PingListener
                 addZoneEntry(true, null, "singeplayer", "Try a local game without any opponents!");
                 try
                 {
-                        addZoneEntry(true, new URI("ws://localhost:80/aphelion"), "localhost", "Test your own locally hosted game server");
-                        addZoneEntry(false, new URI("ws://aphelion-test.welcome-to-the-machine.com:81/aphelion"), "Test server", "JoWie's test server in Europe!");
+                        addZoneEntry(true, new URI("ws://localhost:80/"), "localhost", "Test your own locally hosted game server");
+                        addZoneEntry(false, new URI("ws://aphelion-test.welcome-to-the-machine.com:81/"), "Test server", "JoWie's test server in Europe!");
                 }
                 catch (URISyntaxException ex)
                 {

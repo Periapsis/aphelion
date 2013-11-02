@@ -46,7 +46,10 @@ import aphelion.client.resource.AsyncTexture;
 import aphelion.shared.resource.ResourceDB;
 import aphelion.shared.event.ClockSource;
 import aphelion.shared.event.TickedEventLoop;
+import aphelion.shared.swissarmyknife.SwissArmyKnife;
+import java.net.MalformedURLException;
 import java.net.URI;
+import java.net.URL;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.lwjgl.opengl.Display;
@@ -60,22 +63,25 @@ public class ConnectLoop
 {
         private static final Logger log = Logger.getLogger("aphelion.client");
         
-        private URI serverUri;
-        private ResourceDB resourceDB;
-        private TickedEventLoop loop;
-        private String nickname;
+        private final URI wsUri;
+        private final URL httpUrl;
+        private final ResourceDB resourceDB;
+        private final TickedEventLoop loop;
+        private final String nickname;
         
         private SingleGameConnection connection;
         private NetworkedGame connectionListener;
         
         
 
-        public ConnectLoop(URI serverUri, ResourceDB resourceDB, TickedEventLoop loop, String nickname)
+        public ConnectLoop(URI wsUri, ResourceDB resourceDB, TickedEventLoop loop, String nickname) throws MalformedURLException
         {
-                this.serverUri = serverUri;
+                this.wsUri = wsUri;
                 this.resourceDB = resourceDB;
                 this.loop = loop;
                 this.nickname = nickname;
+                
+                this.httpUrl = SwissArmyKnife.websocketURItoHTTP(wsUri);
         }
         
         
@@ -85,12 +91,12 @@ public class ConnectLoop
          */
         public boolean loop()
         {
-                connectionListener = new NetworkedGame(resourceDB, loop, nickname);
+                connectionListener = new NetworkedGame(resourceDB, loop, httpUrl, nickname);
                 
                 AsyncTexture loadingTex = resourceDB.getTextureLoader().getTexture("gui.loading.connecting");
                 
                 
-                connection = new SingleGameConnection(serverUri, loop, connectionListener);
+                connection = new SingleGameConnection(wsUri, loop, connectionListener);
                 connection.connect();
                 
                 while(!loop.isInterruped() && connectionListener.isConnecting())

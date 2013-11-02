@@ -35,64 +35,14 @@
  * the terms and conditions of the license of that module. An independent
  * module is a module which is not derived from or based on this library.
  */
-
-package aphelion.shared.event.promise;
-
-import aphelion.shared.event.Workable;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
+package aphelion.shared.swissarmyknife;
 
 /**
- *
+ * A dummy class that can not be instantiated, for usage in generics.
+ * If this class is present as a generic, the value should always be null.
  * @author Joris
  */
-public class All extends AbstractPromise
+public final class None
 {
-        private final Object[] resolveResult;
-        private final boolean resolved[];
-        private int resolved_count = 0;
-        private final boolean rejected[];
-
-        public All(Workable workable, AbstractPromise ... promises)
-        {
-                super(workable);
-                resolveResult = new Object[promises.length];
-                resolved = new boolean[promises.length];
-                rejected = new boolean[promises.length];
-                for (int i = 0; i < promises.length; ++i)
-                {
-                        promises[i].then(this, i);
-                }
-        }
-
-        void markListResolve(int index, Object ret)
-        {
-                if (resolved[index] || rejected[index])
-                {
-                        throw new IllegalStateException();
-                }
-
-                resolved[index] = true;
-                resolveResult[index] = ret;
-                ++resolved_count;
-
-                // do not fire success if one or more resulted in failure
-                if (resolved_count == resolved.length)
-                {       
-                        this.resolve(Collections.unmodifiableList(Arrays.asList(resolveResult)));
-                }
-        }
-
-        void markListReject(int index, PromiseException ex)
-        {
-                if (resolved[index] || rejected[index])
-                {
-                        throw new IllegalStateException();
-                }
-
-                rejected[index] = true;
-                
-                // todo exception list
-        }
+        private None(){}
 }

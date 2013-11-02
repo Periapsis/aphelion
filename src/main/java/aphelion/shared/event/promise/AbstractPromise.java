@@ -62,12 +62,34 @@ public abstract class AbstractPromise
         
         protected class Resolution implements Runnable
         {
-                PromiseResolved resolvedCallback;
-                PromiseRejected rejectedCallback;
-                Promise chainedPromise;
-                // or:
-                All all;
-                int myIndex;
+                final PromiseResolved resolvedCallback;
+                final PromiseRejected rejectedCallback;
+                // or
+                final All all;
+                final int myIndex;
+                
+                
+                final Promise chainedPromise;
+
+                Resolution(PromiseResolved resolvedCallback, PromiseRejected rejectedCallback)
+                {
+                        this.resolvedCallback = resolvedCallback;
+                        this.rejectedCallback = rejectedCallback;
+                        this.all = null;
+                        this.myIndex = 0;
+                        
+                        this.chainedPromise = new Promise(workable);
+                }
+
+                Resolution(All all, int myIndex)
+                {
+                        this.resolvedCallback = null;
+                        this.rejectedCallback = null;
+                        this.all = all;
+                        this.myIndex = myIndex;
+                        
+                        this.chainedPromise = null;
+                }
 
                 @Override
                 public void run()
@@ -150,9 +172,12 @@ public abstract class AbstractPromise
         
         public AbstractPromise then(PromiseResolved callback)
         {
-                final Resolution resolution = new Resolution();
-                resolution.resolvedCallback = callback;
-                resolution.chainedPromise = new Promise(workable);
+                if (callback == null)
+                {
+                        throw new IllegalArgumentException();
+                }
+                
+                Resolution resolution = new Resolution(callback, null);
 
                 if (resolved || rejected)
                 {
@@ -168,8 +193,12 @@ public abstract class AbstractPromise
         
         public AbstractPromise then(PromiseRejected callback)
         {
-                final Resolution resolution = new Resolution();
-                resolution.rejectedCallback = callback;
+                if (callback == null)
+                {
+                        throw new IllegalArgumentException();
+                }
+                
+                final Resolution resolution = new Resolution(null, callback);
 
                 if (resolved || rejected)
                 {
@@ -186,6 +215,11 @@ public abstract class AbstractPromise
         
         public void then(All all, int myIndex)
         {
+                if (all == null)
+                {
+                        throw new IllegalArgumentException();
+                }
+                
                 if (resolved)
                 {
                         all.markListResolve(myIndex, resolveResult);
@@ -196,9 +230,7 @@ public abstract class AbstractPromise
                 }
                 else
                 {
-                        Resolution resolution = new Resolution();
-                        resolution.all = all;
-                        resolution.myIndex = myIndex;
+                        Resolution resolution = new Resolution(all, myIndex);
                         resolutions.add(resolution);
                 }
         }

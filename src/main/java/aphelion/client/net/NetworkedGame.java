@@ -64,6 +64,8 @@ import aphelion.shared.resource.LocalUserStorage;
 import aphelion.shared.swissarmyknife.RollingHistory;
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URL;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -93,6 +95,7 @@ public class NetworkedGame implements GameListener, TickEvent
         
         private final ResourceDB resourceDB;
         private final TickedEventLoop loop;
+        private final URL httpServer;
         private PhysicsEnvironment physicsEnv;
         private MapEntities mapEntities;
         private GameProtocolConnection gameConn;
@@ -157,13 +160,17 @@ public class NetworkedGame implements GameListener, TickEvent
                 }
         }
 
-        public NetworkedGame(ResourceDB resourceDB, TickedEventLoop loop, String nickname)
+        public NetworkedGame(ResourceDB resourceDB, TickedEventLoop loop, URL httpServer, String nickname)
         {
                 this.resourceDB = resourceDB;
                 this.loop = loop;
+                this.httpServer = httpServer;
                 this.nickname = nickname;
+                
                 loop.addTickEvent(this);
                 nextState(STATE.ESTABLISHING);
+                
+                
                 try
                 {
                         assetCache = new AssetCache(new LocalUserStorage("assets"));
@@ -297,7 +304,13 @@ public class NetworkedGame implements GameListener, TickEvent
                                 nextState(STATE.WAIT_FOR_ARENALOAD);
 
                                 break;
+                                
                         case WAIT_FOR_ARENALOAD:
+                                break;
+                                
+                        case RECEIVED_ARENALOAD:
+                                // handled by GameLoop
+                                nextState(STATE.ARENA_LOADING);
                                 break;
                                 
                         case ARENA_LOADING:
@@ -442,7 +455,7 @@ public class NetworkedGame implements GameListener, TickEvent
                         {
                                 try
                                 {
-                                        assets.add(new Asset(assetCache, req));
+                                        assets.add(new Asset(assetCache, httpServer, req));
                                 }
                                 catch (MalformedURLException ex)
                                 {
@@ -456,6 +469,8 @@ public class NetworkedGame implements GameListener, TickEvent
                                 }
                                 
                         }
+                        
+                        nextState(STATE.RECEIVED_ARENALOAD);
                 }
 
                 for (GameS2C.ArenaSync msg : s2c.getArenaSyncList())
@@ -698,9 +713,9 @@ public class NetworkedGame implements GameListener, TickEvent
                 return myPid;
         }
         
-        public Iterable<Asset> getRequiredAssets()
+        public List<Asset> getRequiredAssets()
         {
-                return assets;
+                return Collections.unmodifiableList(assets);
         }
 
         public void sendTimeSync()
@@ -890,4 +905,5 @@ public class NetworkedGame implements GameListener, TickEvent
                 command.addAllArguments(Arrays.asList(args));
                 gameConn.send(c2s);
         }
+
 }

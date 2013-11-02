@@ -40,11 +40,15 @@ package aphelion.shared.resource;
 import aphelion.server.ServerConfigException;
 import aphelion.shared.net.protobuf.GameS2C.ResourceRequirement;
 import aphelion.shared.swissarmyknife.SwissArmyKnife;
+import aphelion.shared.swissarmyknife.ThreadSafe;
 import com.google.protobuf.ByteString;
 import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.AbstractList;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
@@ -64,6 +68,10 @@ public class Asset
          */
         public final File configFile;
         
+        /** The name of the asset in the cache. This name is derived from the file hash and size.
+         */
+        public final String cachedName;
+        
         /** The location of the asset within the asset cache.
          * This file might not exist yet if it has to be copied or downloaded first.
          */
@@ -77,11 +85,14 @@ public class Asset
         public final ByteString sha256_protobuf;
         
         /** A list of mirrors the file could be downloaded from. */
-        private final List<Mirror> mirrors;
+        public final List<Mirror> mirrors;
+        
+        private final AssetCache assetCache;
 
         public Asset(AssetCache assetCache, Object yamlEntry) throws ServerConfigException
-        {
-                // Server
+        { // Server
+                this.assetCache = assetCache;
+                
                 try
                 {
                         Map<String, Object> config = (Map<String, Object>) yamlEntry;
@@ -96,17 +107,21 @@ public class Asset
                         sha256_hash = SwissArmyKnife.fileHash("SHA-256", configFile);
                         sha256_protobuf = ByteString.copyFrom(sha256_hash);
                         
+                        
                         this.file = assetCache.getAsset(sha256_hash, size);
+                        this.cachedName = this.file.getName();
                         
                         List yamlMirrors = (List) config.get("mirrors");
                         if (yamlMirrors != null)
                         {
-                                this.mirrors = new ArrayList<>(yamlMirrors.size());
+                                ArrayList<Mirror> mirrors = new ArrayList<>(yamlMirrors.size());
                                 
                                 for (Object yamlMirror : yamlMirrors)
                                 {
                                         mirrors.add(new Mirror((Map<String, Object>) yamlMirror));
                                 }
+                                sortMirrors(mirrors);
+                                this.mirrors = Collections.unmodifiableList(mirrors);
                         }
                         else
                         {
@@ -119,23 +134,48 @@ public class Asset
                 }
         }
 
-        public Asset(AssetCache assetCache, ResourceRequirement protobuf) throws MalformedURLException
-        {
-                // client
+        public Asset(AssetCache assetCache, URL originServer, ResourceRequirement protobuf) throws MalformedURLException
+        { // client
+                this.assetCache = assetCache;
                 sha256_protobuf = protobuf.getSha256();
                 sha256_hash = sha256_protobuf.toByteArray();
                 size = protobuf.getSize();
                 this.configFile = null;
                 this.file = assetCache.getAsset(sha256_hash, size);
+                this.cachedName = this.file.getName();
                 
-                this.mirrors = new ArrayList<>(protobuf.getMirrorsCount());
+                ArrayList<Mirror> mirrors = new ArrayList<>(protobuf.getMirrorsCount());
                 for (ResourceRequirement.Mirror m : protobuf.getMirrorsList())
                 {
-                        this.mirrors.add(new Mirror(m));
+                        mirrors.add(new Mirror(originServer, m));
                 }
+                sortMirrors(mirrors);
+                this.mirrors = Collections.unmodifiableList(mirrors);
         }
         
+        private static void sortMirrors(List<Mirror> mirrors)
+        {
+                Collections.sort(mirrors, new Comparator<Mirror>()
+                {
+                        @Override
+                        public int compare(Mirror o1, Mirror o2)
+                        {
+                                // descending order
+                                return -Integer.compare(o1.priority, o2.priority);
+                        }
+                });
+        }
         
+        public boolean validateCachedEntry()
+        {
+                return assetCache.validateAsset(sha256_hash, size);
+        }
+        
+        @ThreadSafe
+        public void storeAsset(File tmpFile, boolean copy) throws IOException, AssetCache.InvalidContentException
+        {
+                assetCache.storeAsset(tmpFile, copy, sha256_hash, size);
+        }
         
         public void toProtoBuf(ResourceRequirement.Builder builder)
         {
@@ -180,11 +220,20 @@ public class Asset
                         }
                 }
                 
-                public Mirror(ResourceRequirement.Mirror protobuf) throws MalformedURLException
+                public Mirror(URL originServer, ResourceRequirement.Mirror protobuf) throws MalformedURLException
                 {
                         // client
                         
-                        url = new URL(protobuf.getUrl());
+                        String sUrl = protobuf.getUrl();
+                        if (sUrl.charAt(0) == '/')
+                        {
+                                url = new URL(originServer + sUrl.substring(1));
+                        }
+                        else
+                        {
+                                url = new URL(sUrl);
+                        }
+                        
                         priority = protobuf.getPriority();
                         refererHeader = protobuf.hasRefererHeader() ? protobuf.getRefererHeader() : null;
                 }
