@@ -101,6 +101,8 @@ public class NetworkedGame implements GameListener, TickEvent
         
         private final AssetCache assetCache;
         private final List<Asset> assets = new ArrayList<>();
+        public String mapResource;
+        public final List<String> gameConfigResources = new ArrayList<>();
         
         private String nickname;
         private STATE state;
@@ -432,7 +434,9 @@ public class NetworkedGame implements GameListener, TickEvent
                                 return;
                         }
                         
-                        // todo block SEND_ARENA_LOADED
+                        this.mapResource = msg.getMap();
+                        this.gameConfigResources.clear();
+                        this.gameConfigResources.addAll(msg.getGameGonfigList());
                         
                         for (GameS2C.ResourceRequirement req : msg.getResourceRequirementList())
                         {

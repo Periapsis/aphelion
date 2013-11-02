@@ -183,6 +183,9 @@ public class ClientState
                         ass.toProtoBuf(arenaLoad.addResourceRequirementBuilder());
                 }
                 
+                arenaLoad.setMap(serverGame.mapResource);
+                arenaLoad.addAllGameGonfig(serverGame.gameConfigResources);
+                
                 gameConn.send(s2c);
         }
 

@@ -78,7 +78,13 @@ message ArenaLoad {
         // The things you have to load when you first enter the arena
         // This is sent after the client has sent ConnectionReady
         // The client should send ArenaLoaded after completion
-        repeated ResourceRequirement resourceRequirement = 1;       
+        repeated ResourceRequirement resourceRequirement = 1;
+
+        // Resource key
+        required string map = 2;
+
+        // Resource keys
+        repeated string gameGonfig = 3;
 }
 
 message ResourceRequirement {

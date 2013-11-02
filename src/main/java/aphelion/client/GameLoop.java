@@ -76,6 +76,7 @@ import java.lang.ref.WeakReference;
 import java.util.Arrays;
 
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Level;
@@ -158,7 +159,7 @@ public class GameLoop
         public void loop()
         {
                 AbstractPromise loadMapPromise = 
-                loop.addWorkerTask(new MapClassic.LoadMapTask(resourceDB, true), "singleplayer.map")
+                loop.addWorkerTask(new MapClassic.LoadMapTask(resourceDB, true), networkedGame.mapResource)
                 .then(new PromiseResolved()
                 {
                         @Override
@@ -173,7 +174,7 @@ public class GameLoop
                 });
                 
                 AbstractPromise loadConfigPromise = 
-                loop.addWorkerTask(new LoadYamlTask(resourceDB), Arrays.asList(new String[] {"singleplayer.gameconfig"}))
+                loop.addWorkerTask(new LoadYamlTask(resourceDB), Collections.unmodifiableList(networkedGame.gameConfigResources))
                 .then(new PromiseResolved()
                 {
                         @Override
