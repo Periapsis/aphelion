@@ -35,9 +35,7 @@
  * the terms and conditions of the license of that module. An independent
  * module is a module which is not derived from or based on this library.
  */
-
-
-package aphelion.client;
+package aphelion.shared.resource;
 
 
 import java.io.File;
@@ -49,17 +47,15 @@ import java.util.logging.Logger;
  *
  * @author Joris
  */
-public class ClientStorage
+public class LocalUserStorage extends FileStorage
 {
-        private static final Logger log = Logger.getLogger("aphelion.client");
-
+        private static final Logger log = Logger.getLogger("aphelion.resource");
+        
         private static final String OS_NAME = System.getProperty("os.name");
         private static final boolean IS_OS_X = OS_NAME == null ? false : OS_NAME.startsWith("Mac OS X");
         private static final boolean IS_WINDOWS = OS_NAME == null ? false : OS_NAME.startsWith("Windows");
         
-        private final File directory;
-        
-        public ClientStorage(String subdir) throws IOException
+        public LocalUserStorage(String subdir) throws IOException
         {
                 // It might be useful to also provide for a global directory to store things in.
                 // This is not doable without an installer or temporary admin/root privileges however.
@@ -125,15 +121,5 @@ public class ClientStorage
                 {
                         throw new IOException("Client storage directory is not really a directory: " + directory.getPath());
                 }
-        }
-        
-        public File getDirectory()
-        {
-                return directory;
-        }
-        
-        public File getFile(String name)
-        {
-                return new File(directory.getAbsolutePath() + File.separator + name);
         }
 }

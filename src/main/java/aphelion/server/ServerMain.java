@@ -51,6 +51,8 @@ import aphelion.shared.net.protobuf.GameS2C;
 import aphelion.shared.physics.PhysicsEnvironment;
 import aphelion.shared.physics.WEAPON_SLOT;
 import aphelion.shared.physics.valueobjects.PhysicsMovement;
+import aphelion.shared.resource.AssetCache;
+import aphelion.shared.resource.FileStorage;
 import aphelion.shared.resource.ResourceDB;
 import aphelion.shared.swissarmyknife.SwissArmyKnife;
 import java.io.File;
@@ -83,7 +85,7 @@ public class ServerMain implements LoopEvent, TickEvent
         private ServerGame serverGame;
         private PhysicsEnvironment physicsEnv;
         
-        private File assetDirectory;
+        private AssetCache assetCache;
         private List<Asset> assets;
         private String mapResource;
         private List<String> gameConfigResources;
@@ -108,39 +110,49 @@ public class ServerMain implements LoopEvent, TickEvent
                 
                 try
                 {
-                        assetDirectory = new File((String) config.get("assets-path")).getCanonicalFile();
+                        FileStorage assetCacheStorage = new FileStorage(new File((String) config.get("assets-cache-path")).getCanonicalFile());
                         
-                        if (!assetDirectory.canRead() || !assetDirectory.isDirectory())
+                        if (!assetCacheStorage.isUseable())
                         {
-                                throw new ServerConfigException("assets-path is unreadable or not a directory: " + assetDirectory);
+                                throw new ServerConfigException("assets-cache-path is not readable/writeable or not a directory: " + assetCacheStorage);
                         }
                         
-                        // todo: multiple arenas (seperate directories with arena config?)
-                        Map<String, Object> arena = (Map<String, Object>) config.get("arena");
-                        
-                        List configAssets = (List) arena.get("assets");
-                        this.assets = new ArrayList<>(configAssets.size());
-                        for (Object c : configAssets)
-                        {
-                                this.assets.add(new Asset(assetDirectory, c));
-                        }
-                        
-                        mapResource = (String) arena.get("map");
-                        
-                        gameConfigResources = new ArrayList<>((List<String>) arena.get("game-config"));
+                        assetCache = new AssetCache(assetCacheStorage);
                         
                 }
                 catch (ClassCastException | NullPointerException ex)
                 {
-                        throw new ServerConfigException("Missing or invalid server config entry: assets-path");
+                        throw new ServerConfigException("Missing or invalid server config entry: assets-cache-path");
                 }
                 catch (IOException ex)
                 {
-                        throw new ServerConfigException("The given assets-path is not a valid directory: " + assetDirectory.getAbsolutePath(), ex);
+                        throw new ServerConfigException("The given assets-cache-path is not a valid directory: " + config.get("assets-cache-path"), ex);
+                }
+                
+                try
+                {
+                        // todo: multiple arenas (seperate directories with arena config?)
+                        Map<String, Object> arena = (Map<String, Object>) config.get("arena");
+
+                        List configAssets = (List) arena.get("assets");
+                        this.assets = new ArrayList<>(configAssets.size());
+                        for (Object c : configAssets)
+                        {
+                                Asset ass = new Asset(assetCache, c);
+                                this.assets.add(ass);
+                        }
+
+                        mapResource = (String) arena.get("map");
+
+                        gameConfigResources = new ArrayList<>((List<String>) arena.get("game-config"));
+                }
+                catch (ClassCastException | NullPointerException ex)
+                {
+                        throw new ServerConfigException("Invalid config for 'arena'", ex);
                 }
                 
                 
-                server.addHttpRouteStatic("assets", assetDirectory);
+                server.addHttpRouteStatic("assets", assetCache.getStorage().getDirectory());
                 
                 loop.addLoopEvent(server);
                 
@@ -148,6 +160,16 @@ public class ServerMain implements LoopEvent, TickEvent
                 
                 for (Asset ass : this.assets)
                 {
+                        try
+                        {
+                                assetCache.storeAsset(ass.configFile, true, ass);
+                        }
+                        catch (AssetCache.InvalidContentException ex)
+                        {
+                                throw new AssertionError(ex);
+                        }
+                        
+                        // ass.file is now valid
                         resourceDB.addZip(ass.file);
                 }
                 

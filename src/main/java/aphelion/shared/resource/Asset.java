@@ -37,7 +37,6 @@
  */
 package aphelion.shared.resource;
 
-import aphelion.client.AssetCache;
 import aphelion.server.ServerConfigException;
 import aphelion.shared.net.protobuf.GameS2C.ResourceRequirement;
 import aphelion.shared.swissarmyknife.SwissArmyKnife;
@@ -56,32 +55,48 @@ import java.util.logging.Logger;
  */
 public class Asset
 {
-        private static final Logger log = Logger.getLogger("aphelion.server");
+        private static final Logger log = Logger.getLogger("aphelion.resource");
 
-        public final String configPath;
+        /** Where the file should be loaded from. 
+         * If null, this file must be downloaded first (from a mirror).
+         * Do not use this file to add to the ResourceDB, 
+         * this file might be changed by the user. Use this.file for that.
+         */
+        public final File configFile;
+        
+        /** The location of the asset within the asset cache.
+         * This file might not exist yet if it has to be copied or downloaded first.
+         */
         public final File file;
+        
+        /** The file size in bytes. */
         public final long size;
+        
+        /** The sha-256 hash of the file contents. */
         public final byte[] sha256_hash;
         public final ByteString sha256_protobuf;
+        
+        /** A list of mirrors the file could be downloaded from. */
         private final List<Mirror> mirrors;
 
-        public Asset(File assetDirectory, Object yamlEntry) throws ServerConfigException
+        public Asset(AssetCache assetCache, Object yamlEntry) throws ServerConfigException
         {
                 // Server
                 try
                 {
                         Map<String, Object> config = (Map<String, Object>) yamlEntry;
-                        configPath = (String) config.get("path");
-                        file = new File(assetDirectory + File.separator + configPath).getCanonicalFile();
+                        configFile = new File((String) config.get("path")).getCanonicalFile();
 
-                        if (!file.canRead() || !file.isFile())
+                        if (!configFile.canRead() || !configFile.isFile())
                         {
-                                throw new ServerConfigException("Asset is not readable or not a file: " + file);
+                                throw new ServerConfigException("Asset is not readable or not a file: " + configFile);
                         }
 
-                        size = file.length();
-                        sha256_hash = SwissArmyKnife.fileHash("SHA-256", file);
+                        size = configFile.length();
+                        sha256_hash = SwissArmyKnife.fileHash("SHA-256", configFile);
                         sha256_protobuf = ByteString.copyFrom(sha256_hash);
+                        
+                        this.file = assetCache.getAsset(sha256_hash, size);
                         
                         List yamlMirrors = (List) config.get("mirrors");
                         if (yamlMirrors != null)
@@ -104,14 +119,14 @@ public class Asset
                 }
         }
 
-        public Asset(AssetCache assets, ResourceRequirement protobuf) throws MalformedURLException
+        public Asset(AssetCache assetCache, ResourceRequirement protobuf) throws MalformedURLException
         {
                 // client
                 sha256_protobuf = protobuf.getSha256();
                 sha256_hash = sha256_protobuf.toByteArray();
                 size = protobuf.getSize();
-                this.configPath = null;
-                this.file = assets.getAsset(sha256_hash, size);
+                this.configFile = null;
+                this.file = assetCache.getAsset(sha256_hash, size);
                 
                 this.mirrors = new ArrayList<>(protobuf.getMirrorsCount());
                 for (ResourceRequirement.Mirror m : protobuf.getMirrorsList())
@@ -130,7 +145,7 @@ public class Asset
                 {
                         // always add our own server
                         ResourceRequirement.Mirror.Builder mirrorBuilder = builder.addMirrorsBuilder();
-                        mirrorBuilder.setUrl("/assets/" + configPath);
+                        mirrorBuilder.setUrl("/assets/" + this.file.getName());
                         mirrorBuilder.setPriority(0);
                 }
                 

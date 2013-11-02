@@ -37,7 +37,6 @@
  */
 package aphelion.client.net;
 
-import aphelion.client.AssetCache;
 import aphelion.client.graphics.world.ActorShip;
 import aphelion.shared.resource.ResourceDB;
 import aphelion.client.graphics.world.MapEntities;
@@ -60,6 +59,8 @@ import aphelion.shared.event.ClockSource;
 import aphelion.shared.event.TickEvent;
 import aphelion.shared.event.TickedEventLoop;
 import aphelion.shared.resource.Asset;
+import aphelion.shared.resource.AssetCache;
+import aphelion.shared.resource.LocalUserStorage;
 import aphelion.shared.swissarmyknife.RollingHistory;
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -163,7 +164,7 @@ public class NetworkedGame implements GameListener, TickEvent
                 nextState(STATE.ESTABLISHING);
                 try
                 {
-                        assetCache = new AssetCache();
+                        assetCache = new AssetCache(new LocalUserStorage("assets"));
                 }
                 catch (IOException ex)
                 {

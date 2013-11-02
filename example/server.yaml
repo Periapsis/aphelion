@@ -4,9 +4,10 @@
 bind-address: 127.1.2.3
 bind-port: 81
 
-# All assets must be placed in this directory (sub directories are allowed)
-# This path is also exposed using the inbuilt web server (as /assets)
-assets-path: ./assets
+# A directory to temporarily store assets in. 
+# This used to main consistency across differnet clients and arenas
+# This directory could be shared with other servers running on the same machine.
+assets-cache-path: ./assets-cache
   
 # Other http files are served from this directory (optional).
 # The files index.html or index.txt are used as a directory index.

@@ -87,7 +87,7 @@ import java.util.zip.ZipFile;
 
 public class ResourceDB implements LoopEvent
 {
-        private static final Logger log = Logger.getLogger("aphelion.config");
+        private static final Logger log = Logger.getLogger("aphelion.resource");
         
         private AsyncTextureLoader textureLoader;
         
