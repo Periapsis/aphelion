@@ -64,45 +64,45 @@ public interface HttpWebSocketServerListener
         
         /**
          * Called after an opening handshake has been performed and the given websocket is ready to be written on.
-         * @param conn
+         * @param ws
          * @param handshake  
          */
         @ThreadSafe
-        public void wssOpen(MyWebSocketImpl conn, ClientHandshake handshake);
+        public void wssOpen(WebSocket ws, ClientHandshake handshake);
         
         /**
          * Called after the websocket connection has been closed.
          *
-         * @param conn 
+         * @param ws 
          * @param code The codes can be looked up here: {@link CloseFrame}
          * @param reason Additional information string
          * @param remote Returns whether or not the closing of the connection was initiated by the remote host.
 	 *
          */
         @ThreadSafe
-        public void wssClose(MyWebSocketImpl conn, int code, String reason, boolean remote);
+        public void wssClose(WebSocket ws, int code, String reason, boolean remote);
         
          /**
          * Callback for string messages received from the remote host
          *
-         * @param conn 
+         * @param ws 
          * @param message 
          * @see #onMessage(WebSocket, ByteBuffer)
 	 *
          */
         @ThreadSafe
-        public void wssMessage(MyWebSocketImpl conn, String message);
+        public void wssMessage(WebSocket ws, String message);
         
         /**
          * Callback for binary messages received from the remote host
          *
-         * @param conn 
+         * @param ws 
          * @param message 
          * @see #onMessage(WebSocket, String)
 	 *
          */
         @ThreadSafe
-        public void wssMessage(MyWebSocketImpl conn, ByteBuffer message);
+        public void wssMessage(WebSocket ws, ByteBuffer message);
 
         /**
          * Called when errors occurs. If an error causes the websocket connection to fail
@@ -110,10 +110,10 @@ public interface HttpWebSocketServerListener
          * primarily because of IO or protocol errors.<br> If the given exception is an RuntimeException that probably
          * means that you encountered a bug.<br>
          * 
-         * @param conn Can be null if there error does not belong to one specific websocket. For example if the servers
+         * @param ws Can be null if there error does not belong to one specific websocket. For example if the servers
          * port could not be bound.
 	 * @param ex 
          */
         @ThreadSafe
-        public void wssError(MyWebSocketImpl conn, Exception ex);
+        public void wssError(WebSocket ws, Exception ex);
 }

@@ -1,0 +1,10 @@
+# bind-address and bind-port and assets-cache-path are set by code for singleplayer
+
+arena:
+        map: singleplayer.map
+        game-config: [singleplayer.gameconfig]
+        
+        assets:
+                - path: ./assets/classic.zip
+                - path: ./assets/gui.zip
+                - path: ./assets/singleplayer.zip

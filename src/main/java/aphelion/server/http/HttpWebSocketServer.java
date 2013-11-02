@@ -38,7 +38,7 @@
 package aphelion.server.http;
 
 import aphelion.shared.net.HttpWebSocketServerListener;
-import aphelion.shared.net.MyWebSocketImpl;
+import aphelion.shared.net.WebSocketTransport.ServerWebSocketImpl;
 import aphelion.shared.swissarmyknife.ThreadSafe;
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -50,24 +50,16 @@ import java.nio.channels.ClosedSelectorException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.java_websocket.SocketChannelIOHelper;
-import org.java_websocket.WebSocket;
-import org.java_websocket.WebSocketAdapter;
-import org.java_websocket.WebSocketImpl;
-import org.java_websocket.drafts.Draft;
-import org.java_websocket.drafts.Draft_17;
+import org.java_websocket.*;
 import org.java_websocket.framing.CloseFrame;
 import org.java_websocket.handshake.ClientHandshake;
 import org.java_websocket.handshake.Handshakedata;
-import org.java_websocket.server.WebSocketServer.WebSocketServerFactory;
 
 /**
  *
@@ -80,33 +72,9 @@ class HttpWebSocketServer extends WebSocketAdapter implements Runnable
         private volatile boolean ready = false;
         private Selector selector;
         private ConcurrentLinkedQueue<NewChannel> newChannels = new ConcurrentLinkedQueue<>();
-        private HttpWebSocketServerListener listener;
+        private final HttpWebSocketServerListener listener;
         private final Set<WebSocket> connections = new HashSet<>();
         private ByteBuffer buffer;
-        private WebSocketServerFactory wsf = new WebSocketServerFactory()
-        {
-                @Override
-                public WebSocketImpl createWebSocket(WebSocketAdapter a, Draft d, Socket s)
-                {
-                        MyWebSocketImpl ws = new MyWebSocketImpl(a, d, s);
-                        ws.server = true;
-                        return ws;
-                }
-
-                @Override
-                public WebSocketImpl createWebSocket(WebSocketAdapter a, List<Draft> d, Socket s)
-                {
-                        MyWebSocketImpl ws = new MyWebSocketImpl(a, d, s);
-                        ws.server = true;
-                        return ws;
-                }
-
-                @Override
-                public SocketChannel wrapChannel( SocketChannel channel, SelectionKey key)
-                {
-                        return channel;
-                }
-        };
 
         HttpWebSocketServer(HttpWebSocketServerListener listener)
         {
@@ -164,12 +132,11 @@ class HttpWebSocketServer extends WebSocketAdapter implements Runnable
 
                 newChannel.sChannel.configureBlocking(false);
 
-                // Draft_17 corresponds to Sec-WebSocket-Version: 13 which is RFC 6455
+                
 
-                ArrayList<Draft> drafts = new ArrayList<Draft>(1);
-                drafts.add(new Draft_17());
-
-                WebSocketImpl conn = wsf.createWebSocket(this, drafts, newChannel.sChannel.socket());
+                
+                WebSocketImpl conn = new ServerWebSocketImpl(this);
+                
                 newChannel.sChannel.socket().setTcpNoDelay(true);
                 conn.key = newChannel.sChannel.register(selector, SelectionKey.OP_READ, conn);
                 
@@ -179,7 +146,7 @@ class HttpWebSocketServer extends WebSocketAdapter implements Runnable
                 }
                 else
                 {
-                        conn.channel = wsf.wrapChannel(newChannel.sChannel, conn.key);
+                        conn.channel = newChannel.sChannel;
 
                         ByteBuffer prependData = newChannel.prependData;
                         newChannel.prependData = null;
@@ -438,27 +405,27 @@ class HttpWebSocketServer extends WebSocketAdapter implements Runnable
 
         public void onOpen(WebSocket conn, ClientHandshake handshake)
         {
-                listener.wssOpen((MyWebSocketImpl) conn, handshake);
+                listener.wssOpen(conn, handshake);
         }
 
         public void onClose(WebSocket conn, int code, String reason, boolean remote)
         {
-                listener.wssClose((MyWebSocketImpl) conn, code, reason, remote);
+                listener.wssClose(conn, code, reason, remote);
         }
 
         public void onMessage(WebSocket conn, String message)
         {
-                listener.wssMessage((MyWebSocketImpl) conn, message);
+                listener.wssMessage( conn, message);
         }
 
         public void onMessage(WebSocket conn, ByteBuffer message)
         {
-                listener.wssMessage((MyWebSocketImpl) conn, message);
+                listener.wssMessage(conn, message);
         }
 
         public void onError(WebSocket conn, Exception ex)
         {
-                listener.wssError((MyWebSocketImpl) conn, ex);
+                listener.wssError(conn, ex);
         }
 
         @ThreadSafe

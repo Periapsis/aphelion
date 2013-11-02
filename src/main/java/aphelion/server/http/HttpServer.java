@@ -40,7 +40,6 @@ package aphelion.server.http;
 import aphelion.shared.net.HttpWebSocketServerListener;
 import aphelion.server.http.HttpDownloadThread.UpgradeWebSocketHandler;
 import aphelion.shared.event.LoopEvent;
-import aphelion.shared.net.MyWebSocketImpl;
 import aphelion.shared.swissarmyknife.ThreadSafe;
 import java.io.File;
 import java.io.IOException;
@@ -280,7 +279,7 @@ public class HttpServer implements UpgradeWebSocketHandler, LoopEvent, HttpWebSo
 
         @Override
         @ThreadSafe
-        public void wssOpen(MyWebSocketImpl conn, ClientHandshake handshake)
+        public void wssOpen(WebSocket conn, ClientHandshake handshake)
         {
                 HttpWebSocketServerListener listener = this.websocketListener;
                 synchronized(websockets)
@@ -296,7 +295,7 @@ public class HttpServer implements UpgradeWebSocketHandler, LoopEvent, HttpWebSo
 
         @Override
         @ThreadSafe
-        public void wssClose(MyWebSocketImpl conn, int code, String reason, boolean remote)
+        public void wssClose(WebSocket conn, int code, String reason, boolean remote)
         {
                 HttpWebSocketServerListener listener = this.websocketListener;
                 try
@@ -317,7 +316,7 @@ public class HttpServer implements UpgradeWebSocketHandler, LoopEvent, HttpWebSo
 
         @Override
         @ThreadSafe
-        public void wssMessage(MyWebSocketImpl conn, String message)
+        public void wssMessage(WebSocket conn, String message)
         {
                 HttpWebSocketServerListener listener = this.websocketListener;
                 if (listener != null)
@@ -328,7 +327,7 @@ public class HttpServer implements UpgradeWebSocketHandler, LoopEvent, HttpWebSo
 
         @Override
         @ThreadSafe
-        public void wssMessage(MyWebSocketImpl conn, ByteBuffer message)
+        public void wssMessage(WebSocket conn, ByteBuffer message)
         {
                 HttpWebSocketServerListener listener = this.websocketListener;
                 if (listener != null)
@@ -339,7 +338,7 @@ public class HttpServer implements UpgradeWebSocketHandler, LoopEvent, HttpWebSo
 
         @Override
         @ThreadSafe
-        public void wssError(MyWebSocketImpl conn, Exception ex)
+        public void wssError(WebSocket conn, Exception ex)
         {
                 HttpWebSocketServerListener listener = this.websocketListener;
                 if (listener != null)

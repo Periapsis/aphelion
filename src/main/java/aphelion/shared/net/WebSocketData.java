@@ -38,24 +38,16 @@
 
 package aphelion.shared.net;
 
-import java.net.Socket;
-import java.util.List;
-import org.java_websocket.WebSocketImpl;
-import org.java_websocket.WebSocketListener;
-import org.java_websocket.drafts.Draft;
+import java.util.WeakHashMap;
+import org.java_websocket.WebSocket;
 
 /**
  *
  * @author Joris
  */
-public class MyWebSocketImpl extends WebSocketImpl
+public class WebSocketData
 {
         public long openedAt;
-        
-        /** True if this is the server end of this websocket connection.
-         * Otherwise this is the client end
-         */
-        public boolean server;
         
         public boolean initialized;
         /** null if the socket has not been initialized yet or has just been closed.
@@ -68,15 +60,25 @@ public class MyWebSocketImpl extends WebSocketImpl
         public int unacked; 
         
         /** How many messages have we received that have not yet been acknowledged by us */
-        public int ackreply = 0; 
+        public int ackreply = 0;
         
-        public MyWebSocketImpl(WebSocketListener listener, List<Draft> drafts, Socket sock)
-        {
-                super(listener, drafts, sock);
-        }
+        private static final WeakHashMap<WebSocket, WebSocketData> data = new WeakHashMap<>();
 
-        public MyWebSocketImpl(WebSocketListener listener, Draft draft, Socket sock)
+        private WebSocketData()
         {
-                super(listener, draft, sock);
+        }
+        
+        public static WebSocketData get(WebSocket ws)
+        {
+                synchronized(data)
+                {
+                        WebSocketData ret = data.get(ws);
+                        if (ret == null)
+                        {
+                                ret = new WebSocketData();
+                                data.put(ws, ret);
+                        }
+                        return ret;
+                }
         }
 }

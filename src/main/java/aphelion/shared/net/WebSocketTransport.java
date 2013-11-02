@@ -41,24 +41,16 @@ import aphelion.shared.event.LoopEvent;
 import aphelion.shared.swissarmyknife.MySecureRandom;
 import aphelion.shared.swissarmyknife.ThreadSafe;
 import java.lang.ref.WeakReference;
-import java.net.InetAddress;
-import java.net.Socket;
 import java.net.URI;
 import java.nio.ByteBuffer;
-import java.nio.channels.ByteChannel;
 import java.nio.channels.SelectionKey;
-import java.nio.channels.SocketChannel;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.java_websocket.WebSocket;
-import org.java_websocket.WebSocketAdapter;
+import org.java_websocket.WebSocketImpl;
+import org.java_websocket.WebSocketListener;
 import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.drafts.Draft;
 import org.java_websocket.drafts.Draft_17;
@@ -88,41 +80,16 @@ public class WebSocketTransport implements HttpWebSocketServerListener, LoopEven
          * unused bytes at the beginning of the byte array.
          */
         public static final int SEND_RESERVEDPREFIX_BYTES = 1;
-        private final LinkedList<MyWebSocketImpl> serverUnitializedWebsockets = new LinkedList<>();
+        private final LinkedList<WebSocket> serverUnitializedWebsockets = new LinkedList<>();
         private final LinkedList<MyWebSocketClient> unitializedClients = new LinkedList<>();
-        private final HashMap<SessionToken, LinkedList<MyWebSocketImpl>> websockets = new HashMap<>();
-        private WebSocketTransportListener listener;
-        private ConcurrentLinkedQueue<CloseDTO> closeQueue = new ConcurrentLinkedQueue<>();
+        private final HashMap<SessionToken, LinkedList<WebSocket>> websockets = new HashMap<>();
+        private final WebSocketTransportListener listener;
+        private final ConcurrentLinkedQueue<CloseDTO> closeQueue = new ConcurrentLinkedQueue<>();
         private final LinkedList<WeakReference<Thread>> clientThreads = new LinkedList<>();
         
         // todo use the timeout value of WebSocketClient when this is implemented in the lib
         private static final long CLIENT_CONNECT_TIMEOUT = 10_000_000_000L; 
         private static final long SERVER_INIT_TIMEOUT = 10_000_000_000L;
-        
-        WebSocketClient.WebSocketClientFactory clientFactory = new WebSocketClient.WebSocketClientFactory()
-        {
-                @Override
-                public WebSocket createWebSocket(WebSocketAdapter a, Draft d, Socket s)
-                {
-                        MyWebSocketImpl ws = new MyWebSocketImpl(a, d, s);
-                        ws.server = false;
-                        return ws;
-                }
-
-                @Override
-                public WebSocket createWebSocket(WebSocketAdapter a, List<Draft> d, Socket s)
-                {
-                        MyWebSocketImpl ws = new MyWebSocketImpl(a, d, s);
-                        ws.server = false;
-                        return ws;
-                }
-
-                @Override
-                public ByteChannel wrapChannel(SocketChannel channel, SelectionKey key, String host, int port)
-                {
-                        return channel;
-                }
-        };
 
         public WebSocketTransport(WebSocketTransportListener listener)
         {
@@ -139,14 +106,15 @@ public class WebSocketTransport implements HttpWebSocketServerListener, LoopEven
                 // do not use unused (this method is not just called by TickedEventLoop)
                 synchronized (this.serverUnitializedWebsockets)
                 {
-                        Iterator<MyWebSocketImpl> it = this.serverUnitializedWebsockets.iterator();
+                        Iterator<WebSocket> it = this.serverUnitializedWebsockets.iterator();
                         while (it.hasNext())
                         {
-                                MyWebSocketImpl ws = it.next();
+                                WebSocket ws = it.next();
+                                WebSocketData wsd = WebSocketData.get(ws);
 
-                                if (systemNanoTime - ws.openedAt > SERVER_INIT_TIMEOUT)
+                                if (systemNanoTime - wsd.openedAt > SERVER_INIT_TIMEOUT)
                                 {
-                                        log.log(Level.WARNING, "Dropped unitialized websocket as a server ({0}) due to timeout ({1} nanoseconds). ", new Object[] { ws.getRemoteSocketAddress(), systemNanoTime - ws.openedAt });
+                                        log.log(Level.WARNING, "Dropped unitialized websocket as a server ({0}) due to timeout ({1} nanoseconds). ", new Object[] { ws.getRemoteSocketAddress(), systemNanoTime - wsd.openedAt });
                                         close(ws, WS_CLOSE_STATUS.INIT_TIMEOUT);
                                         it.remove();
                                 }
@@ -197,7 +165,7 @@ public class WebSocketTransport implements HttpWebSocketServerListener, LoopEven
                 
                 log.log(Level.INFO, "Attempting to establish connection as a client to {0}", uri);
 
-                client = new MyWebSocketClient(uri, new Draft_17());
+                client = new MyWebSocketClient(uri);
 
                 client.requestedSession = session;
                 client.requestedProtocol = protocol;
@@ -235,16 +203,17 @@ public class WebSocketTransport implements HttpWebSocketServerListener, LoopEven
         {
                 synchronized (this.websockets)
                 {
-                        LinkedList<MyWebSocketImpl> sockets = this.websockets.get(session);
+                        LinkedList<WebSocket> sockets = this.websockets.get(session);
                         if (sockets == null)
                         {
                                 return 0;
                         }
                         
                         int count = 0;
-                        for (MyWebSocketImpl ws : sockets)
+                        for (WebSocket ws : sockets)
                         {
-                                if (protocol == PROTOCOL.NONE || ws.protocol == protocol)
+                                WebSocketData wsd = WebSocketData.get(ws);
+                                if (protocol == PROTOCOL.NONE || wsd.protocol == protocol)
                                 {
                                         count++;
                                 }
@@ -268,36 +237,37 @@ public class WebSocketTransport implements HttpWebSocketServerListener, LoopEven
                 // Note: the websocket library will immediately encode the payload into websocket frames
                 // avoid calling this from the main thread
 
-                MyWebSocketImpl conn;
+                WebSocket ws;
 
                 synchronized (this.websockets)
                 {
-                        conn = findOptimalSocket(session, protocol);
+                        ws = findOptimalSocket(session, protocol);
+                        WebSocketData wsd = WebSocketData.get(ws);
 
-                        if (conn == null)
+                        if (ws == null)
                         {
                                 throw new NoSuitableConnection();
                         }
 
-                        conn.unacked += 1;
+                        wsd.unacked += 1;
                         
                         // Send the number of messages we received previously to the client
-                        if (conn.ackreply > 254)
+                        if (wsd.ackreply > 254)
                         {
                                 // Reserve the value 255 for future use
                                 bytes[0] = (byte) 254;
-                                conn.ackreply -= 254;
+                                wsd.ackreply -= 254;
                         }
                         else
                         {
-                                bytes[0] = (byte) conn.ackreply;
-                                conn.ackreply = 0;
+                                bytes[0] = (byte) wsd.ackreply;
+                                wsd.ackreply = 0;
                         }
                         
-                        assert conn.ackreply >= 0;
+                        assert wsd.ackreply >= 0;
                 }
 
-                conn.send(bytes);
+                ws.send(bytes);
         }
         
         /** Send a unicode message to the other party.
@@ -321,14 +291,14 @@ public class WebSocketTransport implements HttpWebSocketServerListener, LoopEven
         @ThreadSafe
         public void send(SessionToken session, PROTOCOL protocol, String message) throws NoSuitableConnection
         {
-                MyWebSocketImpl conn = findOptimalSocket(session, protocol);
+                WebSocket ws = findOptimalSocket(session, protocol);
 
-                if (conn == null)
+                if (ws == null)
                 {
                         throw new NoSuitableConnection();
                 }
                 
-                conn.send(message);
+                ws.send(message);
         }
         
         private static class ListenerDTO
@@ -392,18 +362,19 @@ public class WebSocketTransport implements HttpWebSocketServerListener, LoopEven
                 // .close() fires onClose events
                 synchronized(this.websockets)
                 {
-                        for (LinkedList<MyWebSocketImpl> list : this.websockets.values())
+                        for (LinkedList<WebSocket> list : this.websockets.values())
                         {
-                                for (MyWebSocketImpl ws : list)
+                                for (WebSocket ws : list)
                                 {
-                                        listener.wstDropConnection(ws.server, ws.session, ws.protocol, code, reason);
+                                        WebSocketData wsd = WebSocketData.get(ws);
+                                        listener.wstDropConnection(ws instanceof ServerWebSocketImpl, wsd.session, wsd.protocol, code, reason);
                                         
                                         // defer so that the hashset can ensure this event is only fired once
-                                        dropEvents.add(new ListenerDTO( ws.server, ws.session, ws.protocol));
+                                        dropEvents.add(new ListenerDTO(ws instanceof ServerWebSocketImpl, wsd.session, wsd.protocol));
                                         
                                         // a socket may not have a SessionToken if it is not in the websockets list
                                         // and all sockets in the websockets have a SessionToken
-                                        ws.session = null; // settings this to null prevents from the drop event 
+                                        wsd.session = null; // settings this to null prevents from the drop event 
                                         // being fired in the websocket close event
                                         close(ws, code, reason);
                                 }
@@ -416,7 +387,7 @@ public class WebSocketTransport implements HttpWebSocketServerListener, LoopEven
                 {
                         for (MyWebSocketClient client : this.unitializedClients)
                         {
-                                MyWebSocketImpl ws = client.getMyConnection();
+                                WebSocket ws = client.getMyConnection();
                                 if (ws != null)
                                 {
                                         close(ws, code, reason);
@@ -428,7 +399,7 @@ public class WebSocketTransport implements HttpWebSocketServerListener, LoopEven
                 
                 synchronized(this.serverUnitializedWebsockets)
                 {
-                        for (MyWebSocketImpl ws : this.serverUnitializedWebsockets)
+                        for (WebSocket ws : this.serverUnitializedWebsockets)
                         {
                                 close(ws, code, reason); 
                         }
@@ -513,19 +484,20 @@ public class WebSocketTransport implements HttpWebSocketServerListener, LoopEven
                 
                 synchronized(this.websockets)
                 {
-                        LinkedList<MyWebSocketImpl> list = this.websockets.remove(session);
+                        LinkedList<WebSocket> list = this.websockets.remove(session);
                         if (list != null)
                         {
-                                for (MyWebSocketImpl ws : list)
+                                for (WebSocket ws : list)
                                 {
-                                        if (protocol == PROTOCOL.NONE || ws.protocol == protocol)
+                                        WebSocketData wsd = WebSocketData.get(ws);
+                                        if (protocol == PROTOCOL.NONE || wsd.protocol == protocol)
                                         {
-                                                listener.wstDropConnection(ws.server, ws.session, ws.protocol, code, reason);
-                                                dropEvents.add(new ListenerDTO(ws.server, ws.session, ws.protocol));
+                                                listener.wstDropConnection(ws instanceof ServerWebSocketImpl, wsd.session, wsd.protocol, code, reason);
+                                                dropEvents.add(new ListenerDTO(ws instanceof ServerWebSocketImpl, wsd.session, wsd.protocol));
                                         
                                                 // a socket may not have a SessionToken if it is not in the websockets list
                                                 // and all sockets in the websockets have a SessionToken
-                                                ws.session = null; // settings this to null prevents from the drop event being fired
+                                                wsd.session = null; // settings this to null prevents from the drop event being fired
                                                 close(ws, code, reason); // may generate an event immediately
                                         }
                                 }
@@ -563,24 +535,24 @@ public class WebSocketTransport implements HttpWebSocketServerListener, LoopEven
                 close(ws, code, "");
         }
         
-        private WeakReference<MyWebSocketImpl> findOptimalSocketPrevious;
+        private WeakReference<WebSocket> findOptimalSocketPrevious;
 
         /** Find the socket with the least amount of messages that have not been acknowledged.
          */
         @ThreadSafe
-        private MyWebSocketImpl findOptimalSocket(SessionToken session, PROTOCOL protocol)
+        private WebSocket findOptimalSocket(SessionToken session, PROTOCOL protocol)
         {
                 synchronized (this.websockets)
                 {
-                        MyWebSocketImpl previous = findOptimalSocketPrevious == null ? null : findOptimalSocketPrevious.get();
+                        WebSocket previous = findOptimalSocketPrevious == null ? null : findOptimalSocketPrevious.get();
 
-                        LinkedList<MyWebSocketImpl> sockets = this.websockets.get(session);
+                        LinkedList<WebSocket> sockets = this.websockets.get(session);
                         if (sockets == null)
                         {
                                 return null;
                         }
 
-                        Iterator<MyWebSocketImpl> it = sockets.iterator();
+                        Iterator<WebSocket> it = sockets.iterator();
                         boolean foundPrevious = false;
 
                         if (previous != null)
@@ -594,7 +566,7 @@ public class WebSocketTransport implements HttpWebSocketServerListener, LoopEven
                                 // Find the location of the previous returned connection
                                 while (it.hasNext())
                                 {
-                                        MyWebSocketImpl conn = it.next();
+                                        WebSocket conn = it.next();
                                         if (conn == previous)
                                         {
                                                 foundPrevious = true;
@@ -610,11 +582,12 @@ public class WebSocketTransport implements HttpWebSocketServerListener, LoopEven
                         }
 
                         int bestValue = 0;
-                        MyWebSocketImpl bestConn = null;
+                        WebSocket bestConn = null;
 
                         while (it.hasNext()) // start with the element after the previous one
                         {
-                                MyWebSocketImpl conn = it.next();
+                                WebSocket ws = it.next();
+                                WebSocketData wsd = WebSocketData.get(ws);
 
                                 if (!it.hasNext() && foundPrevious)
                                 {
@@ -623,7 +596,7 @@ public class WebSocketTransport implements HttpWebSocketServerListener, LoopEven
                                         it = sockets.iterator();
                                 }
 
-                                if (!conn.protocol.equals(protocol))
+                                if (!wsd.protocol.equals(protocol))
                                 {
                                         continue;
                                 }
@@ -631,20 +604,20 @@ public class WebSocketTransport implements HttpWebSocketServerListener, LoopEven
                                 if (bestConn == null)
                                 {
                                         // start off with the first connection we find
-                                        bestConn = conn;
-                                        bestValue = conn.unacked;
+                                        bestConn = ws;
+                                        bestValue = wsd.unacked;
                                 }
                                 else
                                 {
-                                        if (conn.unacked < bestValue)
+                                        if (wsd.unacked < bestValue)
                                         {
                                                 // This connection has less unacknowledged messages than the previous one
-                                                bestConn = conn;
-                                                bestValue = conn.unacked;
+                                                bestConn = ws;
+                                                bestValue = wsd.unacked;
                                         }
                                 }
 
-                                if (conn == previous) // we are where we started off
+                                if (ws == previous) // we are where we started off
                                 {
                                         break;
                                 }
@@ -668,23 +641,25 @@ public class WebSocketTransport implements HttpWebSocketServerListener, LoopEven
 
         @Override
         @ThreadSafe
-        public void wssOpen(MyWebSocketImpl conn, ClientHandshake handshake)
+        public void wssOpen(WebSocket ws, ClientHandshake handshake)
         {
-                log.log(Level.INFO, "New websocket connection from {0}", conn.getRemoteSocketAddress());
+                log.log(Level.INFO, "New websocket connection from {0}", ws.getRemoteSocketAddress());
                 // can not do anything with it yet, the client must send an initialization packet first
+                WebSocketData wsd = WebSocketData.get(ws);
 
                 synchronized (this.serverUnitializedWebsockets)
                 {
-                        conn.openedAt = System.nanoTime();
-                        this.serverUnitializedWebsockets.add(conn);
+                        wsd.openedAt = System.nanoTime();
+                        this.serverUnitializedWebsockets.add(ws);
                 }
         }
 
         @Override
         @ThreadSafe
-        public void wssClose(MyWebSocketImpl conn, int code, String reason, boolean remote)
+        public void wssClose(WebSocket conn, int code, String reason, boolean remote)
         {
                 log.log(Level.INFO, "Closed websocket connection from {0}", conn.getRemoteSocketAddress());
+                WebSocketData connd = WebSocketData.get(conn);
                 
                 synchronized (this.serverUnitializedWebsockets)
                 {
@@ -693,18 +668,19 @@ public class WebSocketTransport implements HttpWebSocketServerListener, LoopEven
                 
                 synchronized (this.websockets)
                 {
-                        if (conn.session != null)
+                        if (connd.session != null)
                         {
-                                assert conn.protocol != null && conn.protocol != PROTOCOL.NONE;
+                                assert connd.protocol != null && connd.protocol != PROTOCOL.NONE;
 
-                                LinkedList<MyWebSocketImpl> websocketList = this.websockets.get(conn.session);
+                                LinkedList<WebSocket> websocketList = this.websockets.get(connd.session);
                                 boolean removed = websocketList.remove(conn);
                                 assert removed;
 
                                 boolean droppedAllForProtocol = true;
-                                for (MyWebSocketImpl ws : websocketList)
+                                for (WebSocket ws : websocketList)
                                 {
-                                        if (ws.protocol.equals(conn.protocol))
+                                        WebSocketData wsd = WebSocketData.get(ws);
+                                        if (wsd.protocol.equals(connd.protocol))
                                         {
                                                 droppedAllForProtocol = false;
                                                 break;
@@ -718,13 +694,13 @@ public class WebSocketTransport implements HttpWebSocketServerListener, LoopEven
                                         log.log(Level.WARNING, "Unknown close code {0}", code);
                                 }
 
-                                listener.wstDropConnection(true, conn.session, conn.protocol, status, reason);
+                                listener.wstDropConnection(true, connd.session, connd.protocol, status, reason);
                                 if (droppedAllForProtocol)
                                 {
-                                        listener.wstDropProtocol(true, conn.session, conn.protocol);
+                                        listener.wstDropProtocol(true, connd.session, connd.protocol);
                                 }
 
-                                conn.session = null;
+                                connd.session = null;
                         }
                 }
                 
@@ -732,12 +708,14 @@ public class WebSocketTransport implements HttpWebSocketServerListener, LoopEven
 
         @Override
         @ThreadSafe
-        public void wssMessage(MyWebSocketImpl conn, String message)
+        public void wssMessage(WebSocket ws, String message)
         {
                 long now = System.nanoTime();
-                if (conn.session == null)
+                WebSocketData wsd = WebSocketData.get(ws);
+                
+                if (wsd.session == null)
                 {
-                        log.log(Level.WARNING, "WebSocket UTF-8 payload ignored because the client has not sent a handshake yet from {0}", conn.getRemoteSocketAddress());
+                        log.log(Level.WARNING, "WebSocket UTF-8 payload ignored because the client has not sent a handshake yet from {0}", ws.getRemoteSocketAddress());
                 }
                 else
                 {
@@ -747,9 +725,9 @@ public class WebSocketTransport implements HttpWebSocketServerListener, LoopEven
                                 
                         synchronized(this.websockets)
                         {
-                                session = conn.session;
-                                protocol = conn.protocol;
-                                protocolVersion = conn.protocolVersion;
+                                session = wsd.session;
+                                protocol = wsd.protocol;
+                                protocolVersion = wsd.protocolVersion;
                         }
                         
                         assert protocol != null && protocol != PROTOCOL.NONE;
@@ -760,11 +738,12 @@ public class WebSocketTransport implements HttpWebSocketServerListener, LoopEven
 
         @Override
         @ThreadSafe
-        public void wssMessage(MyWebSocketImpl conn, ByteBuffer message)
+        public void wssMessage(WebSocket conn, ByteBuffer message)
         {
                 long now = System.nanoTime();
+                WebSocketData connd = WebSocketData.get(conn);
                 
-                if (conn.session == null)
+                if (connd.session == null)
                 {
                         boolean newProtocol;
                         SessionToken session;
@@ -826,7 +805,7 @@ public class WebSocketTransport implements HttpWebSocketServerListener, LoopEven
 
 
                                 session = null;
-                                LinkedList<MyWebSocketImpl> websocketList = null;
+                                LinkedList<WebSocket> websocketList = null;
 
                                 if (has_session_token)
                                 {
@@ -868,15 +847,16 @@ public class WebSocketTransport implements HttpWebSocketServerListener, LoopEven
                                         this.websockets.put(session, websocketList);
                                 }
 
-                                conn.session = session;
-                                conn.protocol = protocol;
-                                conn.protocolVersion = protocol_version;
-                                conn.initialized = true;
+                                connd.session = session;
+                                connd.protocol = protocol;
+                                connd.protocolVersion = protocol_version;
+                                connd.initialized = true;
 
                                 newProtocol = true;
-                                for (MyWebSocketImpl ws : websocketList)
+                                for (WebSocket ws : websocketList)
                                 {
-                                        if (ws.protocol.equals(protocol))
+                                        WebSocketData wsd = WebSocketData.get(ws);
+                                        if (wsd.protocol.equals(protocol))
                                         {
                                                 newProtocol = false;
                                                 break;
@@ -906,14 +886,14 @@ public class WebSocketTransport implements HttpWebSocketServerListener, LoopEven
                                  */
 
                                 // send handshake reply
-                                assert conn.session != null;
+                                assert connd.session != null;
                                 byte[] token = new byte[32];
-                                conn.session.get(token);
+                                connd.session.get(token);
                                 conn.send(token);
 
                                 
-                                websocketList = this.websockets.get(conn.session);
-                                log.log(Level.INFO, "There are now {0} connections for the session {1}", new Object[] { websocketList.size(), conn.session });
+                                websocketList = this.websockets.get(connd.session);
+                                log.log(Level.INFO, "There are now {0} connections for the session {1}", new Object[] { websocketList.size(), connd.session });
                         }
 
                         synchronized (this.serverUnitializedWebsockets)
@@ -937,12 +917,12 @@ public class WebSocketTransport implements HttpWebSocketServerListener, LoopEven
                                 
                         synchronized(this.websockets)
                         {
-                                session = conn.session;
-                                protocol = conn.protocol;
-                                protocolVersion = conn.protocolVersion;
+                                session = connd.session;
+                                protocol = connd.protocol;
+                                protocolVersion = connd.protocolVersion;
                                 
-                                conn.unacked -= ack;
-                                if (conn.unacked < 0)
+                                connd.unacked -= ack;
+                                if (connd.unacked < 0)
                                 {
                                         log.log(Level.WARNING, "conn.unacked is < 0");
                                 }
@@ -956,7 +936,7 @@ public class WebSocketTransport implements HttpWebSocketServerListener, LoopEven
 
         @Override
         @ThreadSafe
-        public void wssError(MyWebSocketImpl conn, Exception ex)
+        public void wssError(WebSocket conn, Exception ex)
         {
                 try
                 {
@@ -976,20 +956,11 @@ public class WebSocketTransport implements HttpWebSocketServerListener, LoopEven
                 int requestedProtocolVersion;
                 Thread thread;
 
-                MyWebSocketClient(URI serverUri, Draft draft, Map<String,String> headers, int connecttimeout)
-                {
-                        super(clientFactory, serverUri, draft, headers, connecttimeout);
-                }
-
-                MyWebSocketClient(URI serverUri, Draft draft)
-                {
-                        super(clientFactory, serverUri, draft);
-                }
-
                 MyWebSocketClient(URI serverURI)
                 {
-                        super(clientFactory, serverURI);
+                        super(serverURI, new Draft_17());
                 }
+                
 
                 @Override
                 @ThreadSafe
@@ -1033,11 +1004,12 @@ public class WebSocketTransport implements HttpWebSocketServerListener, LoopEven
                 public void onMessage(String message)
                 {
                         long now = System.nanoTime();
-                        MyWebSocketImpl conn = this.getMyConnection();
+                        WebSocket ws = this.getMyConnection();
+                        WebSocketData wsd = WebSocketData.get(ws);
 
-                        if (conn.session == null)
+                        if (wsd.session == null)
                         {
-                                log.log(Level.WARNING, "WebSocket UTF-8 payload ignored because the handshake has not yet been completed. {0}", conn.getRemoteSocketAddress());
+                                log.log(Level.WARNING, "WebSocket UTF-8 payload ignored because the handshake has not yet been completed. {0}", ws.getRemoteSocketAddress());
                         }
                         else
                         {
@@ -1047,9 +1019,9 @@ public class WebSocketTransport implements HttpWebSocketServerListener, LoopEven
 
                                 synchronized(WebSocketTransport.this.websockets)
                                 {
-                                        session = conn.session;
-                                        protocol = conn.protocol;
-                                        protocolVersion = conn.protocolVersion;
+                                        session = wsd.session;
+                                        protocol = wsd.protocol;
+                                        protocolVersion = wsd.protocolVersion;
                                 }
 
                                 assert protocol != null && protocol != PROTOCOL.NONE;
@@ -1062,9 +1034,10 @@ public class WebSocketTransport implements HttpWebSocketServerListener, LoopEven
                 public void onMessage(ByteBuffer bytes)
                 {
                         long now = System.nanoTime();
-                        MyWebSocketImpl conn = this.getMyConnection();
+                        WebSocket conn = this.getMyConnection();
+                        WebSocketData connd = WebSocketData.get(conn);
 
-                        if (conn.session == null)
+                        if (connd.session == null)
                         {
                                 // handshake reply
                                 if (bytes.remaining() != 32)
@@ -1080,33 +1053,34 @@ public class WebSocketTransport implements HttpWebSocketServerListener, LoopEven
                                 boolean newProtocol = true;
                                 synchronized (WebSocketTransport.this.websockets)
                                 {
-                                        conn.protocol = this.requestedProtocol;
-                                        conn.protocolVersion = this.requestedProtocolVersion;
-                                        conn.session = new SessionToken(session_token);
-                                        conn.initialized = true;
+                                        connd.protocol = this.requestedProtocol;
+                                        connd.protocolVersion = this.requestedProtocolVersion;
+                                        connd.session = new SessionToken(session_token);
+                                        connd.initialized = true;
 
                                         // make sure the session token object is unique
                                         for (SessionToken existing_token : WebSocketTransport.this.websockets.keySet())
                                         {
-                                                if (existing_token.equals(conn.session))
+                                                if (existing_token.equals(connd.session))
                                                 {
-                                                        conn.session = existing_token;
+                                                        connd.session = existing_token;
                                                 }
                                         }
 
                                 
-                                        LinkedList<MyWebSocketImpl> websocketList;
+                                        LinkedList<WebSocket> websocketList;
 
-                                        websocketList = WebSocketTransport.this.websockets.get(conn.session);
+                                        websocketList = WebSocketTransport.this.websockets.get(connd.session);
                                         if (websocketList == null)
                                         {
                                                 websocketList = new LinkedList<>();
-                                                WebSocketTransport.this.websockets.put(conn.session, websocketList);
+                                                WebSocketTransport.this.websockets.put(connd.session, websocketList);
                                         }
 
-                                        for (MyWebSocketImpl ws : websocketList)
+                                        for (WebSocket ws : websocketList)
                                         {
-                                                if (ws.protocol.equals(conn.protocol))
+                                                WebSocketData wsd = WebSocketData.get(ws);
+                                                if (wsd.protocol.equals(connd.protocol))
                                                 {
                                                         newProtocol = false;
                                                         break;
@@ -1115,16 +1089,16 @@ public class WebSocketTransport implements HttpWebSocketServerListener, LoopEven
 
                                         websocketList.add(conn);
                                         
-                                        websocketList = WebSocketTransport.this.websockets.get(conn.session);
-                                        log.log(Level.INFO, "There are now {0} connections for the session {1}", new Object[] { websocketList.size(), conn.session });
+                                        websocketList = WebSocketTransport.this.websockets.get(connd.session);
+                                        log.log(Level.INFO, "There are now {0} connections for the session {1}", new Object[] { websocketList.size(), connd.session });
                                 }
 
                                 if (newProtocol)
                                 {
-                                        WebSocketTransport.this.listener.wstNewProtocol(false, conn.session, conn.protocol);
+                                        WebSocketTransport.this.listener.wstNewProtocol(false, connd.session, connd.protocol);
                                 }
                                 
-                                WebSocketTransport.this.listener.wstNewConnection(false, conn.session, conn.protocol);
+                                WebSocketTransport.this.listener.wstNewConnection(false, connd.session, connd.protocol);
                                 
 
                                 synchronized (WebSocketTransport.this.unitializedClients)
@@ -1140,13 +1114,13 @@ public class WebSocketTransport implements HttpWebSocketServerListener, LoopEven
 
                                 synchronized(WebSocketTransport.this.websockets)
                                 {
-                                        session = conn.session;
-                                        protocol = conn.protocol;
-                                        protocolVersion = conn.protocolVersion;
+                                        session = connd.session;
+                                        protocol = connd.protocol;
+                                        protocolVersion = connd.protocolVersion;
                                         
                                         int ack = bytes.get(); // moves the position of the buffer
-                                        conn.unacked -= ack;
-                                        if (conn.unacked < 0)
+                                        connd.unacked -= ack;
+                                        if (connd.unacked < 0)
                                         {
                                                 log.log(Level.WARNING, "conn.unacked is < 0");
                                         }
@@ -1162,7 +1136,8 @@ public class WebSocketTransport implements HttpWebSocketServerListener, LoopEven
                 @ThreadSafe
                 public void onClose(int code, String reason, boolean remote)
                 {
-                        MyWebSocketImpl conn = this.getMyConnection();
+                        WebSocket conn = this.getMyConnection();
+                        WebSocketData connd = WebSocketData.get(conn);
 
                         log.log(Level.INFO, "Closed websocket connection as a client from {0}", conn.getRemoteSocketAddress());
 
@@ -1185,23 +1160,24 @@ public class WebSocketTransport implements HttpWebSocketServerListener, LoopEven
                         
                         synchronized (WebSocketTransport.this.websockets)
                         {
-                                session = conn.session;
-                                initialized = conn.initialized;
-                                protocol = conn.protocol;
+                                session = connd.session;
+                                initialized = connd.initialized;
+                                protocol = connd.protocol;
                                 
                                 if (session != null)
                                 {
-                                        assert conn.protocol != null && conn.protocol != PROTOCOL.NONE;
+                                        assert connd.protocol != null && connd.protocol != PROTOCOL.NONE;
 
-                                        LinkedList<MyWebSocketImpl> websocketList = WebSocketTransport.this.websockets.get(session);
+                                        LinkedList<WebSocket> websocketList = WebSocketTransport.this.websockets.get(session);
                                         assert websocketList != null;
                                         boolean removed = websocketList.remove(conn);
                                         assert removed;
 
                                         fireDropListener = true;
-                                        for (MyWebSocketImpl ws : websocketList)
+                                        for (WebSocket ws : websocketList)
                                         {
-                                                if (ws.protocol.equals(protocol))
+                                                WebSocketData wsd = WebSocketData.get(ws);
+                                                if (wsd.protocol.equals(protocol))
                                                 {
                                                         fireDropListener = false;
                                                         break;
@@ -1215,7 +1191,7 @@ public class WebSocketTransport implements HttpWebSocketServerListener, LoopEven
                                         
                                         
                                         
-                                        conn.session = null;
+                                        connd.session = null;
                                         listener.wstDropConnection(false, session, protocol, status, reason);
                                 }
                         }
@@ -1236,7 +1212,7 @@ public class WebSocketTransport implements HttpWebSocketServerListener, LoopEven
                 @ThreadSafe
                 public void onError(Exception ex)
                 {
-                        MyWebSocketImpl conn;
+                        WebSocket conn;
                         conn = getMyConnection();
                         if (conn == null)
                         {
@@ -1249,12 +1225,12 @@ public class WebSocketTransport implements HttpWebSocketServerListener, LoopEven
                 }
 
                 @ThreadSafe
-                public MyWebSocketImpl getMyConnection()
+                public WebSocket getMyConnection()
                 {
-                        return (MyWebSocketImpl) this.getConnection();
+                        return (WebSocket) this.getConnection();
                 }
 
-                @Override
+                /*@Override
                 public String getResourceDescriptor()
                 {
                         WebSocket w = this.getConnection();
@@ -1266,11 +1242,20 @@ public class WebSocketTransport implements HttpWebSocketServerListener, LoopEven
                         {
                                 return w.getResourceDescriptor();
                         }
-                }
+                }*/
         }
         
         @SuppressWarnings("serial")
         public static class NoSuitableConnection extends Exception
         {
+        }
+        
+        public static final class ServerWebSocketImpl extends WebSocketImpl
+        {
+                public ServerWebSocketImpl(WebSocketListener listener)
+                {
+                        // Draft_17 corresponds to Sec-WebSocket-Version: 13 which is RFC 6455
+                        super(listener, Arrays.asList(new Draft[]{new Draft_17()}));
+                }
         }
 }
