@@ -47,12 +47,14 @@ import aphelion.shared.resource.ResourceDB;
 import aphelion.shared.event.TickedEventLoop;
 import aphelion.shared.net.WS_CLOSE_STATUS;
 import aphelion.shared.net.protobuf.GameS2C.AuthenticateResponse;
+import aphelion.shared.resource.LocalUserStorage;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.ByteBuffer;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -64,6 +66,9 @@ import org.lwjgl.opengl.Display;
 import org.lwjgl.opengl.DisplayMode;
 import org.lwjgl.opengl.GL11;
 import org.newdawn.slick.Graphics;
+import org.yaml.snakeyaml.Yaml;
+import org.yaml.snakeyaml.constructor.SafeConstructor;
+import org.yaml.snakeyaml.error.YAMLException;
 
 /**
  *
@@ -97,11 +102,22 @@ public class Client
         {
                 if (uri == null)
                 {
-                        // singleplayer
-                        // future versions might not need to run a server in sigleplayer
-                        // however this is ok for now.
+                        Yaml yaml = new Yaml(new SafeConstructor());
+                        Map<String, Object> singlePlayerConfig;
+                        try
+                        {
+                                singlePlayerConfig = (Map<String, Object>) yaml.load(new FileInputStream("./assets/singleplayer.yaml")); 
+                        }
+                        catch (FileNotFoundException | ClassCastException | YAMLException ex)
+                        {
+                                // Note: YAMLException is a RunTimeException
+                                throw new ServerConfigException("Unable to read server config", ex);
+                        }
                         
-                        Map<String, Object> singlePlayerConfig = new HashMap<>();
+                        // ignore bind-address and bind-port
+                        
+                        // share the assets directory
+                        singlePlayerConfig.put("assets-cache-path", new LocalUserStorage("assets").getDirectory().getAbsolutePath());
                         
                         serverThread = new AphelionServerThread(false, singlePlayerConfig);
                         serverThread.start();
