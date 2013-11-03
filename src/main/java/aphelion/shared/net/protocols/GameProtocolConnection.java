@@ -306,6 +306,7 @@ public class GameProtocolConnection implements Attachable
                                 }
                                 catch (IOException ex)
                                 {
+                                        log.log(Level.WARNING, "", ex);
                                         throw new PromiseException(ex);
                                 }
                                 
@@ -322,6 +323,7 @@ public class GameProtocolConnection implements Attachable
                         }
                         catch (WebSocketTransport.NoSuitableConnection ex)
                         {
+                                log.log(Level.WARNING, "", ex);
                                 throw new PromiseException(ex);
                         }
 
@@ -385,6 +387,7 @@ public class GameProtocolConnection implements Attachable
                                 }
                                 catch (IOException ex)
                                 {
+                                        log.log(Level.WARNING, "", ex);
                                         throw new PromiseException(ex);
                                 }
                                 
@@ -401,6 +404,7 @@ public class GameProtocolConnection implements Attachable
                         }
                         catch (WebSocketTransport.NoSuitableConnection ex)
                         {
+                                log.log(Level.WARNING, "", ex);
                                 throw new PromiseException(ex);
                         }
 

@@ -327,6 +327,7 @@ public class AphelionServer implements LoopEvent, WebSocketTransportListener
                                 game = gameAttachment.get(sessionToken);
                                 if (game == null)
                                 {
+                                        log.log(Level.WARNING, "Received a game message in an incorrect state");
                                         return;
                                 }
                         }

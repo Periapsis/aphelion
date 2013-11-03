@@ -159,18 +159,29 @@ class HttpWebSocketServer extends WebSocketAdapter implements Runnable
 
         private boolean readable(SelectionKey key, WebSocketImpl conn) throws InterruptedException, IOException
         {
-                if (SocketChannelIOHelper.read(buffer, conn, (ByteChannel) conn.channel))
+                buffer.clear();
+                int read = conn.channel.read(buffer);
+                buffer.flip();
+                
+                if (read == -1)
                 {
-                        // Something has been read (up to WebSocket.RCVBUF)
-                        // Perhaps there is more in the TCP receive buffer, 
-                        // but other connections will get a chance first
-                        
-                        conn.decode(buffer);
-                        return true; // true = something has been read
-
+                        // connection closed
+                        conn.eot();
+                        return true;
                 }
-
-                return false;
+                
+                if (read == 0)
+                {
+                        return true;  // true = done reading
+                }
+                
+                // Something has been read (up to WebSocket.RCVBUF)
+                // Perhaps there is more in the TCP receive buffer, 
+                // but other connections will get a chance first
+                
+                conn.decode(buffer);
+                
+                return false; // false = keep this connection in the selector list
         }
 
         private boolean writable(SelectionKey key, WebSocketImpl conn) throws IOException

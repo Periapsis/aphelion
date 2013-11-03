@@ -562,14 +562,30 @@ public class TickedEventLoop implements Workable, Timerable
         @Override
         public void runOnMain(Runnable runnable)
         {
-                completedTasks.offer(new TaskCompleteEntry(runnable));
+                TaskCompleteEntry t = new TaskCompleteEntry(runnable);
+                
+                try
+                {
+                        while (!completedTasks.offer(t, 1, TimeUnit.MILLISECONDS));
+                }
+                catch (InterruptedException ex)
+                {
+                        Thread.currentThread().interrupt();
+                }
         }
         
         @ThreadSafe
         @Override
         public void taskCompleted(WorkerTask task)
         {
-                completedTasks.offer(new TaskCompleteEntry(task));
+                try
+                {
+                        while (!completedTasks.offer(new TaskCompleteEntry(task), 1, TimeUnit.MILLISECONDS));
+                }
+                catch (InterruptedException ex)
+                {
+                        Thread.currentThread().interrupt();
+                }
         }
         
         
