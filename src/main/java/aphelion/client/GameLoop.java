@@ -52,6 +52,7 @@ import aphelion.client.graphics.world.*;
 import aphelion.client.graphics.world.event.ActorDiedTracker;
 import aphelion.client.graphics.world.event.EventTracker;
 import aphelion.client.resource.AsyncTexture;
+import aphelion.client.resource.DBNiftyResourceLocation;
 import aphelion.shared.event.TickEvent;
 import aphelion.shared.event.TickedEventLoop;
 import aphelion.shared.event.promise.*;
@@ -74,6 +75,13 @@ import aphelion.shared.physics.events.pub.ActorDiedPublic;
 import aphelion.shared.resource.Asset;
 import aphelion.shared.resource.DownloadAssetsTask;
 import aphelion.shared.swissarmyknife.AttachmentConsumer;
+import de.lessvoid.nifty.Nifty;
+import de.lessvoid.nifty.nulldevice.NullSoundDevice;
+import de.lessvoid.nifty.renderer.lwjgl.input.LwjglInputSystem;
+import de.lessvoid.nifty.renderer.lwjgl.render.LwjglRenderDevice;
+import de.lessvoid.nifty.spi.time.impl.AccurateTimeProvider;
+import de.lessvoid.nifty.tools.resourceloader.ClasspathLocation;
+import de.lessvoid.nifty.tools.resourceloader.NiftyResourceLoader;
 import java.io.IOException;
 import java.lang.ref.WeakReference;
 
@@ -108,6 +116,7 @@ public class GameLoop
         private final NetworkedGame networkedGame;
         
         // Input:
+        private LwjglInputSystem inputSystem;
         private MyKeyboard myKeyboard;
         
         // Physics:
@@ -118,7 +127,7 @@ public class GameLoop
         // Map:
         private MapClassic mapClassic;
         
-        // Graphics:        
+        // Graphics:
         private StarField stars;
         private Camera mainCamera;
         private Camera radarCamera;
@@ -128,6 +137,7 @@ public class GameLoop
                 = new AttachmentConsumer<>(Event.attachmentManager);
         
         // Screen Graphics
+        private Nifty nifty;
         private EnergyBar energyBar;
         private StatusDisplay statusDisplay;
         private Gauges gauges;
@@ -158,7 +168,7 @@ public class GameLoop
                 return connectionError;
         }
         
-        public void loop()
+        private void initLoop()
         {
                 AbstractPromise downloadPromise = loop.addWorkerTask(new DownloadAssetsTask(), networkedGame.getRequiredAssets());
                 
@@ -241,6 +251,8 @@ public class GameLoop
                                 networkedGame.arenaLoaded(physicsEnv, mapEntities);
                                 loadedResources = true;
                                 
+                                // todo: load nifty xml here
+                                
                                 return null;
                         }
                 }, new PromiseRejected()
@@ -253,8 +265,6 @@ public class GameLoop
                                 // TODO: display a dialog to the user and go back to the launcher?
                         }
                 });
-                
-                AsyncTexture loadingTex = resourceDB.getTextureLoader().getTexture("gui.loading.graphics");
                 
                 myKeyboard = new MyKeyboard();
                 
@@ -271,11 +281,37 @@ public class GameLoop
                 loop.addTickEvent(mapEntities);
                 loop.addLoopEvent(mapEntities);
                 
-                boolean first = true;
-                boolean tickingPhysics = false;
+                
+                inputSystem = new LwjglInputSystem();
+                try
+                {
+                        inputSystem.startup();
+                }
+                catch (Exception ex)
+                {
+                        throw new Error(ex);
+                }
+                nifty = new Nifty(new LwjglRenderDevice(), new NullSoundDevice(), inputSystem, new AccurateTimeProvider());
+                NiftyResourceLoader niftyResourceLoader = nifty.getResourceLoader();
+                niftyResourceLoader.removeAllResourceLocations();
+                // nifty first tries stuff on the class path (needed for its internal files)
+                niftyResourceLoader.addResourceLocation(new ClasspathLocation());
+                // Then try the same reference as a resource key 
+                // (add this second so that zones can not override nifty build-ins)
+                niftyResourceLoader.addResourceLocation(new DBNiftyResourceLocation(resourceDB));       
+        }
+        
+        public void loop()
+        {
+                initLoop();
+                
                 lastFrameReset = System.nanoTime();
                 frames = 60;
                 
+                boolean first = true;
+                boolean tickingPhysics = false;
+                
+                AsyncTexture loadingTex = resourceDB.getTextureLoader().getTexture("gui.loading.graphics");
                 
                 while (!loop.isInterruped())
                 {
@@ -288,6 +324,13 @@ public class GameLoop
                                 loop.interrupt();
                                 break;
                         }
+                        
+                        if (nifty.update())
+                        {
+                                log.log(Level.WARNING, "Close by nifty in game loop");
+                                loop.interrupt();
+                                break;
+                        }        
                         
                         Graph.graphicsLoop();
                         
@@ -440,10 +483,12 @@ public class GameLoop
                 {
                         energyBar.render(mainCamera);
                 }
+                
                 if(statusDisplay != null)
                 {
                 	statusDisplay.render(mainCamera);
                 }
+                
                 if(gauges != null)
                 {
                 	gauges.render(mainCamera, myKeyboard.multiFireGun);
@@ -468,6 +513,8 @@ public class GameLoop
                                 Display.getWidth() - Graph.g.getFont().getWidth(text) - 5, 
                                 radarCamera.screenPosY - Graph.g.getFont().getLineHeight());
                 }
+                
+                nifty.render(false);
         }
         
         @SuppressWarnings("unchecked")
