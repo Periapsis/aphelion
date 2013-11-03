@@ -41,10 +41,13 @@ package aphelion.shared.resource;
 
 import aphelion.shared.event.WorkerTask;
 import aphelion.shared.event.promise.PromiseException;
-import aphelion.shared.swissarmyknife.None;
+import aphelion.shared.swissarmyknife.SwissArmyKnife;
 import java.io.*;
 import java.net.HttpURLConnection;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.RandomAccess;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -62,8 +65,6 @@ public class DownloadAssetsTask extends WorkerTask<List<Asset>, List<Asset>>
         @Override
         public List<Asset> work(List<Asset> argument) throws PromiseException
         {
-                // todo randomize mirror with same prio
-                
                 ASSETS_LOOP: for (Asset ass : argument)
                 {
                         if (ass.validateCachedEntry())
@@ -72,14 +73,42 @@ public class DownloadAssetsTask extends WorkerTask<List<Asset>, List<Asset>>
                                 continue;
                         }
                         
-                        // ass.mirrors is sorted by higest priority first
-                        for (Asset.Mirror mirror : ass.mirrors)
+                        assert ass.mirrors instanceof RandomAccess;
+                        
+                        // ass.mirrors is sorted by higest priority first.
+                        // Mirror with the same priority should be chosen in a random order
+                        for (int i = 0; i < ass.mirrors.size();)
                         {
-                                if (tryMirror(ass, mirror))
+                                Asset.Mirror first = ass.mirrors.get(i);
+                                int prio = first.priority;
+                                
+                                List<Asset.Mirror> shuffled = new ArrayList<>(); // list of assets with the same prio
+                                shuffled.add(first);
+                                
+                                for (++i; i < ass.mirrors.size(); ++i)
                                 {
-                                        continue ASSETS_LOOP;
+                                        Asset.Mirror mirror = ass.mirrors.get(i);
+
+                                        if (prio != mirror.priority)
+                                        {
+                                                break;
+                                        }
+                                        
+                                        shuffled.add(mirror);
+                                }
+                                
+                                Collections.shuffle(shuffled, SwissArmyKnife.random);
+                                
+                                for (Asset.Mirror mirror : shuffled)
+                                {
+                                        if (tryMirror(ass, mirror))
+                                        {
+                                                continue ASSETS_LOOP;
+                                        }
                                 }
                         }
+                        
+                        
                         
                         log.log(Level.SEVERE, "Exhausted mirror list for asset, unable to download asset. {0}", ass.cachedName);
                         throw new PromiseException("Exhausted mirror list for asset " + ass.cachedName);
