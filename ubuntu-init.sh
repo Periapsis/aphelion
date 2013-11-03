@@ -17,15 +17,14 @@
 JAVA_HOME=/usr/lib/jvm/java-7-openjdk-amd64
 APHELION_HOME=/home/aphelion/aphelion
 DAEMON_USER=aphelion
-LISTEN_PORT=80
-LISTEN_IF=0.0.0.0
+CONFIG_FILE=$APHELION_HOME/server.yaml
 # PATH should only include /usr/* if it runs after the mountnfs.sh script
 PATH=/sbin:/usr/sbin:/bin:/usr/bin
 DESC="Aphelion server"
 NAME=aphelion
 DAEMON=/usr/bin/jsvc
 PIDFILE=/var/run/$NAME.pid
-DAEMON_ARGS="-home $JAVA_HOME -user $DAEMON_USER -outfile $APHELION_HOME/out.log -errfile $APHELION_HOME/err.log -pidfile $PIDFILE -cp $APHELION_HOME/bin/classes/aphelion.jar -ea -server -XX:+DoEscapeAnalysis -XX:+UseG1GC -XX:MaxGCPauseMillis=15 -Djava.library.path=$APHELION_HOME/bin/jni aphelion.server.ServerDaemon $LISTEN_PORT $LISTEN_IF"
+DAEMON_ARGS="-home $JAVA_HOME -user $DAEMON_USER -outfile $APHELION_HOME/out.log -errfile $APHELION_HOME/err.log -pidfile $PIDFILE -cp $APHELION_HOME/bin/classes/aphelion.jar -ea -server -XX:+DoEscapeAnalysis -XX:+UseG1GC -XX:MaxGCPauseMillis=15 -Djava.library.path=$APHELION_HOME/bin/jni aphelion.server.ServerDaemon $CONFIG_FILE"
 SCRIPTNAME=/etc/init.d/$NAME
 
 # Exit if the package is not installed
