@@ -69,7 +69,7 @@ public class DownloadAssetsTask extends WorkerTask<List<Asset>, List<Asset>>
                         if (ass.validateCachedEntry())
                         {
                                 // We already have the file cached, no need to download
-                                break;
+                                continue;
                         }
                         
                         // ass.mirrors is sorted by higest priority first
