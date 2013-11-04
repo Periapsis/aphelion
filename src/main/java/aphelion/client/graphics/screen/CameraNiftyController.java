@@ -54,6 +54,8 @@ import de.lessvoid.nifty.screen.Screen;
 import de.lessvoid.xml.xpp3.Attributes;
 import java.util.Properties;
 import java.util.WeakHashMap;
+import org.newdawn.slick.Color;
+import org.newdawn.slick.opengl.TextureImpl;
 
 /**
  *
@@ -97,6 +99,7 @@ public class CameraNiftyController implements Controller
                 }
                 
                 camera = new Camera(handler.getResourceDB());
+                camera.nifty = nifty;
                 
                 String zoom = controlDefinitionAttributes.get("zoom");
                 zoomFill = "fill".equals(zoom);
@@ -112,6 +115,12 @@ public class CameraNiftyController implements Controller
                 
                 clip = controlDefinitionAttributes.getAsBoolean("clip", true);
                 stars = controlDefinitionAttributes.getAsBoolean("stars", false);
+                
+                String fontPlayer = controlDefinitionAttributes.get("font-player");
+                if (fontPlayer != null)
+                {
+                        camera.playerFont = nifty.createFont(fontPlayer);
+                }
         }
 
         @Override
@@ -145,6 +154,9 @@ public class CameraNiftyController implements Controller
                                 camera.setZoom(camera.dimension.y / 1024f / 16f);
                         }
                         
+                        TextureImpl.unbind();
+                        Graph.g.setColor(Color.white);
+                        
                         if (clip)
                         {
                                 camera.setGraphicsClip();
@@ -156,6 +168,10 @@ public class CameraNiftyController implements Controller
                         {
                                 Graph.g.clearClip();
                         }
+                        
+                        TextureImpl.unbind();
+                        Graph.g.setColor(Color.white);
+                        r.setColor(de.lessvoid.nifty.tools.Color.WHITE);
                 }       
         }
         

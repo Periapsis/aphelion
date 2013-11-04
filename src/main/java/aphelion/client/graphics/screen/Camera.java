@@ -45,9 +45,12 @@ import aphelion.shared.map.tile.TileType;
 import aphelion.shared.resource.ResourceDB;
 import aphelion.shared.swissarmyknife.Point;
 import aphelion.shared.swissarmyknife.SwissArmyKnife;
+import de.lessvoid.nifty.Nifty;
+import de.lessvoid.nifty.spi.render.RenderFont;
+import de.lessvoid.nifty.tools.Color;
 import org.lwjgl.opengl.Display;
-import org.newdawn.slick.Color;
 import org.newdawn.slick.Image;
+import org.newdawn.slick.opengl.TextureImpl;
 
 /**
  *
@@ -56,6 +59,8 @@ import org.newdawn.slick.Image;
 public final class Camera
 {
         public final ResourceDB resourceDB;
+        Nifty nifty;
+        RenderFont playerFont;
         
         // All dimension values are without zoom
         public final Point dimension = new Point();
@@ -63,9 +68,6 @@ public final class Camera
         public int dimensionY;
         public final Point dimensionHalf = new Point();
         public final Point dimensionHalfTiles = new Point();
-
-        //Perspective frequency the camera is viewing
-        private short cameraFrequency = 0;
         
         // Positions on the map:
         public final Point pos = new Point(0,0); // center of the camera
@@ -395,17 +397,29 @@ public final class Camera
                         {
                                 en.noRender();
                         }
-                        Graph.g.clearClip();       
+                        Graph.g.clearClip();
                 }
         }
         
-        public short getFrequency()
+        public int getFrequency()
         {
-        	return this.cameraFrequency;
+                return 0; // todo teams
         }
         
-        public void setFrequency(short freq)
+        public void renderPlayerText(String text, int x, int y, Color color)
         {
-        	this.cameraFrequency = freq;
+                if (playerFont == null) { return; }
+                TextureImpl.unbind();
+                nifty.getRenderEngine().setColor(color);
+                nifty.getRenderEngine().setFont(playerFont);
+                nifty.getRenderEngine().renderText(text, x, y, -1, -1, Color.NONE);
+                nifty.getRenderEngine().setColor(Color.WHITE);
+                Graph.g.setColor(org.newdawn.slick.Color.white);
+                TextureImpl.unbind();
+        }
+        
+        public void renderPlayerText(String text, float x, float y, Color color)
+        {
+                renderPlayerText(text, (int) x, (int) y, color);
         }
 }

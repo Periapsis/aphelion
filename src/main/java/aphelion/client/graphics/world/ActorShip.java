@@ -41,7 +41,6 @@ import aphelion.client.graphics.Graph;
 import aphelion.client.RENDER_LAYER;
 import aphelion.shared.resource.ResourceDB;
 import aphelion.client.graphics.screen.Camera;
-import aphelion.client.Fonts;
 import aphelion.client.graphics.AnimatedColour;
 import aphelion.shared.event.TickEvent;
 import aphelion.shared.gameconfig.GCColour;
@@ -57,7 +56,7 @@ import aphelion.shared.physics.valueobjects.PhysicsPoint;
 import aphelion.shared.swissarmyknife.Point;
 import aphelion.shared.swissarmyknife.SwissArmyKnife;
 
-import org.newdawn.slick.Color;
+import de.lessvoid.nifty.tools.Color;
 import org.newdawn.slick.Image;
 import org.newdawn.slick.SpriteSheetCounted;
 
@@ -102,6 +101,9 @@ public class ActorShip extends MapEntity implements TickEvent, WrappedValueAbstr
         public GCInteger emped_delay;
         
         public AnimatedColour radarAnim;
+        
+        private Color playerColor = new Color(1f, 1f, 0f, 1f);
+        private Color lowEnergyColor = new Color(1f, 0f, 0f, 1f);
 
         public ActorShip(ResourceDB db, ActorPublic actor, boolean localPlayer, Animator animator)
         {
@@ -254,8 +256,6 @@ public class ActorShip extends MapEntity implements TickEvent, WrappedValueAbstr
                 
                 long now = Graph.nanoTime();
                 
-                Graph.g.setFont(Fonts.player_name);
-                
                 Point screenPos = new Point();
                 camera.mapToScreenPosition(pos, screenPos);
                 
@@ -366,25 +366,20 @@ public class ActorShip extends MapEntity implements TickEvent, WrappedValueAbstr
 
                         if (name != null)
                         {
-                                Graph.g.setColor(Color.yellow);
-                                Graph.g.drawString(
+                                camera.renderPlayerText(
                                         name + (currentRenderDelay == 0 ? "" : " [" + currentRenderDelay + "]"),
                                         x + image.getWidth(), 
-                                        y + image.getHeight() / 2f); 
+                                        y + image.getHeight() / 2f,
+                                        playerColor); 
                         }
 
                         int energy = this.actor.getEnergy(this.renderingAt_tick) / 1024;
-                        if(energy < this.maxEnergy.get() / 2)
+                        if (energy < this.maxEnergy.get() / 2)
                         {
-                                Graph.g.setColor(Color.yellow);
-
-                                if(energy < this.maxEnergy.get() / 4)
-                                {
-                                        Graph.g.setColor(Color.red);                                		
-                                }
-                                Graph.g.drawString(energy  + "",
+                                camera.renderPlayerText(energy + "",
                                                 x + image.getWidth(),
-                                                y + image.getHeight() / 2f + 15);
+                                                y + image.getHeight() / 2f + 15,
+                                                energy < this.maxEnergy.get() / 4 ? lowEnergyColor : playerColor);
                         }
                 }
 
@@ -392,9 +387,6 @@ public class ActorShip extends MapEntity implements TickEvent, WrappedValueAbstr
                 Graph.g.setColor(Color.green);
                 Graph.g.drawLine(screenPos.x, screenPos.y, screenPos.x, screenPos.y);
                 Graph.g.drawRect(screenPos.x-r, screenPos.y-r, r+r, r+r);*/
-
-                
-                Fonts.setDefault();
                 
                 return false;
         }

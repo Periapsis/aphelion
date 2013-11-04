@@ -6,17 +6,18 @@
                 
                 <layer childLayout="center">
                         <!-- main camera -->
-                        <control name="aphelion-camera" stars="true" clip="false"/>
+                        <control name="aphelion-camera" stars="true" clip="false" font-player="font.ubuntu-mono-bold-16"/>
                 </layer>
+                
                 <layer childLayout="center">
+                        <!-- radar -->
                         <panel id="radar-small" align="right" valign="bottom" width="306px" height="306px" childLayout="center">
-                                <!-- radar -->
+                                
                                 <image filename="classic.window-border" imageMode="resize:3,2,3,3,3,2,3,2,3,2,3,3" width="306px" height="306px"/>
                                 <panel width="300px" height="300px" backgroundColor="#000000b0"/>
                                 <control name="aphelion-camera" width="300px" height="300px" zoom="0.0833333" stars="false" clip="true"/>
                         </panel>
                         <panel id="radar-big" align="right" valign="bottom" width="606px" height="606px" childLayout="center" visible="false">
-                                <!-- radar -->
                                 <image filename="classic.window-border" imageMode="resize:3,2,3,3,3,2,3,2,3,2,3,3" width="606px" height="606px"/>
                                 <panel width="600px" height="600px" backgroundColor="#000000b0"/>
                                 <control name="aphelion-camera" width="600px" height="600px" zoom="fill" stars="false" clip="true"/>

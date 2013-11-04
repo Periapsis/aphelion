@@ -329,6 +329,8 @@ public class GameLoop
                 niftyResourceLoader.addResourceLocation(new DBNiftyResourceLocation(resourceDB));
                 
                 CameraNiftyController.registerControl(nifty, cameraForNifty);
+                
+                nifty.createFont("");
         }
         
         public void loop()
@@ -338,7 +340,6 @@ public class GameLoop
                 lastFrameReset = System.nanoTime();
                 frames = 60;
                 
-                boolean first = true;
                 boolean tickingPhysics = false;
                 
                 AsyncTexture loadingTex = resourceDB.getTextureLoader().getTexture("gui.loading.graphics");
@@ -456,7 +457,8 @@ public class GameLoop
                         Graph.g.setColor(Color.yellow);
                         if (physicsEnv != null)
                         {
-                                Graph.g.setFont(Fonts.normal);
+                                // TODO nifty
+                                /*Graph.g.setFont(Fonts.normal);
                                 Graph.g.drawString(String.format("%d (%2dms) %4d %d %3dms",
                                         lastFps, 
                                         frameTimeDelta, 
@@ -474,11 +476,10 @@ public class GameLoop
                                         }
                                         
                                         Graph.g.drawString(s, 0, 20);
-                                }
+                                }*/
                         }
                         
                         Display.sync(60);
-                        first = false;
                         
                         if (now - lastFrameReset > 1000000000L)
                         {

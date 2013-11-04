@@ -158,10 +158,6 @@ public class Client
                 loop.addLoopEvent(resourceDB);
 
                 resourceDB.addZip(new File("assets/gui.zip"));
-                resourceDB.addZip(new File("assets/classic.zip"));
-                resourceDB.addZip(new File("assets/singleplayer.zip"));
-                
-                Fonts.initialize(resourceDB);
 
                 loop.setup();
 
@@ -281,8 +277,6 @@ public class Client
                 Graph.g.setDimensions(displayWidth, displayHeight);
                 Graphics.setCurrent(Graph.g);
                 Graph.g.setDrawMode(Graphics.MODE_NORMAL);
-                
-                Fonts.setDefault();
         }
         
         private static void glDisableAll()

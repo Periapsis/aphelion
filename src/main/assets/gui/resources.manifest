@@ -8,5 +8,6 @@ gui.display = display.png
 gui.display.energy = engyfont.png
 gui.display.numbers = led.png
 gui.gauges = icons.png
-gui.font.normal = UbuntuMono-B.ttf
-gui.font.shipname = concielian.ttf
+
+font.ubuntu-mono-bold-16 = ubuntu-mono-bold-16.fnt
+ubuntu-mono-bold-16_0.png = ubuntu-mono-bold-16_0.png
