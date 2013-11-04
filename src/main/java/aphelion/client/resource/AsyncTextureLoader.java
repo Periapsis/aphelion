@@ -168,7 +168,7 @@ public class AsyncTextureLoader implements LoopEvent
                                 texture = new AsyncTexture(this, resourceKey, GL11.GL_TEXTURE_2D);
                                 texture.target = GL11.GL_TEXTURE_2D;
                                 TextureCallback cb = new TextureCallback(texture);
-                                workable.addWorkerTask(new TextureWorker(db), resourceKey).then(cb, cb);
+                                workable.addWorkerTask(new TextureWorker(db), resourceKey).then((PromiseResolved) cb).then((PromiseRejected) cb);
                                 pending.incrementAndGet();
                                 textureCache.put(resourceKey, new WeakReference<>(texture));
                         }

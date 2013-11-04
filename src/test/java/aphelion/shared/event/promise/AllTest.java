@@ -54,7 +54,8 @@ public class AllTest
                                 called_A = true;
                                 return null;
                         }
-                }, new PromiseRejected()
+                });
+                all.then(new PromiseRejected()
                 {
                         @Override
                         public void rejected(PromiseException error)
@@ -126,7 +127,8 @@ public class AllTest
                                 called_A = true;
                                 return null;
                         }
-                }, new PromiseRejected()
+                });
+                all.then(new PromiseRejected()
                 {
                         @Override
                         public void rejected(PromiseException error)
@@ -185,7 +187,8 @@ public class AllTest
                                 called_A = true;
                                 return null;
                         }
-                }, new PromiseRejected()
+                });
+                all.then(new PromiseRejected()
                 {
                         @Override
                         public void rejected(PromiseException error)

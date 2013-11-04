@@ -417,4 +417,87 @@ public class PromiseTest
                 assertTrue(called_A);
                 assertTrue(called_B);
         }
+        
+        @Test
+        public void testResolverException()
+        {
+                called_A = false;
+                
+                TickedEventLoop loop = new TickedEventLoop(10, 1, null);
+                loop.setup();
+                
+                AbstractPromise p = new Promise(loop);
+                
+                p.then(new PromiseResolved()
+                {
+                        @Override
+                        public Object resolved(Object ret) throws PromiseException
+                        {
+                                called_A = true;
+                                throw new PromiseException("abc"); // this exception gets eaten
+                        }
+                });
+                
+                p.then(new PromiseRejected()
+                {
+                        @Override
+                        public void rejected(PromiseException error)
+                        {
+                                assert false;
+                        }
+                });
+                
+                loop.loop();
+                p.resolve("hi");
+                loop.loop();
+                
+                assertTrue(called_A);
+        }
+        
+        
+        @Test
+        public void testExceptionChaining()
+        {
+                called_A = false;
+                called_B = false;
+                
+                TickedEventLoop loop = new TickedEventLoop(10, 1, null);
+                loop.setup();
+                
+                AbstractPromise p = new Promise(loop);
+                
+                p.then(new PromiseResolved()
+                {
+                        @Override
+                        public Object resolved(Object ret) throws PromiseException
+                        {
+                                called_A = true;
+                                throw new PromiseException("abc");
+                        }
+                }).then(new PromiseResolved()
+                {
+                        @Override
+                        public Object resolved(Object ret) throws PromiseException
+                        {
+                                assert false;
+                                return null;
+                        }
+                }).then(new PromiseRejected()
+                {
+                        @Override
+                        public void rejected(PromiseException error)
+                        {
+                                called_B = true;
+                                assertEquals("abc", error.getMessage());
+                        }
+                });
+                
+                loop.loop();
+                p.resolve("hi");
+                loop.loop();
+                
+                assertTrue(called_A);
+                assertTrue(called_B);
+        }
+     
 }

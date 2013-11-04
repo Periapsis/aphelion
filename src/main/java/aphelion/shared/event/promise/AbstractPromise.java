@@ -164,12 +164,6 @@ public abstract class AbstractPromise
                 resolutions.clear();
         }
         
-        public AbstractPromise then(PromiseResolved resolved, PromiseRejected rejected)
-        {
-                then(rejected);
-                return then(resolved);
-        }
-        
         public AbstractPromise then(PromiseResolved callback)
         {
                 if (callback == null)
