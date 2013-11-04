@@ -76,6 +76,7 @@ import aphelion.shared.resource.Asset;
 import aphelion.shared.resource.DownloadAssetsTask;
 import aphelion.shared.swissarmyknife.AttachmentConsumer;
 import de.lessvoid.nifty.Nifty;
+import de.lessvoid.nifty.controls.button.ButtonControl;
 import de.lessvoid.nifty.nulldevice.NullSoundDevice;
 import de.lessvoid.nifty.renderer.lwjgl.input.LwjglInputSystem;
 import de.lessvoid.nifty.renderer.lwjgl.render.LwjglRenderDevice;
@@ -91,6 +92,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.JOptionPane;
 
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.opengl.Display;
@@ -247,31 +249,49 @@ public class GameLoop
                                 }
 
                                 ships = physicsEnv.getGlobalConfigStringList(0, "ships");
-
+                                
+                                boolean first = true;
+                                for (String res : networkedGame.niftyGuiResources)
+                                {
+                                        try
+                                        {
+                                                nifty.validateXml(res);
+                                        }
+                                        catch (Exception ex)
+                                        {
+                                                throw new PromiseException(ex);
+                                        }
+                                        
+                                        if (first)
+                                        {
+                                                nifty.fromXmlWithoutStartScreen(res);
+                                                first = false;
+                                        }
+                                        else
+                                        {
+                                                nifty.addXml(res);
+                                        }
+                                        
+                                }
+                                
                                 networkedGame.arenaLoaded(physicsEnv, mapEntities);
                                 loadedResources = true;
                                 
-                                // todo: load nifty xml here
-                                /*try
-                                {
-                                        nifty.validateXml("nifty.test");
-                                }
-                                catch (Exception ex)
-                                {
-                                        throw new Error(ex);
-                                }
-                                nifty.fromXml("nifty.test", "start");*/
+                                nifty.gotoScreen("aphelion-main");
                                 
                                 return null;
                         }
-                }, new PromiseRejected()
+                }).then(new PromiseRejected()
                 {
                         @Override
                         public void rejected(PromiseException error)
                         {
                                 log.log(Level.SEVERE, "Error while loading the arena", error);
                                 loop.interrupt();
-                                // TODO: display a dialog to the user and go back to the launcher?
+                                JOptionPane.showMessageDialog(Display.getParent(), 
+                                                              "Error while loading the arena:\n" 
+                                                              + error.getMessage() 
+                                                              + "\nSee log for further details");
                         }
                 });
                 
@@ -307,7 +327,7 @@ public class GameLoop
                 niftyResourceLoader.addResourceLocation(new ClasspathLocation());
                 // Then try the same reference as a resource key 
                 // (add this second so that zones can not override nifty build-ins)
-                niftyResourceLoader.addResourceLocation(new DBNiftyResourceLocation(resourceDB));       
+                niftyResourceLoader.addResourceLocation(new DBNiftyResourceLocation(resourceDB));
         }
         
         public void loop()

@@ -3,6 +3,7 @@
 arena:
         map: singleplayer.map
         game-config: [singleplayer.gameconfig]
+        nifty-gui: [gui.default]
         
         assets:
                 - path: ./assets/classic.zip

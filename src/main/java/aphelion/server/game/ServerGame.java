@@ -86,6 +86,7 @@ public class ServerGame implements LoopEvent, TickEvent, GameListener
         public final List<Asset> assets;
         public final String mapResource;
         public final List<String> gameConfigResources;
+        public final List<String> niftyGuiResources;
         
         // Simply raise this value to get the next pid, do not reuse them for now.
         // This way we would go into negative pids after 248 days if we would get a new player every 10ms.
@@ -98,13 +99,15 @@ public class ServerGame implements LoopEvent, TickEvent, GameListener
                           TickedEventLoop loop, 
                           List<Asset> assets, 
                           String mapResource, 
-                          List<String> gameConfigResources)
+                          List<String> gameConfigResources,
+                          List<String> niftyGuiResources)
         {
                 this.physicsEnv = physicsEnv;
                 this.loop = loop;
                 this.assets = assets;
                 this.mapResource = mapResource;
                 this.gameConfigResources = Collections.unmodifiableList(gameConfigResources);
+                this.niftyGuiResources = Collections.unmodifiableList(niftyGuiResources);
                 
                 loop.addTimerEvent(SYNC_SOME_ACTOR_EVERY_TICKS, actorSyncTimer);
         }

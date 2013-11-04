@@ -1,3 +1,4 @@
+gui.default = default.nifty.xml
 gui.loading.connecting = logo_connecting.png
 gui.loading.graphics = Logo.png
 gui.loading.map = LoadingRadar.png

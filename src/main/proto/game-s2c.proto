@@ -80,11 +80,14 @@ message ArenaLoad {
         // The client should send ArenaLoaded after completion
         repeated ResourceRequirement resourceRequirement = 1;
 
-        // Resource key
+        // Map to load (resource key)
         required string map = 2;
 
-        // Resource keys
+        // Game config to load (resource keys)
         repeated string gameGonfig = 3;
+
+        // Nifty gui xml's to load (resource keys)
+        repeated string niftyGui = 4;
 }
 
 message ResourceRequirement {

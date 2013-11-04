@@ -64,7 +64,6 @@ import aphelion.shared.resource.LocalUserStorage;
 import aphelion.shared.swissarmyknife.RollingHistory;
 import java.io.IOException;
 import java.net.MalformedURLException;
-import java.net.URI;
 import java.net.URL;
 import java.util.*;
 import java.util.logging.Level;
@@ -106,6 +105,7 @@ public class NetworkedGame implements GameListener, TickEvent
         private final List<Asset> assets = new ArrayList<>();
         public String mapResource;
         public final List<String> gameConfigResources = new ArrayList<>();
+        public final List<String> niftyGuiResources = new ArrayList<>();
         
         private String nickname;
         private STATE state;
@@ -450,6 +450,7 @@ public class NetworkedGame implements GameListener, TickEvent
                         this.mapResource = msg.getMap();
                         this.gameConfigResources.clear();
                         this.gameConfigResources.addAll(msg.getGameGonfigList());
+                        this.niftyGuiResources.addAll(msg.getNiftyGuiList());
                         
                         for (GameS2C.ResourceRequirement req : msg.getResourceRequirementList())
                         {

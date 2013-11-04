@@ -185,6 +185,7 @@ public class ClientState
                 
                 arenaLoad.setMap(serverGame.mapResource);
                 arenaLoad.addAllGameGonfig(serverGame.gameConfigResources);
+                arenaLoad.addAllNiftyGui(serverGame.niftyGuiResources);
                 
                 gameConn.send(s2c);
         }

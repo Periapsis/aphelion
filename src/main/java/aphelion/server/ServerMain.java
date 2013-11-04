@@ -89,6 +89,7 @@ public class ServerMain implements LoopEvent, TickEvent
         private List<Asset> assets;
         private String mapResource;
         private List<String> gameConfigResources;
+        private List<String> niftyGuiResources;
         
         private static final int DUMMY_1_PID = -1;
         private static final int DUMMY_2_PID = -2;
@@ -145,6 +146,7 @@ public class ServerMain implements LoopEvent, TickEvent
                         mapResource = (String) arena.get("map");
 
                         gameConfigResources = new ArrayList<>((List<String>) arena.get("game-config"));
+                        niftyGuiResources = new ArrayList<>((List<String>) arena.get("nifty-gui"));
                 }
                 catch (ClassCastException | NullPointerException ex)
                 {
@@ -216,7 +218,7 @@ public class ServerMain implements LoopEvent, TickEvent
                 physicsEnv.actorNew(0, DUMMY_2_PID, "Dummy 2", 1, "terrier");
                 physicsEnv.actorWarp(0, DUMMY_2_PID, false, 512 * 16 * 1024, 448 * 16 * 1024, 0, -10000, 0); 
                 
-                serverGame = new ServerGame(physicsEnv, loop, assets, mapResource, gameConfigResources);
+                serverGame = new ServerGame(physicsEnv, loop, assets, mapResource, gameConfigResources, niftyGuiResources);
                 loop.addLoopEvent(serverGame);
                 loop.addTickEvent(serverGame);
                 server.setGameClientListener(serverGame);
