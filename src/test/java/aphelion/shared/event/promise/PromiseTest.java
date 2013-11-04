@@ -500,4 +500,50 @@ public class PromiseTest
                 assertTrue(called_B);
         }
      
+        @Test
+        public void testExceptionChaining2()
+        {
+                called_A = false;
+                called_B = false;
+                
+                TickedEventLoop loop = new TickedEventLoop(10, 1, null);
+                loop.setup();
+                
+                AbstractPromise p = new Promise(loop);
+                final AbstractPromise p2 = new Promise(loop);
+                
+                p.then(new PromiseResolved()
+                {
+                        @Override
+                        public Object resolved(Object ret) throws PromiseException
+                        {
+                                called_A = true;
+                                return p2;
+                        }
+                }).then(new PromiseResolved()
+                {
+                        @Override
+                        public Object resolved(Object ret) throws PromiseException
+                        {
+                                throw new PromiseException("abc");
+                        }
+                }).then(new PromiseRejected()
+                {
+                        @Override
+                        public void rejected(PromiseException error)
+                        {
+                                called_B = true;
+                                assertEquals("abc", error.getMessage());
+                        }
+                });
+                
+                loop.loop();
+                p.resolve("hi");
+                loop.loop();
+                p2.resolve("hi");
+                loop.loop();
+                
+                assertTrue(called_A);
+                assertTrue(called_B);
+        }
 }

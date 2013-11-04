@@ -80,6 +80,17 @@ public abstract class AbstractPromise
                         
                         this.chainedPromise = new Promise(workable);
                 }
+                
+                Resolution(PromiseResolved resolvedCallback, PromiseRejected rejectedCallback, Promise chainedPromise)
+                {
+                        this.resolvedCallback = resolvedCallback;
+                        this.rejectedCallback = rejectedCallback;
+                        this.all = null;
+                        this.myIndex = 0;
+                        
+                        assert chainedPromise.workable == workable;
+                        this.chainedPromise = chainedPromise;
+                }
 
                 Resolution(All all, int myIndex)
                 {
@@ -225,6 +236,28 @@ public abstract class AbstractPromise
                 else
                 {
                         Resolution resolution = new Resolution(all, myIndex);
+                        resolutions.add(resolution);
+                }
+        }
+        
+        void then(Resolution foreignResolution)
+        {
+                if (foreignResolution.all != null)
+                {
+                        then(foreignResolution.all, foreignResolution.myIndex);
+                        return;
+                }
+                
+                Resolution resolution = new Resolution(foreignResolution.resolvedCallback, 
+                        foreignResolution.rejectedCallback, 
+                        foreignResolution.chainedPromise);
+                
+                if (resolved || rejected)
+                {
+                        workable.runOnMain(resolution);
+                }
+                else
+                {
                         resolutions.add(resolution);
                 }
         }

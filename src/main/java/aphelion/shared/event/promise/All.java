@@ -39,7 +39,6 @@
 package aphelion.shared.event.promise;
 
 import aphelion.shared.event.Workable;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 

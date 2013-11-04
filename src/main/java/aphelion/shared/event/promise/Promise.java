@@ -58,14 +58,7 @@ public class Promise extends AbstractPromise
                 this.parent = parent;
                 for (AbstractPromise.Resolution resolution : resolutions)
                 {
-                        if (resolution.resolvedCallback != null)
-                        {
-                                parent.then(resolution.resolvedCallback);
-                        }
-                        else if (resolution.all != null)
-                        {
-                                parent.then(resolution.all, resolution.myIndex);
-                        }
+                        parent.then(resolution);
                 }
                 resolutions.clear();
         }
