@@ -79,6 +79,7 @@ import aphelion.shared.resource.DownloadAssetsTask;
 import aphelion.shared.swissarmyknife.AttachmentConsumer;
 import de.lessvoid.nifty.Nifty;
 import de.lessvoid.nifty.elements.Element;
+import de.lessvoid.nifty.elements.render.TextRenderer;
 import de.lessvoid.nifty.nulldevice.NullSoundDevice;
 import de.lessvoid.nifty.renderer.lwjgl.input.LwjglInputSystem;
 import de.lessvoid.nifty.renderer.lwjgl.render.LwjglRenderDevice;
@@ -99,7 +100,6 @@ import javax.swing.JOptionPane;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.opengl.Display;
 import org.lwjgl.opengl.GL11;
-import org.newdawn.slick.Color;
 import org.newdawn.slick.Image;
 
 /**
@@ -454,29 +454,27 @@ public class GameLoop
                         ++frames;
                         long frameTimeDelta = (now - begin) / 1_000_000;
                         
-                        Graph.g.setColor(Color.yellow);
-                        if (physicsEnv != null)
+                        Element dbg = mainScreen == null ? null : mainScreen.findElementByName("debug-info");
+                        if (physicsEnv != null && dbg != null)
                         {
-                                // TODO nifty
-                                /*Graph.g.setFont(Fonts.normal);
-                                Graph.g.drawString(String.format("%d (%2dms) %4d %d %3dms",
+                                String text = String.format("%d (%2dms) %4d %d %3dms",
                                         lastFps, 
                                         frameTimeDelta, 
                                         physicsEnv.getTick(),
                                         physicsEnv.getTimewarpCount(),
-                                        networkedGame.getlastRTTNano() / 1000_000L), 0, 0);
+                                        networkedGame.getlastRTTNano() / 1000_000L);
                                 
                                 if (localShip != null)
                                 {
-                                        String s = "("+((int) localShip.pos.x / 16)+","+((int) localShip.pos.y / 16)+")";
+                                        text += "\n("+((int) localShip.pos.x / 16)+","+((int) localShip.pos.y / 16)+")";
                                         
                                         if (localShip.getActor() != null)
                                         {
-                                                s += " " + localShip.getActor().getShip();
+                                                text += " " + localShip.getActor().getShip();
                                         }
-                                        
-                                        Graph.g.drawString(s, 0, 20);
-                                }*/
+                                }
+                                
+                                dbg.getRenderer(TextRenderer.class).setText(text);
                         }
                         
                         Display.sync(60);

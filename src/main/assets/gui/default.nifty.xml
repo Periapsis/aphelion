@@ -23,5 +23,11 @@
                                 <control name="aphelion-camera" width="600px" height="600px" zoom="fill" stars="false" clip="true"/>
                         </panel>
                 </layer>
+                
+                <layer childLayout="center">
+                        <text id="debug-info" font="font.ubuntu-mono-bold-16" color="#ffff" 
+                              align="left" valign="top" textVAlign="top" textHAlign="left" 
+                              width="100%" height="100px"/>
+                </layer>
         </screen>
 </nifty>
