@@ -325,11 +325,12 @@ public class MapClassic implements PhysicsMap
                                 
                                 if (tileID < 1 || (tileID >= 242 && tileID <= 255))
                                 {
-                                        int randomInt = random.nextInt(4) - 2;
                                         
+                                        /* TODO: make this configurable?
                                         // it has no color yet
                                         if (radarBuffer.getAlpha(x, y) == 0)
                                         {
+                                                int randomInt = random.nextInt(4) - 2;
                                                 // random background noise
                                                 radarBuffer.setRGBA(
                                                         x, y,
@@ -337,7 +338,7 @@ public class MapClassic implements PhysicsMap
                                                         SwissArmyKnife.clip(background.g + randomInt, 0, 255),
                                                         SwissArmyKnife.clip(background.b + randomInt, 0, 255),
                                                         background.a);
-                                        }
+                                        }*/
                                         
                                 }
                                 else
