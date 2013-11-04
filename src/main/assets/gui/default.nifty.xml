@@ -3,8 +3,24 @@
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
        xsi:schemaLocation="http://niftygui.sourceforge.net/nifty-1.3.xsd http://nifty-gui.sourceforge.net/nifty-1.3.xsd">
         <screen id="aphelion-main">
+                
                 <layer childLayout="center">
-                        <image filename="cnc.nuke"/>
+                        <!-- main camera -->
+                        <control name="aphelion-camera" stars="true" clip="false"/>
+                </layer>
+                <layer childLayout="center">
+                        <panel id="radar-small" align="right" valign="bottom" width="306px" height="306px" childLayout="center">
+                                <!-- radar -->
+                                <image filename="classic.window-border" imageMode="resize:3,2,3,3,3,2,3,2,3,2,3,3" width="306px" height="306px"/>
+                                <panel width="300px" height="300px" backgroundColor="#000000b0"/>
+                                <control name="aphelion-camera" width="300px" height="300px" zoom="0.0833333" stars="false" clip="true"/>
+                        </panel>
+                        <panel id="radar-big" align="right" valign="bottom" width="606px" height="606px" childLayout="center" visible="false">
+                                <!-- radar -->
+                                <image filename="classic.window-border" imageMode="resize:3,2,3,3,3,2,3,2,3,2,3,3" width="606px" height="606px"/>
+                                <panel width="600px" height="600px" backgroundColor="#000000b0"/>
+                                <control name="aphelion-camera" width="600px" height="600px" zoom="fill" stars="false" clip="true"/>
+                        </panel>
                 </layer>
         </screen>
 </nifty>

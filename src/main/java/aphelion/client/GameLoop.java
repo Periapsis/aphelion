@@ -45,6 +45,8 @@ import aphelion.client.net.NetworkedGame;
 import aphelion.client.net.SingleGameConnection;
 import aphelion.shared.resource.ResourceDB;
 import aphelion.client.graphics.screen.Camera;
+import aphelion.client.graphics.screen.CameraNiftyController;
+import aphelion.client.graphics.screen.CameraNiftyController.CameraForNifty;
 import aphelion.client.graphics.screen.EnergyBar;
 import aphelion.client.graphics.screen.Gauges;
 import aphelion.client.graphics.screen.StatusDisplay;
@@ -76,17 +78,17 @@ import aphelion.shared.resource.Asset;
 import aphelion.shared.resource.DownloadAssetsTask;
 import aphelion.shared.swissarmyknife.AttachmentConsumer;
 import de.lessvoid.nifty.Nifty;
-import de.lessvoid.nifty.controls.button.ButtonControl;
+import de.lessvoid.nifty.elements.Element;
 import de.lessvoid.nifty.nulldevice.NullSoundDevice;
 import de.lessvoid.nifty.renderer.lwjgl.input.LwjglInputSystem;
 import de.lessvoid.nifty.renderer.lwjgl.render.LwjglRenderDevice;
+import de.lessvoid.nifty.screen.Screen;
 import de.lessvoid.nifty.spi.time.impl.AccurateTimeProvider;
 import de.lessvoid.nifty.tools.resourceloader.ClasspathLocation;
 import de.lessvoid.nifty.tools.resourceloader.NiftyResourceLoader;
 import java.io.IOException;
 import java.lang.ref.WeakReference;
 
-import java.util.Calendar;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -131,15 +133,14 @@ public class GameLoop
         
         // Graphics:
         private StarField stars;
-        private Camera mainCamera;
-        private Camera radarCamera;
-        private Camera bigMapCamera;
         private MapEntities mapEntities;
         private static final AttachmentConsumer<EventPublic, EventTracker> eventTrackers 
                 = new AttachmentConsumer<>(Event.attachmentManager);
         
         // Screen Graphics
         private Nifty nifty;
+        private final Point defaultCameraPosition = new Point();
+        private Screen mainScreen;
         private EnergyBar energyBar;
         private StatusDisplay statusDisplay;
         private Gauges gauges;
@@ -277,7 +278,13 @@ public class GameLoop
                                 networkedGame.arenaLoaded(physicsEnv, mapEntities);
                                 loadedResources = true;
                                 
+                                mainScreen = nifty.getScreen("aphelion-main");
+                                if (mainScreen == null)
+                                {
+                                        throw new PromiseException("Missing nifty-gui screen: aphelion-main");
+                                }
                                 nifty.gotoScreen("aphelion-main");
+                                
                                 
                                 return null;
                         }
@@ -297,15 +304,6 @@ public class GameLoop
                 
                 myKeyboard = new MyKeyboard();
                 
-                mainCamera = new Camera(resourceDB);
-                
-                radarCamera = new Camera(resourceDB);
-                radarCamera.setZoom(1/12f);
-                radarCamera.setPosition(512 * 16, 512 * 16);
-                
-                bigMapCamera = new Camera(resourceDB);
-                bigMapCamera.setPosition(512 * 16, 512 * 16);
-                
                 mapEntities = new MapEntities(resourceDB);
                 loop.addTickEvent(mapEntities);
                 loop.addLoopEvent(mapEntities);
@@ -320,6 +318,7 @@ public class GameLoop
                 {
                         throw new Error(ex);
                 }
+                
                 nifty = new Nifty(new LwjglRenderDevice(), new NullSoundDevice(), inputSystem, new AccurateTimeProvider());
                 NiftyResourceLoader niftyResourceLoader = nifty.getResourceLoader();
                 niftyResourceLoader.removeAllResourceLocations();
@@ -328,6 +327,8 @@ public class GameLoop
                 // Then try the same reference as a resource key 
                 // (add this second so that zones can not override nifty build-ins)
                 niftyResourceLoader.addResourceLocation(new DBNiftyResourceLocation(resourceDB));
+                
+                CameraNiftyController.registerControl(nifty, cameraForNifty);
         }
         
         public void loop()
@@ -352,14 +353,7 @@ public class GameLoop
                                 log.log(Level.WARNING, "Close requested in game loop");
                                 loop.interrupt();
                                 break;
-                        }
-                        
-                        if (nifty.update())
-                        {
-                                log.log(Level.WARNING, "Close by nifty in game loop");
-                                loop.interrupt();
-                                break;
-                        }        
+                        }       
                         
                         Graph.graphicsLoop();
                         
@@ -378,31 +372,22 @@ public class GameLoop
                                 localActor = physicsEnv.getActor(networkedGame.getMyPid());
                         }
                         
-                        Client.initGL();
-                        
-                        int displayWidth = Display.getWidth();
-                        int displayHeight = Display.getHeight();
-                        
-                        if (first || Display.wasResized())
-                        {
-                                nifty.resolutionChanged();
-                                mainCamera.setDimension(displayWidth, displayHeight);
-                                
-                                radarCamera.setDimension((displayHeight / 3.5f), (displayHeight / 3.5f));
-                                radarCamera.setScreenPosition(
-                                        displayWidth - radarCamera.dimension.x - 8, 
-                                        displayHeight - radarCamera.dimension.y - 8);
-                                
-                                bigMapCamera.setDimension((displayHeight * 0.6f), (displayHeight * 0.6f));
-                                //bigMapCamera.setZoom(1/16f);
-                                bigMapCamera.setZoom(bigMapCamera.dimension.y / 1024f / 16f); 
-                                bigMapCamera.setScreenPosition(
-                                        displayWidth - bigMapCamera.dimension.x - 8, 
-                                        displayHeight - bigMapCamera.dimension.y - 8);
-                        }
-                        
                         Keyboard.poll();
                         myKeyboard.pollStates();
+                        
+                        if (nifty.update())
+                        {
+                                log.log(Level.WARNING, "Close by nifty in game loop");
+                                loop.interrupt();
+                                break;
+                        }
+                        
+                        Client.initGL();
+                        
+                        if (Display.wasResized())
+                        {
+                                nifty.resolutionChanged();
+                        }
                         
                         loop.loop(); // logic
                         
@@ -434,7 +419,7 @@ public class GameLoop
                                 if (localShip == null || localActor == null)
                                 {
                                         // TODO spec
-                                        mainCamera.setPosition(8192, 8192);
+                                        defaultCameraPosition.set(8192, 8192);
                                         energyBar = null;
                                         statusDisplay = null;
                                         gauges = null;
@@ -457,10 +442,10 @@ public class GameLoop
                                         }
                                         
                                         
-                                        mainCamera.setPosition(localShip.pos);
+                                        defaultCameraPosition.set(localShip.pos);
                                 }
                                 
-                                render();
+                                nifty.render(false);
                         }
                         
                         // statistics
@@ -504,80 +489,43 @@ public class GameLoop
                 }       
         }
         
-        private void render()
+        private final CameraForNifty cameraForNifty = new CameraNiftyController.CameraForNifty()
         {
-                renderCamera(mainCamera);
-                
-                // GUI
-                if (energyBar != null)
+
+                @Override
+                public ResourceDB getResourceDB()
                 {
-                        energyBar.render(mainCamera);
+                        return resourceDB;
                 }
-                
-                if(statusDisplay != null)
+
+                @Override
+                public void renderCamera(Camera camera, boolean renderStars)
                 {
-                	statusDisplay.render(mainCamera);
-                }
-                
-                if(gauges != null)
-                {
-                	gauges.render(mainCamera, myKeyboard.multiFireGun);
-                }
-                
-                if (myKeyboard.altMap)
-                {
-                        bigMapCamera.renderCameraBox();
-                        bigMapCamera.renderTiles(this.mapClassic, TileType.TILE_LAYER.PLAIN);
-                        renderCamera(bigMapCamera);
-                }
-                else
-                {
-                        radarCamera.setPosition(mainCamera.pos);
-                        radarCamera.clipPosition(0, 0, 1024*16, 1024*16);
-                        renderCamera(radarCamera);
+                        GL11.glColor3f(1, 1, 1);
                         
-                        Graph.g.setColor(Color.white);
-                        String text = Calendar.getInstance().get(Calendar.HOUR_OF_DAY) + ":" + Calendar.getInstance().get(Calendar.MINUTE);
+                        camera.setPosition(defaultCameraPosition);
+                        camera.clipPosition(0, 0, 1024*16, 1024*16);
                         
-                        Graph.g.drawString(text, 
-                                Display.getWidth() - Graph.g.getFont().getWidth(text) - 5, 
-                                radarCamera.screenPosY - Graph.g.getFont().getLineHeight());
+                        if (renderStars)
+                        {
+                                stars.render(camera);
+                        }
+
+                        camera.renderEntities(mapEntities.animations(RENDER_LAYER.BACKGROUND, camera));
+                        camera.renderTiles(mapClassic, TileType.TILE_LAYER.PLAIN);
+                        // rendered in a seperate iteration so that we do not have to switch between textures as often
+                        // (tile set is one big texture)
+                        camera.renderTiles(mapClassic, TileType. TILE_LAYER.ANIMATED);
+                        camera.renderEntities(mapEntities.animations(RENDER_LAYER.AFTER_TILES, camera));
+                        camera.renderEntities(mapEntities.projectiles(false));
+                        camera.renderEntities(mapEntities.animations(RENDER_LAYER.AFTER_PROJECTILES, camera));
+                        camera.renderEntities(mapEntities.shipsNoLocal());
+                        camera.renderEntities(mapEntities.animations(RENDER_LAYER.AFTER_SHIPS, camera));
+                        camera.renderEntity(mapEntities.getLocalShip());
+                        camera.renderTiles(mapClassic, TileType.TILE_LAYER.PLAIN_OVER_SHIP);
+                        camera.renderEntities(mapEntities.animations(RENDER_LAYER.AFTER_LOCAL_SHIP, camera));
                 }
-                
-                nifty.render(false);
-        }
-        
-        @SuppressWarnings("unchecked")
-        private void renderCamera(Camera camera)
-        {
-                GL11.glColor3f(1, 1, 1);
-                
-                if (camera != this.mainCamera)
-                {
-                        // draw camera edges and background unless this is the main camera
-                        camera.renderCameraBox();
-                }
-                
-                if (camera == mainCamera)
-                {
-                        camera.setGraphicsClip();
-                        stars.render(camera);
-                }
-                
-                camera.renderEntities(mapEntities.animations(RENDER_LAYER.BACKGROUND, camera));
-                camera.renderTiles(this.mapClassic, TileType.TILE_LAYER.PLAIN);
-                // rendered in a seperate iteration so that we do not have to switch between textures as often
-                // (tile set is one big texture)
-                camera.renderTiles(this.mapClassic, TileType. TILE_LAYER.ANIMATED);
-                camera.renderEntities(mapEntities.animations(RENDER_LAYER.AFTER_TILES, camera));
-                camera.renderEntities(mapEntities.projectiles(false));
-                camera.renderEntities(mapEntities.animations(RENDER_LAYER.AFTER_PROJECTILES, camera));
-                camera.renderEntities(mapEntities.shipsNoLocal());
-                camera.renderEntities(mapEntities.animations(RENDER_LAYER.AFTER_SHIPS, camera));
-                camera.renderEntity(mapEntities.getLocalShip());
-                camera.renderTiles(this.mapClassic, TileType.TILE_LAYER.PLAIN_OVER_SHIP);
-                camera.renderEntities(mapEntities.animations(RENDER_LAYER.AFTER_LOCAL_SHIP, camera));
-        }
+        };
         
         private void updateGraphicsFromPhysics()
         {
@@ -810,7 +758,6 @@ public class GameLoop
         {
                 private long tick;
                 private boolean up, down, left, right, boost;
-                private boolean altMap;
                 private boolean multiFireGun;
                 private boolean fireGun;
                 private boolean fireBomb;
@@ -835,7 +782,6 @@ public class GameLoop
                                 left = false;
                                 right = false;
                                 boost = false;
-                                altMap = false;
                                 fireGun = false;
                                 fireBomb = false;
                                 fireThor = false;
@@ -859,8 +805,6 @@ public class GameLoop
                         right = Keyboard.isKeyDown(Keyboard.KEY_RIGHT);
                         boost = shift;
                         
-                        altMap = Keyboard.isKeyDown(Keyboard.KEY_LMENU) || Keyboard.isKeyDown(Keyboard.KEY_RMENU);
-                        
                         fireGun = !shift && ctrl;
                         fireBomb = !shift && Keyboard.isKeyDown(Keyboard.KEY_TAB);
                         fireMine = shift && Keyboard.isKeyDown(Keyboard.KEY_TAB);
@@ -878,6 +822,26 @@ public class GameLoop
                         {
                                 int key = Keyboard.getEventKey();
                                 char chr = Keyboard.getEventCharacter();
+                                
+                                if (key == Keyboard.KEY_LMENU || key == Keyboard.KEY_RMENU)
+                                {
+                                        Element big =  mainScreen.findElementByName("radar-big");
+                                        Element small = mainScreen.findElementByName("radar-small");
+                                        
+                                        if (big != null && small != null)
+                                        {
+                                                if (Keyboard.getEventKeyState())
+                                                {
+                                                        small.hide();
+                                                        big.show();
+                                                }
+                                                else
+                                                {
+                                                        big.hide();
+                                                        small.show();
+                                                }
+                                        }
+                                }
                                 
                                 if (!Keyboard.getEventKeyState())
                                 {

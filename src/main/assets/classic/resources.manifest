@@ -8,6 +8,7 @@ mapclassic.asteroid.small2 = asteroid/asteroid4.png
 mapclassic.bullets = bullets.png
 mapclassic.space-station = space-station.png
 mapclassic.wormhole = wormhole.png
+classic.window-border = window-border.png
 classic.ships = ships.png
 classic.bullets = bullets.png
 classic.bombs = bombs.png

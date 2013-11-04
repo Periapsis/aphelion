@@ -261,61 +261,6 @@ public final class Camera
                 return isOnScreen(low.x, low.y, high.x, high.y);
         }
         
-        private static Color background = new Color(0, 0, 0, 0.8f);
-        private static Color edgeA = new Color(0x84, 0x84, 0x84);
-        private static Color edgeB = new Color(0x6B, 0x63, 0x63);
-        private static Color edgeC = new Color(0x52, 0x52, 0x52);
-        
-        public void renderCameraBox()
-        {
-                // Background
-                Graph.g.setColor(background);
-                Graph.g.fillRect(screenPos.x, screenPos.y, dimension.x, dimension.y);
-                
-                // Edges
-                Graph.g.setColor(edgeA);
-                cameraBoxRect(screenPos.x-1, screenPos.y-1, dimension.x+2, dimension.y+2, 0);
-                
-                Graph.g.setColor(edgeB);
-                cameraBoxRect(screenPos.x-2, screenPos.y-2, dimension.x+4, dimension.y+4, 0);
-                
-                Graph.g.setColor(edgeC);
-                cameraBoxRect(screenPos.x-3, screenPos.y-3, dimension.x+6, dimension.y+6, 2);
-                
-                /*Graph.g.setColor(Color.red);
-                Graph.g.drawRect(screenPos.x + dimension.x / 2, 
-                        screenPos.y + dimension.y / 2, 
-                        1, 
-                        1);*/
-        }
-        
-        private void cameraBoxRect(float x1, float y1, float width, float height, float cornerCutOff)
-        {
-		Graph.g.drawLine(
-                        x1 + cornerCutOff,
-                        y1,
-                        x1 + width - cornerCutOff,
-                        y1);
-                
-		Graph.g.drawLine(
-                        x1 + width,
-                        y1 + cornerCutOff,
-                        x1 + width,
-                        y1 + height - cornerCutOff );
-                
-		Graph.g.drawLine(
-                        x1 + width - cornerCutOff,
-                        y1 + height,
-                        x1 + cornerCutOff,
-                        y1 + height);
-                
-		Graph.g.drawLine(
-                        x1,
-                        y1 + height - cornerCutOff,
-                        x1,
-                        y1  + cornerCutOff);
-        }
-        
         public void setGraphicsClip()
         {
                 Graph.g.setClip((int)screenPos.x, (int)screenPos.y, (int)dimension.x, (int)dimension.y);
