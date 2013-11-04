@@ -252,6 +252,15 @@ public class GameLoop
                                 loadedResources = true;
                                 
                                 // todo: load nifty xml here
+                                /*try
+                                {
+                                        nifty.validateXml("nifty.test");
+                                }
+                                catch (Exception ex)
+                                {
+                                        throw new Error(ex);
+                                }
+                                nifty.fromXml("nifty.test", "start");*/
                                 
                                 return null;
                         }
@@ -356,6 +365,7 @@ public class GameLoop
                         
                         if (first || Display.wasResized())
                         {
+                                nifty.resolutionChanged();
                                 mainCamera.setDimension(displayWidth, displayHeight);
                                 
                                 radarCamera.setDimension((displayHeight / 3.5f), (displayHeight / 3.5f));
