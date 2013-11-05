@@ -49,8 +49,8 @@ import aphelion.client.graphics.screen.CameraNiftyController;
 import aphelion.client.graphics.screen.CameraNiftyController.CameraForNifty;
 import aphelion.client.graphics.screen.EnergyBar;
 import aphelion.client.graphics.screen.Gauges;
-import aphelion.client.graphics.screen.NiftyBackgroundColorSpriteEffect;
-import aphelion.client.graphics.screen.NiftySpriteAnimationEffect;
+import aphelion.client.graphics.nifty.BackgroundColorSpriteEffect;
+import aphelion.client.graphics.nifty.SpriteAnimationEffect;
 import aphelion.client.graphics.screen.StatusDisplay;
 import aphelion.client.graphics.world.*;
 import aphelion.client.graphics.world.event.ActorDiedTracker;
@@ -331,8 +331,8 @@ public class GameLoop
                 niftyResourceLoader.addResourceLocation(new DBNiftyResourceLocation(resourceDB));
                 
                 CameraNiftyController.registerControl(nifty, cameraForNifty);
-                NiftySpriteAnimationEffect.registerEffect(nifty);
-                NiftyBackgroundColorSpriteEffect.registerEffect(nifty);
+                SpriteAnimationEffect.registerEffect(nifty);
+                BackgroundColorSpriteEffect.registerEffect(nifty);
         }
         
         public void loop()
