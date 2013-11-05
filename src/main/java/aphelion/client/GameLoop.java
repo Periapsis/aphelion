@@ -49,6 +49,7 @@ import aphelion.client.graphics.screen.CameraNiftyController;
 import aphelion.client.graphics.screen.CameraNiftyController.CameraForNifty;
 import aphelion.client.graphics.screen.EnergyBar;
 import aphelion.client.graphics.screen.Gauges;
+import aphelion.client.graphics.screen.NiftyBackgroundColorSpriteEffect;
 import aphelion.client.graphics.screen.NiftySpriteAnimationEffect;
 import aphelion.client.graphics.screen.StatusDisplay;
 import aphelion.client.graphics.world.*;
@@ -331,8 +332,7 @@ public class GameLoop
                 
                 CameraNiftyController.registerControl(nifty, cameraForNifty);
                 NiftySpriteAnimationEffect.registerEffect(nifty);
-                
-                nifty.createFont("");
+                NiftyBackgroundColorSpriteEffect.registerEffect(nifty);
         }
         
         public void loop()

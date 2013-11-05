@@ -17,6 +17,7 @@ import de.lessvoid.nifty.render.image.renderstrategy.RenderStrategy;
 import de.lessvoid.nifty.spi.render.RenderImage;
 import de.lessvoid.nifty.tools.Alpha;
 import de.lessvoid.nifty.tools.SizeValue;
+import de.lessvoid.nifty.spi.time.TimeProvider;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.logging.Logger;
@@ -27,7 +28,7 @@ import java.util.logging.Logger;
  */
 public class NiftySpriteAnimationEffect implements EffectImpl
 {
-        private static Logger log = Logger.getLogger(NiftySpriteAnimationEffect.class.getName());
+        private static final Logger log = Logger.getLogger(NiftySpriteAnimationEffect.class.getName());
         
         private static final Method getRenderStrategy;
         static
@@ -150,12 +151,12 @@ public class NiftySpriteAnimationEffect implements EffectImpl
                                 }
                                 else
                                 {
-                                        frameLength = new int[] { 10 };
+                                        frameLength = new int[] { 100 };
                                 }
                         }
                         else
                         {
-                                frameLength = new int[] { 10 };
+                                frameLength = new int[] { 100 };
                         }
                 }
                 catch (NumberFormatException ex)
@@ -174,16 +175,10 @@ public class NiftySpriteAnimationEffect implements EffectImpl
                 hideIfNotEnoughSpace = Boolean.valueOf(parameter.getProperty("hideIfNotEnoughSpace", "false"));
                 activeBeforeStartDelay = Boolean.valueOf(parameter.getProperty("activeBeforeStartDelay", "false"));
         }
-
-        @Override
-        public void execute(Element element, float effectTime, Falloff falloff, NiftyRenderEngine r)
+        
+        private void updateIndex(TimeProvider time)
         {
-                if (!activeBeforeStartDelay && effectTime <= 0.0)
-                {
-                        return;
-                }
-                
-                long now = element.getNifty().getTimeProvider().getMsTime();
+                long now = time.getMsTime();
                 long delta;
                 if (firstUpdate)
                 {
@@ -210,7 +205,17 @@ public class NiftySpriteAnimationEffect implements EffectImpl
                         int duration = index < frameLength.length ? frameLength[index] : frameLength[frameLength.length-1];
                         nextChange += duration;
                 }
+        }
+
+        @Override
+        public void execute(Element element, float effectTime, Falloff falloff, NiftyRenderEngine r)
+        {
+                if (!activeBeforeStartDelay && effectTime <= 0.0)
+                {
+                        return;
+                }
                 
+                updateIndex(element.getNifty().getTimeProvider());
 
                 int insetOffset = inset.getValueAsInt(element.getWidth());
                 int imageX = element.getX() + insetOffset;
