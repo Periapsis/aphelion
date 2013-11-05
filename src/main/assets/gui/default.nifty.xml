@@ -62,10 +62,13 @@
                         <panel childLayout="center" valign="top" align="center" width="50%" height="28px">
                                 <!-- energy bar -->
                                 
-                                <image filename="gui.healthbar" imageMode="subImage:0,0,116,28" 
-                                       width="116px" height="28px" align="center" valign="top"/>
-                                       
-                                <panel childLayout="horizontal" valign="top" margin="13px,0px,0px,0px" width="80%" height="6px">
+                                <panel childLayout="horizontal" valign="top" margin="9px,0px,0px,0px" width="100%" height="2px">
+                                        <panel childLayout="center" height="100%" backgroundColor="#9c9ce7ff"/>
+                                        <panel width="17px"/>
+                                        <panel childLayout="center" height="100%" backgroundColor="#9c9ce7ff"/>
+                                </panel>
+                                
+                                <panel childLayout="horizontal" valign="top" margin="13px,0px,0px,0px" width="100%" height="6px">
                                         <panel childLayout="center" height="100%">
                                                 <control name="energybar" id="energybar0" style="energybar-right" width="100%" height="100%"/>
                                         </panel>
@@ -74,6 +77,9 @@
                                                 <control name="energybar" id="energybar1" style="energybar-left" width="100%" height="100%"/>
                                         </panel>
                                 </panel>
+                                
+                                <image filename="gui.healthbar" imageMode="subImage:0,0,116,28" 
+                                       width="116px" height="28px" align="center" valign="top"/>
                         </panel>
                 </layer>
         </screen>
