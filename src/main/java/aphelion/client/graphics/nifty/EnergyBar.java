@@ -27,21 +27,45 @@ package aphelion.client.graphics.nifty;
 
 import de.lessvoid.nifty.Nifty;
 import de.lessvoid.nifty.controls.Controller;
+import de.lessvoid.nifty.effects.Effect;
+import de.lessvoid.nifty.effects.EffectEventId;
+import de.lessvoid.nifty.effects.EffectImpl;
 import de.lessvoid.nifty.elements.Element;
-import de.lessvoid.nifty.elements.render.PanelRenderer;
 import de.lessvoid.nifty.elements.render.TextRenderer;
 import de.lessvoid.nifty.input.NiftyInputEvent;
-import de.lessvoid.nifty.layout.manager.CenterLayout;
 import de.lessvoid.nifty.screen.Screen;
-import de.lessvoid.nifty.tools.Color;
 import de.lessvoid.nifty.tools.SizeValue;
 import de.lessvoid.xml.xpp3.Attributes;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Properties;
 
 public class EnergyBar implements Controller
 {
         private Element progressBarElement;
         private Element progressTextElement;
+        
+        private final List<AutoEffectKey> autoEffectKeys = new ArrayList<>();
+        
+        private static class AutoEffectKey implements Comparable<AutoEffectKey>
+        {
+                final float val;
+                final String autoKey;
+
+                AutoEffectKey(float val, String autoKey)
+                {
+                        this.val = val;
+                        this.autoKey = autoKey;
+                }
+
+                @Override
+                public int compareTo(AutoEffectKey o)
+                {
+                        return Float.compare(val, o.val);
+                }
+                
+        }
 
         @Override
         public void bind(
@@ -53,12 +77,30 @@ public class EnergyBar implements Controller
         {
                 progressBarElement = element.findElementByName("#progress");
                 progressTextElement = element.findElementByName("#progress-text");
+                
+                // Auto trigger effects if they are "onCustom" and have a customKey that is a float
+                // If the progress is under the specified float, the effect is triggered
+                List<Effect> effects = progressBarElement.getEffects(EffectEventId.onCustom, EffectImpl.class);
+                for (Effect effect : effects)
+                {
+                        try
+                        {
+                                float val = Float.parseFloat(effect.getCustomKey());
+                                autoEffectKeys.add(new AutoEffectKey(val, effect.getCustomKey()));
+                        }
+                        catch (NumberFormatException ex)
+                        {
+                        }
+                }
+                
+                // ascending
+                Collections.sort(autoEffectKeys);
         }
 
         @Override
         public void init(Properties parameter, Attributes controlDefinitionAttributes)
         {
-                setProgress(0.5f); // remove me
+                setProgress(1f);
         }
 
         @Override
@@ -95,6 +137,16 @@ public class EnergyBar implements Controller
                         int pixelWidth = (int) (progressBarElement.getParent().getWidth() * progress);
                         progressBarElement.setConstraintWidth(new SizeValue(pixelWidth + "px"));
                         progressBarElement.getParent().layoutElements();
+                        
+                        for (AutoEffectKey autoEffectKey : autoEffectKeys)
+                        {
+                                if (progress <= autoEffectKey.val)
+                                {
+                                        progressBarElement.stopEffect(EffectEventId.onCustom);
+                                        progressBarElement.startEffect(EffectEventId.onCustom, null, autoEffectKey.autoKey);
+                                        break;
+                                }
+                        }
                 }
 
                 if (progressTextElement != null)

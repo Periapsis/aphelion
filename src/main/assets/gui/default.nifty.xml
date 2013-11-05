@@ -6,10 +6,21 @@
                 <panel childLayout="center">
                         <panel id="#progress" x="0" y="0" height="100%" width="0px" style="#bar">
                                 <effect>
-                                        <onStartScreen name="backgroundColorSpriteEffect"
-                                                       length="infinite"
-                                                       colors="#9c9ce7ff,#7b7bc6ff,#7373b5ff,#7373b5ff,#6363a5ff,#5a5a94ff,#5a5a94ff,#4a4a7bff,#5a5a94ff,#5a5a94ff,#6363a5ff,#7373b5ff,#7373b5ff,#7b7bc6ff"
-                                                       frameLength="80"/>
+                                        <onCustom customKey="1"
+                                                  name="backgroundColorSpriteEffect"
+                                                  length="infinite"
+                                                  colors="#9c9ce7ff,#7b7bc6ff,#7373b5ff,#7373b5ff,#6363a5ff,#5a5a94ff,#5a5a94ff,#4a4a7bff,#5a5a94ff,#5a5a94ff,#6363a5ff,#7373b5ff,#7373b5ff,#7b7bc6ff"
+                                                  frameLength="80"/>
+                                        <onCustom customKey="0.5"
+                                                  name="backgroundColorSpriteEffect"
+                                                  length="infinite"
+                                                  colors="#ffffffff,#ffc631ff,#f7b529ff,#e7b521ff,#e7b521ff,#ce9408ff,#b57b10ff,#9c8418ff,#946308ff,#845a29ff,#5a5a18ff,#733910ff,#5a4208ff,#4d2d04ff"
+                                                  frameLength="80"/>
+                                        <onCustom customKey="0.25"
+                                                  name="backgroundColorSpriteEffect"
+                                                  length="infinite"
+                                                  colors="#ffffffff,#ce0808ff,#ce0808ff,#ce0808ff,#a52900ff,#731800ff,#731800ff,#ffffffff,#ce0808ff,#ce0808ff,#ce0808ff,#a52900ff,#731800ff,#731800ff"
+                                                  frameLength="80"/>
                                 </effect>
                         </panel>
                 </panel>
