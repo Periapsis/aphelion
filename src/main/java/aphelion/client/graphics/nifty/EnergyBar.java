@@ -47,6 +47,7 @@ public class EnergyBar implements Controller
         private Element progressTextElement;
         
         private final List<AutoEffectKey> autoEffectKeys = new ArrayList<>();
+        private AutoEffectKey autoEffectCurrent;
         
         private static class AutoEffectKey implements Comparable<AutoEffectKey>
         {
@@ -142,6 +143,12 @@ public class EnergyBar implements Controller
                         {
                                 if (progress <= autoEffectKey.val)
                                 {
+                                        if (autoEffectCurrent == autoEffectKey)
+                                        {
+                                                break;
+                                        }
+                                        autoEffectCurrent = autoEffectKey;
+                                        
                                         progressBarElement.stopEffect(EffectEventId.onCustom);
                                         progressBarElement.startEffect(EffectEventId.onCustom, null, autoEffectKey.autoKey);
                                         break;
