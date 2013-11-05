@@ -39,22 +39,22 @@
 package aphelion.client;
 
 
-import aphelion.client.graphics.world.event.ProjectileExplosionTracker;
 import aphelion.client.graphics.Graph;
 import aphelion.client.net.NetworkedGame;
 import aphelion.client.net.SingleGameConnection;
 import aphelion.shared.resource.ResourceDB;
-import aphelion.client.graphics.screen.Camera;
 import aphelion.client.graphics.screen.CameraNiftyController;
-import aphelion.client.graphics.screen.CameraNiftyController.CameraForNifty;
-import aphelion.client.graphics.screen.EnergyBar;
 import aphelion.client.graphics.screen.Gauges;
 import aphelion.client.graphics.nifty.BackgroundColorSpriteEffect;
+import aphelion.client.graphics.nifty.EnergyBar;
 import aphelion.client.graphics.nifty.SpriteAnimationEffect;
+import aphelion.client.graphics.screen.Camera;
+import aphelion.client.graphics.screen.CameraNiftyController.CameraForNifty;
 import aphelion.client.graphics.screen.StatusDisplay;
 import aphelion.client.graphics.world.*;
 import aphelion.client.graphics.world.event.ActorDiedTracker;
 import aphelion.client.graphics.world.event.EventTracker;
+import aphelion.client.graphics.world.event.ProjectileExplosionTracker;
 import aphelion.client.resource.AsyncTexture;
 import aphelion.client.resource.DBNiftyResourceLocation;
 import aphelion.shared.event.TickEvent;
@@ -63,23 +63,24 @@ import aphelion.shared.event.promise.*;
 import aphelion.shared.gameconfig.GCStringList;
 import aphelion.shared.gameconfig.LoadYamlTask;
 import aphelion.shared.physics.entities.ActorPublic;
-import aphelion.shared.physics.entities.ProjectilePublic;
 import aphelion.shared.physics.events.pub.EventPublic;
-import aphelion.shared.physics.events.pub.ProjectileExplosionPublic;
 import aphelion.shared.physics.PhysicsEnvironment;
 import aphelion.shared.physics.valueobjects.PhysicsMovement;
-import aphelion.shared.physics.valueobjects.PhysicsPoint;
 import aphelion.shared.physics.valueobjects.PhysicsShipPosition;
 import aphelion.shared.physics.WEAPON_SLOT;
 import aphelion.shared.swissarmyknife.Point;
 import aphelion.shared.map.MapClassic;
 import aphelion.shared.map.tile.TileType;
+import aphelion.shared.physics.entities.ProjectilePublic;
 import aphelion.shared.physics.events.Event;
 import aphelion.shared.physics.events.pub.ActorDiedPublic;
+import aphelion.shared.physics.events.pub.ProjectileExplosionPublic;
+import aphelion.shared.physics.valueobjects.PhysicsPoint;
 import aphelion.shared.resource.Asset;
 import aphelion.shared.resource.DownloadAssetsTask;
 import aphelion.shared.swissarmyknife.AttachmentConsumer;
 import de.lessvoid.nifty.Nifty;
+import de.lessvoid.nifty.controls.Controller;
 import de.lessvoid.nifty.elements.Element;
 import de.lessvoid.nifty.elements.render.TextRenderer;
 import de.lessvoid.nifty.nulldevice.NullSoundDevice;
@@ -94,6 +95,7 @@ import java.lang.ref.WeakReference;
 
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -142,8 +144,8 @@ public class GameLoop
         // Screen Graphics
         private Nifty nifty;
         private final Point defaultCameraPosition = new Point();
-        private Screen mainScreen;
-        private EnergyBar energyBar;
+        private Screen mainScreen;        
+        private EnergyBar[] energyBars;
         private StatusDisplay statusDisplay;
         private Gauges gauges;
        
@@ -287,6 +289,7 @@ public class GameLoop
                                 }
                                 nifty.gotoScreen("aphelion-main");
                                 
+                                lookUpNiftyElements();
                                 
                                 return null;
                         }
@@ -333,6 +336,46 @@ public class GameLoop
                 CameraNiftyController.registerControl(nifty, cameraForNifty);
                 SpriteAnimationEffect.registerEffect(nifty);
                 BackgroundColorSpriteEffect.registerEffect(nifty);
+        }
+        
+        /** Find all controls that begin with the given prefix by adding up numbers.
+         * e.x. findControls("bla", ...) looks for:
+         * bla (optional)
+         * bla0
+         * bla1
+         * bla2
+         * bla3
+         */
+        private <T extends Controller> T[] findControls(String elementNamePrefix, Class<T> requestedControlClass, T[] emptyArray)
+        {
+                LinkedList<Controller> ret = new LinkedList<>();
+                
+                T control = mainScreen.findControl(elementNamePrefix, requestedControlClass);
+                if (control != null)
+                {
+                        ret.add(control);
+                }
+                
+                int i = 0;
+                while (true)
+                {
+                        control = mainScreen.findControl(elementNamePrefix + i, requestedControlClass);
+                        ++i;
+                        
+                        if (control == null)
+                        {
+                                break;
+                        }
+                        
+                        ret.add(control);
+                }
+                
+                return ret.toArray(emptyArray);
+        }
+        
+        private void lookUpNiftyElements()
+        {
+                energyBars = findControls("energybar", EnergyBar.class, new EnergyBar[]{});
         }
         
         public void loop()
@@ -423,16 +466,18 @@ public class GameLoop
                                 {
                                         // TODO spec
                                         defaultCameraPosition.set(8192, 8192);
-                                        energyBar = null;
                                         statusDisplay = null;
                                         gauges = null;
                                 }
                                 else
                                 {
-                                        if (energyBar == null)
+                                        float energyProgress = localShip.getEnergy(true) / (float) localShip.getMaxEnergy(true);
+                                        
+                                        for (EnergyBar energyBar : this.energyBars)
                                         {
-                                                energyBar = new EnergyBar(resourceDB, localShip);
+                                                energyBar.setProgress(energyProgress);
                                         }
+                                        
                                         
                                         if(statusDisplay == null)
                                         {

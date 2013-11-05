@@ -2,6 +2,25 @@
 <nifty xmlns="http://nifty-gui.sourceforge.net/nifty-1.3.xsd" 
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
        xsi:schemaLocation="http://niftygui.sourceforge.net/nifty-1.3.xsd http://nifty-gui.sourceforge.net/nifty-1.3.xsd">
+        <controlDefinition name="energybar" controller="aphelion.client.graphics.nifty.EnergyBar">
+                <panel childLayout="center">
+                        <panel id="#progress" x="0" y="0" height="100%" width="0px" style="#bar">
+                                <effect>
+                                        <onStartScreen name="backgroundColorSpriteEffect"
+                                                       length="infinite"
+                                                       colors="#9c9ce7ff,#7b7bc6ff,#7373b5ff,#7373b5ff,#6363a5ff,#5a5a94ff,#5a5a94ff,#4a4a7bff,#5a5a94ff,#5a5a94ff,#6363a5ff,#7373b5ff,#7373b5ff,#7b7bc6ff"
+                                                       frameLength="80"/>
+                                </effect>
+                        </panel>
+                </panel>
+        </controlDefinition>
+        <style id="energybar-left#bar">
+                <attributes align="left"/>
+        </style>
+        <style id="energybar-right#bar">
+                <attributes align="right"/>
+        </style>
+        
         <screen id="aphelion-main">
                 
                 <layer childLayout="center">
@@ -28,6 +47,23 @@
                         <text id="debug-info" font="font.ubuntu-mono-bold-16" color="#ffff" 
                               align="left" valign="top" textVAlign="top" textHAlign="left" 
                               width="100%" height="100px"/>
+                        
+                        <panel childLayout="center" valign="top" align="center" width="50%" height="28px">
+                                <!-- energy bar -->
+                                
+                                <image filename="gui.healthbar" imageMode="subImage:0,0,116,28" 
+                                       width="116px" height="28px" align="center" valign="top"/>
+                                       
+                                <panel childLayout="horizontal" valign="top" margin="13px,0px,0px,0px" width="80%" height="6px">
+                                        <panel childLayout="center" height="100%">
+                                                <control name="energybar" id="energybar0" style="energybar-right" width="100%" height="100%"/>
+                                        </panel>
+                                        <panel width="17px"/>
+                                        <panel childLayout="center" height="100%">
+                                                <control name="energybar" id="energybar1" style="energybar-left" width="100%" height="100%"/>
+                                        </panel>
+                                </panel>
+                        </panel>
                 </layer>
         </screen>
 </nifty>
