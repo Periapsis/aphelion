@@ -4,19 +4,35 @@
        xsi:schemaLocation="http://niftygui.sourceforge.net/nifty-1.3.xsd http://nifty-gui.sourceforge.net/nifty-1.3.xsd">
         <controlDefinition name="energybar" controller="aphelion.client.graphics.nifty.EnergyBar">
                 <panel childLayout="center">
-                        <panel id="#progress" x="0" y="0" height="100%" width="0px" style="#bar">
+                        <panel id="#progress" x="0" y="0" height="100%" width="0px" style="#progress">
                                 <effect>
-                                        <onCustom customKey="1"
+                                        <onShow
                                                   name="backgroundColorSpriteEffect"
                                                   length="infinite"
                                                   colors="#9c9ce7ff,#7b7bc6ff,#7373b5ff,#7373b5ff,#6363a5ff,#5a5a94ff,#5a5a94ff,#4a4a7bff,#5a5a94ff,#5a5a94ff,#6363a5ff,#7373b5ff,#7373b5ff,#7b7bc6ff"
                                                   frameLength="80"/>
-                                        <onCustom customKey="0.5"
+                                </effect>
+                        </panel>
+                </panel>
+        </controlDefinition>
+        <controlDefinition name="energybar-yellow" controller="aphelion.client.graphics.nifty.EnergyBar">
+                <panel childLayout="center">
+                        <panel id="#progress" x="0" y="0" height="100%" width="0px" style="#progress">
+                                <effect>
+                                        <onShow
                                                   name="backgroundColorSpriteEffect"
                                                   length="infinite"
                                                   colors="#ffffffff,#ffc631ff,#f7b529ff,#e7b521ff,#e7b521ff,#ce9408ff,#b57b10ff,#9c8418ff,#946308ff,#845a29ff,#5a5a18ff,#733910ff,#5a4208ff,#4d2d04ff"
                                                   frameLength="80"/>
-                                        <onCustom customKey="0.25"
+                                </effect>
+                        </panel>
+                </panel>
+        </controlDefinition>
+        <controlDefinition name="energybar-red" controller="aphelion.client.graphics.nifty.EnergyBar">
+                <panel childLayout="center">
+                        <panel id="#progress" x="0" y="0" height="100%" width="0px" style="#progress">
+                                <effect>
+                                        <onShow
                                                   name="backgroundColorSpriteEffect"
                                                   length="infinite"
                                                   colors="#ffffffff,#ce0808ff,#ce0808ff,#ce0808ff,#a52900ff,#731800ff,#731800ff,#ffffffff,#ce0808ff,#ce0808ff,#ce0808ff,#a52900ff,#731800ff,#731800ff"
@@ -25,12 +41,7 @@
                         </panel>
                 </panel>
         </controlDefinition>
-        <style id="energybar-left#bar">
-                <attributes align="left"/>
-        </style>
-        <style id="energybar-right#bar">
-                <attributes align="right"/>
-        </style>
+        
         
         <screen id="aphelion-main">
                 
@@ -70,11 +81,15 @@
                                 
                                 <panel childLayout="horizontal" valign="top" margin="13px,0px,0px,0px" width="100%" height="6px">
                                         <panel childLayout="center" height="100%">
-                                                <control name="energybar" id="energybar0" style="energybar-right" width="100%" height="100%"/>
+                                                <control name="energybar-red"               id="energybar0" barAlign="right" width="100%" height="100%"/>
+                                                <control name="energybar-yellow" min="0.25" id="energybar1" barAlign="right" width="100%" height="100%"/>
+                                                <control name="energybar"        min="0.5"  id="energybar2" barAlign="right" width="100%" height="100%"/>
                                         </panel>
                                         <panel width="17px"/>
                                         <panel childLayout="center" height="100%">
-                                                <control name="energybar" id="energybar1" style="energybar-left" width="100%" height="100%"/>
+                                                <control name="energybar-red"               id="energybar3" barAlign="left" width="100%" height="100%"/>
+                                                <control name="energybar-yellow" min="0.25" id="energybar4" barAlign="left" width="100%" height="100%"/>
+                                                <control name="energybar"        min="0.5"  id="energybar5" barAlign="left" width="100%" height="100%"/>
                                         </panel>
                                 </panel>
                                 

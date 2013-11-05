@@ -33,6 +33,7 @@ import de.lessvoid.nifty.effects.EffectImpl;
 import de.lessvoid.nifty.elements.Element;
 import de.lessvoid.nifty.elements.render.TextRenderer;
 import de.lessvoid.nifty.input.NiftyInputEvent;
+import de.lessvoid.nifty.layout.align.HorizontalAlign;
 import de.lessvoid.nifty.screen.Screen;
 import de.lessvoid.nifty.tools.SizeValue;
 import de.lessvoid.xml.xpp3.Attributes;
@@ -43,11 +44,12 @@ import java.util.Properties;
 
 public class EnergyBar implements Controller
 {
+        private Element element;
         private Element progressBarElement;
         private Element progressTextElement;
-        
-        private final List<AutoEffectKey> autoEffectKeys = new ArrayList<>();
-        private AutoEffectKey autoEffectCurrent;
+        private float min;
+        private float max;
+        private boolean first = true;
         
         private static class AutoEffectKey implements Comparable<AutoEffectKey>
         {
@@ -76,26 +78,30 @@ public class EnergyBar implements Controller
                 final Properties parameter,
                 final Attributes controlDefinitionAttributes)
         {
+                if (this.element != null)
+                {
+                        throw new IllegalStateException();
+                }
+                
+                this.element = element;
                 progressBarElement = element.findElementByName("#progress");
                 progressTextElement = element.findElementByName("#progress-text");
                 
-                // Auto trigger effects if they are "onCustom" and have a customKey that is a float
-                // If the progress is under the specified float, the effect is triggered
-                List<Effect> effects = progressBarElement.getEffects(EffectEventId.onCustom, EffectImpl.class);
-                for (Effect effect : effects)
+                if (progressBarElement != null)
                 {
-                        try
+                        String align = controlDefinitionAttributes.get("barAlign");
+                        if (align != null)
                         {
-                                float val = Float.parseFloat(effect.getCustomKey());
-                                autoEffectKeys.add(new AutoEffectKey(val, effect.getCustomKey()));
-                        }
-                        catch (NumberFormatException ex)
-                        {
+                                progressBarElement.setConstraintHorizontalAlign(HorizontalAlign.valueOf(align));
                         }
                 }
                 
-                // ascending
-                Collections.sort(autoEffectKeys);
+                Float min = controlDefinitionAttributes.getAsFloat("min"); // exclusive
+                Float max = controlDefinitionAttributes.getAsFloat("max"); // inclusive
+                if (min == null) { min = -0.1f; }
+                if (max == null) { max = 1f; }
+                this.min = min;
+                this.max = max;
         }
 
         @Override
@@ -133,27 +139,20 @@ public class EnergyBar implements Controller
                         progress = 1.0f;
                 }
                 
+                if (progressValue > this.min && progressValue <= this.max)
+                {
+                        if (!element.isVisible() || first) { element.show(); }
+                }
+                else
+                {
+                        if (element.isVisible()) { element.hide(); }
+                }
+                
                 if (progressBarElement != null)
                 {
                         int pixelWidth = (int) (progressBarElement.getParent().getWidth() * progress);
                         progressBarElement.setConstraintWidth(new SizeValue(pixelWidth + "px"));
                         progressBarElement.getParent().layoutElements();
-                        
-                        for (AutoEffectKey autoEffectKey : autoEffectKeys)
-                        {
-                                if (progress <= autoEffectKey.val)
-                                {
-                                        if (autoEffectCurrent == autoEffectKey)
-                                        {
-                                                break;
-                                        }
-                                        autoEffectCurrent = autoEffectKey;
-                                        
-                                        progressBarElement.stopEffect(EffectEventId.onCustom);
-                                        progressBarElement.startEffect(EffectEventId.onCustom, null, autoEffectKey.autoKey);
-                                        break;
-                                }
-                        }
                 }
 
                 if (progressTextElement != null)
@@ -161,5 +160,7 @@ public class EnergyBar implements Controller
                         String progressText = String.format("%3.0f%%", progress * 100);
                         progressTextElement.getRenderer(TextRenderer.class).setText(progressText);
                 }
+                
+                first = false;
         }
 }
