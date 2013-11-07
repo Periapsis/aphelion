@@ -51,7 +51,6 @@ import aphelion.client.graphics.nifty.EnergyBar;
 import aphelion.client.graphics.nifty.SpriteAnimationEffect;
 import aphelion.client.graphics.screen.Camera;
 import aphelion.client.graphics.screen.CameraNiftyController.CameraForNifty;
-import aphelion.client.graphics.screen.StatusDisplay;
 import aphelion.client.graphics.world.*;
 import aphelion.client.graphics.world.event.ActorDiedTracker;
 import aphelion.client.graphics.world.event.EventTracker;
@@ -148,7 +147,6 @@ public class GameLoop
         private Screen mainScreen;        
         private EnergyBar[] energyBars;
         private Element[] energyTexts;
-        private StatusDisplay statusDisplay;
         private Gauges gauges;
        
         
@@ -362,7 +360,7 @@ public class GameLoop
                 int i = 0;
                 while (true)
                 {
-                        control = mainScreen.findControl(elementNamePrefix + i, requestedControlClass);
+                        control = mainScreen.findControl(elementNamePrefix + "-" + i, requestedControlClass);
                         ++i;
                         
                         if (control == null)
@@ -389,7 +387,7 @@ public class GameLoop
                 int i = 0;
                 while (true)
                 {
-                        element = mainScreen.findElementByName(elementNamePrefix + i);
+                        element = mainScreen.findElementByName(elementNamePrefix + "-" + i);
                         ++i;
                         
                         if (element == null)
@@ -497,7 +495,6 @@ public class GameLoop
                                 {
                                         // TODO spec
                                         defaultCameraPosition.set(8192, 8192);
-                                        statusDisplay = null;
                                         gauges = null;
                                 }
                                 else
@@ -515,15 +512,10 @@ public class GameLoop
                                                 energyText.getRenderer(TextRenderer.class).setText(energy + "");
                                         }
                                         
-                                        
-                                        if(statusDisplay == null)
+                                        if (gauges == null)
                                         {
-                                        	statusDisplay = new StatusDisplay(resourceDB, localShip);
-                                        }
-                                        
-                                        if(gauges == null)
-                                        {
-                                        	gauges = new Gauges(resourceDB, localActor);
+                                                assert mainScreen != null;
+                                                gauges = new Gauges(mainScreen, localActor);
                                         }
                                         
                                         
@@ -932,6 +924,7 @@ public class GameLoop
                                         if (key == Keyboard.KEY_DELETE)
                                         {
                                                 multiFireGun = !multiFireGun;
+                                                gauges.setMultiFireGun(multiFireGun);
                                         }
                                 }
                                 

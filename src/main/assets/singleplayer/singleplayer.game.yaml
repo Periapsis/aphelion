@@ -128,9 +128,6 @@
   ship-local-radar-colour:
         colour: [0xFFFF39, 0x000000]
         frame-duration: 160
-
-  empty-gauge-left-image: {resource: gui.gauges,   offset: [152, 120, 4, 24]}
-  empty-gauge-right-image:  {resource: gui.gauges,   offset: [78 , 120, 4, 24]}
   
   
   weapon-fire-delay: 100  # prevent wasting lots of bandwidth when a weapon has not been configured
@@ -250,26 +247,26 @@
   projectile-image:         {resource: classic.mines,        offset: [0, 112, 160, 16], tiles: [10, 1]}
 
   
-- {selector: {weapon: [classic-gun-lvl1]},      weapon-gauge-image: {resource: gui.gauges,   offset: [0  ,  0  , 26, 24]}}
-- {selector: {weapon: [classic-gun-lvl2]},      weapon-gauge-image: {resource: gui.gauges,   offset: [26 ,  0  , 26, 24]}}
-- {selector: {weapon: [classic-gun-lvl3]},      weapon-gauge-image: {resource: gui.gauges,   offset: [52 ,  0  , 26, 24]}}
-- {selector: {weapon: [classic-gun-lvl4]},      weapon-gauge-image: {resource: gui.gauges,   offset: [52 ,  0  , 26, 24]}}
-- {selector: {weapon: [classic-mgun-lvl1]},     weapon-gauge-image: {resource: gui.gauges,   offset: [78 ,  0  , 26, 24]}}
-- {selector: {weapon: [classic-mgun-lvl2]},     weapon-gauge-image: {resource: gui.gauges,   offset: [104,  0  , 26, 24]}}
-- {selector: {weapon: [classic-mgun-lvl3]},     weapon-gauge-image: {resource: gui.gauges,   offset: [130,  0  , 26, 24]}}
-- {selector: {weapon: [classic-mgun-lvl4]},     weapon-gauge-image: {resource: gui.gauges,   offset: [130,  0  , 26, 24]}}
+- {selector: {weapon: [classic-gun-lvl1]},      weapon-nifty-show: gauge-gun-single-1}
+- {selector: {weapon: [classic-gun-lvl2]},      weapon-nifty-show: gauge-gun-single-2}
+- {selector: {weapon: [classic-gun-lvl3]},      weapon-nifty-show: gauge-gun-single-3}
+- {selector: {weapon: [classic-gun-lvl4]},      weapon-nifty-show: gauge-gun-single-4}
+- {selector: {weapon: [classic-mgun-lvl1]},     weapon-nifty-show: gauge-gun-multi-1}
+- {selector: {weapon: [classic-mgun-lvl2]},     weapon-nifty-show: gauge-gun-multi-2}
+- {selector: {weapon: [classic-mgun-lvl3]},     weapon-nifty-show: gauge-gun-multi-3}
+- {selector: {weapon: [classic-mgun-lvl4]},     weapon-nifty-show: gauge-gun-multi-4}
   
-- {selector: {weapon: [classic-bomb-lvl1]},     weapon-gauge-image: {resource: gui.gauges,   offset: [0  ,  48 , 26, 24]}}
-- {selector: {weapon: [classic-bomb-lvl2]},     weapon-gauge-image: {resource: gui.gauges,   offset: [26 ,  48 , 26, 24]}}
-- {selector: {weapon: [classic-bomb-lvl3]},     weapon-gauge-image: {resource: gui.gauges,   offset: [52 ,  48 , 26, 24]}}
-- {selector: {weapon: [classic-bomb-lvl4]},     weapon-gauge-image: {resource: gui.gauges,   offset: [52 ,  48 , 26, 24]}}
-- {selector: {weapon: [classic-ebomb-lvl1]},    weapon-gauge-image: {resource: gui.gauges,   offset: [0  ,  48 , 26, 24]}}
-- {selector: {weapon: [classic-ebomb-lvl2]},    weapon-gauge-image: {resource: gui.gauges,   offset: [26 ,  48 , 26, 24]}}
-- {selector: {weapon: [classic-ebomb-lvl3]},    weapon-gauge-image: {resource: gui.gauges,   offset: [52 ,  48 , 26, 24]}}
-- {selector: {weapon: [classic-ebomb-lvl4]},    weapon-gauge-image: {resource: gui.gauges,   offset: [52 ,  48 , 26, 24]}} 
+- {selector: {weapon: [classic-bomb-lvl1]},     weapon-nifty-show: gauge-bomb-1}
+- {selector: {weapon: [classic-bomb-lvl2]},     weapon-nifty-show: gauge-bomb-2}
+- {selector: {weapon: [classic-bomb-lvl3]},     weapon-nifty-show: gauge-bomb-3}
+- {selector: {weapon: [classic-bomb-lvl4]},     weapon-nifty-show: gauge-bomb-4}
+- {selector: {weapon: [classic-ebomb-lvl1]},    weapon-nifty-show: gauge-ebomb-1}
+- {selector: {weapon: [classic-ebomb-lvl2]},    weapon-nifty-show: gauge-ebomb-2}
+- {selector: {weapon: [classic-ebomb-lvl3]},    weapon-nifty-show: gauge-ebomb-3}
+- {selector: {weapon: [classic-ebomb-lvl4]},    weapon-nifty-show: gauge-ebomb-4} 
 
-- {selector: {weapon: [classic-thor]},          weapon-gauge-image: {resource: gui.gauges,   offset: [130,  96 , 26, 24]}}
-- {selector: {weapon: [classic-burst]},         weapon-gauge-image: {resource: gui.gauges,   offset: [78 ,  72 , 26, 24]}} 
+- {selector: {weapon: [classic-thor]},          weapon-nifty-show: gauge-thor}
+- {selector: {weapon: [classic-burst]},         weapon-nifty-show: gauge-burst} 
   
   
 - selector: {weapon: *BOMBSMINES}
@@ -408,10 +405,10 @@
   projectile-angle: 367567200
   
 # has multi icon
-- {selector: {ship: javelin, weapon: [classic-gun-lvl1]}, weapon-gauge-image: {resource: gui.gauges,   offset: [156,  0  , 26, 24]}}
-- {selector: {ship: javelin, weapon: [classic-gun-lvl2]}, weapon-gauge-image: {resource: gui.gauges,   offset: [182,  0  , 26, 24]}}
-- {selector: {ship: javelin, weapon: [classic-gun-lvl3]}, weapon-gauge-image: {resource: gui.gauges,   offset: [208,  0  , 26, 24]}}
-- {selector: {ship: javelin, weapon: [classic-gun-lvl4]}, weapon-gauge-image: {resource: gui.gauges,   offset: [208,  0  , 26, 24]}}
+- {selector: {ship: javelin, weapon: [classic-gun-lvl1]}, weapon-nifty-show: gauge-gun-singlem-1}
+- {selector: {ship: javelin, weapon: [classic-gun-lvl2]}, weapon-nifty-show: gauge-gun-singlem-2}
+- {selector: {ship: javelin, weapon: [classic-gun-lvl3]}, weapon-nifty-show: gauge-gun-singlem-3}
+- {selector: {ship: javelin, weapon: [classic-gun-lvl4]}, weapon-nifty-show: gauge-gun-singlem-4}
   
 - selector: {ship: javelin, weapon: *GUNS_MULTI}
   weapon-fire-delay: 150
@@ -477,10 +474,10 @@
   weapon-slot-mine: classic-emine-lvl3
   
 # has multi icon
-- {selector: {ship: leviathan, weapon: [classic-gun-lvl1]}, weapon-gauge-image: {resource: gui.gauges,   offset: [156,  0  , 26, 24]}}
-- {selector: {ship: leviathan, weapon: [classic-gun-lvl2]}, weapon-gauge-image: {resource: gui.gauges,   offset: [182,  0  , 26, 24]}}
-- {selector: {ship: leviathan, weapon: [classic-gun-lvl3]}, weapon-gauge-image: {resource: gui.gauges,   offset: [208,  0  , 26, 24]}}
-- {selector: {ship: leviathan, weapon: [classic-gun-lvl4]}, weapon-gauge-image: {resource: gui.gauges,   offset: [208,  0  , 26, 24]}}
+- {selector: {ship: leviathan, weapon: [classic-gun-lvl1]}, weapon-nifty-show: gauge-gun-singlem-1}
+- {selector: {ship: leviathan, weapon: [classic-gun-lvl2]}, weapon-nifty-show: gauge-gun-singlem-2}
+- {selector: {ship: leviathan, weapon: [classic-gun-lvl3]}, weapon-nifty-show: gauge-gun-singlem-3}
+- {selector: {ship: leviathan, weapon: [classic-gun-lvl4]}, weapon-nifty-show: gauge-gun-singlem-4}
 
 - selector: {ship: leviathan, weapon: *GUNS}
   weapon-fire-delay: 60
@@ -526,10 +523,10 @@
   weapon-slot-burst: classic-burst
 
 # has multi icon
-- {selector: {ship: terrier, weapon: [classic-gun-lvl1]}, weapon-gauge-image: {resource: gui.gauges,   offset: [156,  0  , 26, 24]}}
-- {selector: {ship: terrier, weapon: [classic-gun-lvl2]}, weapon-gauge-image: {resource: gui.gauges,   offset: [182,  0  , 26, 24]}}
-- {selector: {ship: terrier, weapon: [classic-gun-lvl3]}, weapon-gauge-image: {resource: gui.gauges,   offset: [208,  0  , 26, 24]}}
-- {selector: {ship: terrier, weapon: [classic-gun-lvl4]}, weapon-gauge-image: {resource: gui.gauges,   offset: [208,  0  , 26, 24]}}
+- {selector: {ship: terrier, weapon: [classic-gun-lvl1]}, weapon-nifty-show: gauge-gun-singlem-1}
+- {selector: {ship: terrier, weapon: [classic-gun-lvl2]}, weapon-nifty-show: gauge-gun-singlem-2}
+- {selector: {ship: terrier, weapon: [classic-gun-lvl3]}, weapon-nifty-show: gauge-gun-singlem-3}
+- {selector: {ship: terrier, weapon: [classic-gun-lvl4]}, weapon-nifty-show: gauge-gun-singlem-4}
 
   
 - selector: {ship: terrier, weapon: *GUNS}
@@ -571,10 +568,10 @@
   weapon-slot-gun-multi: classic-mgun-lvl3
 
 # has multi icon
-- {selector: {ship: weasel, weapon: [classic-gun-lvl1]}, weapon-gauge-image: {resource: gui.gauges,   offset: [156,  0  , 26, 24]}}
-- {selector: {ship: weasel, weapon: [classic-gun-lvl2]}, weapon-gauge-image: {resource: gui.gauges,   offset: [182,  0  , 26, 24]}}
-- {selector: {ship: weasel, weapon: [classic-gun-lvl3]}, weapon-gauge-image: {resource: gui.gauges,   offset: [208,  0  , 26, 24]}}
-- {selector: {ship: weasel, weapon: [classic-gun-lvl4]}, weapon-gauge-image: {resource: gui.gauges,   offset: [208,  0  , 26, 24]}}
+- {selector: {ship: weasel, weapon: [classic-gun-lvl1]}, weapon-nifty-show: gauge-gun-singlem-1}
+- {selector: {ship: weasel, weapon: [classic-gun-lvl2]}, weapon-nifty-show: gauge-gun-singlem-2}
+- {selector: {ship: weasel, weapon: [classic-gun-lvl3]}, weapon-nifty-show: gauge-gun-singlem-3}
+- {selector: {ship: weasel, weapon: [classic-gun-lvl4]}, weapon-nifty-show: gauge-gun-singlem-4}
 
   
 - selector: {ship: weasel, weapon: *GUNS}
@@ -613,10 +610,10 @@
   weapon-slot-thor: classic-thor
   
 # has multi icon
-- {selector: {ship: lancaster, weapon: [classic-gun-lvl1]}, weapon-gauge-image: {resource: gui.gauges,   offset: [156,  0  , 26, 24]}}
-- {selector: {ship: lancaster, weapon: [classic-gun-lvl2]}, weapon-gauge-image: {resource: gui.gauges,   offset: [182,  0  , 26, 24]}}
-- {selector: {ship: lancaster, weapon: [classic-gun-lvl3]}, weapon-gauge-image: {resource: gui.gauges,   offset: [208,  0  , 26, 24]}}
-- {selector: {ship: lancaster, weapon: [classic-gun-lvl4]}, weapon-gauge-image: {resource: gui.gauges,   offset: [208,  0  , 26, 24]}}
+- {selector: {ship: lancaster, weapon: [classic-gun-lvl1]}, weapon-nifty-show: gauge-gun-singlem-1}
+- {selector: {ship: lancaster, weapon: [classic-gun-lvl2]}, weapon-nifty-show: gauge-gun-singlem-2}
+- {selector: {ship: lancaster, weapon: [classic-gun-lvl3]}, weapon-nifty-show: gauge-gun-singlem-3}
+- {selector: {ship: lancaster, weapon: [classic-gun-lvl4]}, weapon-nifty-show: gauge-gun-singlem-4}
 
         
 - selector: {ship: lancaster, weapon: *GUNS}

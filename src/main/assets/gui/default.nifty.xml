@@ -92,15 +92,15 @@
                                 
                                 <panel childLayout="horizontal" valign="top" margin="13,0,0,0" width="100%" height="6">
                                         <panel childLayout="center" height="100%">
-                                                <control name="energybar-red"               id="energy-bar0" barAlign="right" width="100%" height="100%"/>
-                                                <control name="energybar-yellow" min="0.25" id="energy-bar1" barAlign="right" width="100%" height="100%"/>
-                                                <control name="energybar"        min="0.5"  id="energy-bar2" barAlign="right" width="100%" height="100%"/>
+                                                <control name="energybar-red"               id="energy-bar-0" barAlign="right" width="100%" height="100%"/>
+                                                <control name="energybar-yellow" min="0.25" id="energy-bar-1" barAlign="right" width="100%" height="100%"/>
+                                                <control name="energybar"        min="0.5"  id="energy-bar-2" barAlign="right" width="100%" height="100%"/>
                                         </panel>
                                         <panel width="17"/>
                                         <panel childLayout="center" height="100%">
-                                                <control name="energybar-red"               id="energy-bar3" barAlign="left" width="100%" height="100%"/>
-                                                <control name="energybar-yellow" min="0.25" id="energy-bar4" barAlign="left" width="100%" height="100%"/>
-                                                <control name="energybar"        min="0.5"  id="energy-bar5" barAlign="left" width="100%" height="100%"/>
+                                                <control name="energybar-red"               id="energy-bar-3" barAlign="left" width="100%" height="100%"/>
+                                                <control name="energybar-yellow" min="0.25" id="energy-bar-4" barAlign="left" width="100%" height="100%"/>
+                                                <control name="energybar"        min="0.5"  id="energy-bar-5" barAlign="left" width="100%" height="100%"/>
                                         </panel>
                                 </panel>
                                 
@@ -116,9 +116,90 @@
                                       x="0" y="0" height="22" width="190"/>
                         </panel>
                         
-                        <panel childLayout="vertical" valign="center" align="right">
+                        <panel childLayout="vertical" valign="center" align="left" margin="-50,0,0,0">
+                                <!-- left gauges -->
+                                <panel childLayout="center" width="26" height="24">
+                                        <image filename="gui.gauges" imageMode="subImage:78,120,4,24" width="4" height="24" align="left"/>
+                                        
+                                        <image id="gauge-burst" filename="gui.gauges" imageMode="subImage:78,72,26,24" width="26" height="24" visible="false"/>
+                                </panel>
+                                <panel childLayout="center" width="26" height="24">
+                                        <image filename="gui.gauges" imageMode="subImage:78,120,4,24" width="4" height="24" align="left"/>
+                                        
+                                </panel>
+                                <panel childLayout="center" width="26" height="24">
+                                        <image filename="gui.gauges" imageMode="subImage:78,120,4,24" width="4" height="24" align="left"/>
+                                        
+                                </panel>
+                                <panel childLayout="center" width="26" height="24">
+                                        <image filename="gui.gauges" imageMode="subImage:78,120,4,24" width="4" height="24" align="left"/>
+                                        <image id="gauge-thor" filename="gui.gauges" imageMode="subImage:130,96,26,24" width="26" height="24" visible="false"/>
+                                </panel>
+                                <panel childLayout="center" width="26" height="24">
+                                        <image filename="gui.gauges" imageMode="subImage:78,120,4,24" width="4" height="24" align="left"/>
+                                        
+                                </panel>
+                                <panel childLayout="center" width="26" height="24">
+                                        <image filename="gui.gauges" imageMode="subImage:78,120,4,24" width="4" height="24" align="left"/>
+                                        
+                                </panel>
+                                <panel childLayout="center" width="26" height="24">
+                                        <image filename="gui.gauges" imageMode="subImage:78,120,4,24" width="4" height="24" align="left"/>
+                                        
+                                </panel>
+                        </panel>
+                        
+                        <panel childLayout="vertical" valign="center" align="right" width="26" margin="-50,0,0,0">
                                 <!-- right gauges -->
-                                <image filename="gui.gauges" />
+                                <panel childLayout="center" width="26" height="24">
+                                        <image filename="gui.gauges" imageMode="subImage:152,120,4,24" width="4" height="24" align="right"/>
+                                        
+                                        <!-- single -->
+                                        <image id="gauge-gun-single-1" filename="gui.gauges" imageMode="subImage:0,0,26,24"  width="26" height="24" visible="false"/>
+                                        <image id="gauge-gun-single-2" filename="gui.gauges" imageMode="subImage:26,0,26,24" width="26" height="24" visible="false"/>
+                                        <image id="gauge-gun-single-3" filename="gui.gauges" imageMode="subImage:52,0,26,24" width="26" height="24" visible="false"/>
+                                        <image id="gauge-gun-single-4" filename="gui.gauges" imageMode="subImage:52,0,26,24" width="26" height="24" visible="false"/>
+                                        
+                                        <!-- multi -->
+                                        <image id="gauge-gun-multi-1" filename="gui.gauges" imageMode="subImage:78,0,26,24"  width="26" height="24" visible="false"/>
+                                        <image id="gauge-gun-multi-2" filename="gui.gauges" imageMode="subImage:104,0,26,24" width="26" height="24" visible="false"/>
+                                        <image id="gauge-gun-multi-3" filename="gui.gauges" imageMode="subImage:130,0,26,24" width="26" height="24" visible="false"/>
+                                        <image id="gauge-gun-multi-4" filename="gui.gauges" imageMode="subImage:130,0,26,24" width="26" height="24" visible="false"/>
+                                        
+                                        <!-- has multi -->
+                                        <image id="gauge-gun-singlem-1" filename="gui.gauges" imageMode="subImage:156,0,26,24" width="26" height="24" visible="false"/>
+                                        <image id="gauge-gun-singlem-2" filename="gui.gauges" imageMode="subImage:182,0,26,24" width="26" height="24" visible="false"/>
+                                        <image id="gauge-gun-singlem-3" filename="gui.gauges" imageMode="subImage:208,0,26,24" width="26" height="24" visible="false"/>
+                                        <image id="gauge-gun-singlem-4" filename="gui.gauges" imageMode="subImage:208,0,26,24" width="26" height="24" visible="false"/>
+                                </panel>
+                                <panel childLayout="center" width="26" height="24">
+                                        <image filename="gui.gauges" imageMode="subImage:152,120,4,24" width="4" height="24" align="right"/>
+                                        
+                                        <!-- bomb -->
+                                        <image id="gauge-bomb-1" filename="gui.gauges" imageMode="subImage:0,48,26,24"  width="26" height="24" visible="false"/>
+                                        <image id="gauge-bomb-2" filename="gui.gauges" imageMode="subImage:26,48,26,24" width="26" height="24" visible="false"/>
+                                        <image id="gauge-bomb-3" filename="gui.gauges" imageMode="subImage:52,48,26,24" width="26" height="24" visible="false"/>
+                                        <image id="gauge-bomb-4" filename="gui.gauges" imageMode="subImage:52,48,26,24" width="26" height="24" visible="false"/>
+
+                                        <!-- ebomb -->
+                                        <image id="gauge-ebomb-1" filename="gui.gauges" imageMode="subImage:0,48,26,24"  width="26" height="24" visible="false"/>
+                                        <image id="gauge-ebomb-2" filename="gui.gauges" imageMode="subImage:26,48,26,24" width="26" height="24" visible="false"/>
+                                        <image id="gauge-ebomb-3" filename="gui.gauges" imageMode="subImage:52,48,26,24" width="26" height="24" visible="false"/>
+                                        <image id="gauge-ebomb-4" filename="gui.gauges" imageMode="subImage:52,48,26,24" width="26" height="24" visible="false"/>
+                                </panel>
+                                <panel childLayout="center" width="26" height="24">
+                                        <image filename="gui.gauges" imageMode="subImage:152,120,4,24" width="4" height="24" align="right"/>
+                                </panel>
+                                <panel childLayout="center" width="26" height="24">
+                                        <image filename="gui.gauges" imageMode="subImage:152,120,4,24" width="4" height="24" align="right"/>
+                                </panel>
+                                <panel childLayout="center" width="26" height="24">
+                                        <image filename="gui.gauges" imageMode="subImage:152,120,4,24" width="4" height="24" align="right"/>
+                                </panel>
+                                <panel childLayout="center" width="26" height="24">
+                                        <image filename="gui.gauges" imageMode="subImage:152,120,4,24" width="4" height="24" align="right"/>
+                                </panel>
+                                <panel childLayout="center" width="26" height="24"/>
                         </panel>
                 </layer>
         </screen>

@@ -39,25 +39,28 @@
 package aphelion.client.graphics.screen;
 
 
-import org.newdawn.slick.Animation;
-import aphelion.shared.gameconfig.GCImage;
 import aphelion.shared.gameconfig.GCString;
+import aphelion.shared.gameconfig.GCStringList;
 import aphelion.shared.gameconfig.WrappedValueAbstract;
 import aphelion.shared.physics.entities.ActorPublic;
 import aphelion.shared.physics.WEAPON_SLOT;
-import aphelion.shared.resource.ResourceDB;
+import de.lessvoid.nifty.elements.Element;
+import de.lessvoid.nifty.screen.Screen;
+import java.util.HashSet;
+import java.util.Set;
 
 public class Gauges
 {
-        private ActorPublic localActor;
-        private ResourceDB db;
+        private final ActorPublic localActor;
+        private final Screen screen;
         
         private class WeaponSlot implements WrappedValueAbstract.ChangeListener
         {
-                WEAPON_SLOT slot;
-                GCString weaponKey;
-                GCImage gauge;
-                Animation gaugeAnim;
+                private final WEAPON_SLOT slot;
+                private final GCString weaponKey;
+                private GCStringList niftyShow;
+                private final Set<String> visible = new HashSet<>();
+                private boolean enabled = true;
                 
                 WeaponSlot(WEAPON_SLOT slot)
                 {
@@ -75,23 +78,21 @@ public class Gauges
                                 // different weapon has been assigned to the weapon slot
                                 loadConfig();
                         }
-                        else if (val == gauge)
+                        else if (val == niftyShow)
                         {
-                                gaugeAnim = null; // animation changed (probably) reread it
+                                updateNiftyElements();
                         }
                 }
                 
                 private void loadConfig()
                 {
-                        GCImage newGauge = localActor.getActorConfigImage(weaponKey.get(), "weapon-gauge-image", db);
-                        if (newGauge != gauge)
+                        GCStringList newNiftyShow = localActor.getActorConfigStringList(weaponKey.get(), "weapon-nifty-show");
+                        if (newNiftyShow != niftyShow)
                         {
-                                newGauge.addWeakChangeListener(this);
-                                if (gauge != null) gauge.removeWeakChangeListener(this);
-                                gauge = newGauge;
-                                
-                                
-                                gaugeAnim = null; // animation changed (probably) reread it
+                                newNiftyShow.addWeakChangeListener(this);
+                                if (niftyShow != null) niftyShow.removeWeakChangeListener(this);
+                                niftyShow = newNiftyShow;
+                                updateNiftyElements();
                         }
                 }
                 
@@ -100,27 +101,58 @@ public class Gauges
                         return weaponKey.isSet();
                 }
                 
-                public Animation getGaugeAnimation()
+                public void updateNiftyElements()
                 {
-                        if (gaugeAnim == null)
+                        int len = niftyShow.getValuesLength();
+                        
+                        if (enabled)
                         {
-                                gaugeAnim = gauge.newAnimation();
-                                // newAnimation returns null if the texture has not loaded yet
-                                // in this case draw nothing yet...
+                                for (int i = 0; i < len; ++i)
+                                {
+                                        // prevent { el.hide(); el.show(); }
+                                        visible.remove(niftyShow.get(i));
+                                }
                         }
                         
-                        return gaugeAnim;
+                        for (String id : visible)
+                        {
+                                Element el = screen.findElementByName(id);
+                                if (el != null)
+                                {
+                                        el.hide();
+                                }
+                        }
+                        
+                        visible.clear();
+                        
+                        if (enabled)
+                        {
+                                for (int i = 0; i < len; ++i)
+                                {
+                                        String id = niftyShow.get(i);
+                                        visible.add(id);
+                                        Element el = screen.findElementByName(id);
+                                        if (el != null)
+                                        {
+                                                el.show();
+                                        }
+                                }
+                        }
+                }
+                
+                public void setEnabled(boolean enabled)
+                {
+                        if (this.enabled == enabled) { return; }
+                        this.enabled = enabled;
+                        updateNiftyElements();
                 }
         }
         
         private final WeaponSlot[] slots = new WeaponSlot[WEAPON_SLOT.values().length];
-
-        private GCImage emptySlotLeftImage;
-        private GCImage emptySlotRightImage;
         
-        public Gauges(ResourceDB db, ActorPublic localActor)
+        public Gauges(Screen screen, ActorPublic localActor)
         {
-                this.db = db;
+                this.screen = screen;
                 this.localActor = localActor;
                 
                 for (int i = 0; i < slots.length; ++i)
@@ -128,86 +160,12 @@ public class Gauges
                         slots[i] = new WeaponSlot(WEAPON_SLOT.byId(i));
                 }
                 
-                emptySlotLeftImage = localActor.getActorConfigImage("empty-gauge-left-image", db);
-                emptySlotRightImage = localActor.getActorConfigImage("empty-gauge-right-image", db);
+                slots[WEAPON_SLOT.GUN_MULTI.id].setEnabled(false);
         }
-
-        public void render(Camera camera, boolean multifire)
+        
+        public void setMultiFireGun(boolean multi)
         {
-                float leftOffset = camera.dimensionHalf.y - 50;
-                float rightOffset = camera.dimensionHalf.y - 50;
-                
-                for (WeaponSlot slot : slots)
-                {
-                        if ((slot.slot == WEAPON_SLOT.GUN && multifire) ||
-                           (slot.slot == WEAPON_SLOT.GUN_MULTI && !multifire))
-                        {
-                                continue;
-                        }
-                        
-                        boolean left = false;
-                        
-                        switch (slot.slot)
-                        {
-                                case GUN:
-                                case GUN_MULTI:
-                                case BOMB:
-                                case MINE:
-                                        left = false;
-                                        break;
-                                case THOR:
-                                case BURST:
-                                case REPEL:
-                                case DECOY:
-                                case ROCKET:
-                                case BRICK:
-                                        left = true;
-                                        break;
-                        }
-                        
-                        Animation anim = null;
-                        if (slot.hasWeapon())
-                        {
-                                anim = slot.getGaugeAnimation();
-                        }
-                        
-                        if (anim == null)
-                        {
-                                if (left)
-                                {
-                                        anim = emptySlotLeftImage.newAnimation();
-                                }
-                                else
-                                {
-                                        anim = emptySlotRightImage.newAnimation();
-                                }
-                        }
-                        
-                        if (anim == null)
-                        {
-                                continue;
-                        }
-                        
-                        float x;
-                        float y;
-                        
-                        // todo, positions/order from config?
-                        
-                        if (left)
-                        {
-                                x = 0;
-                                y = leftOffset;
-                                leftOffset += anim.getHeight();
-                        }
-                        else
-                        {
-                                x = camera.dimension.x - anim.getWidth();
-                                y = rightOffset;
-                                rightOffset += anim.getHeight();
-                        }
-                        
-                        anim.draw(x, y);
-                }
+                slots[WEAPON_SLOT.GUN.id].setEnabled(!multi);
+                slots[WEAPON_SLOT.GUN_MULTI.id].setEnabled(multi);
         }
-       
 }
