@@ -205,21 +205,17 @@ public class ActorShip extends MapEntity implements TickEvent, WrappedValueAbstr
         {
                 if (precise)
                 {
-                        return actor.getEnergy()  / 1024;
+                        return actor.getEnergy();
                 }
                 else
                 {
-                        return actor.getEnergy();
+                        return actor.getEnergy()  / 1024;
                 }
         }
         
-        public int getMaxEnergy(boolean precise)
+        public int getMaxEnergy()
         {
                 int nrg = maxEnergy.get();
-                if (!precise)
-                {
-                        nrg /= 1024;
-                }
                 
                 if (nrg < 1) { nrg = 1; }
                 

@@ -4,7 +4,7 @@
        xsi:schemaLocation="http://niftygui.sourceforge.net/nifty-1.3.xsd http://nifty-gui.sourceforge.net/nifty-1.3.xsd">
         <controlDefinition name="energybar" controller="aphelion.client.graphics.nifty.EnergyBar">
                 <panel childLayout="center">
-                        <panel id="#progress" x="0" y="0" height="100%" width="0px" style="#progress">
+                        <panel id="#progress" x="0" y="0" height="100%" width="0" style="#progress">
                                 <effect>
                                         <onShow
                                                   name="backgroundColorSpriteEffect"
@@ -17,7 +17,7 @@
         </controlDefinition>
         <controlDefinition name="energybar-yellow" controller="aphelion.client.graphics.nifty.EnergyBar">
                 <panel childLayout="center">
-                        <panel id="#progress" x="0" y="0" height="100%" width="0px" style="#progress">
+                        <panel id="#progress" x="0" y="0" height="100%" width="0" style="#progress">
                                 <effect>
                                         <onShow
                                                   name="backgroundColorSpriteEffect"
@@ -30,7 +30,7 @@
         </controlDefinition>
         <controlDefinition name="energybar-red" controller="aphelion.client.graphics.nifty.EnergyBar">
                 <panel childLayout="center">
-                        <panel id="#progress" x="0" y="0" height="100%" width="0px" style="#progress">
+                        <panel id="#progress" x="0" y="0" height="100%" width="0" style="#progress">
                                 <effect>
                                         <onShow
                                                   name="backgroundColorSpriteEffect"
@@ -52,9 +52,9 @@
                 
                 <layer childLayout="center">
                         <!-- radar -->
-                        <panel id="radar-small" align="right" valign="bottom" width="306px" height="306px" childLayout="center">
+                        <panel id="radar-small" align="right" valign="bottom" width="306" height="306" childLayout="center">
                                 <panel childLayout="absolute">
-                                        <panel childLayout="horizontal" x="0" y="-16px" width="100%" height="16px">
+                                        <panel childLayout="horizontal" x="0" y="-16" width="100%" height="16">
                                                 <panel/>
                                                 <text font="font.ubuntu-mono-bold-16" color="#ffff" textHAlign="right" textVAlign="bottom" width="30%" height="100%">
                                                         <effect>
@@ -62,50 +62,58 @@
                                                                 <onShow name="clockText" length="infinite" format="HH:mm"/>
                                                         </effect>
                                                 </text>
-                                                <panel width="1px"/>
+                                                <panel width="1"/>
                                         </panel>
                                 </panel>
-                                <image filename="classic.window-border" imageMode="resize:3,2,3,3,3,2,3,2,3,2,3,3" width="306px" height="306px"/>
-                                <panel width="300px" height="300px" backgroundColor="#000000b0"/>
-                                <control name="aphelion-camera" width="300px" height="300px" zoom="0.0833333" stars="false" clip="true"/>
+                                <image filename="classic.window-border" imageMode="resize:3,2,3,3,3,2,3,2,3,2,3,3" width="306" height="306"/>
+                                <panel width="300" height="300" backgroundColor="#000000b0"/>
+                                <control name="aphelion-camera" width="300" height="300" zoom="0.0833333" stars="false" clip="true"/>
                         </panel>
-                        <panel id="radar-big" align="right" valign="bottom" width="606px" height="606px" childLayout="center" visible="false">
-                                <image filename="classic.window-border" imageMode="resize:3,2,3,3,3,2,3,2,3,2,3,3" width="606px" height="606px"/>
-                                <panel width="600px" height="600px" backgroundColor="#000000b0"/>
-                                <control name="aphelion-camera" width="600px" height="600px" zoom="fill" stars="false" clip="true"/>
+                        <panel id="radar-big" align="right" valign="bottom" width="606" height="606" childLayout="center" visible="false">
+                                <image filename="classic.window-border" imageMode="resize:3,2,3,3,3,2,3,2,3,2,3,3" width="606" height="606"/>
+                                <panel width="600" height="600" backgroundColor="#000000b0"/>
+                                <control name="aphelion-camera" width="600" height="600" zoom="fill" stars="false" clip="true"/>
                         </panel>
                 </layer>
                 
                 <layer childLayout="center">
                         <text id="debug-info" font="font.ubuntu-mono-bold-16" color="#ffff" 
                               align="left" valign="top" textVAlign="top" textHAlign="left" 
-                              width="100%" height="100px"/>
+                              width="100%" height="100"/>
                         
-                        <panel childLayout="center" valign="top" align="center" width="50%" height="28px">
+                        <panel childLayout="center" valign="top" align="center" width="50%" height="28">
                                 <!-- energy bar -->
                                 
-                                <panel childLayout="horizontal" valign="top" margin="9px,0px,0px,0px" width="100%" height="2px">
+                                <panel childLayout="horizontal" valign="top" margin="9,0,0,0" width="100%" height="2">
                                         <panel childLayout="center" height="100%" backgroundColor="#9c9ce7ff"/>
-                                        <panel width="17px"/>
+                                        <panel width="17"/>
                                         <panel childLayout="center" height="100%" backgroundColor="#9c9ce7ff"/>
                                 </panel>
                                 
-                                <panel childLayout="horizontal" valign="top" margin="13px,0px,0px,0px" width="100%" height="6px">
+                                <panel childLayout="horizontal" valign="top" margin="13,0,0,0" width="100%" height="6">
                                         <panel childLayout="center" height="100%">
-                                                <control name="energybar-red"               id="energybar0" barAlign="right" width="100%" height="100%"/>
-                                                <control name="energybar-yellow" min="0.25" id="energybar1" barAlign="right" width="100%" height="100%"/>
-                                                <control name="energybar"        min="0.5"  id="energybar2" barAlign="right" width="100%" height="100%"/>
+                                                <control name="energybar-red"               id="energy-bar0" barAlign="right" width="100%" height="100%"/>
+                                                <control name="energybar-yellow" min="0.25" id="energy-bar1" barAlign="right" width="100%" height="100%"/>
+                                                <control name="energybar"        min="0.5"  id="energy-bar2" barAlign="right" width="100%" height="100%"/>
                                         </panel>
-                                        <panel width="17px"/>
+                                        <panel width="17"/>
                                         <panel childLayout="center" height="100%">
-                                                <control name="energybar-red"               id="energybar3" barAlign="left" width="100%" height="100%"/>
-                                                <control name="energybar-yellow" min="0.25" id="energybar4" barAlign="left" width="100%" height="100%"/>
-                                                <control name="energybar"        min="0.5"  id="energybar5" barAlign="left" width="100%" height="100%"/>
+                                                <control name="energybar-red"               id="energy-bar3" barAlign="left" width="100%" height="100%"/>
+                                                <control name="energybar-yellow" min="0.25" id="energy-bar4" barAlign="left" width="100%" height="100%"/>
+                                                <control name="energybar"        min="0.5"  id="energy-bar5" barAlign="left" width="100%" height="100%"/>
                                         </panel>
                                 </panel>
                                 
                                 <image filename="gui.healthbar" imageMode="subImage:0,0,116,28" 
-                                       width="116px" height="28px" align="center" valign="top"/>
+                                       width="116" height="28" align="center" valign="top"/>
+                        </panel>
+                        
+                        <panel childLayout="absolute" valign="top" align="right" width="200" height="68">
+                                <!-- display -->
+                                <image filename="gui.display" x="116" y="5" width="84" height="68"/>
+                                <text id="energy-text" font="font.subspace-energy" color="#ffff" 
+                                      textHAlign="right" textVAlign="top" 
+                                      x="0" y="-8" height="22" width="190"/>
                         </panel>
                 </layer>
         </screen>

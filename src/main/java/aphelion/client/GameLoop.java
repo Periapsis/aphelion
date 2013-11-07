@@ -147,6 +147,7 @@ public class GameLoop
         private final Point defaultCameraPosition = new Point();
         private Screen mainScreen;        
         private EnergyBar[] energyBars;
+        private Element[] energyTexts;
         private StatusDisplay statusDisplay;
         private Gauges gauges;
        
@@ -375,9 +376,37 @@ public class GameLoop
                 return ret.toArray(emptyArray);
         }
         
+        private Element[] findElements(String elementNamePrefix)
+        {
+                LinkedList<Element> ret = new LinkedList<>();
+                
+                Element element = mainScreen.findElementByName(elementNamePrefix);
+                if (element != null)
+                {
+                        ret.add(element);
+                }
+                
+                int i = 0;
+                while (true)
+                {
+                        element = mainScreen.findElementByName(elementNamePrefix + i);
+                        ++i;
+                        
+                        if (element == null)
+                        {
+                                break;
+                        }
+                        
+                        ret.add(element);
+                }
+                
+                return ret.toArray(new Element[]{});
+        }
+        
         private void lookUpNiftyElements()
         {
-                energyBars = findControls("energybar", EnergyBar.class, new EnergyBar[]{});
+                energyBars = findControls("energy-bar", EnergyBar.class, new EnergyBar[]{});
+                energyTexts = findElements("energy-text");
         }
         
         public void loop()
@@ -473,11 +502,17 @@ public class GameLoop
                                 }
                                 else
                                 {
-                                        float energyProgress = localShip.getEnergy(true) / (float) localShip.getMaxEnergy(true);
+                                        int energy = localShip.getEnergy(false);
+                                        float energyProgress = energy / (float) localShip.getMaxEnergy();
                                         
                                         for (EnergyBar energyBar : this.energyBars)
                                         {
                                                 energyBar.setProgress(energyProgress);
+                                        }
+                                        
+                                        for (Element energyText : this.energyTexts)
+                                        {
+                                                energyText.getRenderer(TextRenderer.class).setText(energy + "");
                                         }
                                         
                                         
