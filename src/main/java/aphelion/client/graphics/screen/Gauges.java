@@ -44,8 +44,10 @@ import aphelion.shared.gameconfig.GCStringList;
 import aphelion.shared.gameconfig.WrappedValueAbstract;
 import aphelion.shared.physics.entities.ActorPublic;
 import aphelion.shared.physics.WEAPON_SLOT;
+import de.lessvoid.nifty.effects.EffectEventId;
 import de.lessvoid.nifty.elements.Element;
 import de.lessvoid.nifty.screen.Screen;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -53,6 +55,10 @@ public class Gauges
 {
         private final ActorPublic localActor;
         private final Screen screen;
+        
+        // The same element could be referenced by multiple weapon slots
+        // This map is used to resolve this situation properly
+        private final HashMap<String, Integer> showCounts = new HashMap<>();
         
         private class WeaponSlot implements WrappedValueAbstract.ChangeListener
         {
@@ -80,7 +86,7 @@ public class Gauges
                         }
                         else if (val == niftyShow)
                         {
-                                updateNiftyElements();
+                                updateNiftyElements(true);
                         }
                 }
                 
@@ -92,7 +98,7 @@ public class Gauges
                                 newNiftyShow.addWeakChangeListener(this);
                                 if (niftyShow != null) niftyShow.removeWeakChangeListener(this);
                                 niftyShow = newNiftyShow;
-                                updateNiftyElements();
+                                updateNiftyElements(true);
                         }
                 }
                 
@@ -101,25 +107,41 @@ public class Gauges
                         return weaponKey.isSet();
                 }
                 
-                public void updateNiftyElements()
+                public void updateNiftyElements(boolean doEffect)
                 {
                         int len = niftyShow.getValuesLength();
+                        
+                        boolean doShowEffect = doEffect && !isSomethingVisible();
+                        boolean doHideEffect = doEffect && !hasValue();
                         
                         if (enabled)
                         {
                                 for (int i = 0; i < len; ++i)
                                 {
+                                        String id = niftyShow.get(i);
                                         // prevent { el.hide(); el.show(); }
-                                        visible.remove(niftyShow.get(i));
+                                        visible.remove(id);
                                 }
                         }
                         
                         for (String id : visible)
                         {
+                                Integer showCount = showCounts.get(id);
+                                --showCount;
+                                showCounts.put(id, showCount);
+                                
                                 Element el = screen.findElementByName(id);
-                                if (el != null)
+                                
+                                if (el != null && showCount == 0)
                                 {
-                                        el.hide();
+                                        if (doHideEffect)
+                                        {
+                                                el.hide();
+                                        }
+                                        else
+                                        {
+                                                el.hideWithoutEffect();
+                                        }
                                 }
                         }
                         
@@ -130,11 +152,28 @@ public class Gauges
                                 for (int i = 0; i < len; ++i)
                                 {
                                         String id = niftyShow.get(i);
+                                        if (id.isEmpty())
+                                        {
+                                                continue;
+                                        }
+                                        
+                                        Integer showCount = showCounts.get(id);
+                                        if (showCount == null) { showCount = 0; }
+                                        ++showCount;
+                                        showCounts.put(id, showCount);
+                                        
                                         visible.add(id);
                                         Element el = screen.findElementByName(id);
-                                        if (el != null)
+                                        if (el != null && showCount == 1)
                                         {
-                                                el.show();
+                                                if (doShowEffect)
+                                                {
+                                                        el.show();
+                                                }
+                                                else
+                                                {
+                                                        el.showWithoutEffects();
+                                                }
                                         }
                                 }
                         }
@@ -144,7 +183,24 @@ public class Gauges
                 {
                         if (this.enabled == enabled) { return; }
                         this.enabled = enabled;
-                        updateNiftyElements();
+                }
+                
+                public boolean isSomethingVisible()
+                {
+                        return !visible.isEmpty();
+                }
+                
+                public boolean hasValue()
+                {
+                        int len = niftyShow.getValuesLength();
+                        
+                        boolean hasValue = len > 0;
+                        if (len == 1 && niftyShow.get(0).isEmpty())
+                        {
+                                return false;
+                        }
+                        
+                        return hasValue;
                 }
         }
         
@@ -167,5 +223,8 @@ public class Gauges
         {
                 slots[WEAPON_SLOT.GUN.id].setEnabled(!multi);
                 slots[WEAPON_SLOT.GUN_MULTI.id].setEnabled(multi);
+                
+                slots[WEAPON_SLOT.GUN.id].updateNiftyElements(false);
+                slots[WEAPON_SLOT.GUN_MULTI.id].updateNiftyElements(false);
         }
 }

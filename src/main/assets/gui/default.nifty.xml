@@ -42,6 +42,21 @@
                 </panel>
         </controlDefinition>
         
+        <style id="gauge-left">
+                <attributes width="26" height="24" visible="false"/>
+                <effect>
+                        <onHide name="move" direction="right" mode="toOffset" offsetX="-22"/>
+                        <onShow name="move" direction="right" mode="fromOffset" offsetX="-22"/>
+                </effect>
+        </style>
+        <style id="gauge-right">
+                <attributes width="26" height="24" visible="false"/>
+                <effect>
+                        <onHide name="move" direction="right" mode="toOffset" offsetX="22"/>
+                        <onShow name="move" direction="right" mode="fromOffset" offsetX="22"/>
+                </effect>
+        </style>
+
         
         <screen id="aphelion-main">
                 
@@ -121,7 +136,7 @@
                                 <panel childLayout="center" width="26" height="24">
                                         <image filename="gui.gauges" imageMode="subImage:78,120,4,24" width="4" height="24" align="left"/>
                                         
-                                        <image id="gauge-burst" filename="gui.gauges" imageMode="subImage:78,72,26,24" width="26" height="24" visible="false"/>
+                                        <image id="gauge-burst" style="gauge-left" filename="gui.gauges" imageMode="subImage:78,72,26,24"/>
                                 </panel>
                                 <panel childLayout="center" width="26" height="24">
                                         <image filename="gui.gauges" imageMode="subImage:78,120,4,24" width="4" height="24" align="left"/>
@@ -133,7 +148,7 @@
                                 </panel>
                                 <panel childLayout="center" width="26" height="24">
                                         <image filename="gui.gauges" imageMode="subImage:78,120,4,24" width="4" height="24" align="left"/>
-                                        <image id="gauge-thor" filename="gui.gauges" imageMode="subImage:130,96,26,24" width="26" height="24" visible="false"/>
+                                        <image id="gauge-thor" style="gauge-left" filename="gui.gauges" imageMode="subImage:130,96,26,24"/>
                                 </panel>
                                 <panel childLayout="center" width="26" height="24">
                                         <image filename="gui.gauges" imageMode="subImage:78,120,4,24" width="4" height="24" align="left"/>
@@ -155,37 +170,37 @@
                                         <image filename="gui.gauges" imageMode="subImage:152,120,4,24" width="4" height="24" align="right"/>
                                         
                                         <!-- single -->
-                                        <image id="gauge-gun-single-1" filename="gui.gauges" imageMode="subImage:0,0,26,24"  width="26" height="24" visible="false"/>
-                                        <image id="gauge-gun-single-2" filename="gui.gauges" imageMode="subImage:26,0,26,24" width="26" height="24" visible="false"/>
-                                        <image id="gauge-gun-single-3" filename="gui.gauges" imageMode="subImage:52,0,26,24" width="26" height="24" visible="false"/>
-                                        <image id="gauge-gun-single-4" filename="gui.gauges" imageMode="subImage:52,0,26,24" width="26" height="24" visible="false"/>
-                                        
+                                        <image id="gauge-gun-single-1" style="gauge-right" filename="gui.gauges" imageMode="subImage:0,0,26,24"/>
+                                        <image id="gauge-gun-single-2" style="gauge-right" filename="gui.gauges" imageMode="subImage:26,0,26,24"/>
+                                        <image id="gauge-gun-single-3" style="gauge-right" filename="gui.gauges" imageMode="subImage:52,0,26,24"/>
+                                        <image id="gauge-gun-single-4" style="gauge-right" filename="gui.gauges" imageMode="subImage:52,0,26,24"/>
+
                                         <!-- multi -->
-                                        <image id="gauge-gun-multi-1" filename="gui.gauges" imageMode="subImage:78,0,26,24"  width="26" height="24" visible="false"/>
-                                        <image id="gauge-gun-multi-2" filename="gui.gauges" imageMode="subImage:104,0,26,24" width="26" height="24" visible="false"/>
-                                        <image id="gauge-gun-multi-3" filename="gui.gauges" imageMode="subImage:130,0,26,24" width="26" height="24" visible="false"/>
-                                        <image id="gauge-gun-multi-4" filename="gui.gauges" imageMode="subImage:130,0,26,24" width="26" height="24" visible="false"/>
-                                        
+                                        <image id="gauge-gun-multi-1" style="gauge-right" filename="gui.gauges" imageMode="subImage:78,0,26,24"/>
+                                        <image id="gauge-gun-multi-2" style="gauge-right" filename="gui.gauges" imageMode="subImage:104,0,26,24"/>
+                                        <image id="gauge-gun-multi-3" style="gauge-right" filename="gui.gauges" imageMode="subImage:130,0,26,24"/>
+                                        <image id="gauge-gun-multi-4" style="gauge-right" filename="gui.gauges" imageMode="subImage:130,0,26,24"/>
+
                                         <!-- has multi -->
-                                        <image id="gauge-gun-singlem-1" filename="gui.gauges" imageMode="subImage:156,0,26,24" width="26" height="24" visible="false"/>
-                                        <image id="gauge-gun-singlem-2" filename="gui.gauges" imageMode="subImage:182,0,26,24" width="26" height="24" visible="false"/>
-                                        <image id="gauge-gun-singlem-3" filename="gui.gauges" imageMode="subImage:208,0,26,24" width="26" height="24" visible="false"/>
-                                        <image id="gauge-gun-singlem-4" filename="gui.gauges" imageMode="subImage:208,0,26,24" width="26" height="24" visible="false"/>
+                                        <image id="gauge-gun-singlem-1" style="gauge-right" filename="gui.gauges" imageMode="subImage:156,0,26,24"/>
+                                        <image id="gauge-gun-singlem-2" style="gauge-right" filename="gui.gauges" imageMode="subImage:182,0,26,24"/>
+                                        <image id="gauge-gun-singlem-3" style="gauge-right" filename="gui.gauges" imageMode="subImage:208,0,26,24"/>
+                                        <image id="gauge-gun-singlem-4" style="gauge-right" filename="gui.gauges" imageMode="subImage:208,0,26,24"/>
                                 </panel>
                                 <panel childLayout="center" width="26" height="24">
                                         <image filename="gui.gauges" imageMode="subImage:152,120,4,24" width="4" height="24" align="right"/>
                                         
                                         <!-- bomb -->
-                                        <image id="gauge-bomb-1" filename="gui.gauges" imageMode="subImage:0,48,26,24"  width="26" height="24" visible="false"/>
-                                        <image id="gauge-bomb-2" filename="gui.gauges" imageMode="subImage:26,48,26,24" width="26" height="24" visible="false"/>
-                                        <image id="gauge-bomb-3" filename="gui.gauges" imageMode="subImage:52,48,26,24" width="26" height="24" visible="false"/>
-                                        <image id="gauge-bomb-4" filename="gui.gauges" imageMode="subImage:52,48,26,24" width="26" height="24" visible="false"/>
+                                        <image id="gauge-bomb-1" style="gauge-right" filename="gui.gauges" imageMode="subImage:0,48,26,24" />
+                                        <image id="gauge-bomb-2" style="gauge-right" filename="gui.gauges" imageMode="subImage:26,48,26,24"/>
+                                        <image id="gauge-bomb-3" style="gauge-right" filename="gui.gauges" imageMode="subImage:52,48,26,24"/>
+                                        <image id="gauge-bomb-4" style="gauge-right" filename="gui.gauges" imageMode="subImage:52,48,26,24"/>
 
                                         <!-- ebomb -->
-                                        <image id="gauge-ebomb-1" filename="gui.gauges" imageMode="subImage:0,48,26,24"  width="26" height="24" visible="false"/>
-                                        <image id="gauge-ebomb-2" filename="gui.gauges" imageMode="subImage:26,48,26,24" width="26" height="24" visible="false"/>
-                                        <image id="gauge-ebomb-3" filename="gui.gauges" imageMode="subImage:52,48,26,24" width="26" height="24" visible="false"/>
-                                        <image id="gauge-ebomb-4" filename="gui.gauges" imageMode="subImage:52,48,26,24" width="26" height="24" visible="false"/>
+                                        <image id="gauge-ebomb-1" style="gauge-right" filename="gui.gauges" imageMode="subImage:0,48,26,24"/>
+                                        <image id="gauge-ebomb-2" style="gauge-right" filename="gui.gauges" imageMode="subImage:26,48,26,24"/>
+                                        <image id="gauge-ebomb-3" style="gauge-right" filename="gui.gauges" imageMode="subImage:52,48,26,24"/>
+                                        <image id="gauge-ebomb-4" style="gauge-right" filename="gui.gauges" imageMode="subImage:52,48,26,24"/>
                                 </panel>
                                 <panel childLayout="center" width="26" height="24">
                                         <image filename="gui.gauges" imageMode="subImage:152,120,4,24" width="4" height="24" align="right"/>
