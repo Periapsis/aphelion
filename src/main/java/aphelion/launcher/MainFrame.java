@@ -167,7 +167,7 @@ public class MainFrame extends JFrame implements PingListener
                 });
                 
                 // TODO: from file or something
-                addZoneEntry(true, null, "singeplayer", "Try a local game without any opponents!");
+                addZoneEntry(true, null, "singeplayer", "Try a local game without any human opponents! Feel free to experiment with modifying the zip files in the folder 'assets'.");
                 try
                 {
                         addZoneEntry(true, new URI("ws://localhost:80/"), "localhost", "Test your own locally hosted game server");
