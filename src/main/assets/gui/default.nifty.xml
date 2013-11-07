@@ -113,7 +113,12 @@
                                 <image filename="gui.display" x="116" y="5" width="84" height="68"/>
                                 <text id="energy-text" font="font.subspace-energy" color="#ffff" 
                                       textHAlign="right" textVAlign="top" 
-                                      x="0" y="-8" height="22" width="190"/>
+                                      x="0" y="0" height="22" width="190"/>
+                        </panel>
+                        
+                        <panel childLayout="vertical" valign="center" align="right">
+                                <!-- right gauges -->
+                                <image filename="gui.gauges" />
                         </panel>
                 </layer>
         </screen>
