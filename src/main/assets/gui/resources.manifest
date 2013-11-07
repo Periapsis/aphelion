@@ -5,10 +5,11 @@ gui.loading.map = LoadingRadar.png
 gui.healthbar = hlthbar.png
 gui.healthbar.gradients = gradient.png
 gui.display = display.png
-gui.display.numbers = led.png
 gui.gauges = icons.png
 
 font.ubuntu-mono-bold-16 = ubuntu-mono-bold-16.fnt
 ubuntu-mono-bold-16_0.png = ubuntu-mono-bold-16_0.png
 font.subspace-energy = subspace-energy.fnt
 subspace-energy_0.png = subspace-energy_0.png
+font.subspace-led = subspace-led.fnt
+subspace-led_0.png = subspace-led_0.png
