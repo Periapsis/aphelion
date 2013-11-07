@@ -46,6 +46,7 @@ import aphelion.shared.resource.ResourceDB;
 import aphelion.client.graphics.screen.CameraNiftyController;
 import aphelion.client.graphics.screen.Gauges;
 import aphelion.client.graphics.nifty.BackgroundColorSpriteEffect;
+import aphelion.client.graphics.nifty.ClockTextEffect;
 import aphelion.client.graphics.nifty.EnergyBar;
 import aphelion.client.graphics.nifty.SpriteAnimationEffect;
 import aphelion.client.graphics.screen.Camera;
@@ -336,6 +337,7 @@ public class GameLoop
                 CameraNiftyController.registerControl(nifty, cameraForNifty);
                 SpriteAnimationEffect.registerEffect(nifty);
                 BackgroundColorSpriteEffect.registerEffect(nifty);
+                ClockTextEffect.registerEffect(nifty);
         }
         
         /** Find all controls that begin with the given prefix by adding up numbers.
