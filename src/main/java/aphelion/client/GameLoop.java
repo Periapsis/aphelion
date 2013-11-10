@@ -57,17 +57,13 @@ import aphelion.client.graphics.world.event.EventTracker;
 import aphelion.client.graphics.world.event.ProjectileExplosionTracker;
 import aphelion.client.resource.AsyncTexture;
 import aphelion.client.resource.DBNiftyResourceLocation;
-import aphelion.shared.event.TickEvent;
 import aphelion.shared.event.TickedEventLoop;
 import aphelion.shared.event.promise.*;
-import aphelion.shared.gameconfig.GCStringList;
 import aphelion.shared.gameconfig.LoadYamlTask;
 import aphelion.shared.physics.entities.ActorPublic;
 import aphelion.shared.physics.events.pub.EventPublic;
 import aphelion.shared.physics.PhysicsEnvironment;
-import aphelion.shared.physics.valueobjects.PhysicsMovement;
 import aphelion.shared.physics.valueobjects.PhysicsShipPosition;
-import aphelion.shared.physics.WEAPON_SLOT;
 import aphelion.shared.swissarmyknife.Point;
 import aphelion.shared.map.MapClassic;
 import aphelion.shared.map.tile.TileType;
@@ -101,7 +97,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JOptionPane;
 
-import org.lwjgl.input.Keyboard;
 import org.lwjgl.opengl.Display;
 import org.lwjgl.opengl.GL11;
 import org.newdawn.slick.Image;
@@ -130,7 +125,6 @@ public class GameLoop
         // Physics:
         private PhysicsEnvironment physicsEnv;
         private ActorPublic localActor;
-        private GCStringList ships;
         
         // Map:
         private MapClassic mapClassic;
@@ -243,7 +237,6 @@ public class GameLoop
                                 
                                 physicsEnv = new PhysicsEnvironment(false, mapClassic);
                                 mapEntities.setPhysicsEnv(physicsEnv);
-                                loop.addTickEvent(myKeyboard);
 
                                 for (LoadYamlTask.Return yamlResult : loadYamlResult)
                                 {
@@ -252,8 +245,6 @@ public class GameLoop
                                                 yamlResult.fileIdentifier, 
                                                 yamlResult.yamlDocuments);
                                 }
-
-                                ships = physicsEnv.getGlobalConfigStringList(0, "ships");
                                 
                                 boolean first = true;
                                 for (String res : networkedGame.niftyGuiResources)
@@ -306,8 +297,6 @@ public class GameLoop
                                                               + "\nSee log for further details");
                         }
                 });
-                
-                myKeyboard = new MyKeyboard();
                 
                 mapEntities = new MapEntities(resourceDB);
                 loop.addTickEvent(mapEntities);
@@ -447,14 +436,29 @@ public class GameLoop
                                 localActor = physicsEnv.getActor(networkedGame.getMyPid());
                         }
                         
-                        Keyboard.poll();
-                        myKeyboard.pollStates();
+                        if (myKeyboard == null && localActor != null)
+                        {
+                                myKeyboard = new MyKeyboard(
+                                        inputSystem, 
+                                        mainScreen, 
+                                        networkedGame, 
+                                        physicsEnv,
+                                        localActor, 
+                                        physicsEnv.getGlobalConfigStringList(0, "ships"));
+                                loop.addTickEvent(myKeyboard);
+                        }
                         
                         if (nifty.update())
                         {
                                 log.log(Level.WARNING, "Close by nifty in game loop");
                                 loop.interrupt();
                                 break;
+                        }
+                        
+                        if (gauges != null && myKeyboard != null)
+                        {
+                                myKeyboard.poll();
+                                gauges.setMultiFireGun(myKeyboard.isMultiFireGun());
                         }
                         
                         Client.initGL();
@@ -479,10 +483,13 @@ public class GameLoop
                         
                         if (!networkedGame.isReady())
                         {
-                                Image loadingBanner = loadingTex.getCachedImage();
-                                if (loadingBanner != null)
+                                if (loadingTex != null)
                                 {
-                                        loadingBanner.drawCentered(Display.getWidth() / 2, Display.getHeight() / 2);
+                                        Image loadingBanner = loadingTex.getCachedImage();
+                                        if (loadingBanner != null)
+                                        {
+                                                loadingBanner.drawCentered(Display.getWidth() / 2, Display.getHeight() / 2);
+                                        }
                                 }
                         }
                         else
@@ -493,9 +500,7 @@ public class GameLoop
                                 
                                 if (localShip == null || localActor == null)
                                 {
-                                        // TODO spec
                                         defaultCameraPosition.set(8192, 8192);
-                                        gauges = null;
                                 }
                                 else
                                 {
@@ -826,196 +831,5 @@ public class GameLoop
                 {
                         projectile.exists = false;
                 }
-        }
-
-        
-        private class MyKeyboard implements TickEvent
-        {
-                private long tick;
-                private boolean up, down, left, right, boost;
-                private boolean multiFireGun;
-                private boolean fireGun;
-                private boolean fireBomb;
-                private boolean fireMine;
-                private boolean fireThor;
-                private boolean fireBurst;
-                private boolean fireRepel;
-                private boolean fireDecoy;
-                private boolean fireRocket;
-                private boolean fireBrick;
-                
-                private long lastShipChangeRequest;
-                
-                public void pollStates()
-                {
-                        // Keyboard.poll(); should have just been called.
-                        
-                        if (!Display.isActive())
-                        {
-                                up = false;
-                                down = false;
-                                left = false;
-                                right = false;
-                                boost = false;
-                                fireGun = false;
-                                fireBomb = false;
-                                fireThor = false;
-                                fireBurst = false;
-                                fireRepel = false;
-                                fireDecoy = false;
-                                fireRocket = false;
-                                fireBrick = false;
-                                return;
-                        }
-                        
-                        boolean shift = Keyboard.isKeyDown(Keyboard.KEY_LSHIFT) 
-                                || Keyboard.isKeyDown(Keyboard.KEY_RSHIFT);
-                        
-                        boolean ctrl = Keyboard.isKeyDown(Keyboard.KEY_LCONTROL) 
-                                || Keyboard.isKeyDown(Keyboard.KEY_RCONTROL);
-                        
-                        up    = Keyboard.isKeyDown(Keyboard.KEY_UP);
-                        down  = Keyboard.isKeyDown(Keyboard.KEY_DOWN);
-                        left  = Keyboard.isKeyDown(Keyboard.KEY_LEFT);
-                        right = Keyboard.isKeyDown(Keyboard.KEY_RIGHT);
-                        boost = shift;
-                        
-                        fireGun = !shift && ctrl;
-                        fireBomb = !shift && Keyboard.isKeyDown(Keyboard.KEY_TAB);
-                        fireMine = shift && Keyboard.isKeyDown(Keyboard.KEY_TAB);
-                        fireThor = Keyboard.isKeyDown(Keyboard.KEY_F6);
-                        fireBurst = Keyboard.isKeyDown(Keyboard.KEY_DELETE) && shift;
-                        fireRepel = shift && ctrl;
-                        fireDecoy = Keyboard.isKeyDown(Keyboard.KEY_F5);
-                        fireRocket = Keyboard.isKeyDown(Keyboard.KEY_F3);
-                        fireBrick = Keyboard.isKeyDown(Keyboard.KEY_F4);
-                        
-                        
-                        // keys as events:
-                        
-                        while (Keyboard.next())
-                        {
-                                int key = Keyboard.getEventKey();
-                                char chr = Keyboard.getEventCharacter();
-                                
-                                if (key == Keyboard.KEY_LMENU || key == Keyboard.KEY_RMENU)
-                                {
-                                        Element big =  mainScreen.findElementByName("radar-big");
-                                        Element small = mainScreen.findElementByName("radar-small");
-                                        
-                                        if (big != null && small != null)
-                                        {
-                                                if (Keyboard.getEventKeyState())
-                                                {
-                                                        small.hide();
-                                                        big.show();
-                                                }
-                                                else
-                                                {
-                                                        big.hide();
-                                                        small.show();
-                                                }
-                                        }
-                                }
-                                
-                                if (!Keyboard.getEventKeyState())
-                                {
-                                        // released a key
-                                        if (key == Keyboard.KEY_DELETE)
-                                        {
-                                                multiFireGun = !multiFireGun;
-                                                gauges.setMultiFireGun(multiFireGun);
-                                        }
-                                }
-                                
-                                if (!Keyboard.isRepeatEvent())
-                                {
-                                        if (!shift && chr >= '0' && chr <= '9' && 
-                                                tick - lastShipChangeRequest > 10 &&
-                                                localActor.canChangeShip()
-                                                )
-                                        {
-                                                int s = chr - '0' - 1;
-
-                                                if (s >= 0 && s < ships.getValuesLength())
-                                                {
-                                                        String ship = ships.get(s);
-                                                        if (!ship.equals(localActor.getShip()))
-                                                        {
-                                                                networkedGame.sendCommand("ship", ship);
-                                                                lastShipChangeRequest = tick;
-                                                        }
-                                                }
-                                                continue;
-                                        }
-                                }
-                        }
-                }
-                
-                
-                @Override
-                public void tick(long tick)
-                {
-                        this.tick = tick;
-                        // PhysicsEnvironment should have ticked before this one.
-                        int localPid;
-                        
-                        if (!networkedGame.isReady())
-                        {
-                                // esc to cancel connecting?
-                                return;
-                        }
-                        
-                        localPid = networkedGame.getMyPid();
-                        
-                        if (localActor == null || localActor.isRemoved())
-                        {
-                                return;
-                        }
-                        
-                        if (up || down || left || right)
-                        {
-                                boost = boost && (up || down);
-                                // do not bother sending boost over the network if we can not use it 
-                                // (to prevent unnecessary timewarps)
-                                boost = boost && localActor.canBoost(); 
-                                PhysicsMovement move = PhysicsMovement.get(up, down, left, right, boost);
-                                physicsEnv.actorMove(physicsEnv.getTick(), localPid, move);
-                                networkedGame.sendMove(physicsEnv.getTick(), move);
-                        }
-                        
-                        if (fireGun)  { tryWeapon(this.multiFireGun ? WEAPON_SLOT.GUN_MULTI : WEAPON_SLOT.GUN , localActor); }
-                        if (fireBomb) { tryWeapon(WEAPON_SLOT.BOMB, localActor); }
-                        if (fireMine) { tryWeapon(WEAPON_SLOT.MINE, localActor); }
-                        if (fireThor) { tryWeapon(WEAPON_SLOT.THOR, localActor); }
-                        if (fireBurst) { tryWeapon(WEAPON_SLOT.BURST, localActor); }
-                        if (fireRepel) { tryWeapon(WEAPON_SLOT.REPEL, localActor); }
-                        if (fireDecoy) { tryWeapon(WEAPON_SLOT.DECOY, localActor); }
-                        if (fireRocket) { tryWeapon(WEAPON_SLOT.ROCKET, localActor); }
-                        if (fireBrick) { tryWeapon(WEAPON_SLOT.BRICK, localActor); }
-                        
-                }
-                
-                private void tryWeapon(WEAPON_SLOT weapon, ActorPublic localActor)
-                {
-                        if (!localActor.canFireWeapon(weapon))
-                        {
-                                return;
-                        }
-                        
-                        PhysicsShipPosition weaponHint = new PhysicsShipPosition();
-                        localActor.getPosition(weaponHint);
-                        
-                        physicsEnv.actorWeapon(
-                                physicsEnv.getTick(), 
-                                networkedGame.getMyPid(), 
-                                weapon, 
-                                true, weaponHint.x, weaponHint.y,
-                                weaponHint.x_vel, weaponHint.y_vel,
-                                weaponHint.rot_snapped);
-                        
-                        networkedGame.sendActorWeapon(physicsEnv.getTick(), weapon, weaponHint);
-                }
-                
         }
 }

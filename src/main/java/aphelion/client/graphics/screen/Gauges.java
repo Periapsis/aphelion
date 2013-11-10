@@ -219,8 +219,11 @@ public class Gauges
                 slots[WEAPON_SLOT.GUN_MULTI.id].setEnabled(false);
         }
         
+        private boolean multi = false;
         public void setMultiFireGun(boolean multi)
         {
+                if (this.multi == multi) { return; }
+                this.multi = multi;
                 slots[WEAPON_SLOT.GUN.id].setEnabled(!multi);
                 slots[WEAPON_SLOT.GUN_MULTI.id].setEnabled(multi);
                 

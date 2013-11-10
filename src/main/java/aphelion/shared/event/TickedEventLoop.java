@@ -438,6 +438,10 @@ public class TickedEventLoop implements Workable, Timerable
          */
         public void addTickEvent(TickEvent event)
         {
+                if (event == null)
+                {
+                        throw new IllegalArgumentException();
+                }
                 tickEvents.add(event);
                 
         }
@@ -447,6 +451,10 @@ public class TickedEventLoop implements Workable, Timerable
          */
         public void prependTickEvent(TickEvent event)
         {
+                if (event == null)
+                {
+                        throw new IllegalArgumentException();
+                }
                 tickEvents.add(0, event);
         }
         
@@ -456,9 +464,7 @@ public class TickedEventLoop implements Workable, Timerable
          */
         public boolean removeTickEvent(TickEvent event)
         {
-                int a;
-                
-                for (a = tickEvents.size()-1; a >= 0; --a)
+                for (int a = tickEvents.size()-1; a >= 0; --a)
                 {
                         if (tickEvents.get(a) == event)
                         {
@@ -474,6 +480,10 @@ public class TickedEventLoop implements Workable, Timerable
          */
         public void addLoopEvent(LoopEvent event)
         {
+                if (event == null)
+                {
+                        throw new IllegalArgumentException();
+                }
                 loopEvents.add(event);
                 
         }
@@ -484,9 +494,7 @@ public class TickedEventLoop implements Workable, Timerable
          */
         public boolean removeLoopEvent(LoopEvent event)
         {
-                int a;
-                
-                for (a = loopEvents.size()-1; a >= 0; --a)
+                for (int a = loopEvents.size()-1; a >= 0; --a)
                 {
                         if (tickEvents.get(a) == event)
                         {
