@@ -93,6 +93,8 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.logging.ConsoleHandler;
+import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JOptionPane;
@@ -247,6 +249,16 @@ public class GameLoop
                                 }
                                 
                                 boolean first = true;
+                                
+                                /*{
+                                        Logger logger = Logger.getLogger("de.lessvoid.nifty");
+                                        logger.setLevel(Level.FINER);
+
+                                        ConsoleHandler handler = new ConsoleHandler();
+                                        handler.setLevel(Level.FINER);
+                                        logger.addHandler(handler);
+                                }*/
+                                
                                 for (String res : networkedGame.niftyGuiResources)
                                 {
                                         try

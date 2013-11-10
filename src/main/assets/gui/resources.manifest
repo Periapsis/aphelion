@@ -1,9 +1,20 @@
 gui.default = default.nifty.xml
+gui.style = styles.nifty.xml
+gui.button-style = button.nifty.xml
+gui.textfield-style = textfield.nifty.xml
+gui.scrollbar-style = scrollbar.nifty.xml
+gui.chat-style = chat.nifty.xml
+
+gui.button = button.png
+gui.cursor = cursor.png
+gui.cursor-empty = cursor-empty.png
+gui.cursor-textfield = cursor-textfield.png
+gui.scrollbar = scrollbar.png
+
 gui.loading.connecting = logo_connecting.png
 gui.loading.graphics = Logo.png
 gui.loading.map = LoadingRadar.png
 gui.healthbar = hlthbar.png
-gui.healthbar.gradients = gradient.png
 gui.display = display.png
 gui.gauges = icons.png
 

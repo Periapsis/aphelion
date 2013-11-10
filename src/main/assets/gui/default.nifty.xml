@@ -2,6 +2,10 @@
 <nifty xmlns="http://nifty-gui.sourceforge.net/nifty-1.3.xsd" 
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
        xsi:schemaLocation="http://niftygui.sourceforge.net/nifty-1.3.xsd http://nifty-gui.sourceforge.net/nifty-1.3.xsd">
+        
+        <useStyles filename="gui.style"/>
+        <useControls filename="nifty-default-controls.xml"/>
+        
         <controlDefinition name="energybar" controller="aphelion.client.graphics.nifty.EnergyBar">
                 <panel childLayout="center">
                         <panel id="#progress" x="0" y="0" height="100%" width="0" style="#progress">
@@ -42,6 +46,16 @@
                 </panel>
         </controlDefinition>
         
+        <style id="button-font">
+                <attributes font="font.ubuntu-mono-bold-16"/>
+        </style>
+        <style id="tab-font">   
+                <attributes font="font.ubuntu-mono-bold-16"/>
+        </style>
+        <style id="base-font">  
+                <attributes font="font.ubuntu-mono-bold-16"/>
+        </style>
+        
         <style id="gauge-left">
                 <attributes width="26" height="24" visible="false"/>
                 <effect>
@@ -56,39 +70,12 @@
                         <onShow name="move" direction="right" mode="fromOffset" offsetX="22"/>
                 </effect>
         </style>
-
         
         <screen id="aphelion-main">
                 
                 <layer childLayout="center">
                         <!-- main camera -->
                         <control name="aphelion-camera" stars="true" clip="false" font-player="font.ubuntu-mono-bold-16"/>
-                </layer>
-                
-                <layer childLayout="center">
-                        <!-- radar -->
-                        <panel id="radar-small" align="right" valign="bottom" width="306" height="306" childLayout="center">
-                                <panel childLayout="absolute">
-                                        <panel childLayout="horizontal" x="0" y="-16" width="100%" height="16">
-                                                <panel/>
-                                                <text font="font.ubuntu-mono-bold-16" color="#ffff" textHAlign="right" textVAlign="bottom" width="30%" height="100%">
-                                                        <effect>
-                                                                <onStartScreen name="clockText" length="infinite" format="HH:mm"/>
-                                                                <onShow name="clockText" length="infinite" format="HH:mm"/>
-                                                        </effect>
-                                                </text>
-                                                <panel width="1"/>
-                                        </panel>
-                                </panel>
-                                <image filename="classic.window-border" imageMode="resize:3,2,3,3,3,2,3,2,3,2,3,3" width="306" height="306"/>
-                                <panel width="300" height="300" backgroundColor="#000000b0"/>
-                                <control name="aphelion-camera" width="300" height="300" zoom="0.0833333" stars="false" clip="true"/>
-                        </panel>
-                        <panel id="radar-big" align="right" valign="bottom" width="606" height="606" childLayout="center" visible="false">
-                                <image filename="classic.window-border" imageMode="resize:3,2,3,3,3,2,3,2,3,2,3,3" width="606" height="606"/>
-                                <panel width="600" height="600" backgroundColor="#000000b0"/>
-                                <control name="aphelion-camera" width="600" height="600" zoom="fill" stars="false" clip="true"/>
-                        </panel>
                 </layer>
                 
                 <layer childLayout="center">
@@ -215,6 +202,42 @@
                                         <image filename="gui.gauges" imageMode="subImage:78,120,4,24" width="4" height="24" align="right"/>
                                 </panel>
                                 <panel childLayout="center" width="26" height="24"/>
+                        </panel>
+                </layer>
+                
+                <layer childLayout="center">
+                        <!-- chat -->
+                        <panel childLayout="horizontal" height="152" width="100%" align="left" valign="bottom">
+                                <panel height="100%" align="center" valign="center" childLayout="vertical">
+                                        <control id="chat-local" name="nifty-chat" width="100%" height="100%" lines="5" sendLabel="Send"/>
+                                </panel>
+                                <panel width="256"/>
+                        </panel>
+                </layer>
+                
+                <layer childLayout="center">
+                        <!-- radar -->
+                        <panel id="radar-small" align="right" valign="bottom" width="256" height="256" childLayout="center">
+                                <panel childLayout="absolute">
+                                        <panel childLayout="horizontal" x="0" y="-16" width="100%" height="16">
+                                                <panel/>
+                                                <text font="font.ubuntu-mono-bold-16" color="#ffff" textHAlign="right" textVAlign="bottom" width="30%" height="100%">
+                                                        <effect>
+                                                                <onStartScreen name="clockText" length="infinite" format="HH:mm"/>
+                                                                <onShow name="clockText" length="infinite" format="HH:mm"/>
+                                                        </effect>
+                                                </text>
+                                                <panel width="1"/>
+                                        </panel>
+                                </panel>
+                                <image filename="classic.window-border" imageMode="resize:3,2,3,3,3,2,3,2,3,2,3,3" width="256" height="256"/>
+                                <panel width="250" height="250" backgroundColor="#000000b0"/>
+                                <control name="aphelion-camera" width="250" height="250" zoom="0.0833333" stars="false" clip="true"/>
+                        </panel>
+                        <panel id="radar-big" align="right" valign="bottom" width="606" height="606" childLayout="center" visible="false">
+                                <image filename="classic.window-border" imageMode="resize:3,2,3,3,3,2,3,2,3,2,3,3" width="606" height="606"/>
+                                <panel width="600" height="600" backgroundColor="#000000b0"/>
+                                <control name="aphelion-camera" width="600" height="600" zoom="fill" stars="false" clip="true"/>
                         </panel>
                 </layer>
         </screen>
