@@ -122,9 +122,10 @@ public class WebSocketTest
                         // set up the client
                         SingleGameConnection client = new SingleGameConnection(
                                 new URI("ws://127.0.0.1:"+server.getHTTPListeningPort()+"/aphelion"), 
-                                loop, 
-                                new testSingleGameWebSocket_ClientGameListener(), 
+                                loop,
                                 1); // 1 connection;
+                        
+                        client.addListener(new testSingleGameWebSocket_ClientGameListener());
 
                         loop.addLoopEvent(client);
                         server.setup();
@@ -351,8 +352,8 @@ public class WebSocketTest
                         SingleGameConnection client = new SingleGameConnection(
                                 new URI("ws://127.0.0.1:"+server.getHTTPListeningPort()+"/aphelion"), 
                                 loop, 
-                                new testMultiGameWebSocket_ClientGameListener(), 
                                 5); // 5 connections;
+                        client.addListener(new testMultiGameWebSocket_ClientGameListener());
 
                         loop.addLoopEvent(client);
                         client.connect();

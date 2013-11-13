@@ -35,49 +35,22 @@
  * the terms and conditions of the license of that module. An independent
  * module is a module which is not derived from or based on this library.
  */
+
 package aphelion.shared.net.protocols;
 
-import aphelion.shared.net.WS_CLOSE_STATUS;
 import aphelion.shared.net.protobuf.GameC2S;
-import aphelion.shared.net.protobuf.GameS2C;
 
-/** 
+/**
+ *
  * @author Joris
  */
-public interface GameListener extends GameC2SListener, GameS2CListener
+public interface GameC2SListener
 {
-        public void gameEstablishFailure(WS_CLOSE_STATUS code, String reason);
-        
-        /** Called (from the main thread) when a new client has started the game protocol.
-         * This method is usually called upon the first socket connection for this client 
-         * (after some protocol handshakes). New socket connections for the same client will 
-         * not cause this method to be called again.
+        /** 
+         * We received a message from the client.
          * @param game
+         * @param c2s The parsed protobuf message.
+         * @param receivedAt The nano time at which this message was received
          */
-        public void gameNewClient(GameProtocolConnection game);
-        
-        /** Called (from the main thread) when the client is no longer present.
-         * This method is usually called after the last socket connection for this client is 
-         * gone. This event may be delayed to allow the client to reconnect, but this 
-         * is optional.
-         * @param game
-         */
-        public void gameRemovedClient(GameProtocolConnection game);
-        
-        /** Called (from the main thread) when a connection has been added.
-         * At this point the connection is ready to be used to send or receive.
-         * Fired AFTER gameNewClient
-         *
-         * @param game
-         */
-        public void gameNewConnection(GameProtocolConnection game);
-        
-        /** Called (from the main thread) when a connection has been dropped .
-         * Fired BEFORE gameRemovedClient
-         * 
-         * @param game
-         * @param code See WS_CLOSE_STATUS 
-         * @param reason An optional message to display to the user
-         */
-        public void gameDropConnection(GameProtocolConnection game, WS_CLOSE_STATUS code, String reason);
+        public void gameC2SMessage(GameProtocolConnection game, GameC2S.C2S c2s, long receivedAt);
 }

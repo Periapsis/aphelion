@@ -234,7 +234,8 @@ public class AphelionServer implements LoopEvent, WebSocketTransportListener
                                         game.removed();
                                 }
 
-                                game = new GameProtocolConnection(workable, webSocketTransport, sessionToken, server, gameClientListener);
+                                game = new GameProtocolConnection(workable, webSocketTransport, sessionToken, server);
+                                game.addListener(gameClientListener);
                                 gameAttachment.set(sessionToken, game);
                         }
 
