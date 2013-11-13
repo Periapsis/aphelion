@@ -55,6 +55,7 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Map;
 import java.util.WeakHashMap;
@@ -77,19 +78,33 @@ public class GameProtocolConnection implements Attachable
         private final WebSocketTransport websocketTransport;
         public  final SessionToken session;
         public  final boolean server;
-        private final GameListener listener;
+        private final ArrayList listeners = new ArrayList(4);
         
         private final STATE[] state = {STATE.NONE};
         
         private static enum STATE {NONE, CREATED, DROPPED};
 
-        public GameProtocolConnection(Workable workable, WebSocketTransport websocketTransport, SessionToken session, boolean server, GameListener listener)
+        public GameProtocolConnection(Workable workable, WebSocketTransport websocketTransport, SessionToken session, boolean server)
         {
                 this.workable = workable;
                 this.websocketTransport = websocketTransport;
                 this.session = session;
                 this.server = server;
-                this.listener = listener;
+        }
+        
+        public void addListener(GameListener listener)
+        {
+                this.listeners.add(listener);
+        }
+        
+        public void addListener(GameC2SListener listener)
+        {
+                this.listeners.add(listener);
+        }
+        
+        public void addListener(GameS2CListener listener)
+        {
+                this.listeners.add(listener);
         }
         
         @Override
@@ -139,7 +154,7 @@ public class GameProtocolConnection implements Attachable
                         if (state[0] == STATE.NONE)
                         {
                                 state[0] = STATE.CREATED;
-                                workable.runOnMain(new CallGameClientListener(listener, this, 1, null, null));
+                                workable.runOnMain(new CallGameClientListener(listeners, this, 1, null, null));
                         }
                         else
                         {
@@ -156,7 +171,7 @@ public class GameProtocolConnection implements Attachable
                         if (state[0] == STATE.CREATED)
                         {
                                 state[0] = STATE.DROPPED;
-                                workable.runOnMain(new CallGameClientListener(listener, this, 2, null, null));
+                                workable.runOnMain(new CallGameClientListener(listeners, this, 2, null, null));
                         }
                         else
                         {
@@ -211,7 +226,7 @@ public class GameProtocolConnection implements Attachable
                                 }
                                 
                                 // run the callback on the main thread
-                                workable.runOnMain(new CallGameClientListener(listener, this, c2s, receivedAt));
+                                workable.runOnMain(new CallGameClientListener(listeners, this, c2s, receivedAt));
                         }
                         catch (InvalidProtocolBufferException ex)
                         {
@@ -231,7 +246,7 @@ public class GameProtocolConnection implements Attachable
                                 GameS2C.S2C s2c = GameS2C.S2C.parseFrom(new ByteArrayInputStream(message.array(), message.position(), message.remaining()));
 
                                 // run the callback on the main thread
-                                workable.runOnMain(new CallGameClientListener(listener, this, s2c, receivedAt));
+                                workable.runOnMain(new CallGameClientListener(listeners, this, s2c, receivedAt));
                         }
                         catch (InvalidProtocolBufferException ex)
                         {
@@ -247,13 +262,13 @@ public class GameProtocolConnection implements Attachable
         @ThreadSafe
         public void connectionAdded()
         {
-                workable.runOnMain(new CallGameClientListener(listener, this, 4, null, null));
+                workable.runOnMain(new CallGameClientListener(listeners, this, 4, null, null));
         }
         
         @ThreadSafe
         public void connectionDropped(WS_CLOSE_STATUS drop_code, String drop_reason)
         {
-                workable.runOnMain(new CallGameClientListener(listener, this, 5, drop_code, drop_reason));
+                workable.runOnMain(new CallGameClientListener(listeners, this, 5, drop_code, drop_reason));
         }
         
         
@@ -414,7 +429,7 @@ public class GameProtocolConnection implements Attachable
         
         public static class CallGameClientListener implements Runnable
         {
-                final GameListener listener;
+                final ArrayList listeners;
                 final GameC2S.C2S c2s;
                 final GameS2C.S2C s2c;
                 final GameProtocolConnection conn;
@@ -423,9 +438,9 @@ public class GameProtocolConnection implements Attachable
                 final WS_CLOSE_STATUS drop_code;
                 final String drop_reason;
 
-                public CallGameClientListener(GameListener listener, GameProtocolConnection conn, int what, WS_CLOSE_STATUS drop_code, String drop_reason)
+                public CallGameClientListener(ArrayList listeners, GameProtocolConnection conn, int what, WS_CLOSE_STATUS drop_code, String drop_reason)
                 {
-                        this.listener = listener;
+                        this.listeners = listeners;
                         this.conn = conn;
                         this.c2s = null;
                         this.s2c = null;
@@ -436,9 +451,9 @@ public class GameProtocolConnection implements Attachable
                 }
 
                 // message
-                public CallGameClientListener(GameListener listener, GameProtocolConnection conn, GameC2S.C2S c2s, long receivedAt)
+                public CallGameClientListener(ArrayList listeners, GameProtocolConnection conn, GameC2S.C2S c2s, long receivedAt)
                 {
-                        this.listener = listener;
+                        this.listeners = listeners;
                         this.conn = conn;
                         this.c2s = c2s;
                         this.s2c = null;
@@ -449,9 +464,9 @@ public class GameProtocolConnection implements Attachable
                 }
                 
                 // message
-                public CallGameClientListener(GameListener listener, GameProtocolConnection conn, GameS2C.S2C s2c, long receivedAt)
+                public CallGameClientListener(ArrayList listeners, GameProtocolConnection conn, GameS2C.S2C s2c, long receivedAt)
                 {
-                        this.listener = listener;
+                        this.listeners = listeners;
                         this.conn = conn;
                         this.c2s = null;
                         this.s2c = s2c;
@@ -464,37 +479,64 @@ public class GameProtocolConnection implements Attachable
                 @Override
                 public void run()
                 {
-                        switch (what)
+                        for (Object listener : listeners)
                         {
-                                case 0:
-                                        listener.gameEstablishFailure(drop_code, drop_reason);
-                                        return;
-                                case 1:
-                                        listener.gameNewClient(conn);
-                                        return;
-                                case 2:
-                                        listener.gameRemovedClient(conn);
-                                        return;
-                                case 3:
-                                        if (this.c2s != null)
-                                        {
-                                                listener.gameC2SMessage(conn, c2s, receivedAt);
-                                        }
-                                        else
-                                        {
-                                                assert this.s2c != null;
-                                                listener.gameS2CMessage(conn, s2c, receivedAt);
-                                        }
-                                        
-                                        return;
-                                case 4:
-                                        listener.gameNewConnection(conn);
-                                        return;
-                                case 5:
-                                        listener.gameDropConnection(conn, drop_code, drop_reason);
-                                        return;
-                                default:
-                                        assert false;
+                                switch (what)
+                                {
+                                        case 0:
+                                                if (listener instanceof GameListener)
+                                                {
+                                                        ((GameListener) listener).gameEstablishFailure(drop_code, drop_reason);
+                                                }
+
+                                                return;
+                                        case 1:
+                                                if (listener instanceof GameListener)
+                                                {
+                                                        assert listener instanceof GameC2SListener;
+                                                        assert listener instanceof GameS2CListener;
+                                                        ((GameListener) listener).gameNewClient(conn);
+                                                }
+                                                return;
+                                        case 2:
+                                                if (listener instanceof GameListener)
+                                                {
+                                                        ((GameListener) listener).gameRemovedClient(conn);
+                                                }
+                                                return;
+                                        case 3:
+                                                if (this.c2s != null)
+                                                {
+                                                        if (listener instanceof GameC2SListener)
+                                                        {
+                                                                ((GameC2SListener) listener).gameC2SMessage(conn, c2s, receivedAt);
+                                                        }
+                                                }
+                                                else
+                                                {
+                                                        assert this.s2c != null;
+                                                        if (listener instanceof GameS2CListener)
+                                                        {
+                                                                ((GameS2CListener) listener).gameS2CMessage(conn, s2c, receivedAt);
+                                                        }
+                                                }
+
+                                                return;
+                                        case 4:
+                                                if (listener instanceof GameListener)
+                                                {
+                                                        ((GameListener) listener).gameNewConnection(conn);
+                                                }
+                                                return;
+                                        case 5:
+                                                if (listener instanceof GameListener)
+                                                {
+                                                        ((GameListener) listener).gameDropConnection(conn, drop_code, drop_reason);
+                                                }
+                                                return;
+                                        default:
+                                                assert false;
+                                }
                         }
                 }
         }

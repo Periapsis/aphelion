@@ -70,7 +70,7 @@ public class ConnectLoop
         private final String nickname;
         
         private SingleGameConnection connection;
-        private NetworkedGame connectionListener;
+        private NetworkedGame networkedGame;
         
         
 
@@ -91,15 +91,16 @@ public class ConnectLoop
          */
         public boolean loop()
         {
-                connectionListener = new NetworkedGame(resourceDB, loop, httpUrl, nickname);
+                networkedGame = new NetworkedGame(resourceDB, loop, httpUrl, nickname);
                 
                 AsyncTexture loadingTex = resourceDB.getTextureLoader().getTexture("gui.loading.connecting");
                 
                 
-                connection = new SingleGameConnection(wsUri, loop, connectionListener);
+                connection = new SingleGameConnection(wsUri, loop);
+                connection.addListener(networkedGame);
                 connection.connect();
                 
-                while(!loop.isInterruped() && connectionListener.isConnecting())
+                while(!loop.isInterruped() && networkedGame.isConnecting())
                 {
                         Display.update();
                         
@@ -130,12 +131,12 @@ public class ConnectLoop
                         return false;
                 }
                 
-                return !connectionListener.isConnecting() && !connectionListener.isDisconnected();
+                return !networkedGame.isConnecting() && !networkedGame.isDisconnected();
         }
         
         public ClockSource getSyncedClockSource()
         {
-                return connectionListener.getSyncedClockSource();
+                return networkedGame.getSyncedClockSource();
         }
         
         public SingleGameConnection getConnection()
@@ -145,6 +146,6 @@ public class ConnectLoop
         
         public NetworkedGame getNetworkedGame()
         {
-                return connectionListener;
+                return networkedGame;
         }
 }

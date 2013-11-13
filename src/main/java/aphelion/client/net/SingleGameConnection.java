@@ -47,9 +47,12 @@ import aphelion.shared.net.SessionToken;
 import aphelion.shared.net.WS_CLOSE_STATUS;
 import aphelion.shared.net.WebSocketTransport;
 import aphelion.shared.net.WebSocketTransportListener;
+import aphelion.shared.net.protocols.GameC2SListener;
+import aphelion.shared.net.protocols.GameS2CListener;
 import aphelion.shared.swissarmyknife.ThreadSafe;
 import java.net.URI;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -73,32 +76,44 @@ public class SingleGameConnection implements LoopEvent, WebSocketTransportListen
         private final URI uri;
         private final Workable workable;
         private final WebSocketTransport webSocketTransport;
-        private final GameListener gameClientListener;
+        private final ArrayList listeners = new ArrayList(4);
         private GameProtocolConnection game;
         private final int desired_sockets; //TODO: set me to 5
 
-        public SingleGameConnection(URI uri, Workable workable, GameListener gameClientListener)
+        public SingleGameConnection(URI uri, Workable workable)
         {
                 this.uri = uri;
                 this.workable = workable;
-                this.gameClientListener = gameClientListener;
                 
                 this.webSocketTransport = new WebSocketTransport(this);
                 
                 this.desired_sockets = 5;
         }
         
-        public SingleGameConnection(URI uri, Workable workable, GameListener gameClientListener, int desired_sockets)
+        public SingleGameConnection(URI uri, Workable workable, int desired_sockets)
         {
                 this.uri = uri;
                 this.workable = workable;
-                this.gameClientListener = gameClientListener;
                 
                 this.webSocketTransport = new WebSocketTransport(this);
                 
                 this.desired_sockets = desired_sockets;
         }
         
+        public void addListener(GameListener listener)
+        {
+                this.listeners.add(listener);
+        }
+        
+        public void addListener(GameC2SListener listener)
+        {
+                this.listeners.add(listener);
+        }
+        
+        public void addListener(GameS2CListener listener)
+        {
+                this.listeners.add(listener);
+        }
         
         @Override
         public void loop(long systemNanoTime, long sourceNanoTime)
@@ -156,7 +171,7 @@ public class SingleGameConnection implements LoopEvent, WebSocketTransportListen
                         {
                                 assert this.game == null;
                                 
-                                workable.runOnMain(new GameProtocolConnection.CallGameClientListener(this.gameClientListener, null, 0, code, reason));
+                                workable.runOnMain(new GameProtocolConnection.CallGameClientListener(this.listeners, null, 0, code, reason));
                         }
                         
                         log.log(Level.WARNING, "Error establish game connection to the server {0}: {1}", new Object[]{code, reason});
@@ -180,7 +195,22 @@ public class SingleGameConnection implements LoopEvent, WebSocketTransportListen
                                 
                                 this.webSocketTransport.closeSession(game.session, WS_CLOSE_STATUS.CLOSING_PREVIOUS_SESSION, null);
                         }
-                        this.game = new GameProtocolConnection(workable, webSocketTransport, sessionToken, false, gameClientListener);
+                        this.game = new GameProtocolConnection(workable, webSocketTransport, sessionToken, false);
+                        for (Object listener : this.listeners)
+                        {
+                                if (listener instanceof GameListener)
+                                {
+                                        this.game.addListener((GameListener) listener);
+                                }
+                                else if (listener instanceof GameC2SListener)
+                                {
+                                        this.game.addListener((GameC2SListener) listener);
+                                }
+                                else if (listener instanceof GameS2CListener)
+                                {
+                                        this.game.addListener((GameS2CListener) listener);
+                                }
+                        }
                         this.game.created();
                         
                         int sockets = this.webSocketTransport.getSocketCount(sessionToken, protocol);
