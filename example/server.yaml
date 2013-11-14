@@ -20,7 +20,7 @@ arena:
         
         map: myzone.public.map
         game-config: [myzone.global.settings, myzone.public.settings]
-        nifty-gui: [gui.default, myzone.gui]
+        nifty-gui: [gui.main, myzone.gui]
         
         assets:
                 # This path is relative to assets-path

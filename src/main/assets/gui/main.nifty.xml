@@ -3,7 +3,10 @@
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
        xsi:schemaLocation="http://niftygui.sourceforge.net/nifty-1.3.xsd http://nifty-gui.sourceforge.net/nifty-1.3.xsd">
         
-        <useStyles filename="gui.style"/>
+        <useStyles filename="gui.style.button"/>
+        <useStyles filename="gui.style.textfield"/>
+        <useStyles filename="gui.style.scrollbar"/>
+        <useStyles filename="gui.style.chat"/>
         <useControls filename="nifty-default-controls.xml"/>
         
         <controlDefinition name="energybar" controller="aphelion.client.graphics.nifty.EnergyBar">

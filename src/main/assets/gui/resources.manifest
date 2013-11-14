@@ -1,9 +1,8 @@
-gui.default = default.nifty.xml
-gui.style = styles.nifty.xml
-gui.button-style = button.nifty.xml
-gui.textfield-style = textfield.nifty.xml
-gui.scrollbar-style = scrollbar.nifty.xml
-gui.chat-style = chat.nifty.xml
+gui.main = main.nifty.xml
+gui.style.button = button.nifty-style.xml
+gui.style.textfield = textfield.nifty-style.xml
+gui.style.scrollbar = scrollbar.nifty-style.xml
+gui.style.chat = chat.nifty-style.xml
 
 gui.button = button.png
 gui.cursor = cursor.png
