@@ -8,6 +8,7 @@
                                                 <control name="nifty-chat-line" chatLineIconWidth="$chatLineIconWidth" chatLineIconHeight="$chatLineIconHeight" chatLineHeight="$chatLineHeight" />
                                         </control>
                                 </panel>
+                                <panel style="#chatPanel-spacer" height="100%"/>
                                 <panel style="#playerArea" childLayout="vertical">
                                         <control id="#playerList" name="listBox" vertical="optional" horizontal="off" selection="Disabled" displayItems="$lines" viewConverterClass="de.lessvoid.nifty.controls.chatcontrol.ChatBoxViewConverter">
                                                 <control name="nifty-chat-line" chatLineIconWidth="$chatLineIconWidth" chatLineIconHeight="$chatLineIconHeight" chatLineHeight="$chatLineHeight" />
@@ -16,7 +17,8 @@
                         </panel>
                         <panel style="#mainPanel-spacer" width="100%"/>
                         <panel style="#chatTextArea" childLayout="horizontal">
-                                <control id="#chat-text-input" name="textfield" />
+                                <!-- override the default textfield style -->
+                                <control id="#chat-text-input" name="textfield" style="aphelion-chat-text-input"/>
                                 <!--<control id="#chat-text-button" name="button" width="" label="$sendLabel">
                                         <interact onClick="sendText()" />
                                 </control>-->
@@ -24,7 +26,7 @@
                 </panel>
         </controlDefinition>
 
-        <!-- this defines the control for a single line of text in the chat and player window -->
+
         <controlDefinition name="nifty-chat-line">
                 <panel childLayout="horizontal" width="100%" align="center">
                         <image id="#chat-line-icon" width="$chatLineIconWidth" height="$chatLineIconHeight" />

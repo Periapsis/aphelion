@@ -108,10 +108,8 @@ public class LocalChat implements EventTopicSubscriber<AphelionChatTextSendEvent
         {
                 for (GameS2C.LocalChatMessage message : s2c.getLocalChatMessageList())
                 {
-                        System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! " + message.getMessage());
                         for (AphelionChatControl control : chatLocals)
                         {
-                                System.out.println("@@@@@@@@@@@@@");
                                 control.receivedChatLine(message.getSender() + "> " + message.getMessage(), null);
                         }
                 }
