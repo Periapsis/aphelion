@@ -36,21 +36,21 @@
  * module is a module which is not derived from or based on this library.
  */
 
-package aphelion.shared.net.protocols;
+package aphelion.shared.net.game;
 
-import aphelion.shared.net.protobuf.GameS2C;
+import aphelion.shared.net.protobuf.GameC2S;
 
 /**
  *
  * @author Joris
  */
-public interface GameS2CListener
+public interface GameC2SListener
 {
         /** 
          * We received a message from the client.
          * @param game
-         * @param s2c The parsed protobuf message.
+         * @param c2s The parsed protobuf message.
          * @param receivedAt The nano time at which this message was received
          */
-        public void gameS2CMessage(GameProtocolConnection game, GameS2C.S2C s2c, long receivedAt);
+        public void gameC2SMessage(GameProtocolConnection game, GameC2S.C2S c2s, long receivedAt);
 }

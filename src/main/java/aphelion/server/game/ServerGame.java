@@ -41,9 +41,10 @@ package aphelion.server.game;
 import aphelion.shared.resource.Asset;
 import aphelion.server.game.ClientState.STATE;
 import aphelion.shared.event.*;
-import aphelion.shared.net.protocols.GameListener;
-import aphelion.shared.net.protocols.GameProtocolConnection;
+import aphelion.shared.net.game.GameProtoListener;
+import aphelion.shared.net.game.GameProtocolConnection;
 import aphelion.shared.net.WS_CLOSE_STATUS;
+import aphelion.shared.net.game.NetworkedActor;
 import aphelion.shared.net.protobuf.GameC2S;
 import aphelion.shared.net.protobuf.GameC2S.Authenticate;
 import aphelion.shared.net.protobuf.GameOperation;
@@ -61,9 +62,7 @@ import aphelion.shared.physics.valueobjects.PhysicsMovement;
 import aphelion.shared.physics.WEAPON_SLOT;
 import aphelion.shared.swissarmyknife.AttachmentConsumer;
 import aphelion.shared.swissarmyknife.SwissArmyKnife;
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -71,7 +70,7 @@ import java.util.logging.Logger;
  *
  * @author Joris
  */
-public class ServerGame implements LoopEvent, TickEvent, GameListener
+public class ServerGame implements LoopEvent, TickEvent, GameProtoListener
 {
         private static final Logger log = Logger.getLogger("aphelion.server.game");
         
@@ -94,6 +93,7 @@ public class ServerGame implements LoopEvent, TickEvent, GameListener
         
         // all players that are in STATE.READY
         private LinkedList<GameProtocolConnection> readyPlayers = new LinkedList<>();
+        private Map<Integer, NetworkedActor> actors = new HashMap<>(); // actor pid -> client state
         
         public ServerGame(PhysicsEnvironment physicsEnv, 
                           TickedEventLoop loop, 
@@ -120,6 +120,21 @@ public class ServerGame implements LoopEvent, TickEvent, GameListener
         public void removeReadyPlayer(GameProtocolConnection gameConn)
         {
                 readyPlayers.remove(gameConn);
+        }
+        
+        public void addActor(NetworkedActor netActor)
+        {
+                actors.put(netActor.pid, netActor);
+        }
+        
+        public void removeActor(NetworkedActor netActor)
+        {
+                actors.remove(netActor.pid);
+        }
+        
+        public NetworkedActor getActor(int pid)
+        {
+                return actors.get(pid);
         }
         
         public int getPlayerCount()
@@ -419,15 +434,17 @@ public class ServerGame implements LoopEvent, TickEvent, GameListener
                 }
         }
         
-        public static boolean addPhysicsOperationToMessage(GameS2C.S2C.Builder s2c, OperationPublic op)
+        public boolean addPhysicsOperationToMessage(GameS2C.S2C.Builder s2c, OperationPublic op)
         {
                 if (op instanceof ActorNewPublic)
                 {
                         ActorNewPublic opNew = (ActorNewPublic) op;
+                        NetworkedActor netActor = getActor(opNew.getPid());
+                        
                         GameOperation.ActorNew.Builder actorNew = s2c.addActorNewBuilder();
                         actorNew.setTick(opNew.getTick());
                         actorNew.setPid(opNew.getPid());
-                        actorNew.setName(opNew.getName());
+                        actorNew.setName(netActor == null ? "??????" : netActor.name);
                         actorNew.setSeed(opNew.getSeed());
                         actorNew.setShip(opNew.getShip());
                         return true;

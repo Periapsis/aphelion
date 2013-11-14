@@ -82,11 +82,10 @@ public class PhysicsEnvironmentTest extends PhysicsTest
                 assertTrue(env.tick_now == 1);
 
                 // Should trigger the operation immediately
-                env.actorNew(1, 1, "Player 1", 1234, "Warbird"); // tick, pid
-                assertNotNull(env.getActor(1));
+                env.actorNew(1, 1, 1234, "Warbird");                 assertNotNull(env.getActor(1));
 
                 // Should not trigger the operation yet
-                env.actorNew(2, 2, "Player 2", 1234, "Warbird");
+                env.actorNew(2, 2, 1234, "Warbird");
                 env.actorRemove(2, 1);
                 assertNotNull(env.getActor(1));
                 assertNull(env.getActor(2));
@@ -96,15 +95,14 @@ public class PhysicsEnvironmentTest extends PhysicsTest
                 assertNotNull(env.getActor(2));
 
                 // late operation, should execute immediately
-                env.actorNew(1, 3, "Player 3", 1234, "Warbird");
+                env.actorNew(1, 3, 1234, "Warbird");
                 assertNotNull(env.getActor(3));
 
                 // operations with the same tick should execute in the same order they are added
                 env.actorRemove(1, 3);
                 assertTrue(env.getActor(3).isRemoved());
 
-                env.actorNew(3, 4, "Player 4", 1234, "Warbird"); // tick,pid
-                env.actorRemove(3, 4);
+                env.actorNew(3, 4, 1234, "Warbird");                 env.actorRemove(3, 4);
                 env.tick(); // 3
                 assertTrue(env.getActor(4).isRemoved());
 
@@ -125,8 +123,7 @@ public class PhysicsEnvironmentTest extends PhysicsTest
                 env.tick(); // 2
                 env.tick(); // 3
 
-                env.actorNew(3, 1, "Player 1", 1234, "Warbird"); // tick, pid
-                ActorPublic actor = env.getActor(1); // actor created at tick 3
+                env.actorNew(3, 1, 1234, "Warbird");                 ActorPublic actor = env.getActor(1); // actor created at tick 3
 
                 env.tick(); // 4
 
@@ -297,7 +294,7 @@ public class PhysicsEnvironmentTest extends PhysicsTest
         {
                 // Test multiple move's received in the past (but still in order)
 
-                env.actorNew(0, 1, "Player 1", 1234, "Warbird");
+                env.actorNew(0, 1, 1234, "Warbird");
                 env.actorWarp(0, 1, false, 0, 0, 1000, 1001, PhysicsEnvironment.ROTATION_1_2TH);
                 ActorPublic actor = env.getActor(1);
 
@@ -331,7 +328,7 @@ public class PhysicsEnvironmentTest extends PhysicsTest
                 // Test multiple move's received in the past, out of order
                 // This is solved without a timewarp
 
-                env.actorNew(0, 1, "Player 1", 1234, "Warbird");
+                env.actorNew(0, 1, 1234, "Warbird");
                 // facing down
                 env.actorWarp(0, 1, false, 0, 0, 1000, 1001, PhysicsEnvironment.ROTATION_1_2TH);
                 ActorPublic actor = env.getActor(1);
@@ -365,7 +362,7 @@ public class PhysicsEnvironmentTest extends PhysicsTest
         public void testInvalidOperationOrder()
         {
                 env.actorWarp(1, 1, false, 1000, 1000, 100, 100, 0);
-                env.actorNew(5, 1, "Player 1", 1234, "Warbird");
+                env.actorNew(5, 1, 1234, "Warbird");
                 
                 while (env.tick_now < 200)
                 {
@@ -384,7 +381,7 @@ public class PhysicsEnvironmentTest extends PhysicsTest
         {
                 // these tick values are so long ago, they are not part of any trailing state
                 env.actorRemove(-10000, 1);
-                env.actorNew(-11000, 1, "Player 1", 1234, "Warbird");
+                env.actorNew(-11000, 1, 1234, "Warbird");
                 
                 env.tick();
         }
@@ -392,7 +389,7 @@ public class PhysicsEnvironmentTest extends PhysicsTest
         @Test
         public void testWeaponFire()
         {
-                env.actorNew(0, 1, "Player 1", 1234, "Warbird");
+                env.actorNew(0, 1, 1234, "Warbird");
                 env.actorWarp(0, 1, false, 1000, 2000, 0, 10, PhysicsEnvironment.ROTATION_1_2TH);
                 env.actorWeapon(0, 1, WEAPON_SLOT.GUN, false, 0, 0, 0, 0, 0);
                 
@@ -432,7 +429,7 @@ public class PhysicsEnvironmentTest extends PhysicsTest
         @Test
         public void testWeaponFireConsistency()
         {
-                env.actorNew(0, 1, "Player 1", 1234, "Warbird");
+                env.actorNew(0, 1, 1234, "Warbird");
                 env.actorWarp(0, 1, false, 1000, 2000, 0, 0, PhysicsEnvironment.ROTATION_1_2TH);
                 env.actorWeapon(2, 1, WEAPON_SLOT.GUN, false, 0, 0, 0, 0, 0);
                 

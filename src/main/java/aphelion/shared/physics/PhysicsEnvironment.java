@@ -749,12 +749,11 @@ public class PhysicsEnvironment implements TickEvent
                 assert ret;
         }
         
-        public void actorNew(long tick, int pid, String name, long seed, String ship)
+        public void actorNew(long tick, int pid, long seed, String ship)
         {
                 ActorNew op = new ActorNew();
                 op.tick = tick;
                 op.pid = pid;
-                op.name = name;
                 op.seed = seed;
                 op.ship = ship;
 

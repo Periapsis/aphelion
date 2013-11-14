@@ -43,7 +43,6 @@ import aphelion.shared.physics.entities.Actor;
 import aphelion.shared.physics.PhysicsEnvironment;
 import aphelion.shared.physics.entities.MapEntity;
 import aphelion.shared.physics.State;
-import java.util.Iterator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -58,7 +57,6 @@ public class ActorNew extends Operation implements ActorNewPublic
         // this list is only kept here temporary.
         // it will be set as an attribute in every actor.
         private MapEntity[] crossStateList = new MapEntity[PhysicsEnvironment.MAX_TRAILING_STATES];
-        public String name;
         public long seed;
         public String ship;
         
@@ -107,7 +105,6 @@ public class ActorNew extends Operation implements ActorNewPublic
                 
                 assert actor.crossStateList == crossStateList;
                 
-                actor.name = name;
                 actor.seed = seed;
                 actor.seed_high = (int) (actor.seed >> 32);
                 actor.seed_low = (int) (actor.seed);
@@ -148,12 +145,6 @@ public class ActorNew extends Operation implements ActorNewPublic
         @Override
         public void resetExecutionHistory(State state, State resetTo)
         {
-        }
-
-        @Override
-        public String getName()
-        {
-                return name;
         }
 
         @Override

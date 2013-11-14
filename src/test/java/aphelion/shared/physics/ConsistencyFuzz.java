@@ -126,7 +126,7 @@ public class ConsistencyFuzz
                 Command[] commands = new Command[]
                 {
                         // tick 0
-                        new Command(){public void execute(){ env.actorNew(1, 1, "JoWie", 357436389, "warbird"); }},
+                        new Command(){public void execute(){ env.actorNew(1, 1, 357436389, "warbird"); }},
                         new Command(){public void execute(){ env.actorWarp(2, 1, false, 200000, 150000, -1000, 0, PhysicsEnvironment.ROTATION_1_4TH); }},
                         new Command(){public void execute(){ env.actorMove(3, 1, PhysicsMovement.get(false, true, false, true, true)); }},
                         new Command(){public void execute(){ env.actorMove(4, 1, PhysicsMovement.get(true, false, false, false, false)); }},

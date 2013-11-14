@@ -69,7 +69,6 @@ public interface ActorPublic
         boolean getPosition(PhysicsShipPosition pos);
         boolean getHistoricPosition(PhysicsShipPosition pos, long tick, boolean lookAtOtherStates);
         PhysicsMoveable getHistoricMovement(long tick, boolean lookAtOtherStates);
-        String getName();
         long getSeed();
         String getShip(); // as used in settings
         Iterator<ProjectilePublic> projectileIterator();

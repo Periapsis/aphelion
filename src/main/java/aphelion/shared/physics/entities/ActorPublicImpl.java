@@ -210,20 +210,6 @@ public class ActorPublicImpl implements ActorPublic
                 
                 return actor.getHistoricMovement(tick, lookAtOtherStates);
         }
-        
-        @Override
-        public String getName()
-        {
-                Actor actor = getActor();
-                if (actor == null)
-                {
-                        return null; // deleted
-                }
-                else
-                {
-                        return actor.name;
-                }
-        }
 
         @Override
         public boolean canFireWeapon(WEAPON_SLOT weapon)

@@ -42,8 +42,8 @@ import aphelion.client.net.SingleGameConnection;
 import aphelion.server.AphelionServer;
 import aphelion.server.http.HttpServer;
 import aphelion.shared.event.TickedEventLoop;
-import aphelion.shared.net.protocols.GameProtocolConnection;
-import aphelion.shared.net.protocols.GameListener;
+import aphelion.shared.net.game.GameProtocolConnection;
+import aphelion.shared.net.game.GameProtoListener;
 import aphelion.shared.net.protobuf.GameC2S;
 import aphelion.shared.net.protobuf.GameC2S.C2S;
 import aphelion.shared.net.protobuf.GameOperation.ActorMove;
@@ -149,7 +149,7 @@ public class WebSocketTest
                 }
         }
         
-        private class testSingleGameWebSocket_ServerGameListener implements GameListener
+        private class testSingleGameWebSocket_ServerGameListener implements GameProtoListener
         {
 
                 @Override
@@ -241,7 +241,7 @@ public class WebSocketTest
         }
         
         
-        private class testSingleGameWebSocket_ClientGameListener implements GameListener
+        private class testSingleGameWebSocket_ClientGameListener implements GameProtoListener
         {
 
                 @Override
@@ -374,7 +374,7 @@ public class WebSocketTest
                 }
         }
         
-        private class testMultiGameWebSocket_ServerGameListener implements GameListener
+        private class testMultiGameWebSocket_ServerGameListener implements GameProtoListener
         {
 
                 @Override
@@ -489,7 +489,7 @@ public class WebSocketTest
                 }
         }
         
-        private class testMultiGameWebSocket_ClientGameListener implements GameListener
+        private class testMultiGameWebSocket_ClientGameListener implements GameProtoListener
         {
 
                 @Override

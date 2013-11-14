@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <nifty-controls xmlns="http://nifty-gui.sourceforge.net/nifty-1.3.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://nifty-gui.sourceforge.net/nifty-1.3.xsd">
-        <controlDefinition name="aphelion-chat" style="aphelion-chat-control" controller="aphelion.client.graphics.nifty.AphelionChatControl" lines="10" playerLines="11" sendLabel="Send" chatLineIconWidth="25px" chatLineIconHeight="25px" chatLineHeight="25px">
+        <controlDefinition name="aphelion-chat" style="aphelion-chat-control" controller="aphelion.client.graphics.nifty.chat.AphelionChatControl" lines="10" playerLines="11" sendLabel="Send" chatLineIconWidth="25px" chatLineIconHeight="25px" chatLineHeight="25px">
                 <panel style="#mainPanel" childLayout="horizontal">
                         <panel style="#chatPanel" childLayout="vertical">
                                 <panel style="#chatArea" childLayout="horizontal">
@@ -20,7 +20,7 @@
                         </panel>
                         <panel style="#mainPanel-spacer"/>
                         <panel style="#playerArea" childLayout="vertical">
-                                <control id="#playerList" name="listBox" vertical="optional" horizontal="off" selection="Disabled" displayItems="$playerLines" viewConverterClass="de.lessvoid.nifty.controls.chatcontrol.ChatBoxViewConverter">
+                                <control id="#playerList" name="listBox" vertical="optional" horizontal="off" selection="Disabled" displayItems="$playerLines" viewConverterClass="aphelion.client.graphics.nifty.chat.ChatPlayerViewConverter">
                                         <control name="nifty-chat-line" chatLineIconWidth="$chatLineIconWidth" chatLineIconHeight="$chatLineIconHeight" chatLineHeight="$chatLineHeight" />
                                 </control>
                         </panel>

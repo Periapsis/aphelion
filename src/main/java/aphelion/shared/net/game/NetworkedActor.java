@@ -35,14 +35,23 @@
  * the terms and conditions of the license of that module. An independent
  * module is a module which is not derived from or based on this library.
  */
-package aphelion.shared.physics.operations.pub;
+package aphelion.shared.net.game;
 
 /**
- *
+ * Contains actor state that is unrelated to physics.
+ * 
  * @author Joris
  */
-public interface ActorNewPublic extends OperationPublic
+public class NetworkedActor
 {
-        long getSeed();
-        String getShip();
+        public final int pid;
+        public final boolean local;
+        public String name;
+
+        public NetworkedActor(int pid, boolean local, String name)
+        {
+                this.pid = pid;
+                this.local = local;
+                this.name = name;
+        }
 }

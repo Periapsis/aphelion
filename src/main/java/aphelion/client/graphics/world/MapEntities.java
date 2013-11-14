@@ -41,6 +41,12 @@ import aphelion.client.graphics.screen.Camera;
 import aphelion.client.RENDER_LAYER;
 import aphelion.shared.event.LoopEvent;
 import aphelion.shared.event.TickEvent;
+import aphelion.shared.net.game.ActorListener;
+import aphelion.shared.net.game.GameProtocolConnection;
+import aphelion.shared.net.game.GameS2CListener;
+import aphelion.shared.net.game.NetworkedActor;
+import aphelion.shared.net.protobuf.GameOperation;
+import aphelion.shared.net.protobuf.GameS2C;
 import aphelion.shared.physics.entities.ProjectilePublic;
 import aphelion.shared.physics.PhysicsEnvironment;
 import aphelion.shared.resource.ResourceDB;
@@ -54,10 +60,10 @@ import gnu.trove.map.hash.TIntObjectHashMap;
 import java.util.Iterator;
 
 /**
- *
+ * Takes care of tracking graphics state for entities (ships, projetiles).
  * @author Joris
  */
-public class MapEntities implements TickEvent, LoopEvent, Animator
+public class MapEntities implements TickEvent, LoopEvent, Animator, ActorListener, GameS2CListener
 {
         private static final AttachmentConsumer<ProjectilePublic, Projectile> projectileAttachment 
                 = new AttachmentConsumer<>(aphelion.shared.physics.entities.Projectile.attachmentManager);
@@ -88,7 +94,7 @@ public class MapEntities implements TickEvent, LoopEvent, Animator
         public void addShip(ActorShip en)
         {
                 actorShips.put(en.pid, en);
-                if (en.localPlayer)
+                if (en.isLocalPlayer())
                 {
                         assert localShip == null; // since the getter is singular
                         localShip = en;
@@ -176,7 +182,7 @@ public class MapEntities implements TickEvent, LoopEvent, Animator
                                 {
                                         wrapped.advance();
                                         next = wrapped.value();
-                                        if (!next.localPlayer)
+                                        if (!next.isLocalPlayer())
                                         {
                                                 return;
                                         }
@@ -272,7 +278,7 @@ public class MapEntities implements TickEvent, LoopEvent, Animator
                         it.advance();
                         ActorShip ship = it.value();
                         
-                        if (ship.localPlayer && !includeLocal)
+                        if (ship.isLocalPlayer() && !includeLocal)
                         {
                                 continue;
                         }
@@ -374,6 +380,55 @@ public class MapEntities implements TickEvent, LoopEvent, Animator
                                 {
                                         animation.animating = false;
                                         animIt.remove();
+                                }
+                        }
+                }
+        }
+
+        @Override
+        public void newActor(NetworkedActor actor)
+        {
+                this.addShip(new ActorShip(this.resourceDB, actor, physicsEnv.getActor(actor.pid, 0, true), this));
+        }
+
+        @Override
+        public void actorModified(NetworkedActor actor)
+        {
+        }
+
+        @Override
+        public void removedActor(NetworkedActor actor)
+        {
+                ActorShip ship = this.getActorShip(actor.pid);
+                assert ship != null;
+                this.removeShip(ship);
+        }
+
+        @Override
+        public void gameS2CMessage(GameProtocolConnection game, GameS2C.S2C s2c, long receivedAt)
+        {
+                // Calculate render delay
+
+                for (GameOperation.ActorMove msg : s2c.getActorMoveList())
+                {
+                        if (msg.getDirect())
+                        {
+                                ActorShip ship = this.getActorShip(msg.getPid());
+                                if (ship != null)
+                                {
+                                        // Use the tick of the first move
+                                        // This way the render delay does not continuesly drift because 
+                                        // of the delayed move update mechanism (SEND_MOVE_DELAY, 
+                                        // which is very similar to Nagle's algorithm).
+
+                                        if (ship.isLocalPlayer())
+                                        {
+                                                ship.renderDelay.set(0);
+                                        }
+                                        else
+                                        {
+                                                ship.renderDelay.setByPositionUpdate(physicsEnv.getTick(), msg.getTick());
+                                        }
                                 }
                         }
                 }

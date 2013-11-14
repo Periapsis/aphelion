@@ -36,7 +36,7 @@
  * module is a module which is not derived from or based on this library.
  */
 
-package aphelion.shared.net.protocols;
+package aphelion.shared.net.game;
 
 import aphelion.shared.event.Workable;
 import aphelion.shared.event.WorkerTask;
@@ -92,7 +92,7 @@ public class GameProtocolConnection implements Attachable
                 this.server = server;
         }
         
-        public void addListener(GameListener listener)
+        public void addListener(GameProtoListener listener)
         {
                 this.listeners.add(listener);
         }
@@ -429,7 +429,7 @@ public class GameProtocolConnection implements Attachable
         
         public static class CallGameClientListener implements Runnable
         {
-                final ArrayList listeners;
+                final Iterable listeners;
                 final GameC2S.C2S c2s;
                 final GameS2C.S2C s2c;
                 final GameProtocolConnection conn;
@@ -438,7 +438,7 @@ public class GameProtocolConnection implements Attachable
                 final WS_CLOSE_STATUS drop_code;
                 final String drop_reason;
 
-                public CallGameClientListener(ArrayList listeners, GameProtocolConnection conn, int what, WS_CLOSE_STATUS drop_code, String drop_reason)
+                public CallGameClientListener(Iterable listeners, GameProtocolConnection conn, int what, WS_CLOSE_STATUS drop_code, String drop_reason)
                 {
                         this.listeners = listeners;
                         this.conn = conn;
@@ -451,7 +451,7 @@ public class GameProtocolConnection implements Attachable
                 }
 
                 // message
-                public CallGameClientListener(ArrayList listeners, GameProtocolConnection conn, GameC2S.C2S c2s, long receivedAt)
+                public CallGameClientListener(Iterable listeners, GameProtocolConnection conn, GameC2S.C2S c2s, long receivedAt)
                 {
                         this.listeners = listeners;
                         this.conn = conn;
@@ -464,7 +464,7 @@ public class GameProtocolConnection implements Attachable
                 }
                 
                 // message
-                public CallGameClientListener(ArrayList listeners, GameProtocolConnection conn, GameS2C.S2C s2c, long receivedAt)
+                public CallGameClientListener(Iterable listeners, GameProtocolConnection conn, GameS2C.S2C s2c, long receivedAt)
                 {
                         this.listeners = listeners;
                         this.conn = conn;
@@ -484,24 +484,24 @@ public class GameProtocolConnection implements Attachable
                                 switch (what)
                                 {
                                         case 0:
-                                                if (listener instanceof GameListener)
+                                                if (listener instanceof GameProtoListener)
                                                 {
-                                                        ((GameListener) listener).gameEstablishFailure(drop_code, drop_reason);
+                                                        ((GameProtoListener) listener).gameEstablishFailure(drop_code, drop_reason);
                                                 }
 
                                                 break;
                                         case 1:
-                                                if (listener instanceof GameListener)
+                                                if (listener instanceof GameProtoListener)
                                                 {
                                                         assert listener instanceof GameC2SListener;
                                                         assert listener instanceof GameS2CListener;
-                                                        ((GameListener) listener).gameNewClient(conn);
+                                                        ((GameProtoListener) listener).gameNewClient(conn);
                                                 }
                                                 break;
                                         case 2:
-                                                if (listener instanceof GameListener)
+                                                if (listener instanceof GameProtoListener)
                                                 {
-                                                        ((GameListener) listener).gameRemovedClient(conn);
+                                                        ((GameProtoListener) listener).gameRemovedClient(conn);
                                                 }
                                                 break;
                                         case 3:
@@ -523,15 +523,15 @@ public class GameProtocolConnection implements Attachable
 
                                                 break;
                                         case 4:
-                                                if (listener instanceof GameListener)
+                                                if (listener instanceof GameProtoListener)
                                                 {
-                                                        ((GameListener) listener).gameNewConnection(conn);
+                                                        ((GameProtoListener) listener).gameNewConnection(conn);
                                                 }
                                                 break;
                                         case 5:
-                                                if (listener instanceof GameListener)
+                                                if (listener instanceof GameProtoListener)
                                                 {
-                                                        ((GameListener) listener).gameDropConnection(conn, drop_code, drop_reason);
+                                                        ((GameProtoListener) listener).gameDropConnection(conn, drop_code, drop_reason);
                                                 }
                                                 break;
                                         default:

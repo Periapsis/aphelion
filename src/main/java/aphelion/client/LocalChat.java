@@ -40,13 +40,16 @@
 package aphelion.client;
 
 
-import aphelion.client.graphics.nifty.AphelionChatControl;
-import aphelion.client.graphics.nifty.AphelionChatControl.AphelionChatTextSendEvent;
+import aphelion.client.graphics.nifty.chat.AphelionChatControl;
+import aphelion.client.graphics.nifty.chat.AphelionChatControl.AphelionChatTextSendEvent;
+import aphelion.client.net.NetworkedGame;
+import aphelion.shared.net.game.ActorListener;
 import aphelion.shared.net.protobuf.GameC2S;
 import aphelion.shared.net.protobuf.GameC2S.C2S;
 import aphelion.shared.net.protobuf.GameS2C;
-import aphelion.shared.net.protocols.GameProtocolConnection;
-import aphelion.shared.net.protocols.GameS2CListener;
+import aphelion.shared.net.game.GameProtocolConnection;
+import aphelion.shared.net.game.GameS2CListener;
+import aphelion.shared.net.game.NetworkedActor;
 import de.lessvoid.nifty.screen.Screen;
 import java.util.List;
 import org.bushe.swing.event.EventTopicSubscriber;
@@ -55,7 +58,7 @@ import org.bushe.swing.event.EventTopicSubscriber;
  *
  * @author Joris
  */
-public class LocalChat implements EventTopicSubscriber<AphelionChatTextSendEvent>, GameS2CListener
+public class LocalChat implements EventTopicSubscriber<AphelionChatTextSendEvent>, GameS2CListener, ActorListener
 {
         private final GameProtocolConnection gameConn;
         private final List<AphelionChatControl> chatLocals;
@@ -71,20 +74,13 @@ public class LocalChat implements EventTopicSubscriber<AphelionChatTextSendEvent
                 this.chatLocals = chatLocals;
         }
         
-        public void subscribeListeners(Screen screen)
+        public void subscribeListeners(NetworkedGame netGame, Screen screen)
         {
+                netGame.addActorListener(this);
                 gameConn.addListener(this);
                 for (AphelionChatControl control : chatLocals)
                 {
                         control.getElement().getNifty().subscribe(screen, control.getElement().getId(), AphelionChatTextSendEvent.class, this);
-                        control.addPlayer("Hello", null);
-                        control.addPlayer("+Foo", null);
-                        control.addPlayer("def", null);
-                        control.addPlayer("@JoWie", null);
-                        control.addPlayer("Hmm", null);
-                        control.addPlayer("DEf Ghj Llm", null);
-                        control.addPlayer("Lorem ipsum", null);
-                        
                 }
         }
         
@@ -112,6 +108,33 @@ public class LocalChat implements EventTopicSubscriber<AphelionChatTextSendEvent
                         {
                                 control.receivedChatLine(message.getSender() + "> " + message.getMessage(), null);
                         }
+                }
+        }
+
+        @Override
+        public void newActor(NetworkedActor actor)
+        {
+                for (AphelionChatControl control : chatLocals)
+                {
+                        control.addPlayer(actor.pid, actor.name, null);
+                }
+        }
+
+        @Override
+        public void actorModified(NetworkedActor actor)
+        {
+                for (AphelionChatControl control : chatLocals)
+                {
+                        control.renamePlayer(actor.pid, actor.name);
+                }
+        }
+
+        @Override
+        public void removedActor(NetworkedActor actor)
+        {
+                for (AphelionChatControl control : chatLocals)
+                {
+                        control.removePlayer(actor.pid);
                 }
         }
 }

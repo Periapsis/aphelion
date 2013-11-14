@@ -80,7 +80,6 @@ public class Actor extends MapEntity
         public final LinkedListHead<Projectile> projectiles = new LinkedListHead<>(); // fired by the actor
         
         public int pid;
-        public String name;
         public long seed;
         public int seed_high;
         public int seed_low;
@@ -737,7 +736,6 @@ public class Actor extends MapEntity
                 
                 assert pid == other.pid;
                 
-                name = other.name;
                 seed = other.seed;
                 seed_high = other.seed_high;
                 seed_low = other.seed_low;
@@ -760,7 +758,7 @@ public class Actor extends MapEntity
                 this.lastWeaponFire = null;
                 for (WeaponConfig otherConfig : other.weapons.values())
                 {
-                        WeaponConfig myConfig = this.getWeaponConfig(name); // never returns null
+                        WeaponConfig myConfig = this.getWeaponConfig(otherConfig.weaponKey); // never returns null
                         myConfig.nextWeaponFire_tick = otherConfig.nextWeaponFire_tick;
                         
                         if (otherConfig == other.lastWeaponFire)

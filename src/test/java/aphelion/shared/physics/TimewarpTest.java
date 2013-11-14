@@ -44,7 +44,7 @@ public class TimewarpTest extends PhysicsTest
                 
                 // todo also test change
                 
-                env.actorNew(1, ACTOR_FIRST, "Bla", 1234, "warbird");
+                env.actorNew(1, ACTOR_FIRST, 1234, "warbird");
                 env.actorWarp(1, ACTOR_FIRST, false, 1000, 90, 0, 0, 0);
                 
                 env.timewarp(1);
@@ -95,7 +95,7 @@ public class TimewarpTest extends PhysicsTest
         @Test
         public void testActorDestruction()
         {
-                env.actorNew(1, ACTOR_FIRST, "Bla", 1234, "warbird");
+                env.actorNew(1, ACTOR_FIRST, 1234, "warbird");
                 env.actorRemove(PhysicsEnvironment.TRAILING_STATE_DELAY + 3, ACTOR_FIRST);
                 
                 env.tick();
@@ -140,7 +140,7 @@ public class TimewarpTest extends PhysicsTest
         @Test
         public void testConfigChange()
         {
-                env.actorNew(1, ACTOR_FIRST, "Bla", 1234, "warbird");
+                env.actorNew(1, ACTOR_FIRST, 1234, "warbird");
                 env.actorWarp(1, ACTOR_FIRST, false, 1000, 90, 0, 0, 0);
                 
                 // Config change
@@ -217,7 +217,7 @@ public class TimewarpTest extends PhysicsTest
                 }
                 
                 
-                env.actorNew(1, ACTOR_FIRST, "Bla", 1234, "warbird");
+                env.actorNew(1, ACTOR_FIRST, 1234, "warbird");
                 env.actorWarp(1, ACTOR_FIRST, false, 1000, 90, 0, 0, 0);
                 env.actorWeapon(2, ACTOR_FIRST, WEAPON_SLOT.GUN, false, 0, 0, 0, 0, 0);
                 
@@ -342,7 +342,7 @@ public class TimewarpTest extends PhysicsTest
                 }
                 
                 
-                env.actorNew(1, ACTOR_FIRST, "Bla", 1234, "warbird");
+                env.actorNew(1, ACTOR_FIRST, 1234, "warbird");
                 env.actorWarp(1, ACTOR_FIRST, false, 1000, 90, 0, 0, 0);
                 env.actorWeapon(2, ACTOR_FIRST, WEAPON_SLOT.GUN, false, 0, 0, 0 ,0 ,0);
                 
@@ -479,9 +479,9 @@ public class TimewarpTest extends PhysicsTest
                 }
                 
                 
-                env.actorNew(1, ACTOR_FIRST, "Bla", 1234, "warbird");
+                env.actorNew(1, ACTOR_FIRST, 1234, "warbird");
                 env.actorWarp(1, ACTOR_FIRST, false, 1000, 90, 0, 0, PhysicsEnvironment.ROTATION_1_4TH);
-                env.actorNew(1, ACTOR_SECOND, "Bl2a", 4321, "warbird");
+                env.actorNew(1, ACTOR_SECOND, 4321, "warbird");
                 env.actorWarp(1, ACTOR_SECOND, false, 60000, 90, 0, 0, 0);
                 
                 env.actorWeapon(2, ACTOR_FIRST, WEAPON_SLOT.GUN, false, 0, 0, 0 , 0, 0);
@@ -569,9 +569,9 @@ public class TimewarpTest extends PhysicsTest
                 }
                 
                 
-                env.actorNew(1, ACTOR_FIRST, "Bla", 1234, "warbird");
+                env.actorNew(1, ACTOR_FIRST, 1234, "warbird");
                 env.actorWarp(1, ACTOR_FIRST, false, 1000, 90, 0, 0, PhysicsEnvironment.ROTATION_1_4TH);
-                env.actorNew(1, ACTOR_SECOND, "Bl2a", 4321, "warbird");
+                env.actorNew(1, ACTOR_SECOND, 4321, "warbird");
                 env.actorWarp(1, ACTOR_SECOND, false, 400000, 90, 0, 0, 0);
                 
                 env.actorWeapon(2, ACTOR_FIRST, WEAPON_SLOT.GUN, false, 0, 0, 0 , 0, 0);

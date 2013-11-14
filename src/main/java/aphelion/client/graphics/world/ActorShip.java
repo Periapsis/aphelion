@@ -47,6 +47,7 @@ import aphelion.shared.gameconfig.GCColour;
 import aphelion.shared.gameconfig.GCImage;
 import aphelion.shared.gameconfig.GCInteger;
 import aphelion.shared.gameconfig.WrappedValueAbstract;
+import aphelion.shared.net.game.NetworkedActor;
 import aphelion.shared.physics.entities.ActorPublic;
 import aphelion.shared.physics.PhysicsEnvironment;
 import aphelion.shared.physics.PhysicsMath;
@@ -67,9 +68,8 @@ import org.newdawn.slick.SpriteSheetCounted;
 public class ActorShip extends MapEntity implements TickEvent, WrappedValueAbstract.ChangeListener
 {
         public final int pid;
+        private NetworkedActor netActor;
         private final ActorPublic actor;
-        public final boolean localPlayer;
-        private String name;
         private final Animator animator;
                 
         private int physRotation;
@@ -105,11 +105,12 @@ public class ActorShip extends MapEntity implements TickEvent, WrappedValueAbstr
         private Color playerColor = new Color(1f, 1f, 0f, 1f);
         private Color lowEnergyColor = new Color(1f, 0f, 0f, 1f);
 
-        public ActorShip(ResourceDB db, ActorPublic actor, boolean localPlayer, Animator animator)
+        public ActorShip(ResourceDB db, NetworkedActor netActor, ActorPublic actor, Animator animator)
         {
     		super(db);
+                assert netActor != null;
                 assert actor != null;
-                this.localPlayer = localPlayer;
+                this.netActor = netActor;
                 this.actor = actor;
                 this.pid = actor.getPid();
                 this.animator = animator;
@@ -178,11 +179,6 @@ public class ActorShip extends MapEntity implements TickEvent, WrappedValueAbstr
                 }
         }
         
-        public final void setNameFromPhysics(String name)
-        {
-                this.name = name;
-        }
-        
         public void setShadowPositionFromPhysics(int x, int y)
         {
                 shadowPosition.x = x / 1024f;
@@ -240,7 +236,7 @@ public class ActorShip extends MapEntity implements TickEvent, WrappedValueAbstr
                 
                 maxEnergy = actor.getActorConfigInteger("ship-energy");
                 shipImage = actor.getActorConfigImage("ship-image", db);
-                if (this.localPlayer)
+                if (this.isLocalPlayer())
                 {
                         radarColour = actor.getActorConfigColour("ship-local-radar-colour");
                 }
@@ -258,7 +254,6 @@ public class ActorShip extends MapEntity implements TickEvent, WrappedValueAbstr
                 lastExhaust_nanos = Graph.nanoTime();
                 lastEmp_nanos = Graph.nanoTime();
                 
-                setNameFromPhysics(actor.getName());
                 setRotationFromPhysics(physRotation); // update tile
         }
         
@@ -385,10 +380,10 @@ public class ActorShip extends MapEntity implements TickEvent, WrappedValueAbstr
                 {
                         image.draw(x, y, w, h);
 
-                        if (name != null)
+                        if (netActor.name != null)
                         {
                                 camera.renderPlayerText(
-                                        name + (currentRenderDelay == 0 ? "" : " [" + currentRenderDelay + "]"),
+                                        netActor.name + (currentRenderDelay == 0 ? "" : " [" + currentRenderDelay + "]"),
                                         x + image.getWidth(), 
                                         y + image.getHeight() / 2f,
                                         playerColor); 
@@ -421,7 +416,7 @@ public class ActorShip extends MapEntity implements TickEvent, WrappedValueAbstr
 
         public boolean isLocalPlayer()
         {
-                return localPlayer;
+                return netActor.local;
         }
 
         @Override

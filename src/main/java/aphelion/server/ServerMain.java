@@ -46,6 +46,7 @@ import aphelion.shared.event.promise.PromiseException;
 import aphelion.shared.gameconfig.LoadYamlTask;
 import aphelion.shared.map.MapClassic;
 import aphelion.shared.map.MapClassic.LoadMapTask;
+import aphelion.shared.net.game.NetworkedActor;
 import aphelion.shared.net.protobuf.GameOperation;
 import aphelion.shared.net.protobuf.GameS2C;
 import aphelion.shared.physics.PhysicsEnvironment;
@@ -211,17 +212,19 @@ public class ServerMain implements LoopEvent, TickEvent
                 }
                 gameConfig = null;
                 
-                // dummy for testing
-                physicsEnv.actorNew(0, DUMMY_1_PID, "Dummy", 1, "javelin");
-                physicsEnv.actorWarp(0, DUMMY_1_PID, false, 512 * 16 * 1024, 448 * 16 * 1024, 0, 10000, 0);
-                
-                physicsEnv.actorNew(0, DUMMY_2_PID, "Dummy 2", 1, "terrier");
-                physicsEnv.actorWarp(0, DUMMY_2_PID, false, 512 * 16 * 1024, 448 * 16 * 1024, 0, -10000, 0); 
-                
                 serverGame = new ServerGame(physicsEnv, loop, assets, mapResource, gameConfigResources, niftyGuiResources);
                 loop.addLoopEvent(serverGame);
                 loop.addTickEvent(serverGame);
                 server.setGameClientListener(serverGame);
+                
+                // dummy for testing
+                physicsEnv.actorNew(0, DUMMY_1_PID, 1, "javelin");
+                physicsEnv.actorWarp(0, DUMMY_1_PID, false, 512 * 16 * 1024, 448 * 16 * 1024, 0, 10000, 0);
+                serverGame.addActor(new NetworkedActor(DUMMY_1_PID, true, "Dummy 1"));
+                
+                physicsEnv.actorNew(0, DUMMY_2_PID, 1, "terrier");
+                physicsEnv.actorWarp(0, DUMMY_2_PID, false, 512 * 16 * 1024, 448 * 16 * 1024, 0, -10000, 0); 
+                serverGame.addActor(new NetworkedActor(DUMMY_2_PID, true, "Dummy 2"));
                 
                 loop.addLoopEvent(this);
                 loop.addTickEvent(this);

@@ -23,7 +23,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package aphelion.client.graphics.nifty;
+package aphelion.client.graphics.nifty.chat;
 
 import de.lessvoid.nifty.Nifty;
 import de.lessvoid.nifty.NiftyEvent;
@@ -48,7 +48,7 @@ import java.util.logging.Logger;
  * @author Mark
  * @author Joris
  */
-public class AphelionChatControl extends AbstractController implements Chat, KeyInputHandler
+public class AphelionChatControl extends AbstractController implements KeyInputHandler
 {
         private static final String CHAT_BOX = "#chatBox";
         private static final String PLAYER_LIST = "#playerList";
@@ -57,7 +57,7 @@ public class AphelionChatControl extends AbstractController implements Chat, Key
         private TextField textControl;
         private final PlayerComparator playerComparator = new PlayerComparator();
         private Nifty nifty;
-        private final List<ChatEntryModelClass> playerBuffer = new ArrayList<>();
+        private final List<PlayerEntry> playerBuffer = new ArrayList<>();
         private final List<ChatEntryModelClass> linesBuffer = new ArrayList<>();
 
         /**
@@ -79,15 +79,16 @@ public class AphelionChatControl extends AbstractController implements Chat, Key
                 nifty = niftyParam;
 
                 // this buffer is needed because in some cases the entry is added to either list before the emelent is bound.
-                final ListBox<ChatEntryModelClass> playerList = getListBox(PLAYER_LIST);
+                final ListBox<PlayerEntry> playerList = getListBox(PLAYER_LIST);
                 while (!playerBuffer.isEmpty())
                 {
-                        ChatEntryModelClass player = playerBuffer.remove(0);
+                        PlayerEntry player = playerBuffer.remove(0);
                         log.log(Level.FINE, "adding player {0}", (playerList.itemCount() + 1));
                         playerList.addItem(player);
                         playerList.sortAllItems(playerComparator);
                         playerList.showItem(player);
                 }
+                
                 final ListBox<ChatEntryModelClass> chatBox = getListBox(CHAT_BOX);
                 while (!linesBuffer.isEmpty())
                 {
@@ -118,19 +119,12 @@ public class AphelionChatControl extends AbstractController implements Chat, Key
                 textControl.getElement().addInputHandler(this);
         }
 
-        /**
-         * {@inheritDoc
-         */
-        @Override
         public final void receivedChatLine(final String text, final NiftyImage icon)
         {
                 receivedChatLine(text, icon, null);
         }
 
-        /**
-         * {@inheritDoc}
-         */
-        @Override
+
         public void receivedChatLine(String text, NiftyImage icon, String style)
         {
                 if (linesBuffer.isEmpty())
@@ -154,79 +148,71 @@ public class AphelionChatControl extends AbstractController implements Chat, Key
                 }
         }
 
-        /**
-         * {@inheritDoc
-         */
-        @Override
-        public final void addPlayer(final String playerName, final NiftyImage playerIcon)
+
+        public final void addPlayer(int pid, final String playerName, final NiftyImage playerIcon)
         {
-                addPlayer(playerName, playerIcon, null);
+                addPlayer(pid, playerName, playerIcon, null);
         }
 
-        /**
-         * {@inheritDoc
-         */
-        @Override
-        public void addPlayer(String playerName, NiftyImage playerIcon, String style)
+
+        public void addPlayer(int pid, String playerName, NiftyImage playerIcon, String style)
         {
                 if (playerBuffer.isEmpty())
                 {
                         try
                         {
-                                final ListBox<ChatEntryModelClass> playerList = getListBox(PLAYER_LIST);
+                                final ListBox<PlayerEntry> playerList = getListBox(PLAYER_LIST);
                                 log.log(Level.FINE, "adding player {0}", (playerList.itemCount() + 1));
-                                final ChatEntryModelClass item = new ChatEntryModelClass(playerName, playerIcon, style);
+                                final PlayerEntry item = new PlayerEntry(pid, playerName, playerIcon, style);
                                 playerList.addItem(item);
                                 playerList.sortAllItems(playerComparator);
                                 playerList.showItem(item);
                         }
                         catch (NullPointerException npe)
                         {
-                                playerBuffer.add(new ChatEntryModelClass(playerName, playerIcon, style));
+                                playerBuffer.add(new PlayerEntry(pid, playerName, playerIcon, style));
                         }
                 }
                 else
                 {
-                        playerBuffer.add(new ChatEntryModelClass(playerName, playerIcon, style));
+                        playerBuffer.add(new PlayerEntry(pid, playerName, playerIcon, style));
+                }
+        }
+        
+        public final void renamePlayer(int pid, String playerName)
+        {
+                final ListBox<PlayerEntry> playerList = getListBox(PLAYER_LIST);
+                int i = playerList.getItems().indexOf(new PlayerEntry(pid, null, null));
+                if (i >= 0)
+                {
+                        PlayerEntry item = playerList.getItems().get(i);
+                        item.setLabel(playerName);
                 }
         }
 
-        /**
-         * {@inheritDoc
-         */
-        @Override
-        public final void removePlayer(final String playerName)
+        public final void removePlayer(int pid)
         {
-                final ListBox<ChatEntryModelClass> playerList = getListBox(PLAYER_LIST);
-                log.log(Level.FINE, "removing player {0}", playerName);
-                final ChatEntryModelClass item = new ChatEntryModelClass(playerName, null);
+                final ListBox<PlayerEntry> playerList = getListBox(PLAYER_LIST);
+                log.log(Level.FINE, "removing player {0}", pid);
+                final PlayerEntry item = new PlayerEntry(pid, null, null);
                 playerList.removeItem(item);
         }
 
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public List<ChatEntryModelClass> getPlayers()
+
+        public List<PlayerEntry> getPlayers()
         {
-                final ListBox<ChatEntryModelClass> playerList = getListBox(PLAYER_LIST);
+                final ListBox<PlayerEntry> playerList = getListBox(PLAYER_LIST);
                 return playerList.getItems();
         }
 
-        /**
-         * {@inheritDoc}
-         */
-        @Override
+  
         public List<ChatEntryModelClass> getLines()
         {
                 final ListBox<ChatEntryModelClass> chatBox = getListBox(CHAT_BOX);
                 return chatBox.getItems();
         }
 
-        /**
-         * {@inheritDoc}
-         */
-        @Override
+
         public void update()
         {
                 getListBox(PLAYER_LIST).refresh();
@@ -243,12 +229,10 @@ public class AphelionChatControl extends AbstractController implements Chat, Key
                 nifty.publishEvent(getId(), new AphelionChatTextSendEvent(this, text));
                 textControl.setText("");
         }
-
-        @SuppressWarnings("unchecked")
-        private ListBox<ChatEntryModelClass> getListBox(final String name)
+        
+        private ListBox getListBox(final String name)
         {
-
-                return (ListBox<ChatEntryModelClass>) getElement().findNiftyControl(name, ListBox.class);
+                return getElement().findNiftyControl(name, ListBox.class);
         }
 
         /**
@@ -290,7 +274,7 @@ public class AphelionChatControl extends AbstractController implements Chat, Key
          * @author Mark
          * @version 0.2
          */
-        private class PlayerComparator implements Comparator<ChatEntryModelClass>
+        private class PlayerComparator implements Comparator<PlayerEntry>
         {
 
                 /**
@@ -304,7 +288,7 @@ public class AphelionChatControl extends AbstractController implements Chat, Key
                  * {@inheritDoc}
                  */
                 @Override
-                public int compare(final ChatEntryModelClass player1, final ChatEntryModelClass player2)
+                public int compare(final PlayerEntry player1, final PlayerEntry player2)
                 {
                         String left = player1.getLabel();
                         String right = player2.getLabel();

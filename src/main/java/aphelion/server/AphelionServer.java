@@ -37,13 +37,13 @@
  */
 package aphelion.server;
 
-import aphelion.shared.net.protocols.GameListener;
+import aphelion.shared.net.game.GameProtoListener;
 import aphelion.shared.net.SessionToken;
 import aphelion.server.http.HttpServer;
 import aphelion.shared.event.LoopEvent;
 import aphelion.shared.event.Workable;
 import aphelion.shared.net.PROTOCOL;
-import aphelion.shared.net.protocols.GameProtocolConnection;
+import aphelion.shared.net.game.GameProtocolConnection;
 import aphelion.shared.net.WS_CLOSE_STATUS;
 import aphelion.shared.net.WebSocketTransport;
 import aphelion.shared.net.WebSocketTransport.NoSuitableConnection;
@@ -76,7 +76,7 @@ public class AphelionServer implements LoopEvent, WebSocketTransportListener
         private final Workable workable;
         private final WebSocketTransport webSocketTransport;
                 
-        private GameListener gameClientListener;
+        private GameProtoListener gameClientListener;
         
         private boolean hasSetup = false;
         private boolean stop = false;
@@ -96,7 +96,7 @@ public class AphelionServer implements LoopEvent, WebSocketTransportListener
                 httpServer.addRouteStatic(path, file);
         }
         
-        public void setGameClientListener(GameListener gameClientListener)
+        public void setGameClientListener(GameProtoListener gameClientListener)
         {
                 if (hasSetup)
                 {

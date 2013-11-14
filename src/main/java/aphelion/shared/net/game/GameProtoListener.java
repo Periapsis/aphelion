@@ -35,7 +35,7 @@
  * the terms and conditions of the license of that module. An independent
  * module is a module which is not derived from or based on this library.
  */
-package aphelion.shared.net.protocols;
+package aphelion.shared.net.game;
 
 import aphelion.shared.net.WS_CLOSE_STATUS;
 import aphelion.shared.net.protobuf.GameC2S;
@@ -44,7 +44,7 @@ import aphelion.shared.net.protobuf.GameS2C;
 /** 
  * @author Joris
  */
-public interface GameListener extends GameC2SListener, GameS2CListener
+public interface GameProtoListener extends GameC2SListener, GameS2CListener
 {
         public void gameEstablishFailure(WS_CLOSE_STATUS code, String reason);
         

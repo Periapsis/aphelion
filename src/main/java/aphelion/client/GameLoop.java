@@ -39,6 +39,7 @@
 package aphelion.client;
 
 
+import aphelion.client.graphics.nifty.chat.AphelionChatControl;
 import aphelion.client.graphics.Graph;
 import aphelion.client.graphics.nifty.*;
 import aphelion.client.net.NetworkedGame;
@@ -280,7 +281,7 @@ public class GameLoop
                                         
                                 }
                                 
-                                networkedGame.arenaLoaded(physicsEnv, mapEntities);
+                                networkedGame.arenaLoaded(physicsEnv);
                                 loadedResources = true;
                                 
                                 mainScreen = nifty.getScreen("aphelion-main");
@@ -293,7 +294,7 @@ public class GameLoop
                                 lookUpNiftyElements();
                                 
                                 localChat = new LocalChat(networkedGame.getGameConn(), Collections.unmodifiableList(Arrays.asList(chatLocals)));
-                                localChat.subscribeListeners(mainScreen);
+                                localChat.subscribeListeners(networkedGame, mainScreen);
                                 
                                 return null;
                         }
@@ -312,6 +313,8 @@ public class GameLoop
                 });
                 
                 mapEntities = new MapEntities(resourceDB);
+                networkedGame.addActorListener(mapEntities);
+                this.connection.addListener(mapEntities);
                 loop.addTickEvent(mapEntities);
                 loop.addLoopEvent(mapEntities);
                 
@@ -702,7 +705,6 @@ public class GameLoop
                 {
                         actorShip.setPositionFromPhysics(actorPos.x, actorPos.y);
                         actorShip.setRotationFromPhysics(actorPos.rot_snapped);
-                        actorShip.setNameFromPhysics(physicsActor.getName());
                 }
                 else
                 {

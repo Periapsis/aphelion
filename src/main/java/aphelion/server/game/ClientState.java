@@ -40,7 +40,8 @@ package aphelion.server.game;
 import aphelion.shared.resource.Asset;
 import aphelion.shared.gameconfig.GCBoolean;
 import aphelion.shared.gameconfig.GCStringList;
-import aphelion.shared.net.protocols.GameProtocolConnection;
+import aphelion.shared.net.game.GameProtocolConnection;
+import aphelion.shared.net.game.NetworkedActor;
 import aphelion.shared.net.protobuf.GameOperation;
 import aphelion.shared.net.protobuf.GameS2C;
 import aphelion.shared.net.protobuf.GameS2C.ArenaLoad;
@@ -99,6 +100,8 @@ public class ClientState
         public String nickname;
         private GCStringList ships;
         public long lastActorSyncBroadcast_nanos;
+        
+        public NetworkedActor myNetActor;
 
         ClientState(ServerGame serverGame, GameProtocolConnection gameConn)
         {
@@ -111,6 +114,10 @@ public class ClientState
         public void setNickname(String nickname)
         {
                 this.nickname = nickname;
+                if (myNetActor != null)
+                {
+                        myNetActor.name = nickname;
+                }
         }
 
         public void nextState(STATE state)
@@ -143,7 +150,8 @@ public class ClientState
                         case SEND_ARENA_SYNC:
                                 // never a 0 pid
                                 this.pid = serverGame.generatePid();
-
+                                this.myNetActor = new NetworkedActor(pid, false, nickname);
+                                
                                 doArenaSync();
 
                                 nextState(STATE.READY);
@@ -151,10 +159,15 @@ public class ClientState
                                 break;
                         case READY:
                                 serverGame.addReadyPlayer(gameConn);
+                                serverGame.addActor(myNetActor);
 
                                 break;
                         case DISCONNECTED:
                                 serverGame.removeReadyPlayer(gameConn);
+                                if (myNetActor != null)
+                                {
+                                        serverGame.removeActor(myNetActor);
+                                }
 
                                 if (pid > 0)
                                 {
@@ -216,7 +229,7 @@ public class ClientState
                         seed = MySecureRandom.nextLong();
                 }
 
-                physicsEnv.actorNew(physicsEnv.getTick(), pid, nickname, seed, ship);
+                physicsEnv.actorNew(physicsEnv.getTick(), pid, seed, ship);
                 ActorPublic newActor = physicsEnv.getActor(pid);
 
                 PhysicsPoint spawn = new PhysicsPoint();
@@ -299,6 +312,7 @@ public class ClientState
                 {
                         ActorPublic actor = actorIt.next();
                         int actorPid = actor.getPid();
+                        NetworkedActor netActor = serverGame.getActor(actorPid);
 
                         if (actorPid == this.pid)
                         {
@@ -323,7 +337,9 @@ public class ClientState
                         GameOperation.ActorNew.Builder actorNew = s2c.addActorNewBuilder();
                         actorNew.setTick(oldestStateTick);
                         actorNew.setPid(actorPid);
-                        actorNew.setName(actor.getName());
+                        
+                        
+                        actorNew.setName(netActor == null ? "???????" : netActor.name);
                         actorNew.setSeed(actor.getSeed());
                         actorNew.setShip(actor.getShip());
 
@@ -400,7 +416,7 @@ public class ClientState
                                 s2cMessages.put(op.getPid(), s2c);
                         }
 
-                        ServerGame.addPhysicsOperationToMessage(s2c, op);
+                        serverGame.addPhysicsOperationToMessage(s2c, op);
                 }
 
                 TIntObjectIterator<GameS2C.S2C.Builder> s2cIt = s2cMessages.iterator();

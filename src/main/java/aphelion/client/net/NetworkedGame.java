@@ -37,11 +37,11 @@
  */
 package aphelion.client.net;
 
+import aphelion.shared.net.game.NetworkedActor;
 import aphelion.client.graphics.world.ActorShip;
 import aphelion.shared.resource.ResourceDB;
-import aphelion.client.graphics.world.MapEntities;
-import aphelion.shared.net.protocols.GameListener;
-import aphelion.shared.net.protocols.GameProtocolConnection;
+import aphelion.shared.net.game.GameProtoListener;
+import aphelion.shared.net.game.GameProtocolConnection;
 import aphelion.shared.net.WS_CLOSE_STATUS;
 import aphelion.shared.net.protobuf.GameC2S;
 import aphelion.shared.net.protobuf.GameC2S.Authenticate;
@@ -58,6 +58,7 @@ import aphelion.shared.swissarmyknife.SwissArmyKnife;
 import aphelion.shared.event.ClockSource;
 import aphelion.shared.event.TickEvent;
 import aphelion.shared.event.TickedEventLoop;
+import aphelion.shared.net.game.ActorListener;
 import aphelion.shared.resource.Asset;
 import aphelion.shared.resource.AssetCache;
 import aphelion.shared.resource.LocalUserStorage;
@@ -73,7 +74,7 @@ import java.util.logging.Logger;
  *
  * @author Joris
  */
-public class NetworkedGame implements GameListener, TickEvent
+public class NetworkedGame implements GameProtoListener, TickEvent
 {
         private static final Logger log = Logger.getLogger("aphelion.net");
         
@@ -95,8 +96,8 @@ public class NetworkedGame implements GameListener, TickEvent
         private final ResourceDB resourceDB;
         private final TickedEventLoop loop;
         private final URL httpServer;
+        
         private PhysicsEnvironment physicsEnv;
-        private MapEntities mapEntities;
         private GameProtocolConnection gameConn;
         private ClockSync clockSync;
         private int initial_timeSync_count = 0;
@@ -106,6 +107,9 @@ public class NetworkedGame implements GameListener, TickEvent
         public String mapResource;
         public final List<String> gameConfigResources = new ArrayList<>();
         public final List<String> niftyGuiResources = new ArrayList<>();
+        
+        private final ArrayList<ActorListener> actorListeners = new ArrayList<>(4);
+        private final Map<Integer, NetworkedActor> actors = new HashMap<>();
         
         private String nickname;
         private STATE state;
@@ -181,8 +185,18 @@ public class NetworkedGame implements GameListener, TickEvent
                         throw new Error(ex);
                 }
         }
+        
+        public void addActorListener(ActorListener listener)
+        {
+                this.actorListeners.add(listener);
+                
+                for (NetworkedActor actor : this.actors.values())
+                {
+                        listener.newActor(actor);
+                }
+        }
 
-        public void arenaLoaded(PhysicsEnvironment physicsEnv, MapEntities mapEntities)
+        public void arenaLoaded(PhysicsEnvironment physicsEnv)
         {
                 if (this.state != STATE.ARENA_LOADING)
                 {
@@ -195,7 +209,6 @@ public class NetworkedGame implements GameListener, TickEvent
                 }
 
                 this.physicsEnv = physicsEnv;
-                this.mapEntities = mapEntities;
                 
                 nextState(STATE.SEND_ARENA_LOADED);
         }
@@ -498,13 +511,17 @@ public class NetworkedGame implements GameListener, TickEvent
                         // At what tick is the server now? (loop.synchronize will wait or fast forward ahead to compensate for latency)                     
                         physicsEnv.skipForward(msg.getCurrentTicks() + tickLatency);
                         
-                        physicsEnv.actorNew(msg.getCurrentTicks(), myPid, msg.getName(), msg.getYourSeed(), msg.getShip());
-                        
-                        ActorShip ship = new ActorShip(this.resourceDB, physicsEnv.getActor(myPid, 0, true), true, mapEntities); 
-                        mapEntities.addShip(ship);
+                        physicsEnv.actorNew(msg.getCurrentTicks(), myPid, msg.getYourSeed(), msg.getShip());
 
+                        NetworkedActor actor = new NetworkedActor(myPid, true, msg.getName());
+                        this.actors.put(myPid, actor);
                         
                         nextState(STATE.RECEIVED_ARENASYNC);
+                        
+                        for (ActorListener listener : actorListeners)
+                        {
+                                listener.newActor(actor);
+                        }
                 }
 
                 if (s2c.getActorNewCount() > 0 || 
@@ -554,7 +571,7 @@ public class NetworkedGame implements GameListener, TickEvent
                         log.log(Level.INFO, "Received ActorNew {0} {1}", new Object[] { msg.getTick(), msg.getPid()});
                         physicsEnv.actorNew(
                                 msg.getTick(), 
-                                msg.getPid(), msg.getName(), msg.getSeed(), msg.getShip()
+                                msg.getPid(), msg.getSeed(), msg.getShip()
                                 );
                         
                         if (unknownActorRemove.contains(msg.getPid()))
@@ -564,8 +581,13 @@ public class NetworkedGame implements GameListener, TickEvent
                         }
                         else
                         {
-                                ActorShip ship = new ActorShip(this.resourceDB, physicsEnv.getActor(msg.getPid(), 0, true), false, mapEntities);
-                                mapEntities.addShip(ship);
+                                NetworkedActor actor = new NetworkedActor(msg.getPid(), false, msg.getName());
+                                this.actors.put(myPid, actor);
+
+                                for (ActorListener listener : actorListeners)
+                                {
+                                        listener.newActor(actor);
+                                }
                         }
                 }
                 
@@ -586,8 +608,8 @@ public class NetworkedGame implements GameListener, TickEvent
                         log.log(Level.INFO, "Received ActorRemove {0} {1}", new Object[] { msg.getTick(), msg.getPid()});
                         physicsEnv.actorRemove(msg.getTick(), msg.getPid());
                         
-                        ActorShip ship = mapEntities.getActorShip(msg.getPid());
-                        if (ship == null)
+                        NetworkedActor actor = actors.get(msg.getPid());
+                        if (actor == null)
                         {
                                 // Received ActorNew and ActorRemove out of order
                                 // Assumes PIDs are unique. ActorNew is never called twice with the same PID.
@@ -595,7 +617,12 @@ public class NetworkedGame implements GameListener, TickEvent
                         }
                         else
                         {
-                                mapEntities.removeShip(ship);
+                                actors.remove(actor.getPid());
+                                
+                                for (ActorListener listener : actorListeners)
+                                {
+                                        listener.removedActor(actor);
+                                }
                         }
                 }
 
@@ -622,27 +649,6 @@ public class NetworkedGame implements GameListener, TickEvent
                                         );
 
                                 ++tick;
-                        }
-                        
-                        if (msg.getDirect())
-                        {
-                                ActorShip ship = mapEntities.getActorShip(msg.getPid());
-                                if (ship != null)
-                                {
-                                        // Use the tick of the first move
-                                        // This way the render delay does not continuesly drift because 
-                                        // of the delayed move update mechanism (SEND_MOVE_DELAY, 
-                                        // this is very similar to how Nagle works.)
-
-                                        if (ship.isLocalPlayer())
-                                        {
-                                                ship.renderDelay.set(0);
-                                        }
-                                        else
-                                        {
-                                                ship.renderDelay.setByPositionUpdate(physicsEnv.getTick(), msg.getTick());
-                                        }
-                                }
                         }
                 }
                 
@@ -909,5 +915,4 @@ public class NetworkedGame implements GameListener, TickEvent
                 command.addAllArguments(Arrays.asList(args));
                 gameConn.send(c2s);
         }
-
 }
