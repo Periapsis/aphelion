@@ -489,7 +489,7 @@ public class GameProtocolConnection implements Attachable
                                                         ((GameListener) listener).gameEstablishFailure(drop_code, drop_reason);
                                                 }
 
-                                                return;
+                                                break;
                                         case 1:
                                                 if (listener instanceof GameListener)
                                                 {
@@ -497,13 +497,13 @@ public class GameProtocolConnection implements Attachable
                                                         assert listener instanceof GameS2CListener;
                                                         ((GameListener) listener).gameNewClient(conn);
                                                 }
-                                                return;
+                                                break;
                                         case 2:
                                                 if (listener instanceof GameListener)
                                                 {
                                                         ((GameListener) listener).gameRemovedClient(conn);
                                                 }
-                                                return;
+                                                break;
                                         case 3:
                                                 if (this.c2s != null)
                                                 {
@@ -521,19 +521,19 @@ public class GameProtocolConnection implements Attachable
                                                         }
                                                 }
 
-                                                return;
+                                                break;
                                         case 4:
                                                 if (listener instanceof GameListener)
                                                 {
                                                         ((GameListener) listener).gameNewConnection(conn);
                                                 }
-                                                return;
+                                                break;
                                         case 5:
                                                 if (listener instanceof GameListener)
                                                 {
                                                         ((GameListener) listener).gameDropConnection(conn, drop_code, drop_reason);
                                                 }
-                                                return;
+                                                break;
                                         default:
                                                 assert false;
                                 }
