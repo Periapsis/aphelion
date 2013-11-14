@@ -617,7 +617,7 @@ public class NetworkedGame implements GameProtoListener, TickEvent
                         }
                         else
                         {
-                                actors.remove(actor.getPid());
+                                actors.remove(actor.pid);
                                 
                                 for (ActorListener listener : actorListeners)
                                 {
