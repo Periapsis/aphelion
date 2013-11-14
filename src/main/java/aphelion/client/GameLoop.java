@@ -336,6 +336,7 @@ public class GameLoop
                 niftyResourceLoader.addResourceLocation(new DBNiftyResourceLocation(resourceDB));
                 
                 CameraNiftyController.registerControl(nifty, cameraForNifty);
+                TriggerOnShowEffect.registerEffect(nifty);
                 SpriteAnimationEffect.registerEffect(nifty);
                 BackgroundColorSpriteEffect.registerEffect(nifty);
                 ClockTextEffect.registerEffect(nifty);

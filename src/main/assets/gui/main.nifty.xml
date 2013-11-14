@@ -217,7 +217,7 @@
                 
                 <layer childLayout="center">
                         <!-- chat -->
-                        <panel childLayout="horizontal" height="152" width="100%" align="left" valign="bottom">
+                        <panel childLayout="horizontal" height="150" width="100%" align="left" valign="bottom">
                                 <panel height="100%" align="center" valign="center" childLayout="vertical">
                                         <control id="chat-local" name="aphelion-chat" width="100%" height="100%" lines="5" sendLabel="Send"/>
                                 </panel>
@@ -233,7 +233,7 @@
                                                 <panel/>
                                                 <text font="font.ubuntu-mono-bold-16" color="#ffff" textHAlign="right" textVAlign="bottom" width="30%" height="100%">
                                                         <effect>
-                                                                <onStartScreen name="clockText" length="infinite" format="HH:mm"/>
+                                                                <onStartScreen name="triggerOnShow" length="1"/>
                                                                 <onShow name="clockText" length="infinite" format="HH:mm"/>
                                                         </effect>
                                                 </text>
