@@ -242,8 +242,11 @@ public class NetworkedGame implements GameListener, TickEvent
         {
                 return auth_error_desc;
         }
-        
-        
+
+        public GameProtocolConnection getGameConn()
+        {
+                return gameConn;
+        }
         
 
         public ClockSource getSyncedClockSource()

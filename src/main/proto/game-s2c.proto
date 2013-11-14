@@ -116,7 +116,10 @@ message ArenaSync {
         required string ship = 6;
 }
 
-
+message LocalChatMessage {
+        required string sender = 1;
+        required string message = 2;
+}
 
 
 message S2C {
@@ -141,5 +144,7 @@ message S2C {
 	repeated TimeResponse timeResponse = 102;
         repeated ArenaLoad arenaLoad = 103;
 	repeated ArenaSync arenaSync = 104;
+
+        repeated LocalChatMessage localChatMessage = 200;
 }
 

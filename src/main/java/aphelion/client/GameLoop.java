@@ -76,7 +76,9 @@ import aphelion.shared.resource.Asset;
 import aphelion.shared.resource.DownloadAssetsTask;
 import aphelion.shared.swissarmyknife.AttachmentConsumer;
 import de.lessvoid.nifty.Nifty;
+import de.lessvoid.nifty.controls.ChatTextSendEvent;
 import de.lessvoid.nifty.controls.Controller;
+import de.lessvoid.nifty.controls.chatcontrol.ChatControl;
 import de.lessvoid.nifty.elements.Element;
 import de.lessvoid.nifty.elements.render.TextRenderer;
 import de.lessvoid.nifty.nulldevice.NullSoundDevice;
@@ -88,16 +90,16 @@ import de.lessvoid.nifty.tools.resourceloader.ClasspathLocation;
 import de.lessvoid.nifty.tools.resourceloader.NiftyResourceLoader;
 import java.io.IOException;
 import java.lang.ref.WeakReference;
+import java.util.Arrays;
 
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.logging.ConsoleHandler;
-import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JOptionPane;
+import org.bushe.swing.event.EventTopicSubscriber;
 
 import org.lwjgl.opengl.Display;
 import org.lwjgl.opengl.GL11;
@@ -119,6 +121,7 @@ public class GameLoop
         // Network:
         private final SingleGameConnection connection;
         private final NetworkedGame networkedGame;
+        private LocalChat localChat;
         
         // Input:
         private LwjglInputSystem inputSystem;
@@ -144,6 +147,7 @@ public class GameLoop
         private EnergyBar[] energyBars;
         private Element[] energyTexts;
         private Gauges gauges;
+        private ChatControl[] chatLocals;
        
         
         // Graphics statistics
@@ -294,6 +298,9 @@ public class GameLoop
                                 
                                 lookUpNiftyElements();
                                 
+                                localChat = new LocalChat(networkedGame.getGameConn(), Collections.unmodifiableList(Arrays.asList(chatLocals)));
+                                localChat.subscribeListeners(mainScreen);
+                                
                                 return null;
                         }
                 }).then(new PromiseRejected()
@@ -406,6 +413,7 @@ public class GameLoop
         {
                 energyBars = findControls("energy-bar", EnergyBar.class, new EnergyBar[]{});
                 energyTexts = findElements("energy-text");
+                chatLocals = findControls("chat-local", ChatControl.class, new ChatControl[]{});
         }
         
         public void loop()

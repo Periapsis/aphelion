@@ -55,6 +55,12 @@
         <style id="base-font">  
                 <attributes font="font.ubuntu-mono-bold-16"/>
         </style>
+        <style id="nifty-label" base="base-font">
+                <attributes align="center"/>  
+                <effect>
+                        <onActive name="clip" post="false" />
+                </effect>
+        </style>
         
         <style id="gauge-left">
                 <attributes width="26" height="24" visible="false"/>

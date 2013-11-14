@@ -378,6 +378,21 @@ public class ServerGame implements LoopEvent, TickEvent, GameListener
                         
                         broadcast(s2c, game); // forward to all other clients
                 }
+                
+                for (GameC2S.SendLocalChat msg : c2s.getSendLocalChatList())
+                {
+                        String message = msg.getMessage();
+                        if (state.nickname == null || message == null || message.isEmpty())
+                        {
+                                continue;
+                        }
+                        
+                        GameS2C.S2C.Builder s2c = GameS2C.S2C.newBuilder();
+                        GameS2C.LocalChatMessage.Builder chat = s2c.addLocalChatMessageBuilder();
+                        chat.setSender(state.nickname);
+                        chat.setMessage(message);
+                        broadcast(s2c); // forward to all clients
+                }
         }
 
         @Override
