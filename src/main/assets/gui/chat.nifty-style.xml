@@ -8,8 +8,12 @@
                 <attributes/>
         </style>
         
+        <style id="aphelion-chat-control#mainPanel-spacer">
+                <attributes width="2"/>
+        </style>
+        
         <style id="aphelion-chat-control#chatArea">
-                <attributes backgroundColor="#fff1"/>
+                <attributes backgroundColor="#ffffff08"/>
         </style>
         
         <style id="aphelion-chat-control#chatPanel-spacer">
@@ -17,12 +21,10 @@
         </style>
 
         <style id="aphelion-chat-control#playerArea">
-                <attributes width="200px" backgroundColor="#fff1"/>
+                <attributes width="200px" backgroundColor="#ffffff08"/>
         </style>
 
-        <style id="aphelion-chat-control#mainPanel-spacer">
-                <attributes height="2"/>
-        </style>
+        
 
         <style id="aphelion-chat-control#chatTextArea">
                 <attributes align="left" width="100%" height="23"/>
@@ -37,12 +39,16 @@
                 
         </style>
         
-        <!-- yay hidden features; override to disable the border effects -->
         <style id="aphelion-chat-text-input#panel">
-                <attributes childLayout="overlay" height="23px"/>
+                <attributes childLayout="overlay" height="23px" />
+                <effect>
+                        <onHover name="changeMouseCursor" id="textFieldCursor" />
+                </effect>
         </style>
+
         <style id="aphelion-chat-text-input#field">
-                <attributes childLayout="center" childClip="true" backgroundColor="#fff1" padding="0px,2px"/>
+                <!-- override to disable the border effects -->
+                <attributes childLayout="center" childClip="true" padding="0px,2px" backgroundColor="#ffffff08"/>
         </style>
         <style id="aphelion-chat-text-input#text" base="nifty-textfield#text"/>
         <style id="aphelion-chat-text-input#cursor-panel" base="nifty-textfield#cursor-panel"/>

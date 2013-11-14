@@ -219,7 +219,7 @@
                         <!-- chat -->
                         <panel childLayout="horizontal" height="150" width="100%" align="left" valign="bottom">
                                 <panel height="100%" align="center" valign="center" childLayout="vertical">
-                                        <control id="chat-local" name="aphelion-chat" width="100%" height="100%" lines="5" sendLabel="Send"/>
+                                        <control id="chat-local" name="aphelion-chat" width="100%" height="100%" lines="5" playerLines="6" sendLabel="Send"/>
                                 </panel>
                                 <panel width="256"/>
                         </panel>

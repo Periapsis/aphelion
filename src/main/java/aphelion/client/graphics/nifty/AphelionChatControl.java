@@ -262,7 +262,7 @@ public class AphelionChatControl extends AbstractController implements Chat, Key
                         return false;
                 }
                 
-                log.log(Level.INFO, "event received: {0}", inputEvent);
+                log.log(Level.FINE, "event received: {0}", inputEvent);
                 
                 if (inputEvent == NiftyInputEvent.SubmitText)
                 {
@@ -296,7 +296,7 @@ public class AphelionChatControl extends AbstractController implements Chat, Key
                 /**
                  * Default constructor.
                  */
-                public PlayerComparator()
+                PlayerComparator()
                 {
                 }
 
@@ -306,7 +306,9 @@ public class AphelionChatControl extends AbstractController implements Chat, Key
                 @Override
                 public int compare(final ChatEntryModelClass player1, final ChatEntryModelClass player2)
                 {
-                        return player1.getLabel().compareToIgnoreCase(player2.getLabel());
+                        String left = player1.getLabel();
+                        String right = player2.getLabel();
+                        return left.compareToIgnoreCase(right);
                 }
         }
 

@@ -339,6 +339,7 @@ public class GameLoop
                 TriggerOnShowEffect.registerEffect(nifty);
                 SpriteAnimationEffect.registerEffect(nifty);
                 BackgroundColorSpriteEffect.registerEffect(nifty);
+                BackgroundColorAnimated.registerEffect(nifty);
                 ClockTextEffect.registerEffect(nifty);
         }
         

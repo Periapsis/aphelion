@@ -1,27 +1,28 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <nifty-controls xmlns="http://nifty-gui.sourceforge.net/nifty-1.3.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://nifty-gui.sourceforge.net/nifty-1.3.xsd">
-        <controlDefinition name="aphelion-chat" style="aphelion-chat-control" controller="aphelion.client.graphics.nifty.AphelionChatControl" lines="10" sendLabel="Send" chatLineIconWidth="25px" chatLineIconHeight="25px" chatLineHeight="25px">
-                <panel style="#mainPanel" childLayout="vertical">
-                        <panel style="#chatPanel" childLayout="horizontal" width="100%" align="center">
+        <controlDefinition name="aphelion-chat" style="aphelion-chat-control" controller="aphelion.client.graphics.nifty.AphelionChatControl" lines="10" playerLines="11" sendLabel="Send" chatLineIconWidth="25px" chatLineIconHeight="25px" chatLineHeight="25px">
+                <panel style="#mainPanel" childLayout="horizontal">
+                        <panel style="#chatPanel" childLayout="vertical">
                                 <panel style="#chatArea" childLayout="horizontal">
                                         <control id="#chatBox" name="listBox" vertical="optional" horizontal="optional" selection="Disabled" displayItems="$lines" viewConverterClass="de.lessvoid.nifty.controls.chatcontrol.ChatBoxViewConverter">
                                                 <control name="nifty-chat-line" chatLineIconWidth="$chatLineIconWidth" chatLineIconHeight="$chatLineIconHeight" chatLineHeight="$chatLineHeight" />
                                         </control>
                                 </panel>
-                                <panel style="#chatPanel-spacer" height="100%"/>
-                                <panel style="#playerArea" childLayout="vertical">
-                                        <control id="#playerList" name="listBox" vertical="optional" horizontal="off" selection="Disabled" displayItems="$lines" viewConverterClass="de.lessvoid.nifty.controls.chatcontrol.ChatBoxViewConverter">
-                                                <control name="nifty-chat-line" chatLineIconWidth="$chatLineIconWidth" chatLineIconHeight="$chatLineIconHeight" chatLineHeight="$chatLineHeight" />
-                                        </control>
+                                <panel style="#chatPanel-spacer"/>
+                                <panel style="#chatTextArea" childLayout="horizontal">
+                                        <!-- override the default textfield style -->
+                                        <control id="#chat-text-input" name="textfield" style="aphelion-chat-text-input"/>
+                                        <!--<control id="#chat-text-button" name="button" width="" label="$sendLabel">
+                                                <interact onClick="sendText()" />
+                                        </control>-->
                                 </panel>
+                                
                         </panel>
-                        <panel style="#mainPanel-spacer" width="100%"/>
-                        <panel style="#chatTextArea" childLayout="horizontal">
-                                <!-- override the default textfield style -->
-                                <control id="#chat-text-input" name="textfield" style="aphelion-chat-text-input"/>
-                                <!--<control id="#chat-text-button" name="button" width="" label="$sendLabel">
-                                        <interact onClick="sendText()" />
-                                </control>-->
+                        <panel style="#mainPanel-spacer"/>
+                        <panel style="#playerArea" childLayout="vertical">
+                                <control id="#playerList" name="listBox" vertical="optional" horizontal="off" selection="Disabled" displayItems="$playerLines" viewConverterClass="de.lessvoid.nifty.controls.chatcontrol.ChatBoxViewConverter">
+                                        <control name="nifty-chat-line" chatLineIconWidth="$chatLineIconWidth" chatLineIconHeight="$chatLineIconHeight" chatLineHeight="$chatLineHeight" />
+                                </control>
                         </panel>
                 </panel>
         </controlDefinition>
