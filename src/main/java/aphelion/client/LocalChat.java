@@ -40,13 +40,13 @@
 package aphelion.client;
 
 
+import aphelion.client.graphics.nifty.AphelionChatControl;
+import aphelion.client.graphics.nifty.AphelionChatControl.AphelionChatTextSendEvent;
 import aphelion.shared.net.protobuf.GameC2S;
 import aphelion.shared.net.protobuf.GameC2S.C2S;
 import aphelion.shared.net.protobuf.GameS2C;
 import aphelion.shared.net.protocols.GameProtocolConnection;
 import aphelion.shared.net.protocols.GameS2CListener;
-import de.lessvoid.nifty.controls.ChatTextSendEvent;
-import de.lessvoid.nifty.controls.chatcontrol.ChatControl;
 import de.lessvoid.nifty.screen.Screen;
 import java.util.List;
 import org.bushe.swing.event.EventTopicSubscriber;
@@ -55,12 +55,12 @@ import org.bushe.swing.event.EventTopicSubscriber;
  *
  * @author Joris
  */
-public class LocalChat implements EventTopicSubscriber<ChatTextSendEvent>, GameS2CListener
+public class LocalChat implements EventTopicSubscriber<AphelionChatTextSendEvent>, GameS2CListener
 {
         private final GameProtocolConnection gameConn;
-        private final List<ChatControl> chatLocals;
+        private final List<AphelionChatControl> chatLocals;
 
-        public LocalChat(GameProtocolConnection gameConn, List<ChatControl> chatLocals)
+        public LocalChat(GameProtocolConnection gameConn, List<AphelionChatControl> chatLocals)
         {
                 if (gameConn == null)
                 {
@@ -74,14 +74,22 @@ public class LocalChat implements EventTopicSubscriber<ChatTextSendEvent>, GameS
         public void subscribeListeners(Screen screen)
         {
                 gameConn.addListener(this);
-                for (ChatControl control : chatLocals)
+                for (AphelionChatControl control : chatLocals)
                 {
-                        control.getElement().getNifty().subscribe(screen, control.getElement().getId(), ChatTextSendEvent.class, this);
+                        control.getElement().getNifty().subscribe(screen, control.getElement().getId(), AphelionChatTextSendEvent.class, this);
+                        control.addPlayer("Hello", null);
+                        control.addPlayer("+Foo", null);
+                        control.addPlayer("def", null);
+                        control.addPlayer("@JoWie", null);
+                        control.addPlayer("Hmm", null);
+                        control.addPlayer("DEf Ghj Llm", null);
+                        control.addPlayer("Lorem ipsum", null);
+                        
                 }
         }
         
         @Override
-        public void onEvent(String topic, ChatTextSendEvent data)
+        public void onEvent(String topic, AphelionChatTextSendEvent data)
         {
                 String text = data.getText();
                 if (text == null || text.isEmpty())
@@ -100,8 +108,10 @@ public class LocalChat implements EventTopicSubscriber<ChatTextSendEvent>, GameS
         {
                 for (GameS2C.LocalChatMessage message : s2c.getLocalChatMessageList())
                 {
-                        for (ChatControl control : chatLocals)
+                        System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! " + message.getMessage());
+                        for (AphelionChatControl control : chatLocals)
                         {
+                                System.out.println("@@@@@@@@@@@@@");
                                 control.receivedChatLine(message.getSender() + "> " + message.getMessage(), null);
                         }
                 }

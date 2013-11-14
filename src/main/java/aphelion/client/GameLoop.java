@@ -40,15 +40,12 @@ package aphelion.client;
 
 
 import aphelion.client.graphics.Graph;
+import aphelion.client.graphics.nifty.*;
 import aphelion.client.net.NetworkedGame;
 import aphelion.client.net.SingleGameConnection;
 import aphelion.shared.resource.ResourceDB;
 import aphelion.client.graphics.screen.CameraNiftyController;
 import aphelion.client.graphics.screen.Gauges;
-import aphelion.client.graphics.nifty.BackgroundColorSpriteEffect;
-import aphelion.client.graphics.nifty.ClockTextEffect;
-import aphelion.client.graphics.nifty.EnergyBar;
-import aphelion.client.graphics.nifty.SpriteAnimationEffect;
 import aphelion.client.graphics.screen.Camera;
 import aphelion.client.graphics.screen.CameraNiftyController.CameraForNifty;
 import aphelion.client.graphics.world.*;
@@ -76,9 +73,7 @@ import aphelion.shared.resource.Asset;
 import aphelion.shared.resource.DownloadAssetsTask;
 import aphelion.shared.swissarmyknife.AttachmentConsumer;
 import de.lessvoid.nifty.Nifty;
-import de.lessvoid.nifty.controls.ChatTextSendEvent;
 import de.lessvoid.nifty.controls.Controller;
-import de.lessvoid.nifty.controls.chatcontrol.ChatControl;
 import de.lessvoid.nifty.elements.Element;
 import de.lessvoid.nifty.elements.render.TextRenderer;
 import de.lessvoid.nifty.nulldevice.NullSoundDevice;
@@ -99,7 +94,6 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JOptionPane;
-import org.bushe.swing.event.EventTopicSubscriber;
 
 import org.lwjgl.opengl.Display;
 import org.lwjgl.opengl.GL11;
@@ -147,7 +141,7 @@ public class GameLoop
         private EnergyBar[] energyBars;
         private Element[] energyTexts;
         private Gauges gauges;
-        private ChatControl[] chatLocals;
+        private AphelionChatControl[] chatLocals;
        
         
         // Graphics statistics
@@ -413,7 +407,7 @@ public class GameLoop
         {
                 energyBars = findControls("energy-bar", EnergyBar.class, new EnergyBar[]{});
                 energyTexts = findElements("energy-text");
-                chatLocals = findControls("chat-local", ChatControl.class, new ChatControl[]{});
+                chatLocals = findControls("chat-local", AphelionChatControl.class, new AphelionChatControl[]{});
         }
         
         public void loop()

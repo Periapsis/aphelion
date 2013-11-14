@@ -1,27 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <nifty-styles xmlns="http://nifty-gui.sourceforge.net/nifty-styles-1.3.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://nifty-gui.sourceforge.net/nifty-styles-1.3.xsd http://nifty-gui.sourceforge.net/nifty-styles-1.3.xsd">
-        <style id="nifty-chat-control#mainPanel">
-                <attributes childLayout="vertical" width="100%" />
+        <style id="aphelion-chat-control#mainPanel">
+                <attributes width="100%"/>
         </style>
 
-        <style id="nifty-chat-control#chatPanel">
-                <attributes childLayout="horizontal" width="100%" align="center" />
+        <style id="aphelion-chat-control#chatPanel">
+                <attributes />
         </style>
 
-        <style id="nifty-chat-control#chatArea">
-                <attributes childLayout="horizontal" align="left" width="75%" backgroundColor="#fff2"/>
+        <style id="aphelion-chat-control#chatArea">
+                <attributes backgroundColor="#fff2"/>
         </style>
 
-        <style id="nifty-chat-control#playerArea">
-                <attributes childLayout="vertical" width="25%" backgroundColor="#fff2"/>
+        <style id="aphelion-chat-control#playerArea">
+                <attributes width="25%" backgroundColor="#fff2"/>
         </style>
 
-        <style id="nifty-chat-control#spacer">
-                <attributes height="2" width="100%" />
+        <style id="aphelion-chat-control#mainPanel-spacer">
+                <attributes height="2"/>
         </style>
 
-        <style id="nifty-chat-control#chatTextArea">
-                <attributes childLayout="horizontal" align="left" width="100%"/>
+        <style id="aphelion-chat-control#chatTextArea">
+                <attributes align="left" width="100%"/>
         </style>
         
   

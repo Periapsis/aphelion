@@ -3,6 +3,7 @@ gui.style.button = button.nifty-style.xml
 gui.style.textfield = textfield.nifty-style.xml
 gui.style.scrollbar = scrollbar.nifty-style.xml
 gui.style.chat = chat.nifty-style.xml
+gui.control.chat = chat.nifty-control.xml
 
 gui.button = button.png
 gui.cursor = cursor.png
