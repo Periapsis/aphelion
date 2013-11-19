@@ -40,6 +40,11 @@ package aphelion.client.graphics.nifty;
 import aphelion.client.net.NetworkedGame;
 import aphelion.shared.net.COMMAND_SOURCE;
 import de.lessvoid.nifty.Nifty;
+import de.lessvoid.nifty.input.NiftyInputEvent;
+import de.lessvoid.nifty.input.NiftyInputMapping;
+import de.lessvoid.nifty.input.keyboard.KeyboardInputEvent;
+import de.lessvoid.nifty.renderer.lwjgl.input.LwjglKeyboardInputEventCreator;
+import de.lessvoid.nifty.screen.KeyInputHandler;
 import de.lessvoid.nifty.screen.Screen;
 import de.lessvoid.nifty.screen.ScreenController;
 
@@ -47,19 +52,21 @@ import de.lessvoid.nifty.screen.ScreenController;
  *
  * @author Joris
  */
-public class MainScreenController implements ScreenController
+public class MainScreenController implements ScreenController, NiftyInputMapping, KeyInputHandler
 {
         private Nifty nifty;
         private Screen screen;
         private NetworkedGame netGame;
-        
+
         @Override
         public void bind(Nifty nifty, Screen screen)
         {
                 this.nifty = nifty;
                 this.screen = screen;
+
+                screen.addKeyboardInputHandler(this, this);
         }
-        
+
         public void aphelionBind(NetworkedGame netGame)
         {
                 this.netGame = netGame;
@@ -74,8 +81,8 @@ public class MainScreenController implements ScreenController
         public void onEndScreen()
         {
         }
-        
-        private boolean sendCommand(String command, String ... args)
+
+        private boolean sendCommand(String command, String... args)
         {
                 if (netGame == null)
                 {
@@ -83,26 +90,59 @@ public class MainScreenController implements ScreenController
                 }
                 netGame.sendCommand(COMMAND_SOURCE.USER_FROM_GUI, command, args);
                 // todo something to prevent flooding?
-                
+
                 return true; // do not try other targets (whatever that means)
         }
-        
+
         // called from nifty
         public boolean sendCommand1(String command)
         {
                 return sendCommand(command);
         }
+
         public boolean sendCommand2(String command, String arg1)
         {
                 return sendCommand(command, arg1);
         }
+
         public boolean sendCommand3(String command, String arg1, String arg2)
         {
                 return sendCommand(command, arg1, arg2);
         }
-        
+
         public void quit()
         {
                 nifty.exit();
+        }
+
+        @Override
+        public NiftyInputEvent convert(KeyboardInputEvent inputEvent)
+        {
+                if (inputEvent.isKeyDown())
+                {
+                        if (inputEvent.getKey() == KeyboardInputEvent.KEY_RETURN)
+                        {
+                                return NiftyInputEvent.Activate;
+                        }
+                        else if (inputEvent.getKey() == KeyboardInputEvent.KEY_SPACE)
+                        {
+                                return NiftyInputEvent.Activate;
+                        }
+                        else if (inputEvent.getKey() == KeyboardInputEvent.KEY_NEXT && inputEvent.isShiftDown())
+                        {
+                                return NiftyInputEvent.NextInputElement;
+                        }
+                        else if (inputEvent.getKey() == KeyboardInputEvent.KEY_PRIOR && inputEvent.isShiftDown())
+                        {
+                                return NiftyInputEvent.PrevInputElement;
+                        }
+                }
+                return null;
+        }
+
+        @Override
+        public boolean keyEvent(NiftyInputEvent inputEvent)
+        {
+                return false;
         }
 }
