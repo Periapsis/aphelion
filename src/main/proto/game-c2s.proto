@@ -83,9 +83,14 @@ message Command {
 	required string name = 1; // Command name for example "go"
 	repeated string arguments = 2;
         
-        // The server does not interpet this value
+        // The server does not interpret this value
         // It is sent back unaltered in any response to this command 
-        optional int32 response_code = 3; 
+        optional int32 response_code = 3;
+
+        // 0 = Unspecified
+        // 1 = User manually typed this command
+        // 2 = It was triggered by nifty-gui (for example after a mouse press)
+        required uint32 source = 4;
 }
 
 message SendLocalChat {

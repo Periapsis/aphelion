@@ -143,6 +143,7 @@ public class GameLoop
         private Element[] energyTexts;
         private Gauges gauges;
         private AphelionChatControl[] chatLocals;
+        private Element gameMenuPopup;
        
         
         // Graphics statistics
@@ -260,15 +261,6 @@ public class GameLoop
                                 
                                 for (String res : networkedGame.niftyGuiResources)
                                 {
-                                        try
-                                        {
-                                                nifty.validateXml(res);
-                                        }
-                                        catch (Exception ex)
-                                        {
-                                                throw new PromiseException(ex);
-                                        }
-                                        
                                         if (first)
                                         {
                                                 nifty.fromXmlWithoutStartScreen(res);
@@ -413,6 +405,7 @@ public class GameLoop
                 energyBars = findControls("energy-bar", EnergyBar.class, new EnergyBar[]{});
                 energyTexts = findElements("energy-text");
                 chatLocals = findControls("chat-local", AphelionChatControl.class, new AphelionChatControl[]{});
+                gameMenuPopup = nifty.createPopup("gameMenuPopup");
         }
         
         public void loop()
@@ -463,8 +456,16 @@ public class GameLoop
                                         networkedGame, 
                                         physicsEnv,
                                         localActor, 
-                                        physicsEnv.getGlobalConfigStringList(0, "ships"));
+                                        physicsEnv.getGlobalConfigStringList(0, "ships"),
+                                        gameMenuPopup
+                                );
                                 loop.addTickEvent(myKeyboard);
+                                
+                                GameMenuController gameMenuControl = gameMenuPopup.getControl(GameMenuController.class);
+                                if (gameMenuControl != null)
+                                {
+                                        gameMenuControl.aphelionBind(networkedGame);
+                                }
                         }
                         
                         if (nifty.update())

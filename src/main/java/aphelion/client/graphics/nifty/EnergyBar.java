@@ -1,4 +1,4 @@
-/* Copyright (c) 2013, nifty-gui / Joris van der Wel
+/* Copyright (c) 2013, Joris van der Wel
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without

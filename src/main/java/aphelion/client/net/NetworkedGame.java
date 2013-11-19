@@ -38,7 +38,6 @@
 package aphelion.client.net;
 
 import aphelion.shared.net.game.NetworkedActor;
-import aphelion.client.graphics.world.ActorShip;
 import aphelion.shared.resource.ResourceDB;
 import aphelion.shared.net.game.GameProtoListener;
 import aphelion.shared.net.game.GameProtocolConnection;
@@ -58,6 +57,7 @@ import aphelion.shared.swissarmyknife.SwissArmyKnife;
 import aphelion.shared.event.ClockSource;
 import aphelion.shared.event.TickEvent;
 import aphelion.shared.event.TickedEventLoop;
+import aphelion.shared.net.COMMAND_SOURCE;
 import aphelion.shared.net.game.ActorListener;
 import aphelion.shared.resource.Asset;
 import aphelion.shared.resource.AssetCache;
@@ -898,15 +898,16 @@ public class NetworkedGame implements GameProtoListener, TickEvent
                 }
         }
         
-        public void sendCommand(String name, String ... args)
+        public void sendCommand(COMMAND_SOURCE source, String name, String ... args)
         {
-                sendCommand(name, 0, args);
+                sendCommand(source, name, 0, false, args);
         }
         
-        public void sendCommand(String name, int responseCode, String ... args)
+        public void sendCommand(COMMAND_SOURCE source, String name, int responseCode, boolean fromGUI, String ... args)
         {
                 GameC2S.C2S.Builder c2s = GameC2S.C2S.newBuilder();
                 GameC2S.Command.Builder command = c2s.addCommandBuilder();
+                command.setSource(source.id);
                 command.setName(name);
                 if (responseCode != 0)
                 {

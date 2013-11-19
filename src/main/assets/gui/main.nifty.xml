@@ -251,4 +251,47 @@
                         </panel>
                 </layer>
         </screen>
+        
+        <controlDefinition name="gameMenuButton" controller="aphelion.client.graphics.nifty.HotCharControl">
+                <text style="#text" visibleToMouse="true" width="100%" font="font.ubuntu-mono-bold-16" textHAlign="left">
+                       <interact onClick="$command"/>
+                </text>
+        </controlDefinition>
+        
+        <popup id="gameMenuPopup" childLayout="center" focusable="true" controller="aphelion.client.graphics.nifty.GameMenuController">
+                <panel valign="top" align="center" width="296" height="181" childLayout="center">
+                        <image filename="classic.window-border" imageMode="resize:3,2,3,3,3,2,3,2,3,2,3,3" width="296" height="181"/>
+                        <panel width="290" height="175" backgroundColor="#000000b0"/>
+                        <panel width="290" height="175" childLayout="vertical" padding="1">
+                                <text text="-= Menu =-" width="100%" height="16"  textLineHeight="9" font="font.ubuntu-mono-bold-16" color="#73ff63ff" textHAlign="center" textVAlign="top"/>
+                                <panel width="100%" height="1" backgroundColor="#848484ff"/>
+                                <panel width="100%" height="*" childLayout="horizontal">
+                                        <panel width="*" height="100%" childLayout="vertical">
+                                                <control name="gameMenuButton" char="q" command="quit()" 
+                                                         text="Q = Quit" width="100%"/>
+                                        </panel>
+                                        <panel width="100" height="100%" childLayout="vertical">
+                                                <text text="  Ships" color="#de3108ff" font="font.ubuntu-mono-bold-16"/>
+                                                <control name="gameMenuButton" char="1" command="sendCommand2(ship, warbird)" 
+                                                         text="1 = Warbird"    textLineHeight="15"/>
+                                                <control name="gameMenuButton" char="2" command="sendCommand2(ship, javelin)" 
+                                                         text="2 = Javelin"    textLineHeight="15"/>
+                                                <control name="gameMenuButton" char="3" command="sendCommand2(ship, spider)" 
+                                                         text="3 = Spider"     textLineHeight="15"/>
+                                                <control name="gameMenuButton" char="4" command="sendCommand2(ship, leviathan)" 
+                                                         text="4 = Leviathan"  textLineHeight="15"/>
+                                                <control name="gameMenuButton" char="5" command="sendCommand2(ship, terrier)" 
+                                                         text="5 = Terrier"    textLineHeight="15"/>
+                                                <control name="gameMenuButton" char="6" command="sendCommand2(ship, weasel)" 
+                                                         text="6 = Weasel"     textLineHeight="15"/>
+                                                <control name="gameMenuButton" char="7" command="sendCommand2(ship, lancaster)" 
+                                                         text="7 = Lancaster"  textLineHeight="15"/>
+                                                <control name="gameMenuButton" char="8" command="sendCommand2(ship, shark)" 
+                                                         text="8 = Shark"      textLineHeight="15"/>
+                                        </panel>
+                                </panel>
+                                <text text="Any other key to resume game" width="100%" font="font.ubuntu-mono-bold-16" color="#efad21ff" textHAlign="center"/>
+                        </panel>
+                </panel>
+        </popup>
 </nifty>

@@ -69,9 +69,11 @@ public class MyKeyboard implements TickEvent
         /** The actor this keyboard input is for */
         private final ActorPublic controllingActor;
         private final GCStringList ships;
+        private Element gameMenuPopup;
         
         private final Element bigRadar;
         private final Element smallRadar;
+        
         
         private long tick;
         
@@ -95,7 +97,8 @@ public class MyKeyboard implements TickEvent
                           NetworkedGame networkedGame,
                           PhysicsEnvironment physicsEnv,
                           ActorPublic controllingActor, 
-                          GCStringList ships)
+                          GCStringList ships,
+                          Element gameMenuPopup)
         {
                 this.input = input;
                 this.mainScreen = mainScreen;
@@ -103,8 +106,11 @@ public class MyKeyboard implements TickEvent
                 this.physicsEnv = physicsEnv;
                 this.controllingActor = controllingActor;
                 this.ships = ships;
+                this.gameMenuPopup = gameMenuPopup;
+                
                 this.bigRadar =  mainScreen.findElementByName("radar-big");
                 this.smallRadar = mainScreen.findElementByName("radar-small");
+                
         }
 
         public boolean isMultiFireGun()
@@ -182,6 +188,14 @@ public class MyKeyboard implements TickEvent
                                         }
                                 }
                         }
+                        
+                        if (key == KeyboardInputEvent.KEY_ESCAPE)
+                        {
+                                if (!event.isKeyDown() && gameMenuPopup != null)
+                                {
+                                        gameMenuPopup.getNifty().showPopup(mainScreen, gameMenuPopup.getId(), null);
+                                }
+                        }
 
                         if (!event.isKeyDown()) // released a key
                         {
@@ -189,26 +203,6 @@ public class MyKeyboard implements TickEvent
                                 {
                                         multiFireGun = !multiFireGun;
                                 }
-                                
-                                if (!shift && chr >= '0' && chr <= '9' && 
-                                        tick - lastShipChangeRequest > 10 &&
-                                        controllingActor.canChangeShip()
-                                        )
-                                {
-                                        int s = chr - '0' - 1;
-
-                                        if (s >= 0 && s < ships.getValuesLength())
-                                        {
-                                                String ship = ships.get(s);
-                                                if (!ship.equals(controllingActor.getShip()))
-                                                {
-                                                        networkedGame.sendCommand("ship", ship);
-                                                        lastShipChangeRequest = tick;
-                                                }
-                                        }
-                                        continue;
-                                }
-                        
                         }
                 }
         }
