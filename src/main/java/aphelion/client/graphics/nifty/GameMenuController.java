@@ -117,17 +117,21 @@ public class GameMenuController extends AbstractController implements NiftyInput
                 return false;
         }
         
-        // called from nifty
+        
         
         private boolean sendCommand(String command, String ... args)
         {
-                System.out.println("?" + command + " " + args);
+                if (netGame == null)
+                {
+                        return false;
+                }
                 netGame.sendCommand(COMMAND_SOURCE.USER_FROM_GUI, command, args);
                 // todo something to prevent flooding?
                 
                 return true; // do not try other targets (whatever that means)
         }
         
+        // called from nifty
         public boolean sendCommand1(String command)
         {
                 return sendCommand(command);

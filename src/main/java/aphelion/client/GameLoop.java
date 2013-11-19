@@ -81,6 +81,7 @@ import de.lessvoid.nifty.nulldevice.NullSoundDevice;
 import de.lessvoid.nifty.renderer.lwjgl.input.LwjglInputSystem;
 import de.lessvoid.nifty.renderer.lwjgl.render.LwjglRenderDevice;
 import de.lessvoid.nifty.screen.Screen;
+import de.lessvoid.nifty.screen.ScreenController;
 import de.lessvoid.nifty.spi.time.impl.AccurateTimeProvider;
 import de.lessvoid.nifty.tools.resourceloader.ClasspathLocation;
 import de.lessvoid.nifty.tools.resourceloader.NiftyResourceLoader;
@@ -280,6 +281,11 @@ public class GameLoop
                                 if (mainScreen == null)
                                 {
                                         throw new PromiseException("Missing nifty-gui screen: aphelion-main");
+                                }
+                                ScreenController screenControl = mainScreen.getScreenController();
+                                if (screenControl instanceof MainScreenController)
+                                {
+                                        ((MainScreenController) screenControl).aphelionBind(networkedGame);
                                 }
                                 nifty.gotoScreen("aphelion-main");
                                 

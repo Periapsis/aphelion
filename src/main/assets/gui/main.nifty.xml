@@ -81,7 +81,7 @@
                 </effect>
         </style>
         
-        <screen id="aphelion-main">
+        <screen id="aphelion-main" controller="aphelion.client.graphics.nifty.MainScreenController">
                 
                 <layer childLayout="center">
                         <!-- main camera -->

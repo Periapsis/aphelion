@@ -110,7 +110,6 @@ public class HotCharControl extends AbstractController
                 HotCharControl control = element.getControl(HotCharControl.class);
                 if (control != null)
                 {
-                        System.out.println("Found " + control.getChar());
                         ret.put(control.getChar(), control);
                 }
                 
