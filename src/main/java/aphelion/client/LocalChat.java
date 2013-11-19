@@ -106,7 +106,14 @@ public class LocalChat implements EventTopicSubscriber<AphelionChatTextSendEvent
                 {
                         for (AphelionChatControl control : chatLocals)
                         {
-                                control.receivedChatLine(message.getSender() + "> " + message.getMessage(), null);
+                                if (message.hasSender())
+                                {
+                                        control.receivedChatLine(message.getSender() + "> " + message.getMessage(), null);
+                                }
+                                else
+                                {
+                                        control.receivedChatLine(message.getMessage(), null);
+                                }
                         }
                 }
         }

@@ -90,6 +90,11 @@ public class AphelionChatControl extends AbstractController implements KeyInputH
                 }
                 
                 final ListBox<ChatEntryModelClass> chatBox = getListBox(CHAT_BOX);
+                for (int i = 0; i < chatBox.getDisplayItemCount() - 1; ++i)
+                {
+                        chatBox.addItem(new ChatEntryModelClass("", null));
+                }
+                
                 while (!linesBuffer.isEmpty())
                 {
                         ChatEntryModelClass line = linesBuffer.remove(0);
@@ -127,6 +132,7 @@ public class AphelionChatControl extends AbstractController implements KeyInputH
 
         public void receivedChatLine(String text, NiftyImage icon, String style)
         {
+                text = text.replace("$", "\\$");
                 if (linesBuffer.isEmpty())
                 {
                         try
@@ -149,14 +155,16 @@ public class AphelionChatControl extends AbstractController implements KeyInputH
         }
 
 
-        public final void addPlayer(int pid, final String playerName, final NiftyImage playerIcon)
+        public final void addPlayer(int pid, String playerName, NiftyImage playerIcon)
         {
+                playerName = playerName.replace("$", "\\$");
                 addPlayer(pid, playerName, playerIcon, null);
         }
 
 
         public void addPlayer(int pid, String playerName, NiftyImage playerIcon, String style)
         {
+                playerName = playerName.replace("$", "\\$");
                 if (playerBuffer.isEmpty())
                 {
                         try
@@ -181,6 +189,7 @@ public class AphelionChatControl extends AbstractController implements KeyInputH
         
         public final void renamePlayer(int pid, String playerName)
         {
+                playerName = playerName.replace("$", "\\$");
                 final ListBox<PlayerEntry> playerList = getListBox(PLAYER_LIST);
                 int i = playerList.getItems().indexOf(new PlayerEntry(pid, null, null));
                 if (i >= 0)
