@@ -43,6 +43,7 @@ package aphelion.client;
 import aphelion.client.graphics.nifty.chat.AphelionChatControl;
 import aphelion.client.graphics.nifty.chat.AphelionChatControl.AphelionChatTextSendEvent;
 import aphelion.client.net.NetworkedGame;
+import aphelion.shared.net.COMMAND_SOURCE;
 import aphelion.shared.net.game.ActorListener;
 import aphelion.shared.net.protobuf.GameC2S;
 import aphelion.shared.net.protobuf.GameC2S.C2S;
@@ -51,6 +52,7 @@ import aphelion.shared.net.game.GameProtocolConnection;
 import aphelion.shared.net.game.GameS2CListener;
 import aphelion.shared.net.game.NetworkedActor;
 import de.lessvoid.nifty.screen.Screen;
+import java.util.Arrays;
 import java.util.List;
 import org.bushe.swing.event.EventTopicSubscriber;
 
@@ -60,24 +62,24 @@ import org.bushe.swing.event.EventTopicSubscriber;
  */
 public class LocalChat implements EventTopicSubscriber<AphelionChatTextSendEvent>, GameS2CListener, ActorListener
 {
-        private final GameProtocolConnection gameConn;
+        private final NetworkedGame netGame;
         private final List<AphelionChatControl> chatLocals;
 
-        public LocalChat(GameProtocolConnection gameConn, List<AphelionChatControl> chatLocals)
+        public LocalChat(NetworkedGame netGame, List<AphelionChatControl> chatLocals)
         {
-                if (gameConn == null)
+                if (netGame == null)
                 {
                         throw new IllegalArgumentException();
                 }
                 
-                this.gameConn = gameConn;
+                this.netGame = netGame;
                 this.chatLocals = chatLocals;
         }
         
         public void subscribeListeners(NetworkedGame netGame, Screen screen)
         {
                 netGame.addActorListener(this);
-                gameConn.addListener(this);
+                netGame.getGameConn().addListener(this);
                 for (AphelionChatControl control : chatLocals)
                 {
                         control.getElement().getNifty().subscribe(screen, control.getElement().getId(), AphelionChatTextSendEvent.class, this);
@@ -93,10 +95,24 @@ public class LocalChat implements EventTopicSubscriber<AphelionChatTextSendEvent
                         return;
                 }
                 
+                if (text.charAt(0) == '?' || text.charAt(0) == '*')
+                {
+                        String[] arg = text.substring(1).split("\\s+");
+                        if (arg.length > 0 && !arg[0].isEmpty())
+                        {
+                                netGame.sendCommand(COMMAND_SOURCE.USER_MANUAL, arg[0], Arrays.copyOfRange(arg, 1, arg.length));
+                                for (AphelionChatControl control : chatLocals)
+                                {
+                                        control.receivedChatLine(text, null);
+                                }
+                                return;
+                        }
+                }
+
                 C2S.Builder builder = C2S.newBuilder();
                 GameC2S.SendLocalChat.Builder chat = builder.addSendLocalChatBuilder();
                 chat.setMessage(text);
-                gameConn.send(builder);
+                netGame.getGameConn().send(builder);
         }
 
         @Override

@@ -291,7 +291,7 @@ public class GameLoop
                                 
                                 lookUpNiftyElements();
                                 
-                                localChat = new LocalChat(networkedGame.getGameConn(), Collections.unmodifiableList(Arrays.asList(chatLocals)));
+                                localChat = new LocalChat(networkedGame, Collections.unmodifiableList(Arrays.asList(chatLocals)));
                                 localChat.subscribeListeners(networkedGame, mainScreen);
                                 
                                 return null;
