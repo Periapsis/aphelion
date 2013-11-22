@@ -40,15 +40,12 @@ package aphelion.shared.physics.operations;
 
 
 import aphelion.shared.net.protobuf.GameOperation;
+import aphelion.shared.physics.EnvironmentConfiguration;
 import aphelion.shared.physics.operations.pub.WeaponSyncPublic;
 import aphelion.shared.physics.entities.Actor;
-import aphelion.shared.physics.PhysicsEnvironment;
-import aphelion.shared.physics.entities.MapEntity;
 import aphelion.shared.physics.entities.Projectile;
 import aphelion.shared.physics.State;
 import aphelion.shared.physics.entities.ProjectileFactory;
-import aphelion.shared.swissarmyknife.LinkedListEntry;
-import java.util.ArrayList;
 import java.util.logging.Logger;
 
 /**
@@ -65,9 +62,9 @@ public class WeaponSync extends Operation implements WeaponSyncPublic
         public String weaponKey;
         public GameOperation.WeaponSync.Projectile[] syncProjectiles;
         
-        public WeaponSync()
+        public WeaponSync(EnvironmentConfiguration econfig)
         {
-                super(true, PRIORITY.ACTOR_WEAPON_SYNC);
+                super(econfig, true, PRIORITY.ACTOR_WEAPON_SYNC);
         }
 
         @Override

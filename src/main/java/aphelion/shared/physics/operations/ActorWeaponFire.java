@@ -39,16 +39,15 @@
 package aphelion.shared.physics.operations;
 
 
+import aphelion.shared.physics.EnvironmentConfiguration;
 import aphelion.shared.physics.operations.pub.ActorWeaponFirePublic;
 import aphelion.shared.physics.entities.Actor;
-import aphelion.shared.physics.PhysicsEnvironment;
 import aphelion.shared.physics.entities.Projectile;
 import aphelion.shared.physics.State;
 import aphelion.shared.physics.valueobjects.PhysicsPositionVector;
 import aphelion.shared.physics.valueobjects.PhysicsShipPosition;
 import aphelion.shared.physics.WEAPON_SLOT;
 import aphelion.shared.physics.entities.ProjectileFactory;
-import aphelion.shared.swissarmyknife.LinkedListEntry;
 import aphelion.shared.swissarmyknife.SwissArmyKnife;
 import java.util.ArrayList;
 import java.util.logging.Level;
@@ -62,7 +61,7 @@ public class ActorWeaponFire extends Operation implements ActorWeaponFirePublic
 {
         private static final Logger log = Logger.getLogger("aphelion.shared.physics");
         
-        private boolean[] usedHint = new boolean[PhysicsEnvironment.MAX_TRAILING_STATES];
+        private final boolean[] usedHint;
         
         private final ProjectileFactory factory = new ProjectileFactory();
 
@@ -80,9 +79,10 @@ public class ActorWeaponFire extends Operation implements ActorWeaponFirePublic
         // projectile index -> state id -> map entity
         private ArrayList<PhysicsPositionVector[]> fireHistories;
         
-        public ActorWeaponFire()
+        public ActorWeaponFire(EnvironmentConfiguration econfig)
         {
-                super(true, PRIORITY.ACTOR_WEAPON_FIRE);
+                super(econfig, true, PRIORITY.ACTOR_WEAPON_FIRE);
+                usedHint = new boolean[econfig.TRAILING_STATES];
         }
         
         @Override
@@ -171,7 +171,7 @@ public class ActorWeaponFire extends Operation implements ActorWeaponFirePublic
                         }
                         else
                         {
-                                fireHistory = new PhysicsPositionVector[PhysicsEnvironment.MAX_TRAILING_STATES];
+                                fireHistory = new PhysicsPositionVector[econfig.TRAILING_STATES];
                                 fireHistories.add(fireHistory);
                                 assert p == fireHistories.size() - 1;
                                 

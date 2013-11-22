@@ -118,21 +118,6 @@ import java.util.logging.Logger;
 public class PhysicsEnvironment implements TickEvent
 {
         private static final Logger log = Logger.getLogger("aphelion.shared.physics");
-        private OutputStreamWriter debugLog;
-        
-        /** The maximum amount of trailing states for both client and server. */
-        public static final int MAX_TRAILING_STATES = 8;
-        /** Each state trails this much time (tick) behind the next state. 
-         * 16 is a power of 2 which gives a small speed benefit */
-        public static final int TRAILING_STATE_DELAY = 16;
-        
-        /** The total amount of ticks history is kept for. */
-        public static final int TOTAL_HISTORY = MAX_TRAILING_STATES * TRAILING_STATE_DELAY;
-        
-        public final boolean server; // true = server; false = client
-        public final int MAX_OPERATION_AGE; // do not accept operations that are older than this many ticks
-        public final int TRAILING_STATES;
-        public final int TIMEWARP_EVERY_TICKS = 10; // If two timewarps need to be executed in rapid succession, wait this many ticks
         
         public static final int ROTATION_POINTS = (2*2*2*2*2*2) * (3*3*3) * (5*5) * 7 * 11 * 13 * 17; // Highly Composite Number (it has 1344 divisors)
         public static final int ROTATION_1_2TH = ROTATION_POINTS / 2;
@@ -140,6 +125,7 @@ public class PhysicsEnvironment implements TickEvent
         public static final int ROTATION_3_4TH = ROTATION_1_2TH + ROTATION_1_4TH;
         public static final int MAX_POSITION = 1073741823; // 2^30-1
 
+        public final EnvironmentConfiguration econfig;
         
         long tick_now;
         long ticked_at;
@@ -153,38 +139,22 @@ public class PhysicsEnvironment implements TickEvent
 
         public PhysicsEnvironment(boolean server, PhysicsMap map)
         {
-                if (server)
-                {
-                        TRAILING_STATES = 4;
-                        // C2S operations will have to arrive within  640ms 
-                }
-                else
-                {
-                        TRAILING_STATES = 8;
-                        // S2C and C2S2C operations will have to arrive within 1280ms
-                        // The MAX_OPERATION_AGE for clients should be atleast 2x as large as the maximum age of the server.
-                        // So that it will be unlikely that a C2S2C operation that was accepted by the server, to be rejected by clients.
-                }
-                
-                // The last state does not accept new (non critical) operations
-                MAX_OPERATION_AGE = (TRAILING_STATES-1) * TRAILING_STATE_DELAY;
-
-                this.server = server;
+                econfig = new EnvironmentConfiguration(server);
                 this.map = map;
 
-                trailingStates = new State[TRAILING_STATES];
+                trailingStates = new State[econfig.TRAILING_STATES];
 
-                for (int s = 0; s < TRAILING_STATES; s++)
+                for (int s = 0; s < econfig.TRAILING_STATES; s++)
                 {
                         trailingStates[s] = new State(
                                 this, 
                                 s, 
-                                s * TRAILING_STATE_DELAY, 
-                                s < TRAILING_STATES - 2, // do not allow hints in the last 2 trailing states
-                                s == TRAILING_STATES - 1  // force late config execution in the last trailing state
+                                econfig.FIRST_STATE_DELAY + s * econfig.TRAILING_STATE_DELAY, 
+                                s < econfig.TRAILING_STATES - 2, // do not allow hints in the last 2 trailing states
+                                s == econfig.TRAILING_STATES - 1  // force late config execution in the last trailing state
                                 );
                         
-                        trailingStates[s].tick_now = this.tick_now - (s * TRAILING_STATE_DELAY);
+                        trailingStates[s].tick_now = this.tick_now - trailingStates[s].delay;
                 }
         }
         
@@ -228,7 +198,7 @@ public class PhysicsEnvironment implements TickEvent
          */
         public long getTick(int stateid)
         {
-                if (stateid < 0 || stateid >= TRAILING_STATES)
+                if (stateid < 0 || stateid >= econfig.TRAILING_STATES)
                 {
                         throw new IllegalArgumentException("Invalid state");
                 }
@@ -253,9 +223,9 @@ public class PhysicsEnvironment implements TickEvent
         public int getState(long tick)
         {
                 int ticks_ago = (int) (this.tick_now - tick);
-                int state_id = ticks_ago / PhysicsEnvironment.TRAILING_STATE_DELAY;
+                int state_id = ticks_ago / econfig.TRAILING_STATE_DELAY;
                 
-                if (state_id < 0 || state_id >= TRAILING_STATES)
+                if (state_id < 0 || state_id >= econfig.TRAILING_STATES)
                 {
                         return -1;
                 }
@@ -275,10 +245,10 @@ public class PhysicsEnvironment implements TickEvent
                 ++tick_now;
                 ticked_at = System.nanoTime();
 
-                for (int s = 0; s < TRAILING_STATES; s++)
+                for (int s = 0; s < econfig.TRAILING_STATES; s++)
                 {
                         debug_current_state = s;
-                        long tick = this.tick_now - (s * TRAILING_STATE_DELAY);
+                        long tick = this.tick_now - this.trailingStates[s].delay;
                         this.trailingStates[s].tick(tick);
                 }
 
@@ -290,7 +260,7 @@ public class PhysicsEnvironment implements TickEvent
         
         public boolean consistencyCheck()
         {
-                for (int s = TRAILING_STATES - 1; s > 0; --s)
+                for (int s = econfig.TRAILING_STATES - 1; s > 0; --s)
                 {
                         State older = this.trailingStates[s];
                         State newer = this.trailingStates[s - 1];
@@ -304,7 +274,7 @@ public class PhysicsEnvironment implements TickEvent
                         {
                                 if (older.isLast // Always timewarp to the last state (because state data is going to be discarded)
                                    || this.lastTimewarp_tick == 0 
-                                   || this.tick_now - this.lastTimewarp_tick >= this.TIMEWARP_EVERY_TICKS)
+                                   || this.tick_now - this.lastTimewarp_tick >= econfig.TIMEWARP_EVERY_TICKS)
                                         
                                 {
                                         // state is not consistent with the older state
@@ -343,7 +313,7 @@ public class PhysicsEnvironment implements TickEvent
                 long end = System.nanoTime();
                 
                 log.log(Level.WARNING, "Time Warp {0}: to state {1} in {2}ms. Tick {3} to {4}.", new Object[] {
-                        server ? "(server)" : "(client)",
+                        econfig.server ? "(server)" : "(client)",
                         stateid,
                         (end - start) / 1_000_000.0,
                         this.trailingStates[0].tick_now,
@@ -366,7 +336,7 @@ public class PhysicsEnvironment implements TickEvent
                 // If an operation has been executed in the oldest state,
                 // it can be removed.
                 
-                oldestState = this.trailingStates[TRAILING_STATES - 1];
+                oldestState = this.trailingStates[econfig.TRAILING_STATES - 1];
                 
                 linkOp = oldestState.history.first;
                 while (linkOp != null)
@@ -377,7 +347,7 @@ public class PhysicsEnvironment implements TickEvent
                         if (op.tick < oldestState.tick_now - 1) // -1 to be sure
                         {
                                 // remove the operation everywhere
-                                for (int s = 0; s < TRAILING_STATES; ++s)
+                                for (int s = 0; s < econfig.TRAILING_STATES; ++s)
                                 {
                                         op.link[s].remove();
                                 }
@@ -437,7 +407,7 @@ public class PhysicsEnvironment implements TickEvent
                                 if (!olderPosition.equals(newerPosition))
                                 {
                                         log.log(Level.WARNING, "{0}: Inconsistency in position/velocity/rotation, actor {1}", new Object[]{
-                                                server ? "Server" : "Client",
+                                                econfig.server ? "Server" : "Client",
                                                 actorNewer.pid
                                         });
                                         return false;
@@ -447,7 +417,7 @@ public class PhysicsEnvironment implements TickEvent
                                     actorNewer.getHistoricEnergy(older.tick_now, true))
                                 {
                                         log.log(Level.WARNING, "{0}: Inconsistency in energy, actor {1}", new Object[]{
-                                                server ? "Server" : "Client",
+                                                econfig.server ? "Server" : "Client",
                                                 actorNewer.pid
                                         });
                                         return false;
@@ -467,7 +437,7 @@ public class PhysicsEnvironment implements TickEvent
                         if (!linkOp.data.isConsistent(older, newer))
                         {
                                 log.log(Level.WARNING, "{0}: Inconsistency in operation {1}", new Object[]{
-                                        server ? "Server" : "Client",
+                                        econfig.server ? "Server" : "Client",
                                         linkOp.data.getClass().getName()
                                 });
                                 return false;
@@ -480,7 +450,7 @@ public class PhysicsEnvironment implements TickEvent
                         if (!linkEv.data.isConsistent(older, newer))
                         {
                                 log.log(Level.WARNING, "{0}: Inconsistency in event {1}", new Object[]{
-                                        server ? "Server" : "Client",
+                                        econfig.server ? "Server" : "Client",
                                         linkEv.data.getClass().getName()
                                 });
                                 return false;
@@ -498,10 +468,10 @@ public class PhysicsEnvironment implements TickEvent
         {
                 int a;
 
-                if (operation.ignorable && operation.tick <= this.tick_now - MAX_OPERATION_AGE)
+                if (operation.ignorable && operation.tick <= this.tick_now - econfig.HIGHEST_DELAY)
                 {
                         log.log(Level.WARNING, "Operation about actor {1} at {2} dropped, too old ({0}). now = {3}", new Object[] {
-                                server ? "server" : "client",
+                                econfig.server ? "server" : "client",
                                 operation.getPid(),
                                 operation.getTick(),
                                 this.tick_now
@@ -509,7 +479,7 @@ public class PhysicsEnvironment implements TickEvent
                         return false;
                 }
 
-                for (a = 0; a < TRAILING_STATES; a++)
+                for (a = 0; a < econfig.TRAILING_STATES; a++)
                 {
                         trailingStates[a].addOperation(operation);
                 }
@@ -549,7 +519,7 @@ public class PhysicsEnvironment implements TickEvent
                 Actor actor;
                 State state;
         
-                if (stateid < 0 || stateid >= TRAILING_STATES)
+                if (stateid < 0 || stateid >= econfig.TRAILING_STATES)
                 {
                         throw new IllegalArgumentException("Invalid state");
                 }
@@ -588,7 +558,7 @@ public class PhysicsEnvironment implements TickEvent
         {
                 State state;
         
-                if (stateid < 0 || stateid >= TRAILING_STATES)
+                if (stateid < 0 || stateid >= econfig.TRAILING_STATES)
                 {
                         throw new IllegalArgumentException("Invalid state");
                 }
@@ -605,7 +575,7 @@ public class PhysicsEnvironment implements TickEvent
          */
         public Iterable<ActorPublic> actorIterable(int stateid)
         {
-                if (stateid < 0 || stateid >= TRAILING_STATES)
+                if (stateid < 0 || stateid >= econfig.TRAILING_STATES)
                 {
                         throw new IllegalArgumentException("Invalid state");
                 }
@@ -632,7 +602,7 @@ public class PhysicsEnvironment implements TickEvent
         {
                 State state;
         
-                if (stateid < 0 || stateid >= TRAILING_STATES)
+                if (stateid < 0 || stateid >= econfig.TRAILING_STATES)
                 {
                         throw new IllegalArgumentException("Invalid state");
                 }
@@ -648,7 +618,7 @@ public class PhysicsEnvironment implements TickEvent
         {
                 State state;
         
-                if (stateid < 0 || stateid >= TRAILING_STATES)
+                if (stateid < 0 || stateid >= econfig.TRAILING_STATES)
                 {
                         throw new IllegalArgumentException("Invalid state");
                 }
@@ -661,7 +631,7 @@ public class PhysicsEnvironment implements TickEvent
         @SuppressWarnings("unchecked")
         public Iterable<ProjectilePublic> projectileIterable(int stateid)
         {
-                if (stateid < 0 || stateid >= TRAILING_STATES)
+                if (stateid < 0 || stateid >= econfig.TRAILING_STATES)
                 {
                         throw new IllegalArgumentException("Invalid state");
                 }
@@ -686,7 +656,7 @@ public class PhysicsEnvironment implements TickEvent
          */
         public int calculateProjectileCount(int stateid)
         {
-                if (stateid < 0 || stateid >= TRAILING_STATES)
+                if (stateid < 0 || stateid >= econfig.TRAILING_STATES)
                 {
                         throw new IllegalArgumentException("Invalid state");
                 }
@@ -706,7 +676,7 @@ public class PhysicsEnvironment implements TickEvent
         {
                 State state;
         
-                if (stateid < 0 || stateid >= TRAILING_STATES)
+                if (stateid < 0 || stateid >= econfig.TRAILING_STATES)
                 {
                         throw new IllegalArgumentException("Invalid state");
                 }
@@ -718,7 +688,7 @@ public class PhysicsEnvironment implements TickEvent
         
         public ConfigSelection newConfigSelection(int stateid)
         {
-                if (stateid < 0 || stateid >= TRAILING_STATES)
+                if (stateid < 0 || stateid >= econfig.TRAILING_STATES)
                 {
                         throw new IllegalArgumentException("Invalid state");
                 }
@@ -728,7 +698,7 @@ public class PhysicsEnvironment implements TickEvent
         
         public void loadConfig(long tick, String fileIdentifier, List yamlDocuments)
         {
-                LoadConfig op = new LoadConfig();
+                LoadConfig op = new LoadConfig(econfig);
                 op.tick = tick;
                 op.fileIdentifier = fileIdentifier;
                 op.yamlDocuments = yamlDocuments;
@@ -741,7 +711,7 @@ public class PhysicsEnvironment implements TickEvent
         
         public void unloadConfig(long tick, String fileIdentifier)
         {
-                UnloadConfig op = new UnloadConfig();
+                UnloadConfig op = new UnloadConfig(econfig);
                 op.tick = tick;
                 op.fileIdentifier = fileIdentifier;
                 
@@ -751,7 +721,7 @@ public class PhysicsEnvironment implements TickEvent
         
         public void actorNew(long tick, int pid, long seed, String ship)
         {
-                ActorNew op = new ActorNew();
+                ActorNew op = new ActorNew(econfig);
                 op.tick = tick;
                 op.pid = pid;
                 op.seed = seed;
@@ -763,9 +733,9 @@ public class PhysicsEnvironment implements TickEvent
         
         public void actorSync(GameOperation.ActorSync sync)
         {
-                assert !this.server;
+                assert !this.econfig.server;
                 
-                ActorSync op = new ActorSync();
+                ActorSync op = new ActorSync(econfig);
                 op.tick = sync.getTick();
                 op.pid = sync.getPid();
                 op.sync = sync;
@@ -776,7 +746,7 @@ public class PhysicsEnvironment implements TickEvent
         
         public void actorModification(long tick, int pid, String ship)
         {
-                ActorModification op = new ActorModification();
+                ActorModification op = new ActorModification(econfig);
                 op.tick = tick;
                 op.pid = pid;
                 op.ship = ship;
@@ -787,7 +757,7 @@ public class PhysicsEnvironment implements TickEvent
 
         public void actorRemove(long tick, int pid)
         {
-                ActorRemove op = new ActorRemove();
+                ActorRemove op = new ActorRemove(econfig);
                 op.tick = tick;
                 op.pid = pid;
 
@@ -801,7 +771,7 @@ public class PhysicsEnvironment implements TickEvent
          */
         public boolean actorWarp(long tick, int pid, boolean hint, int x, int y, int x_vel, int y_vel, int rotation)
         {
-                ActorWarp op = new ActorWarp();
+                ActorWarp op = new ActorWarp(econfig);
                 op.tick = tick;
                 op.pid = pid;
                 op.hint = hint;
@@ -817,7 +787,7 @@ public class PhysicsEnvironment implements TickEvent
         public boolean actorWarp(
                 long tick, int pid, boolean hint, int x, int y, int x_vel, int y_vel, int rotation, boolean has_x, boolean has_y, boolean has_x_vel, boolean has_y_vel, boolean has_rotation)
         {
-                ActorWarp op = new ActorWarp();
+                ActorWarp op = new ActorWarp(econfig);
                 op.tick = tick;
                 op.pid = pid;
                 op.hint = hint;
@@ -837,7 +807,7 @@ public class PhysicsEnvironment implements TickEvent
          */
         public boolean actorMove(long tick, int pid, PhysicsMovement move)
         {
-                ActorMove op = new ActorMove();
+                ActorMove op = new ActorMove(econfig);
                 op.tick = tick;
                 op.pid = pid;
                 op.move = move;
@@ -857,7 +827,7 @@ public class PhysicsEnvironment implements TickEvent
                 int hint_x_vel, int hint_y_vel, 
                 int hint_snapped_rotation)
         {
-                ActorWeaponFire op = new ActorWeaponFire();
+                ActorWeaponFire op = new ActorWeaponFire(econfig);
                 op.tick = tick;
                 op.pid = pid;
                 op.weapon_slot = weapon_slot;
@@ -885,10 +855,10 @@ public class PhysicsEnvironment implements TickEvent
                 String weaponKey, 
                 GameOperation.WeaponSync.Projectile[] projectiles)
         {
-                assert !this.server;
+                assert !econfig.server;
                 // do not modify "projectiles" after calling this method
                 
-                WeaponSync op = new WeaponSync();
+                WeaponSync op = new WeaponSync(econfig);
                 op.tick = tick;
                 op.pid = owner_pid;
                 op.weaponKey = weaponKey;

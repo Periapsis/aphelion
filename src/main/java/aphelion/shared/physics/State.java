@@ -64,6 +64,8 @@ public class State
 {
         private static final Logger log = Logger.getLogger("aphelion.shared.physics");
         private static final int ACTOR_INITIALCAPACITY = 64;
+        
+        public final EnvironmentConfiguration econfig;
         public final int id;
         public final PhysicsEnvironment env;
         public final Collision collision = new Collision();
@@ -93,6 +95,7 @@ public class State
         State(PhysicsEnvironment env, int state_id, long delay, boolean allowHints, boolean isLast)
         {
                 this.env = env;
+                econfig = env.econfig;
                 this.id = state_id;
                 this.delay = delay;
                 this.tick_now = -delay;
@@ -118,7 +121,7 @@ public class State
                         if (actor.isRemoved())
                         {
                                 // Can we really remove the actor now?
-                                if (env.tick_now - actor.removedAt_tick > env.TRAILING_STATES * PhysicsEnvironment.TRAILING_STATE_DELAY)
+                                if (env.tick_now - actor.removedAt_tick > econfig.HIGHEST_DELAY)
                                 {
                                         boolean activeSomewhere = false;
                                         for (int s = 0; s < actor.crossStateList.length; ++s)
@@ -133,7 +136,7 @@ public class State
                                         if (!activeSomewhere)
                                         {
                                                 // really remove it now
-                                                for (int s = 0; s < env.TRAILING_STATES; ++s)
+                                                for (int s = 0; s < econfig.TRAILING_STATES; ++s)
                                                 {
                                                         State state = env.trailingStates[s];
 
@@ -219,7 +222,7 @@ public class State
                                 // do not bother if the projectile index is not 0, 
                                 // it has already been checked
                                 if (projectile.projectile_index == 0
-                                    && env.tick_now - projectile.removedAt_tick > env.TRAILING_STATES * PhysicsEnvironment.TRAILING_STATE_DELAY)
+                                    && env.tick_now - projectile.removedAt_tick > econfig.HIGHEST_DELAY)
                                 {
                                         boolean activeSomewhere = false;
 
@@ -309,7 +312,7 @@ public class State
                                 needTimewarpToThisState = true;
                                 
                                 log.log(Level.WARNING, "{0}: Inconsistency in queued operation {1}. (lateSync {2})", new Object[]{
-                                        env.server ? "Server" : "Client",
+                                        econfig.server ? "Server" : "Client",
                                         op.getClass().getName(),
                                         lateSync
                                 });
@@ -607,7 +610,7 @@ public class State
                         event.resetExecutionHistory(this, older);
                         
                         boolean occuredSomewhere = false;
-                        for (int s = 0; s < env.TRAILING_STATES; ++s)
+                        for (int s = 0; s < econfig.TRAILING_STATES; ++s)
                         {
                                 if (event.hasOccured(s))
                                 {
@@ -640,7 +643,7 @@ public class State
                         if (!op.execute(this, this.tick_now - op.tick))
                         {
                                 log.log(Level.WARNING, "{0}: Inconsistency in late operation {1}", new Object[]{
-                                        env.server ? "Server" : "Client",
+                                        econfig.server ? "Server" : "Client",
                                         op.getClass().getName()
                                 });
                                 needTimewarpToThisState = true;

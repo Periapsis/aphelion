@@ -40,9 +40,9 @@ package aphelion.shared.physics.operations;
 
 
 import aphelion.shared.net.protobuf.GameOperation;
+import aphelion.shared.physics.EnvironmentConfiguration;
 import aphelion.shared.physics.entities.Actor;
 import aphelion.shared.physics.operations.pub.ActorSyncPublic;
-import aphelion.shared.physics.PhysicsEnvironment;
 import aphelion.shared.physics.State;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -56,13 +56,14 @@ public class ActorSync extends Operation implements ActorSyncPublic
         private static final Logger log = Logger.getLogger("aphelion.shared.physics");
         public GameOperation.ActorSync sync;
         
-        private int[] executionCount = new int[PhysicsEnvironment.MAX_TRAILING_STATES];
+        private final int[] executionCount;
         
         private boolean logged = false;
         
-        public ActorSync()
+        public ActorSync(EnvironmentConfiguration econfig)
         {
-                super(false, PRIORITY.ACTOR_SYNC);
+                super(econfig, false, PRIORITY.ACTOR_SYNC);
+                executionCount = new int[econfig.TRAILING_STATES];
         }
         
         @Override

@@ -40,7 +40,7 @@
 package aphelion.shared.physics.events;
 
 
-import aphelion.shared.physics.PhysicsEnvironment;
+import aphelion.shared.physics.EnvironmentConfiguration;
 import aphelion.shared.physics.State;
 import aphelion.shared.physics.entities.Actor;
 import aphelion.shared.physics.events.pub.ActorDiedPublic;
@@ -54,11 +54,13 @@ import java.util.logging.Logger;
 public class ActorDied extends Event implements ActorDiedPublic
 {
         private static final Logger log = Logger.getLogger("aphelion.shared.physics");
-        private History[] history = new History[PhysicsEnvironment.MAX_TRAILING_STATES];
+        private final History[] history;
         
-        public ActorDied()
+        public ActorDied(EnvironmentConfiguration econfig)
         {
-                for (int a = 0; a < PhysicsEnvironment.MAX_TRAILING_STATES; ++a)
+                history = new History[econfig.TRAILING_STATES];
+                
+                for (int a = 0; a < econfig.TRAILING_STATES; ++a)
                 {
                         history[a] = new History();
                 }

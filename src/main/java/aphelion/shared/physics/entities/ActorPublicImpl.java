@@ -57,11 +57,7 @@ import aphelion.shared.physics.valueobjects.PhysicsPoint;
 import aphelion.shared.physics.valueobjects.PhysicsShipPosition;
 import aphelion.shared.physics.WEAPON_SLOT;
 import aphelion.shared.resource.ResourceDB;
-import java.lang.ref.WeakReference;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Map;
 
 /**
  * This wrapper makes sure that if an actor gets destroyed 

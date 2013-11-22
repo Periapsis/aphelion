@@ -244,7 +244,7 @@ public class GameLoop
                                 for (LoadYamlTask.Return yamlResult : loadYamlResult)
                                 {
                                         physicsEnv.loadConfig(
-                                                -PhysicsEnvironment.TOTAL_HISTORY,
+                                                physicsEnv.getTick()-physicsEnv.econfig.HIGHEST_DELAY,
                                                 yamlResult.fileIdentifier, 
                                                 yamlResult.yamlDocuments);
                                 }

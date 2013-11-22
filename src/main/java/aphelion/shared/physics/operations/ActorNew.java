@@ -38,11 +38,14 @@
 
 package aphelion.shared.physics.operations;
 
+import aphelion.shared.physics.EnvironmentConfiguration;
+import aphelion.shared.physics.PhysicsMap;
 import aphelion.shared.physics.operations.pub.ActorNewPublic;
 import aphelion.shared.physics.entities.Actor;
-import aphelion.shared.physics.PhysicsEnvironment;
 import aphelion.shared.physics.entities.MapEntity;
 import aphelion.shared.physics.State;
+import aphelion.shared.physics.valueobjects.PhysicsPoint;
+import aphelion.shared.physics.valueobjects.PhysicsWarp;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -56,13 +59,14 @@ public class ActorNew extends Operation implements ActorNewPublic
         
         // this list is only kept here temporary.
         // it will be set as an attribute in every actor.
-        private MapEntity[] crossStateList = new MapEntity[PhysicsEnvironment.MAX_TRAILING_STATES];
+        private final MapEntity[] crossStateList;
         public long seed;
         public String ship;
         
-        public ActorNew()
+        public ActorNew(EnvironmentConfiguration econfig)
         {
-                super(false, PRIORITY.ACTOR_NEW);
+                super(econfig, false, PRIORITY.ACTOR_NEW);
+                crossStateList = new MapEntity[econfig.TRAILING_STATES];
         }
         
         @Override
@@ -118,13 +122,26 @@ public class ActorNew extends Operation implements ActorNewPublic
                 state.actors.put(actor.pid, actor);
                 state.actorsList.add(actor);
                 
+                PhysicsPoint spawn = new PhysicsPoint();
+                actor.findSpawnPoint(spawn, this.tick);
                 
+                if (spawn.set)
+                {
+                        PhysicsWarp spawnWarp = new PhysicsWarp(
+                                spawn.x * PhysicsMap.TILE_PIXELS + PhysicsMap.TILE_PIXELS/2, 
+                                spawn.y * PhysicsMap.TILE_PIXELS + PhysicsMap.TILE_PIXELS/2, 
+                                0, 
+                                0, 
+                                actor.randomRotation(seed));
+                        actor.moveHistory.setHistory(this.tick, spawnWarp);
+                        actor.applyMoveable(spawnWarp, this.tick); // sets the current position
+                }
                 
                 actor.updatePositionHistory(this.tick);
-                for (int t = 0; t < ticks_late; ++t)
-                {
-                        actor.updatePositionHistory(this.tick + t + 1);
-                }
+                
+                // dead reckon current position so that it is no longer late
+                // the position at the tick of this operation should not be dead reckoned, therefor +1
+                actor.performDeadReckoning(state.env.getMap(), this.tick + 1, ticks_late);
 
                 if (state.id == 0)
                 {

@@ -105,10 +105,10 @@ public class ProjectileFactory
                         }
                         else
                         {
-                                crossStateList = new MapEntity[PhysicsEnvironment.MAX_TRAILING_STATES];
+                                crossStateList = new MapEntity[state.econfig.TRAILING_STATES];
                                 crossStateLists.add(crossStateList);
 
-                                spawnedEntities = new Projectile[PhysicsEnvironment.MAX_TRAILING_STATES];
+                                spawnedEntities = new Projectile[state.econfig.TRAILING_STATES];
                                 constructedEntitiesList.add(spawnedEntities);
 
                                 assert p == crossStateLists.size() - 1;

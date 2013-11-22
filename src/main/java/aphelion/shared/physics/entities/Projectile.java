@@ -124,7 +124,10 @@ public final class Projectile extends MapEntity implements ProjectilePublic
                 Actor.WeaponConfig config, 
                 int projectile_index)
         {
-                super(state, crossStateList, createdAt_tick, PhysicsEnvironment.TRAILING_STATE_DELAY);
+                super(state, 
+                      crossStateList, 
+                      createdAt_tick, 
+                      (state.isLast ? 0 : state.econfig.TRAILING_STATE_DELAY) + state.econfig.MINIMUM_HISTORY_TICKS);
                 
                 this.owner = owner; // note may be null for now, will be resolved by resetTo
                 this.config = config; // note may be null for now, will be resolved by resetTo
@@ -334,7 +337,7 @@ public final class Projectile extends MapEntity implements ProjectilePublic
                                 ProjectileExplosion event = explosionEvent == null ? null : explosionEvent.get();
                                 if (event == null)
                                 {
-                                        event = new ProjectileExplosion();
+                                        event = new ProjectileExplosion(state.econfig);
                                         explosionEvent = new WeakReference<>(event);
                                 }
                                 
@@ -364,7 +367,7 @@ public final class Projectile extends MapEntity implements ProjectilePublic
                                 ProjectileExplosion event = explosionEvent == null ? null : explosionEvent.get();
                                 if (event == null)
                                 {
-                                        event = new ProjectileExplosion();
+                                        event = new ProjectileExplosion(state.econfig);
                                         explosionEvent = new WeakReference<>(event);
                                 }
                                 
@@ -461,7 +464,7 @@ public final class Projectile extends MapEntity implements ProjectilePublic
                 ProjectileExplosion event = explosionEvent == null ? null : explosionEvent.get();
                 if (event == null)
                 {
-                        event = new ProjectileExplosion();
+                        event = new ProjectileExplosion(state.econfig);
                         explosionEvent = new WeakReference<>(event);
                 }
 

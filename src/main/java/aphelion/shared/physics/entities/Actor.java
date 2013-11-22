@@ -301,19 +301,14 @@ public class Actor extends MapEntity
                 // Move history is used so that reordered move operations (which occurs a lot)
                 // do not cause continues time warps.
                 // We have to store enough history for moves so that any delayed move can recalculate your position
-                // Suppose there are 4 trailing states. State 0 (the most recent) would need to store 4 trailing states
+                // Suppose there are 4 trailing states. State 0 (the most recent) would need to store 3 trailing states
                 // worth of move history. 4 * TRAILING_STATE_DELAY is the maximum age of any operation executed on state 0.
                 // 3 * TRAILING_STATE_DELAY would the max on state 1, et cetera.
                 
-                // NOTE: the history is MAX_TRAILING_STATES so that both client and server have the same history length!
-                // This is important because an operation may want to look into the history to see if it can execute something
-                // (like: enough energy for a weapon fire?). The client and server must therefor respond to the case wherein
-                // the history has ended in the same way. The easiest way to do this is to make the histories of equal length.
-                // and a +1 for fun
                 super(state, 
                         crossStateList, 
                         createdAt_tick, 
-                        (PhysicsEnvironment.MAX_TRAILING_STATES - state.id) * PhysicsEnvironment.TRAILING_STATE_DELAY + 1);
+                        (state.econfig.TRAILING_STATES - state.id - 1) * state.econfig.TRAILING_STATE_DELAY + state.econfig.MINIMUM_HISTORY_TICKS);
                 
                 posHistoryDetailed = (PhysicsPointHistoryDetailed) this.posHistory;
                 

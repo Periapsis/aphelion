@@ -114,7 +114,7 @@ public class ConsistencyFuzz
 
         private ConfigSelection applyTestSettings(PhysicsEnvironment env)
         {
-                env.loadConfig(env.getTick() - PhysicsEnvironment.TOTAL_HISTORY, "test", yamlDocuments);
+                env.loadConfig(env.getTick() - env.econfig.HIGHEST_DELAY, "test", yamlDocuments);
                 return env.newConfigSelection(0);
         }
 
@@ -153,7 +153,7 @@ public class ConsistencyFuzz
                 {
                         ++iteration;
                         
-                        env = new PhysicsEnvironment(true, new MapEmpty());
+                        env = new PhysicsEnvironment(false, new MapEmpty());
                         conf = applyTestSettings(env);
                         
                         testWeapon_doTest(commands, it.next());

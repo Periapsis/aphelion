@@ -50,6 +50,7 @@ import aphelion.shared.physics.entities.ProjectilePublic;
 import aphelion.shared.physics.operations.pub.OperationPublic;
 import aphelion.shared.physics.PhysicsEnvironment;
 import aphelion.shared.physics.PhysicsMap;
+import aphelion.shared.physics.operations.pub.ActorNewPublic;
 import aphelion.shared.physics.valueobjects.PhysicsPoint;
 import aphelion.shared.swissarmyknife.MySecureRandom;
 import aphelion.shared.swissarmyknife.SwissArmyKnife;
@@ -230,23 +231,6 @@ public class ClientState
                 }
 
                 physicsEnv.actorNew(physicsEnv.getTick(), pid, seed, ship);
-                ActorPublic newActor = physicsEnv.getActor(pid);
-
-                PhysicsPoint spawn = new PhysicsPoint();
-                int rot = 0;
-
-                if (newActor != null)
-                {
-                        newActor.findSpawnPoint(spawn, physicsEnv.getTick());
-                        rot = newActor.randomRotation(seed);
-                }
-
-                int x = spawn.x * PhysicsMap.TILE_PIXELS + PhysicsMap.TILE_PIXELS/2;
-                int y = spawn.y * PhysicsMap.TILE_PIXELS + PhysicsMap.TILE_PIXELS/2;
-                int x_vel = 0;
-                int y_vel = 0;
-
-                physicsEnv.actorWarp(physicsEnv.getTick(), pid, false, x, y, x_vel, y_vel, rot);
 
 
                 // Send ArenaSync to the new player
@@ -261,16 +245,6 @@ public class ClientState
                         inArena.setYourPid(pid);
                         inArena.setYourSeed(seed);
                         inArena.setShip(ship);
-
-                        GameOperation.ActorWarp.Builder actorWarp = s2c.addActorWarpBuilder();
-                        actorWarp.setTick(physicsEnv.getTick());
-                        actorWarp.setHint(false);
-                        actorWarp.setPid(pid);
-                        actorWarp.setX(x);
-                        actorWarp.setY(y);
-                        actorWarp.setXVel(x_vel);
-                        actorWarp.setYVel(y_vel);
-                        actorWarp.setRotation(rot);
 
                         gameConn.send(s2c);
                 }
@@ -288,22 +262,12 @@ public class ClientState
                         // There is no actorSync here. The player will initialize with the same default
                         // values for everyone.
 
-                        GameOperation.ActorWarp.Builder actorWarp = s2c.addActorWarpBuilder();
-                        actorWarp.setTick(physicsEnv.getTick());
-                        actorWarp.setPid(pid);
-                        actorWarp.setHint(false);
-                        actorWarp.setX(x);
-                        actorWarp.setY(y);
-                        actorWarp.setXVel(x_vel);
-                        actorWarp.setYVel(y_vel);
-                        actorWarp.setRotation(rot);
-
                         serverGame.broadcast(s2c, this.gameConn);
                 }
 
 
                 // Send the state of all actors to the player
-                int oldestState = physicsEnv.TRAILING_STATES-1;
+                int oldestState = physicsEnv.econfig.TRAILING_STATES-1;
                 long oldestStateTick = physicsEnv.getTick(oldestState);
                 Iterator<ActorPublic> actorIt = physicsEnv.actorIterator(oldestState);
                 int actors = 0;
@@ -316,6 +280,7 @@ public class ClientState
 
                         if (actorPid == this.pid)
                         {
+                                // Already sent all the data we need to send for the actor we just spawned
                                 continue;
                         }
 
@@ -404,8 +369,9 @@ public class ClientState
                 while (opIt.hasNext())
                 {
                         OperationPublic op = opIt.next();
-                        if (op.getPid() == this.pid)
+                        if (op.getPid() == this.pid && op instanceof ActorNewPublic)
                         {
+                                // already sent this stuff (few lines up)
                                 continue;
                         }
 
@@ -433,7 +399,7 @@ public class ClientState
         {
                 // send the sync of my actor to all players (including myself)
                 
-                int oldestState = physicsEnv.TRAILING_STATES-1;
+                int oldestState = physicsEnv.econfig.TRAILING_STATES-1;
                 ActorPublic actor = physicsEnv.getActor(pid, oldestState, false);
                 if (actor == null)
                 {

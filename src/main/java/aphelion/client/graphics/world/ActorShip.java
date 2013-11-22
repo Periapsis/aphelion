@@ -145,7 +145,7 @@ public class ActorShip extends MapEntity implements TickEvent, WrappedValueAbstr
                 currentRenderDelay = SwissArmyKnife.clip(
                         this.renderDelay.get(),
                         0, 
-                        physicsEnv.TRAILING_STATES * PhysicsEnvironment.TRAILING_STATE_DELAY - 1);
+                        physicsEnv.econfig.HIGHEST_DELAY);
                 
                 if (currentRenderDelay > createdAgo)
                 {

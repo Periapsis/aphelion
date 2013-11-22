@@ -39,9 +39,9 @@
 package aphelion.shared.physics.operations;
 
 
+import aphelion.shared.physics.EnvironmentConfiguration;
 import aphelion.shared.physics.entities.Actor;
 import aphelion.shared.physics.operations.pub.ActorModificationPublic;
-import aphelion.shared.physics.PhysicsEnvironment;
 import aphelion.shared.physics.State;
 import aphelion.shared.swissarmyknife.SwissArmyKnife;
 import java.util.logging.Logger;
@@ -54,14 +54,15 @@ public class ActorModification extends Operation implements ActorModificationPub
 {
         private static final Logger log = Logger.getLogger("aphelion.shared.physics");
         
-        private final boolean[] executed = new boolean[PhysicsEnvironment.MAX_TRAILING_STATES];
+        private final boolean[] executed;
         
         // all attributes are optional
         public String ship;
         
-        public ActorModification()
+        public ActorModification(EnvironmentConfiguration econfig)
         {
-                super(false, PRIORITY.ACTOR_MODIFICATION);
+                super(econfig, false, PRIORITY.ACTOR_MODIFICATION);
+                executed = new boolean[econfig.TRAILING_STATES];
         }
         
         @Override

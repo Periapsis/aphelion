@@ -38,6 +38,7 @@
 
 package aphelion.shared.physics.operations;
 
+import aphelion.shared.physics.EnvironmentConfiguration;
 import aphelion.shared.physics.operations.pub.ActorWarpPublic;
 import aphelion.shared.physics.entities.Actor;
 import aphelion.shared.physics.State;
@@ -56,9 +57,9 @@ public class ActorWarp extends Operation implements ActorWarpPublic
         public PhysicsWarp warp;
         public boolean hint; // optional execution, used to correct inconsistencies caused by super high latency
 
-        public ActorWarp()
+        public ActorWarp(EnvironmentConfiguration econfig)
         {
-                super(true, PRIORITY.ACTOR_WARP);
+                super(econfig, true, PRIORITY.ACTOR_WARP);
         }
         
         @Override

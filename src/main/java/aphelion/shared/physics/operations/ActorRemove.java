@@ -38,6 +38,7 @@
 
 package aphelion.shared.physics.operations;
 
+import aphelion.shared.physics.EnvironmentConfiguration;
 import aphelion.shared.physics.operations.pub.ActorRemovePublic;
 import aphelion.shared.physics.entities.Actor;
 import aphelion.shared.physics.entities.Projectile;
@@ -54,9 +55,9 @@ public class ActorRemove extends Operation implements ActorRemovePublic
 {
         private static final Logger log = Logger.getLogger("aphelion.shared.physics");
         
-        public ActorRemove()
+        public ActorRemove(EnvironmentConfiguration econfig)
         {
-                super(false, PRIORITY.ACTOR_REMOVE);
+                super(econfig, false, PRIORITY.ACTOR_REMOVE);
         }
 
         @Override

@@ -86,7 +86,6 @@ public abstract class MapEntity
                 crossStateList[state.id] = this;
                 this.createdAt_tick = createdAt_tick;
                 this.HISTORY_LENGTH = historyLength;
-                // + 1 is need for consistency checking
                 this.posHistory = new PhysicsPointHistoryDetailed(createdAt_tick, HISTORY_LENGTH);
                 assert posHistory.HISTORY_LENGTH == HISTORY_LENGTH;
         }
@@ -130,7 +129,7 @@ public abstract class MapEntity
                 {
                         int ticks_ago = (int) (state.tick_now - tick);
 
-                        int states_ago = ticks_ago / PhysicsEnvironment.TRAILING_STATE_DELAY;
+                        int states_ago = ticks_ago / state.econfig.TRAILING_STATE_DELAY;
 
                         int state_id = state.id + states_ago;
                         if (state_id < 0 || state_id >= crossStateList.length)

@@ -40,6 +40,7 @@ package aphelion.shared.physics.events;
 
 
 import aphelion.shared.gameconfig.GCStringList;
+import aphelion.shared.physics.EnvironmentConfiguration;
 import aphelion.shared.physics.entities.Actor;
 import aphelion.shared.physics.entities.Actor.WeaponConfig;
 import aphelion.shared.physics.entities.MapEntity;
@@ -66,7 +67,7 @@ import java.util.logging.Logger;
 public class ProjectileExplosion extends Event implements ProjectileExplosionPublic
 {
         private static final Logger log = Logger.getLogger("aphelion.shared.physics");
-        private History[] history = new History[PhysicsEnvironment.MAX_TRAILING_STATES];
+        private final History[] history;
         
         private final ProjectileFactory chained_factory = new ProjectileFactory();
         
@@ -79,9 +80,10 @@ public class ProjectileExplosion extends Event implements ProjectileExplosionPub
           */
         final TIntObjectHashMap<ActorDied> diedEvents = new TIntObjectHashMap<>(4);
         
-        public ProjectileExplosion()
+        public ProjectileExplosion(EnvironmentConfiguration econfig)
         {
-                for (int a = 0; a < PhysicsEnvironment.MAX_TRAILING_STATES; ++a)
+                history = new History[econfig.TRAILING_STATES];
+                for (int a = 0; a < econfig.TRAILING_STATES; ++a)
                 {
                         history[a] = new History();
                 }
@@ -249,7 +251,7 @@ public class ProjectileExplosion extends Event implements ProjectileExplosionPub
                         ActorDied diedEvent = diedEvents.get(killed_pid);
                         if (diedEvent == null)
                         {
-                                diedEvent = new ActorDied();
+                                diedEvent = new ActorDied(state.econfig);
                                 diedEvents.put(killed_pid, diedEvent);
                         }
                         

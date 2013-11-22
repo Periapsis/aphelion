@@ -39,6 +39,7 @@
 package aphelion.shared.physics.operations;
 
 
+import aphelion.shared.physics.EnvironmentConfiguration;
 import aphelion.shared.physics.PhysicsEnvironment;
 import aphelion.shared.physics.State;
 import java.util.List;
@@ -56,11 +57,12 @@ public class LoadConfig extends Operation
         public String fileIdentifier;
         public List<Object> yamlDocuments;
         
-        private final boolean[] executed = new boolean[PhysicsEnvironment.MAX_TRAILING_STATES];
+        private final boolean[] executed;
         
-        public LoadConfig()
+        public LoadConfig(EnvironmentConfiguration econfig)
         {
-                super(false, PRIORITY.LOAD_CONFIG);
+                super(econfig, false, PRIORITY.LOAD_CONFIG);
+                executed = new boolean[econfig.TRAILING_STATES];
         }
         
         @Override

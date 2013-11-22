@@ -37,9 +37,11 @@
  */
 package aphelion.shared.physics;
 
+import aphelion.shared.gameconfig.GameConfig;
 import aphelion.shared.physics.entities.ProjectilePublic;
 import aphelion.shared.physics.entities.ActorPublic;
 import java.util.Iterator;
+import java.util.List;
 import org.junit.*;
 import static org.junit.Assert.*;
 
@@ -308,7 +310,7 @@ public class PhysicsEnvironmentTest extends PhysicsTest
                 env.actorMove(15, 1, MOVE_UP);
 
                 // Ensure a timewarp can happen
-                while (env.tick_now < 15 + PhysicsEnvironment.TRAILING_STATE_DELAY)
+                while (env.tick_now < 15 + env.econfig.TRAILING_STATE_DELAY)
                 {
                         env.tick();
                 }
@@ -316,8 +318,8 @@ public class PhysicsEnvironmentTest extends PhysicsTest
 
                 assertVelocity(1000, 1001 + 28 * 2, actor);
                 assertPosition(
-                        (15 + PhysicsEnvironment.TRAILING_STATE_DELAY) * 1000,
-                        10 * 1001 + 5 * (1001+28) + PhysicsEnvironment.TRAILING_STATE_DELAY * (1001+28*2),
+                        (15 + env.econfig.TRAILING_STATE_DELAY) * 1000,
+                        10 * 1001 + 5 * (1001+28) + env.econfig.TRAILING_STATE_DELAY * (1001+28*2),
                         actor);
 
         }
@@ -361,6 +363,21 @@ public class PhysicsEnvironmentTest extends PhysicsTest
         @Test
         public void testInvalidOperationOrder()
         {
+                List<Object> yamlDocuments;
+                try
+                {
+                        yamlDocuments = GameConfig.loadYaml(
+                        "- ship-spawn-x: 100\n" +
+                        "  ship-spawn-y: 100\n" +
+                        "  ship-spawn-radius: 0\n");
+                }
+                catch (Exception ex)
+                {
+                        throw new Error(ex);
+                }
+                
+                env.loadConfig(env.getTick() - env.econfig.HIGHEST_DELAY + 1, "testInvalidOperationOrder()", yamlDocuments);
+                
                 env.actorWarp(1, 1, false, 1000, 1000, 100, 100, 0);
                 env.actorNew(5, 1, 1234, "Warbird");
                 
@@ -372,7 +389,9 @@ public class PhysicsEnvironmentTest extends PhysicsTest
                 assertEquals(0, env.getTimewarpCount());
                 
                 ActorPublic actor = env.getActor(1);
-                assertPosition(0, 0, actor); // warp should be ignored
+                assertPosition(100 * PhysicsMap.TILE_PIXELS + PhysicsMap.TILE_PIXELS / 2, 
+                               100 * PhysicsMap.TILE_PIXELS + PhysicsMap.TILE_PIXELS / 2, 
+                               actor); // warp should be ignored
                 
         }
         
@@ -461,7 +480,7 @@ public class PhysicsEnvironmentTest extends PhysicsTest
                 
                 
                 // Ensure a timewarp can happen
-                while (env.tick_now < 2 + PhysicsEnvironment.TRAILING_STATE_DELAY)
+                while (env.tick_now < 2 + env.econfig.TRAILING_STATE_DELAY)
                 {
                         env.tick();
                 }
@@ -481,7 +500,7 @@ public class PhysicsEnvironmentTest extends PhysicsTest
                 
                 assertEquals(1000, pos.x);
                 assertEquals(2000 + offsetY + 28 // ship position
-                        + (fireSpeed + 28) * PhysicsEnvironment.TRAILING_STATE_DELAY, // the distance the projectile has traveled
+                        + (fireSpeed + 28) * env.econfig.TRAILING_STATE_DELAY, // the distance the projectile has traveled
                         pos.y
                 );
                 

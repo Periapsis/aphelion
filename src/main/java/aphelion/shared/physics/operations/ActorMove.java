@@ -37,6 +37,7 @@
  */
 package aphelion.shared.physics.operations;
 
+import aphelion.shared.physics.EnvironmentConfiguration;
 import aphelion.shared.physics.operations.pub.ActorMovePublic;
 import aphelion.shared.physics.entities.Actor;
 import aphelion.shared.physics.State;
@@ -52,9 +53,9 @@ public class ActorMove extends Operation implements ActorMovePublic
 {
         public PhysicsMovement move;
 
-        public ActorMove()
+        public ActorMove(EnvironmentConfiguration econfig)
         {
-                super(true, PRIORITY.ACTOR_MOVE);
+                super(econfig, true, PRIORITY.ACTOR_MOVE);
         }
         
         @Override

@@ -106,7 +106,7 @@ public class Projectile extends MapEntity implements WrappedValueAbstract.Change
                 currentRenderDelay = SwissArmyKnife.clip(
                         renderDelay.get(),
                         0, 
-                        physicsEnv.TRAILING_STATES * PhysicsEnvironment.TRAILING_STATE_DELAY - 1);
+                        physicsEnv.econfig.HIGHEST_DELAY);
                         
                 this.renderingAt_tick = physicsEnv.getTick() - currentRenderDelay;
         }

@@ -35,7 +35,7 @@ public class TimewarpTest extends PhysicsTest
                                 + "- selector: {ship: javelin}\n"
                                 + "  test-actor-creation-test: 391385\n"
                         );
-                        env.loadConfig(env.getTick() - PhysicsEnvironment.TOTAL_HISTORY, "test", yamlDocuments);
+                        env.loadConfig(env.getTick() - env.econfig.HIGHEST_DELAY, "test", yamlDocuments);
                 }
                 catch (Exception ex)
                 {
@@ -68,7 +68,7 @@ public class TimewarpTest extends PhysicsTest
                 
                 env.actorModification(3, ACTOR_FIRST, "javelin");
                 
-                while(env.getTick() < PhysicsEnvironment.TRAILING_STATE_DELAY)
+                while(env.getTick() < env.econfig.TRAILING_STATE_DELAY)
                 {
                         env.tick();
                 }
@@ -84,7 +84,7 @@ public class TimewarpTest extends PhysicsTest
                 assertEquals(1, env.getActorCount(0));
                 this.assertPosition(1000, 90, env.getActor(ACTOR_FIRST, 0, false));
                 this.assertPosition(1000, 90, env.getActor(ACTOR_FIRST, 1, false));
-                env.timewarp(env.TRAILING_STATES-1);
+                env.timewarp(env.econfig.TRAILING_STATES-1);
                 assertEquals(1, env.getActorCount(0));
                 this.assertPosition(1000, 90, env.getActor(ACTOR_FIRST, 0, false));
                 this.assertPosition(1000, 90, env.getActor(ACTOR_FIRST, 1, false));
@@ -96,13 +96,13 @@ public class TimewarpTest extends PhysicsTest
         public void testActorDestruction()
         {
                 env.actorNew(1, ACTOR_FIRST, 1234, "warbird");
-                env.actorRemove(PhysicsEnvironment.TRAILING_STATE_DELAY + 3, ACTOR_FIRST);
+                env.actorRemove(env.econfig.TRAILING_STATE_DELAY + 3, ACTOR_FIRST);
                 
                 env.tick();
                 assertActorExists(env.getActor(ACTOR_FIRST, 0, false));
                 assertActorNotExists(env.getActor(ACTOR_FIRST, 1, false));
                 
-                while(env.getTick() < PhysicsEnvironment.TRAILING_STATE_DELAY)
+                while(env.getTick() < env.econfig.TRAILING_STATE_DELAY)
                 {
                         env.tick();
                 }
@@ -121,14 +121,14 @@ public class TimewarpTest extends PhysicsTest
                 assertActorNotExists(env.getActor(ACTOR_FIRST, 0, false));
                 assertNotNull(env.getActor(ACTOR_FIRST, 1, false));
                 
-                env.timewarp(env.TRAILING_STATES-1);
+                env.timewarp(env.econfig.TRAILING_STATES-1);
                 assertActorNotExists(env.getActor(ACTOR_FIRST, 0, false));
                 assertNotNull(env.getActor(ACTOR_FIRST, 1, false));
                 
                 // Soft delete
                 assertEquals(1, env.getActorCount(0));
                 
-                while(env.getTick(env.TRAILING_STATES-1) < 1 + PhysicsEnvironment.TOTAL_HISTORY)
+                while(env.getTick(env.econfig.TRAILING_STATES-1) < 1 + env.econfig.HIGHEST_DELAY)
                 {
                         env.tick();
                 }
@@ -178,7 +178,7 @@ public class TimewarpTest extends PhysicsTest
                 assertEquals(28, env.getGlobalConfigInteger(1, "ship-thrust").get());
                 assertVelocity(0, -3624, env.getActor(ACTOR_FIRST, 0, false));
                 
-                env.timewarp(env.TRAILING_STATES-1);
+                env.timewarp(env.econfig.TRAILING_STATES-1);
                 assertEquals(1000, env.getGlobalConfigInteger(0, "ship-thrust").get());
                 assertEquals(28, env.getGlobalConfigInteger(1, "ship-thrust").get());
                 assertVelocity(0, -3624, env.getActor(ACTOR_FIRST, 0, false));
@@ -209,7 +209,7 @@ public class TimewarpTest extends PhysicsTest
                                 + "- selector: {weapon: test-reload}\n"
                                 + "  weapon-switch-delay: 4\n"
                         );
-                        env.loadConfig(env.getTick() - PhysicsEnvironment.TOTAL_HISTORY, "test", yamlDocuments);
+                        env.loadConfig(env.getTick() - env.econfig.HIGHEST_DELAY, "test", yamlDocuments);
                 }
                 catch (Exception ex)
                 {
@@ -237,14 +237,14 @@ public class TimewarpTest extends PhysicsTest
                 assertContains(env.projectileIterator(0), firstProjectile);
                 
                 
-                env.timewarp(env.TRAILING_STATES-1);
+                env.timewarp(env.econfig.TRAILING_STATES-1);
                 assertEquals(1, env.calculateProjectileCount(0));
                 assertEquals(0, env.calculateProjectileCount(1));
                 testProjectileCreation_assertFirstProj(0, 1000, -14246);
                 assertContains(env.projectileIterator(0), firstProjectile);
                 
                 
-                while(env.getTick() < PhysicsEnvironment.TRAILING_STATE_DELAY)
+                while(env.getTick() < env.econfig.TRAILING_STATE_DELAY)
                 {
                         env.tick();
                 }
@@ -265,7 +265,7 @@ public class TimewarpTest extends PhysicsTest
                 testProjectileCreation_assertFirstProj(1, 1000, -14246);
                 assertContains(env.projectileIterator(0), firstProjectile);
                 
-                env.timewarp(env.TRAILING_STATES-1);
+                env.timewarp(env.econfig.TRAILING_STATES-1);
                 assertEquals(1, env.calculateProjectileCount(0));
                 assertEquals(1, env.calculateProjectileCount(1));
                 testProjectileCreation_assertFirstProj(0, 1000, -96166);
@@ -293,7 +293,7 @@ public class TimewarpTest extends PhysicsTest
                 
                 // should detect the inconsistency and resolve it
                 // (new Projectile() should execute properly)
-                while(env.getTick(1) < t+PhysicsEnvironment.TRAILING_STATE_DELAY)
+                while(env.getTick(1) < t+env.econfig.TRAILING_STATE_DELAY)
                 {
                         env.tick();
                 }
@@ -308,7 +308,7 @@ public class TimewarpTest extends PhysicsTest
                 assertContains(env.projectileIterator(0), firstProjectile);
                 
                 // expire the projectiles
-                while(env.getTick(env.TRAILING_STATES-1) < t + 3 + 100 + PhysicsEnvironment.TOTAL_HISTORY)
+                while(env.getTick(env.econfig.TRAILING_STATES-1) < t + 3 + 100 + env.econfig.HIGHEST_DELAY)
                 {
                         env.tick();
                 }
@@ -334,7 +334,7 @@ public class TimewarpTest extends PhysicsTest
                                 + "- selector: {weapon: test-reload}\n"
                                 + "  weapon-switch-delay: 4\n"
                         );
-                        env.loadConfig(env.getTick() - PhysicsEnvironment.TOTAL_HISTORY, "test", yamlDocuments);
+                        env.loadConfig(env.getTick() - env.econfig.HIGHEST_DELAY, "test", yamlDocuments);
                 }
                 catch (Exception ex)
                 {
@@ -354,12 +354,12 @@ public class TimewarpTest extends PhysicsTest
                 env.timewarp(1);
                 assertEquals(1 * 50, env.calculateProjectileCount(0));
                 
-                env.timewarp(env.TRAILING_STATES-1);
+                env.timewarp(env.econfig.TRAILING_STATES-1);
                 assertEquals(1 * 50, env.calculateProjectileCount(0));
                 
                 
                 
-                while(env.getTick() < PhysicsEnvironment.TRAILING_STATE_DELAY)
+                while(env.getTick() < env.econfig.TRAILING_STATE_DELAY)
                 {
                         env.tick();
                 }
@@ -374,7 +374,7 @@ public class TimewarpTest extends PhysicsTest
                 assertEquals(1 * 50, env.calculateProjectileCount(0));
                 assertEquals(1 * 50, env.calculateProjectileCount(1));
                 
-                env.timewarp(env.TRAILING_STATES-1);
+                env.timewarp(env.econfig.TRAILING_STATES-1);
                 assertEquals(1 * 50, env.calculateProjectileCount(0));
                 assertEquals(1 * 50, env.calculateProjectileCount(1));
                 
@@ -400,7 +400,7 @@ public class TimewarpTest extends PhysicsTest
                 
                 // should detect the inconsistency and resolve it
                 // (new Projectile() should execute properly)
-                while(env.getTick(1) < t+PhysicsEnvironment.TRAILING_STATE_DELAY)
+                while(env.getTick(1) < t+env.econfig.TRAILING_STATE_DELAY)
                 {
                         env.tick();
                 }
@@ -414,7 +414,7 @@ public class TimewarpTest extends PhysicsTest
                 assertEquals(3 * 50, env.calculateProjectileCount(0));
                 
                 // expire the projectiles
-                while(env.getTick(env.TRAILING_STATES-1) < t + 3 + 100 + PhysicsEnvironment.TOTAL_HISTORY)
+                while(env.getTick(env.econfig.TRAILING_STATES-1) < t + 3 + 100 + env.econfig.HIGHEST_DELAY)
                 {
                         env.tick();
                 }
@@ -471,7 +471,7 @@ public class TimewarpTest extends PhysicsTest
                                 + "  projectile-damage: 2000\n"
                                 + "  ship-energy: 1500\n"
                         );
-                        env.loadConfig(env.getTick() - PhysicsEnvironment.TOTAL_HISTORY, "test", yamlDocuments);
+                        env.loadConfig(env.getTick() - env.econfig.HIGHEST_DELAY, "test", yamlDocuments);
                 }
                 catch (Exception ex)
                 {
@@ -494,7 +494,7 @@ public class TimewarpTest extends PhysicsTest
                 env.timewarp(1);
                 testExplosionEventShort_assertEvent(0);
                 
-                while (env.getTick() < PhysicsEnvironment.TRAILING_STATE_DELAY + 4)
+                while (env.getTick() < env.econfig.TRAILING_STATE_DELAY + 4)
                 {
                         env.tick();
                 }
@@ -504,7 +504,7 @@ public class TimewarpTest extends PhysicsTest
                 env.timewarp(1);
                 testExplosionEventShort_assertEvent(0);
                 testExplosionEventShort_assertEvent(1);
-                env.timewarp(env.TRAILING_STATES-1);
+                env.timewarp(env.econfig.TRAILING_STATES-1);
                 testExplosionEventShort_assertEvent(0);
                 testExplosionEventShort_assertEvent(1);
                 
@@ -561,7 +561,7 @@ public class TimewarpTest extends PhysicsTest
                                 + "  projectile-damage: 2000\n"
                                 + "  ship-energy: 1500\n"
                         );
-                        env.loadConfig(env.getTick() - PhysicsEnvironment.TOTAL_HISTORY, "test", yamlDocuments);
+                        env.loadConfig(env.getTick() - env.econfig.HIGHEST_DELAY, "test", yamlDocuments);
                 }
                 catch (Exception ex)
                 {
@@ -577,7 +577,7 @@ public class TimewarpTest extends PhysicsTest
                 env.actorWeapon(2, ACTOR_FIRST, WEAPON_SLOT.GUN, false, 0, 0, 0 , 0, 0);
                 
                 // modify this test case if TRAILING_STATE_DELAY changes
-                assert PhysicsEnvironment.TRAILING_STATE_DELAY == 16; 
+                assert env.econfig.TRAILING_STATE_DELAY == 16; 
                 
                 while (env.getTick() < 22)
                 {
@@ -588,7 +588,7 @@ public class TimewarpTest extends PhysicsTest
                 env.timewarp(1);
                 testExplosionEventLong_assertEvent(0);
                 
-                while (env.getTick() < PhysicsEnvironment.TRAILING_STATE_DELAY + 22)
+                while (env.getTick() < env.econfig.TRAILING_STATE_DELAY + 22)
                 {
                         env.tick();
                 }
@@ -598,7 +598,7 @@ public class TimewarpTest extends PhysicsTest
                 env.timewarp(1);
                 testExplosionEventLong_assertEvent(0);
                 testExplosionEventLong_assertEvent(1);
-                env.timewarp(env.TRAILING_STATES-1);
+                env.timewarp(env.econfig.TRAILING_STATES-1);
                 testExplosionEventLong_assertEvent(0);
                 testExplosionEventLong_assertEvent(1);
         }
