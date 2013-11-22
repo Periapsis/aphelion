@@ -421,6 +421,26 @@ public class ClientState
                 
                 lastActorSyncBroadcast_nanos = System.nanoTime();
         }
+        
+        public void sendCommandResponse(boolean error, String message)
+        {
+                sendCommandResponse(error, 0, message);
+        }
+        
+        public void sendCommandResponse(boolean error, int responseCode, String message)
+        {
+                GameS2C.S2C.Builder s2c = GameS2C.S2C.newBuilder();
+                GameS2C.LocalChatMessage.Builder chat = s2c.addLocalChatMessageBuilder();
+                
+                chat.setMessage((error ? "\\#de3108#" : "\\#73ff63#") + message);
+                
+                if (responseCode != 0)
+                {
+                        chat.setCommandResponseCode(responseCode);
+                }
+                
+                gameConn.send(s2c);
+        }
 
         public void parseCommand(String name, int responseCode, List<String> argumentsList)
         {
@@ -432,16 +452,19 @@ public class ClientState
 
                                 if (argumentsList.size() < 1)
                                 {
+                                        sendCommandResponse(true, "You must specify a ship name.");
                                         break;
                                 }
 
                                 if (actor == null)
                                 {
+                                        sendCommandResponse(true, "You are not in a ship.");
                                         break;
                                 }
 
                                 if (!actor.canChangeShip())
                                 {
+                                        sendCommandResponse(true, "You need full energy to change your ship.");
                                         break;
                                 }
 
@@ -451,7 +474,7 @@ public class ClientState
 
                                 if (!ships.hasValue(ship))
                                 {
-                                        // todo generate list of valid ships from config
+                                        sendCommandResponse(true, "The ship '"+ship+"' is not a valid ship.");
                                         break;
                                 }
 

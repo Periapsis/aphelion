@@ -123,6 +123,10 @@ message LocalChatMessage {
         // A color encoded message, to start a color use \#ff0000#.
         // For example "Hello \#ff0000#world!"
         required string message = 2;
+
+        // If this message is the result of a command the user sent,
+        // and that command had a response code set, here it is.
+        optional int32 command_response_code = 3;
 }
 
 

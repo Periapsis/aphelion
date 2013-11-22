@@ -84,7 +84,8 @@ message Command {
 	repeated string arguments = 2;
         
         // The server does not interpret this value
-        // It is sent back unaltered in any response to this command 
+        // It is sent back unaltered in any response to this command
+        // Any value is allowed except 0
         optional int32 response_code = 3;
 
         // 0 = Unspecified
