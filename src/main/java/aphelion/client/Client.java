@@ -145,6 +145,7 @@ public class Client
                 Display.setDisplayMode(new DisplayMode(1024, 768));
                 Display.create();
 
+                log.log(Level.INFO, "OpenGL version: {0}", GL11.glGetString(GL11.GL_VERSION));
 
                 Keyboard.create();
 
