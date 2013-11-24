@@ -65,6 +65,7 @@ import aphelion.shared.swissarmyknife.SwissArmyKnife;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
 
 /**
  *
@@ -402,6 +403,8 @@ public class ServerGame implements LoopEvent, TickEvent, GameProtoListener
                                 continue;
                         }
                         
+                        message = annoyance.matcher(message).replaceAll("");
+                        
                         GameS2C.S2C.Builder s2c = GameS2C.S2C.newBuilder();
                         GameS2C.LocalChatMessage.Builder chat = s2c.addLocalChatMessageBuilder();
                         chat.setSender(state.nickname);
@@ -409,6 +412,8 @@ public class ServerGame implements LoopEvent, TickEvent, GameProtoListener
                         broadcast(s2c); // forward to all clients
                 }
         }
+        
+        private static final Pattern annoyance = Pattern.compile("n[e|3]wb|n[o0]{2,}b", Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
 
         @Override
         public void gameS2CMessage(GameProtocolConnection game, GameS2C.S2C s2c, long receivedAt)
