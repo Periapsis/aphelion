@@ -43,10 +43,7 @@ import aphelion.shared.resource.ResourceDB;
 import aphelion.client.graphics.screen.Camera;
 import aphelion.client.graphics.AnimatedColour;
 import aphelion.shared.event.TickEvent;
-import aphelion.shared.gameconfig.GCColour;
-import aphelion.shared.gameconfig.GCImage;
-import aphelion.shared.gameconfig.GCInteger;
-import aphelion.shared.gameconfig.WrappedValueAbstract;
+import aphelion.shared.gameconfig.*;
 import aphelion.shared.net.game.NetworkedActor;
 import aphelion.shared.physics.entities.ActorPublic;
 import aphelion.shared.physics.PhysicsEnvironment;
@@ -55,7 +52,6 @@ import aphelion.shared.physics.valueobjects.PhysicsMoveable;
 import aphelion.shared.physics.valueobjects.PhysicsMovement;
 import aphelion.shared.physics.valueobjects.PhysicsPoint;
 import aphelion.shared.swissarmyknife.Point;
-import aphelion.shared.swissarmyknife.SwissArmyKnife;
 
 import de.lessvoid.nifty.tools.Color;
 import org.newdawn.slick.Image;
@@ -99,6 +95,7 @@ public class ActorShip extends MapEntity implements TickEvent, WrappedValueAbstr
         public GCInteger shipRadius;
         public GCImage exhaust_image;
         public GCInteger exhaust_delay;
+        public GCBoolean exhaust_remote;
         public GCImage emped_image;
         public GCInteger emped_delay;
         
@@ -229,8 +226,10 @@ public class ActorShip extends MapEntity implements TickEvent, WrappedValueAbstr
                 shipRadius = actor.getActorConfigInteger("ship-radius");
                 exhaust_image = actor.getActorConfigImage("ship-exhaust-image", db);
                 exhaust_delay = actor.getActorConfigInteger("ship-exhaust-delay");
+                exhaust_remote = actor.getActorConfigBoolean("ship-exhaust-remote-players");
                 emped_image = actor.getActorConfigImage("ship-emped-image", db);
                 emped_delay = actor.getActorConfigInteger("ship-emped-delay");
+                
                 
                 lastExhaust_nanos = Graph.nanoTime();
                 lastEmp_nanos = Graph.nanoTime();
@@ -290,7 +289,7 @@ public class ActorShip extends MapEntity implements TickEvent, WrappedValueAbstr
                         return false;
                 }
                 
-                if (this.exhaust_image.isSet())
+                if (this.exhaust_image.isSet() && (this.isLocalPlayer() || exhaust_remote.get()))
                 {
                         if (now - this.lastExhaust_nanos > this.exhaust_delay.get() * 1_000_000L)
                         {
