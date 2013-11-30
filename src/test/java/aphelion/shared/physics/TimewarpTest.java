@@ -254,21 +254,21 @@ public class TimewarpTest extends PhysicsTest
                 
                 assertEquals(1, env.calculateProjectileCount(0));
                 assertEquals(1, env.calculateProjectileCount(1));
-                testProjectileCreation_assertFirstProj(0, 1000, -96166);
+                testProjectileCreation_assertFirstProj(0, 1000, -178086);
                 testProjectileCreation_assertFirstProj(1, 1000, -14246);
                 assertContains(env.projectileIterator(0), firstProjectile);
                 
                 env.timewarp(1);
                 assertEquals(1, env.calculateProjectileCount(0));
                 assertEquals(1, env.calculateProjectileCount(1));
-                testProjectileCreation_assertFirstProj(0, 1000, -96166);
+                testProjectileCreation_assertFirstProj(0, 1000, -178086);
                 testProjectileCreation_assertFirstProj(1, 1000, -14246);
                 assertContains(env.projectileIterator(0), firstProjectile);
                 
                 env.timewarp(env.econfig.TRAILING_STATES-1);
                 assertEquals(1, env.calculateProjectileCount(0));
                 assertEquals(1, env.calculateProjectileCount(1));
-                testProjectileCreation_assertFirstProj(0, 1000, -96166);
+                testProjectileCreation_assertFirstProj(0, 1000, -178086);
                 testProjectileCreation_assertFirstProj(1, 1000, -14246);
                 assertContains(env.projectileIterator(0), firstProjectile);
                 
@@ -577,9 +577,9 @@ public class TimewarpTest extends PhysicsTest
                 env.actorWeapon(2, ACTOR_FIRST, WEAPON_SLOT.GUN, false, 0, 0, 0 , 0, 0);
                 
                 // modify this test case if TRAILING_STATE_DELAY changes
-                assert env.econfig.TRAILING_STATE_DELAY == 16; 
+                assert env.econfig.TRAILING_STATE_DELAY == 32; 
                 
-                while (env.getTick() < 22)
+                while (env.getTick() < 38)
                 {
                         env.tick();
                 }
@@ -588,7 +588,7 @@ public class TimewarpTest extends PhysicsTest
                 env.timewarp(1);
                 testExplosionEventLong_assertEvent(0);
                 
-                while (env.getTick() < env.econfig.TRAILING_STATE_DELAY + 22)
+                while (env.getTick() < env.econfig.TRAILING_STATE_DELAY + 38)
                 {
                         env.tick();
                 }

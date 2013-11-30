@@ -85,18 +85,18 @@ public final class EnvironmentConfiguration
         {
                 this.server = server;
                 
-                TRAILING_STATE_DELAY = 16;
+                TRAILING_STATE_DELAY = 32;
                 TIMEWARP_EVERY_TICKS = 10;
                 
                 if (server)
                 {
-                        FIRST_STATE_DELAY = 8 * TRAILING_STATE_DELAY;
+                        FIRST_STATE_DELAY = 4 * TRAILING_STATE_DELAY;
                         TRAILING_STATES = 1;
                 }
                 else
                 {
                         FIRST_STATE_DELAY = 0;
-                        TRAILING_STATES = 16;
+                        TRAILING_STATES = 8;
                         
                 }
                 

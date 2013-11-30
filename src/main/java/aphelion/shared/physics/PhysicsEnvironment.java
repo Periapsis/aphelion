@@ -51,7 +51,6 @@ import aphelion.shared.physics.valueobjects.PhysicsWarp;
 import aphelion.shared.resource.ResourceDB;
 import aphelion.shared.swissarmyknife.LinkedListEntry;
 import aphelion.shared.swissarmyknife.LinkedListHead;
-import java.io.OutputStreamWriter;
 import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Level;

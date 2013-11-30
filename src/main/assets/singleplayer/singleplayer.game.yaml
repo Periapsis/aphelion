@@ -154,6 +154,13 @@
         tiles: [6, 6]
         frame-duration: 50
 
+  render-delay: 5
+  render-delay-latency-factor: 1000
+  render-delay-projectiles: true
+  render-delay-maximize-local-time: false
+  render-delay-update-ship-delay-every-ticks: 50
+  render-delay-update-projectile-delay-every-ticks: 2
+
 
 # Weapon images
 - selector: {weapon: *GUNS}

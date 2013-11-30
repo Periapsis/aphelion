@@ -41,6 +41,7 @@ package aphelion.client;
 
 import aphelion.client.graphics.nifty.chat.AphelionChatControl;
 import aphelion.client.graphics.Graph;
+import aphelion.client.graphics.RenderDelay;
 import aphelion.client.graphics.nifty.*;
 import aphelion.client.net.NetworkedGame;
 import aphelion.client.net.SingleGameConnection;
@@ -133,6 +134,8 @@ public class GameLoop
         // Graphics:
         private StarField stars;
         private MapEntities mapEntities;
+        private RenderDelay renderDelay;
+        
         private static final AttachmentConsumer<EventPublic, EventTracker> eventTrackers 
                 = new AttachmentConsumer<>(Event.attachmentManager);
         
@@ -151,8 +154,6 @@ public class GameLoop
         private long frames;
         private long lastFrameReset;
         private long lastFps;
-        
-        final RENDER_DELAY_METHOD renderDelayMethod = RENDER_DELAY_METHOD.MINIMIZE_DELAY_CHANGES;
 
         public GameLoop(ResourceDB resourceDB, TickedEventLoop loop, SingleGameConnection connection, NetworkedGame networkedGame)
         {
@@ -249,6 +250,9 @@ public class GameLoop
                                                 yamlResult.yamlDocuments);
                                 }
                                 
+                                renderDelay = new RenderDelay(physicsEnv, mapEntities);
+                                connection.addListener(renderDelay);
+                                
                                 boolean first = true;
                                 
                                 /*{
@@ -312,7 +316,7 @@ public class GameLoop
                 
                 mapEntities = new MapEntities(resourceDB);
                 networkedGame.addActorListener(mapEntities);
-                this.connection.addListener(mapEntities);
+                
                 loop.addTickEvent(mapEntities);
                 loop.addLoopEvent(mapEntities);
                 
@@ -452,6 +456,10 @@ public class GameLoop
                         if (networkedGame.isReady() && localActor == null)
                         {
                                 localActor = physicsEnv.getActor(networkedGame.getMyPid());
+                                if (renderDelay != null)
+                                {
+                                        renderDelay.init(localActor);
+                                }
                         }
                         
                         if (myKeyboard == null && localActor != null)
@@ -690,12 +698,15 @@ public class GameLoop
                         localActorPos.set(actorPos.x, actorPos.y);
                 }
                 
-                if (renderDelayMethod == RENDER_DELAY_METHOD.DISABLED)
+                if (renderDelay == null)
                 {
-                        actorShip.renderDelay.set(0);
+                        actorShip.renderingAt_tick = physicsEnv.getTick();
                 }
-
-                actorShip.calculateRenderAtTick(physicsEnv);
+                else
+                {
+                        renderDelay.calculateRenderAtTick(actorShip);
+                }
+                
                 actorShip.exists = true;
 
                 if (physicsActor.isRemoved(actorShip.renderingAt_tick))
@@ -743,101 +754,14 @@ public class GameLoop
                         projectile.setShadowPositionFromPhysics(projectilePos.x, projectilePos.y);
                 }
                 
-                if (renderDelayMethod == RENDER_DELAY_METHOD.DISABLED 
-                    || renderDelayMethod == RENDER_DELAY_METHOD.PROJECTILE_DISABLED)
+                if (renderDelay == null)
                 {
-                        projectile.renderDelay.set(0);
+                        projectile.renderingAt_tick = physicsEnv.getTick();
                 }
                 else
                 {
-                        // the closest ship excluding the local one
-                        // all actors should have been updated at this point
-                        ActorShip closest = mapEntities.findNearestActor(projectile.pos, false);
-                        if (closest == null || localShip == null)
-                        {
-                                projectile.renderDelay.set(0);
-                        }
-                        else
-                        {
-                                boolean switchedShip = false;
-
-                                if (projectile.renderDelayBasedOn == null 
-                                    || projectile.renderDelayBasedOn.get() != closest)
-                                {
-                                        switchedShip = true;
-                                        projectile.renderDelayBasedOn = new WeakReference<>(closest);
-                                }
-
-                                /* p = local player
-                                 * r = remote player
-                                 * e = entity (projectile)
-                                 * r' = the shadow of the player r (the position that is 
-                                 *      dead reckoned up the current time)
-                                 * 
-                                 * δ(x, y) is the distance between x en y
-                                 * d(x, y) is the render delay of y on the screen of x
-                                 * d(p, e) = 0       if δ(p , e') = 0
-                                 * d(p, e) = d(p,r)  if δ(r', e') = 0
-                                 * 
-                                 * d(p, e) = d(p, r) * max(0, 1 - δ(r', e') / δ(p, r) )
-                                 * sqrt(a) / sqrt(b) = sqrt(a / b)
-                                 */
-
-                                Point diff = new Point();
-                                diff.set(closest.shadowPosition);
-                                diff.sub(projectile.shadowPosition);
-                                float distSq_rShadow_e = diff.distanceSquared();
-
-                                diff.set(localShip.pos);
-                                diff.sub(closest.pos);
-                                float distSq_p_r = diff.distanceSquared();
-
-                                double renderDelay = 
-                                        closest.renderDelay.get() * 
-                                        Math.max(0, 1 - Math.sqrt(distSq_rShadow_e / distSq_p_r));
-
-                                if (Double.isNaN(renderDelay))
-                                {
-                                        renderDelay = 0;
-                                }
-
-                                renderDelay = Math.round(renderDelay);
-
-                                if (renderDelayMethod == RENDER_DELAY_METHOD.MAXIMIZE_LOCAL_TIME)
-                                {
-                                        projectile.renderDelay.set((int) renderDelay);
-                                }
-                                else if (renderDelayMethod == RENDER_DELAY_METHOD.MINIMIZE_DELAY_CHANGES)
-                                {
-                                        Point prevPos = new Point(projectile.shadowPosition_prev);
-                                        prevPos.sub(localShip.pos);
-                                        
-                                        Point nextPos = new Point(projectile.shadowPosition);
-                                        nextPos.sub(localShip.pos);
-                                        
-                                        boolean movingAway = nextPos.distanceSquared() > prevPos.distanceSquared();
-                                        
-                                        if (movingAway)
-                                        {
-                                                // if the distance to the local ship is increasing:
-                                                // only increase the render delay, do not decrease it.
-                                                // unless the calculation has switched to a different ship
-                                                if (switchedShip || renderDelay > projectile.renderDelay.getDesired())
-                                                {
-                                                        projectile.renderDelay.set((int) renderDelay);
-                                                }
-                                        }
-                                        else
-                                        {
-                                                projectile.renderDelay.set((int) renderDelay);
-                                        }
-                                }
-                        }
+                        renderDelay.calculateRenderAtTick(projectile);
                 }
-
-                // get the actual current smoothed render delay
-                projectile.calculateRenderAtTick(physicsEnv);
-
                 projectile.exists = true;
 
                 if (physicsProjectile.isRemoved(projectile.renderingAt_tick))

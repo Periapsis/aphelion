@@ -80,8 +80,10 @@ public class ActorShip extends MapEntity implements TickEvent, WrappedValueAbstr
         /** The position without delay (with dead reckoning) */
         public final Point shadowPosition = new Point(0, 0);
 
-        public final RenderDelay renderDelay = new RenderDelay(50); // todo move the "50" to settings
-        public long currentRenderDelay;
+        // RenderDelay
+        public final RenderDelayValue renderDelay_value = new RenderDelayValue(0);
+        public long renderDelay_current;
+        public long renderDelay_mostRecentMove;
         public long renderingAt_tick;
         
 
@@ -136,27 +138,6 @@ public class ActorShip extends MapEntity implements TickEvent, WrappedValueAbstr
                 lastExhaust_nanos = Graph.nanoTime();
                 lastEmp_nanos = Graph.nanoTime();
                 tryInitPhysics();
-        }
-        
-        public void calculateRenderAtTick(PhysicsEnvironment physicsEnv)
-        {
-                long createdAgo = physicsEnv.getTick() - actor.getCreatedAt();
-                
-                currentRenderDelay = SwissArmyKnife.clip(
-                        this.renderDelay.get(),
-                        0, 
-                        physicsEnv.econfig.HIGHEST_DELAY);
-                
-                if (currentRenderDelay > createdAgo)
-                {
-                        currentRenderDelay = (int) createdAgo;
-                        if (currentRenderDelay < 0)
-                        {
-                                currentRenderDelay = 0;
-                        }
-                }
-                        
-                this.renderingAt_tick = physicsEnv.getTick() - currentRenderDelay;
         }
         
         public void setRotationFromPhysics(int physRotation)
@@ -383,7 +364,7 @@ public class ActorShip extends MapEntity implements TickEvent, WrappedValueAbstr
                         if (netActor.name != null)
                         {
                                 camera.renderPlayerText(
-                                        netActor.name + (currentRenderDelay == 0 ? "" : " [" + currentRenderDelay + "]"),
+                                        netActor.name + (renderDelay_current == 0 ? "" : " [" + renderDelay_current + "]"),
                                         x + image.getWidth(), 
                                         y + image.getHeight() / 2f,
                                         playerColor); 
@@ -411,7 +392,7 @@ public class ActorShip extends MapEntity implements TickEvent, WrappedValueAbstr
         public void tick(long tick)
         {
                 tryInitPhysics();
-        	renderDelay.tick(tick);
+        	renderDelay_value.tick(tick);
         }
 
         public boolean isLocalPlayer()

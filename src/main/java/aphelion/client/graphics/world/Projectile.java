@@ -51,9 +51,9 @@ import aphelion.shared.physics.valueobjects.PhysicsPoint;
 import aphelion.shared.resource.ResourceDB;
 import aphelion.shared.swissarmyknife.Point;
 import aphelion.shared.swissarmyknife.SwissArmyKnife;
+import de.lessvoid.nifty.tools.Color;
 import java.lang.ref.WeakReference;
 import org.newdawn.slick.Animation;
-import org.newdawn.slick.Color;
 import org.newdawn.slick.Image;
 import org.newdawn.slick.SpriteSheetCounted;
 
@@ -67,10 +67,11 @@ public class Projectile extends MapEntity implements WrappedValueAbstract.Change
         public final Point shadowPosition = new Point(0, 0);
         public final Point shadowPosition_prev = new Point(0, 0);
         
-        public final RenderDelay renderDelay = new RenderDelay(2); // todo move the "2" to settings
-        public long currentRenderDelay;
+        // RenderDelay:
+        public final RenderDelayValue renderDelay_value = new RenderDelayValue(0);
+        public long renderDelay_current;
+        public WeakReference<ActorShip> renderDelay_basedOn;
         public long renderingAt_tick;
-        public WeakReference<ActorShip> renderDelayBasedOn;
         
         private GCImage imageNoBounce;
         private GCImage imageBounces;
@@ -103,12 +104,12 @@ public class Projectile extends MapEntity implements WrappedValueAbstract.Change
         
         public void calculateRenderAtTick(PhysicsEnvironment physicsEnv)
         {
-                currentRenderDelay = SwissArmyKnife.clip(
-                        renderDelay.get(),
+                renderDelay_current = SwissArmyKnife.clip(
+                        renderDelay_value.get(),
                         0, 
                         physicsEnv.econfig.HIGHEST_DELAY);
                         
-                this.renderingAt_tick = physicsEnv.getTick() - currentRenderDelay;
+                this.renderingAt_tick = physicsEnv.getTick() - renderDelay_current;
         }
         
         public void setShadowPositionFromPhysics(int x, int y)
@@ -121,7 +122,7 @@ public class Projectile extends MapEntity implements WrappedValueAbstract.Change
         @Override
         public void tick(long tick)
         {
-                renderDelay.tick(tick);
+                renderDelay_value.tick(tick);
         }
         
         private void updateAnimObjects()
@@ -277,8 +278,7 @@ public class Projectile extends MapEntity implements WrappedValueAbstract.Change
                                         anim.getHeight() * camera.zoom);
                         }
                         
-                        //Graph.g.setColor(Color.red);
-                        //Graph.g.drawString(this.currentRenderDelay + "", screenPos.x + 5, screenPos.y + 5);
+                        camera.renderPlayerText(this.renderDelay_current + "", screenPos.x + 5, screenPos.y + 5, Color.WHITE);
                 }
                 
                 return iteration < 1;

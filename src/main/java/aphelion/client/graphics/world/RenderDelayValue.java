@@ -44,7 +44,7 @@ import aphelion.shared.event.TickEvent;
  *
  * @author Joris
  */
-public class RenderDelay implements TickEvent
+public class RenderDelayValue implements TickEvent
 {
         private int updateDelay;
         
@@ -52,10 +52,14 @@ public class RenderDelay implements TickEvent
         private int desired = 0;
         private int renderDelay = 0;
         private long lastUpdate = 0;
-        private long mostRecentUpdate;
 
         /** @param updateDelay move the render delay by 1 tick every this many ticks. */
-        public RenderDelay(int updateDelay)
+        public RenderDelayValue(int updateDelay)
+        {
+                this.updateDelay = updateDelay;
+        }
+
+        public void setUpdateDelay(int updateDelay)
         {
                 this.updateDelay = updateDelay;
         }
@@ -131,30 +135,5 @@ public class RenderDelay implements TickEvent
         public boolean hasBeenSet()
         {
                 return set > 0;
-        }
-        
-        /** Call this method whenever a new position update for an actor has been received.
-         * @param tick The current physics ticks.
-         * @param positionTick The physics tick value of the position (move, warp) message. 
-         */
-        public void setByPositionUpdate(long tick, long positionTick)
-        {
-                int RENDER_DELAY_BASE = 5; // something related to send move delay?
-                
-                if (set == 0 || positionTick > mostRecentUpdate)
-                {
-                        desired = RENDER_DELAY_BASE;
-                        desired += tick - positionTick;
-
-                        // render delay has not been set before
-                        if (set == 0)
-                        {
-                                renderDelay = desired;
-                        }
-                        
-                        mostRecentUpdate = positionTick;
-                }
-                
-                if (set == 0) set = 1;
         }
 }

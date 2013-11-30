@@ -99,7 +99,7 @@ public class ActorDiedTracker implements EventTracker
                         }
                         
                         // do not update the render delay after it has been set
-                        renderDelay = ship.currentRenderDelay;
+                        renderDelay = ship.renderDelay_current;
                         renderingAt_state = physicsEnv.getState(physicsEnv.getTick() - renderDelay);
                         
                         if (renderingAt_state < 0)
