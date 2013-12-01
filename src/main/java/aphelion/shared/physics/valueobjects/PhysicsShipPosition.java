@@ -49,6 +49,10 @@ public class PhysicsShipPosition
         public int y;
         public int x_vel;
         public int y_vel;
+        // smooth is not included in equals(), two positions are consistent with each other
+        // even if the smoothed position is different
+        public int smooth_x; 
+        public int smooth_y;
         public int rot;
         public int rot_snapped;
 
@@ -96,7 +100,7 @@ public class PhysicsShipPosition
         {
                 if (set)
                 {
-                        return String.format("(%d, %d, %d, %d, [%d])", x, y, x_vel, y_vel, rot);
+                        return String.format("(%d, %d, %d, %d, [%d], %d, %d)", x, y, x_vel, y_vel, rot, smooth_x, smooth_y);
                 }
                 else
                 {
@@ -106,6 +110,7 @@ public class PhysicsShipPosition
 
         // note: when generating equals, make sure that if set is false in both objects, true is returned
         // also get rid of getClass() which is slow...
+        // And do NOT include smooth position
         @Override
         public boolean equals(Object obj)
         {

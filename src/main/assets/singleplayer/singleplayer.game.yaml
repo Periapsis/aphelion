@@ -116,6 +116,7 @@
         tiles: [19, 1] 
         frame-duration: [10, 50]
   ship-exhaust-delay: 100 # a new puff every X ms
+  ship-exhaust-remote-players: false
   
   ship-emped-image:
         resource: classic.emped
@@ -154,9 +155,9 @@
         tiles: [6, 6]
         frame-duration: 50
 
-  render-delay: 5
-  render-delay-latency-factor: 1000
-  render-delay-projectiles: true
+  render-delay: 0
+  render-delay-latency-factor: 0
+  render-delay-projectiles: false
   render-delay-maximize-local-time: false
   render-delay-update-ship-delay-every-ticks: 50
   render-delay-update-projectile-delay-every-ticks: 2

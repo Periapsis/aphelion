@@ -721,7 +721,14 @@ public class GameLoop
 
                 if (physicsActor.getHistoricPosition(actorPos, actorShip.renderingAt_tick, true))
                 {
-                        actorShip.setPositionFromPhysics(actorPos.x, actorPos.y);
+                        if (actorShip.isLocalPlayer())
+                        {
+                                actorShip.setPositionFromPhysics(actorPos.x, actorPos.y);
+                        }
+                        else
+                        {
+                                actorShip.setPositionFromPhysics(actorPos.smooth_x, actorPos.smooth_y);
+                        }
                         actorShip.setRotationFromPhysics(actorPos.rot_snapped);
                 }
                 else

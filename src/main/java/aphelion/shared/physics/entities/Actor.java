@@ -58,6 +58,8 @@ import aphelion.shared.physics.valueobjects.PhysicsRotation;
 import aphelion.shared.physics.valueobjects.PhysicsShipPosition;
 import aphelion.shared.physics.valueobjects.PhysicsWarp;
 import aphelion.shared.physics.WEAPON_SLOT;
+import aphelion.shared.physics.valueobjects.*;
+import aphelion.shared.physics.valueobjects.PhysicsPointHistorySmooth.SMOOTHING_ALGORITHM;
 import aphelion.shared.swissarmyknife.LinkedListEntry;
 import aphelion.shared.swissarmyknife.LinkedListHead;
 import aphelion.shared.swissarmyknife.RollingHistory;
@@ -91,6 +93,7 @@ public class Actor extends MapEntity
         public final PhysicsPointHistory velHistory;
         public final PhysicsPointHistory rotHistory; // x = rotation, y = rotation snapped
         public final RollingHistory<PhysicsMoveable> moveHistory;
+        public final PhysicsPointHistorySmooth smoothHistory;
         
         public long nextSwitchedWeaponFire_tick; // >=
         public WeaponConfig lastWeaponFire;
@@ -319,6 +322,11 @@ public class Actor extends MapEntity
                 moveHistory = new RollingHistory<>(createdAt_tick, HISTORY_LENGTH);
                 velHistory = new PhysicsPointHistory(createdAt_tick, HISTORY_LENGTH);
                 rotHistory = new PhysicsPointHistory(createdAt_tick, HISTORY_LENGTH);
+                smoothHistory = new PhysicsPointHistorySmooth(posHistory, velHistory);
+                
+                // Do not smooth on the last state so that any inconsistencies will always be resolved
+                smoothHistory.setAlgorithm(state.isLast ? SMOOTHING_ALGORITHM.NONE : SMOOTHING_ALGORITHM.LINEAR);
+                
                 energy = new RollingHistorySerialInteger(createdAt_tick, HISTORY_LENGTH, ENERGY_SETTER.values().length);
                 energy.setMinimum(createdAt_tick, 0);
                 dead = new RollingHistorySerialInteger(createdAt_tick, HISTORY_LENGTH, 1);
@@ -881,6 +889,8 @@ public class Actor extends MapEntity
                 pos.y           = actor.posHistory.getY(tick);
                 pos.x_vel       = actor.velHistory.getX(tick);
                 pos.y_vel       = actor.velHistory.getY(tick);
+                pos.smooth_x    = actor.smoothHistory.getX(tick);
+                pos.smooth_y    = actor.smoothHistory.getY(tick);
                 pos.rot         = actor.rotHistory.getX(tick);
                 pos.rot_snapped = actor.rotHistory.getY(tick);
                 pos.set = true;

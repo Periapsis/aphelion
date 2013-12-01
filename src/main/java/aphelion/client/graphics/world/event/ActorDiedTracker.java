@@ -153,7 +153,7 @@ public class ActorDiedTracker implements EventTracker
                 if (image != null && actor.getHistoricPosition(actorPos, occuredAt_tick, false))
                 {
                         anim = new GCImageAnimation(resourceDB, image);
-                        anim.setPositionFromPhysics(actorPos.x, actorPos.y);
+                        anim.setPositionFromPhysics(actorPos.smooth_x, actorPos.smooth_y);
                         anim.setVelocityFromPhysics(actorPos.x_vel, actorPos.y_vel);
                         mapEntities.addAnimation(RENDER_LAYER.AFTER_LOCAL_SHIP, anim, null);
                 }

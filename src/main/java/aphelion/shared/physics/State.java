@@ -102,6 +102,18 @@ public class State
                 this.allowHints = allowHints;
                 this.isLast = isLast;
         }
+        
+        private void setActorSmoothPositionBaseline()
+        {
+                TIntObjectIterator<Actor> itActor = this.actors.iterator();
+                while (itActor.hasNext())
+                {
+                        itActor.advance();
+
+                        Actor actor = itActor.value();
+                        actor.smoothHistory.setBaseLine();
+                }
+        }
 
         private void tickActors()
         {
@@ -341,6 +353,7 @@ public class State
         {
                 this.tick_now = tick_now;
 
+                setActorSmoothPositionBaseline();
                 // 1. Dead reckoning
                 // 2. Actor cleanup
                 // 3. Respawning (executed before any operations so 

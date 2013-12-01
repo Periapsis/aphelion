@@ -251,7 +251,20 @@ public class PhysicsPointHistoryDetailed extends PhysicsPointHistory
         }
 
         @Override
-        protected void updated()
+        protected void updated(long tick, int index)
+        {
+                super.updated(tick, index);
+                removeOldData();
+        }
+        
+        @Override
+        protected void updatedAll()
+        {
+                super.updatedAll();
+                removeOldData();
+        }
+        
+        private void removeOldData()
         {
                 // remove old data
                 long removeBefore = getMostRecentTick() - HISTORY_LENGTH + 1;

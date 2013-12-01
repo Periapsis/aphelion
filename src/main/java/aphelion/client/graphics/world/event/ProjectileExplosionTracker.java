@@ -43,7 +43,6 @@ import aphelion.client.graphics.world.MapEntities;
 import aphelion.client.graphics.world.Projectile;
 import aphelion.shared.gameconfig.GCImage;
 import aphelion.shared.physics.PhysicsEnvironment;
-import aphelion.shared.physics.entities.ActorPublic;
 import aphelion.shared.physics.entities.ProjectilePublic;
 import aphelion.shared.physics.events.pub.ProjectileExplosionPublic;
 import aphelion.shared.physics.events.pub.ProjectileExplosionPublic.EXPLODE_REASON;
@@ -53,7 +52,6 @@ import static aphelion.shared.physics.events.pub.ProjectileExplosionPublic.EXPLO
 import static aphelion.shared.physics.events.pub.ProjectileExplosionPublic.EXPLODE_REASON.PROX_DELAY;
 import static aphelion.shared.physics.events.pub.ProjectileExplosionPublic.EXPLODE_REASON.PROX_DIST;
 import aphelion.shared.physics.valueobjects.PhysicsPoint;
-import aphelion.shared.physics.valueobjects.PhysicsShipPosition;
 import aphelion.shared.resource.ResourceDB;
 import java.util.ArrayList;
 

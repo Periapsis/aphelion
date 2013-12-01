@@ -50,6 +50,7 @@ public class PhysicsPointHistory
         private long history_tick = 0;
         private final int[] history_x;
         private final int[] history_y;
+        private UpdateListener listener;
         
         public PhysicsPointHistory(long initial_tick, int history_length)
         {
@@ -59,7 +60,30 @@ public class PhysicsPointHistory
                 history_y = new int[HISTORY_LENGTH];
         }
         
-        protected void updated() {}
+        protected void updated(long tick, int index)
+        {
+                if (listener != null)
+                {
+                        listener.updated(tick, index);
+                }
+        }
+        
+        protected void updatedAll() 
+        {
+                if (listener != null)
+                {
+                        listener.updatedAll();
+                }
+        }
+        
+        void setListener(UpdateListener listener)
+        {
+                if (this.listener != null)
+                {
+                        throw new IllegalStateException();
+                }
+                this.listener = listener;
+        }
         
         public int setHistory(long tick, PhysicsPoint point)
         {
@@ -96,7 +120,7 @@ public class PhysicsPointHistory
                 history_x[index] = x;
                 history_y[index] = y;
                 
-                updated();
+                updated(tick, index);
                 return index;
         }
         
@@ -117,47 +141,50 @@ public class PhysicsPointHistory
         
         public void get(PhysicsPoint ret, long tick)
         {
-                long ticks_ago = history_tick - tick;
-                if (ticks_ago < 0 || ticks_ago >= HISTORY_LENGTH)
-                {
-                        ret.unset();
-                        return;
-                }
-                
-                int index = history_index - (int) ticks_ago;
-                if (index < 0) { index += HISTORY_LENGTH; }
+                int index = getIndex(tick);
+                if (index < 0) { ret.unset(); return; }
 
+                getByIndex(ret, index);
+        }
+        
+        void getByIndex(PhysicsPoint ret, int index)
+        {
                 ret.set = true;
                 ret.x = history_x[index];
                 ret.y = history_y[index];
         }
         
-        public int getX(long tick)
+        int getIndex(long tick)
         {
                 long ticks_ago = history_tick - tick;
                 if (ticks_ago < 0 || ticks_ago >= HISTORY_LENGTH)
                 {
-                        return 0;
+                        return -1;
                 }
                 
                 int index = history_index - (int) ticks_ago;
                 if (index < 0) { index += HISTORY_LENGTH; }
                 
+                return index;
+        }
+        
+        public int getX(long tick)
+        {
+                int index = getIndex(tick);
+                if (index < 0) { return 0; }
                 return history_x[index];
         }
         
         public int getY(long tick)
         {
-                long ticks_ago = history_tick - tick;
-                if (ticks_ago < 0 || ticks_ago >= HISTORY_LENGTH)
-                {
-                        return 0;
-                }
-                
-                int index = history_index - (int) ticks_ago;
-                if (index < 0) { index += HISTORY_LENGTH; }
-                
+                int index = getIndex(tick);
+                if (index < 0) { return 0; }
                 return history_y[index];
+        }
+
+        protected int getHistoryIndex()
+        {
+                return history_index;
         }
         
         public long getMostRecentTick()
@@ -208,7 +235,7 @@ public class PhysicsPointHistory
                         --myIndex;
                 }
                 
-                updated();
+                updatedAll();
         }
         
 
@@ -228,5 +255,11 @@ public class PhysicsPointHistory
                 }
                 
                 return ret.toString();
+        }
+        
+        static interface UpdateListener
+        {
+                void updated(long tick, int index);
+                void updatedAll();
         }
 }
