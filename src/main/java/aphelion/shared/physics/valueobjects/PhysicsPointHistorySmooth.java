@@ -177,22 +177,22 @@ public class PhysicsPointHistorySmooth
                 smooth_x[index] = desired.x;
                 smooth_y[index] = desired.y;
                 
-                if (algorithm == SMOOTHING_ALGORITHM.NONE)
+                if (base.distanceSquared(desired) <= smoothLimitDistanceSq)
                 {
-                }
-                else if (algorithm == SMOOTHING_ALGORITHM.LINEAR && lookAheadTicks > 0)
-                {
-                        PhysicsPoint smoothed = new PhysicsPoint();
-                        smoothed.set(velocity);
-                        smoothed.multiply(lookAheadTicks);
-                        smoothed.add(desired);
-                        
-                        smoothed.sub(base);
-                        smoothed.divide(lookAheadTicks);
-                        smoothed.add(base);
-                        
-                        if (smoothed.distanceSquared(desired) <= smoothLimitDistanceSq)
+                        if (algorithm == SMOOTHING_ALGORITHM.NONE)
                         {
+                        }
+                        else if (algorithm == SMOOTHING_ALGORITHM.LINEAR && lookAheadTicks > 0)
+                        {
+                                PhysicsPoint smoothed = new PhysicsPoint();
+                                smoothed.set(velocity);
+                                smoothed.multiply(lookAheadTicks);
+                                smoothed.add(desired);
+
+                                smoothed.sub(base);
+                                smoothed.divide(lookAheadTicks);
+                                smoothed.add(base);
+                                
                                 smooth_x[index] = smoothed.x;
                                 smooth_y[index] = smoothed.y;
                         }
