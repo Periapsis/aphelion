@@ -37,13 +37,7 @@
  */
 package aphelion.shared.physics.entities;
 
-import aphelion.shared.gameconfig.ConfigSelection;
-import aphelion.shared.gameconfig.GCBooleanList;
-import aphelion.shared.gameconfig.GCInteger;
-import aphelion.shared.gameconfig.GCIntegerList;
-import aphelion.shared.gameconfig.GCString;
-import aphelion.shared.gameconfig.GCStringList;
-import aphelion.shared.gameconfig.WrappedValueAbstract;
+import aphelion.shared.gameconfig.*;
 import aphelion.shared.net.protobuf.GameOperation;
 import aphelion.shared.physics.PhysicsEnvironment;
 import aphelion.shared.physics.PhysicsMap;
@@ -93,6 +87,7 @@ public class Actor extends MapEntity
         public final PhysicsPointHistory velHistory;
         public final PhysicsPointHistory rotHistory; // x = rotation, y = rotation snapped
         public final RollingHistory<PhysicsMoveable> moveHistory;
+        private long mostRecentMove_tick;
         public final PhysicsPointHistorySmooth smoothHistory;
         
         public long nextSwitchedWeaponFire_tick; // >=
@@ -150,6 +145,7 @@ public class Actor extends MapEntity
         public GCString  smoothingAlgorithm;
         public GCInteger smoothingLookAheadTicks;
         public GCInteger smoothingDistanceLimit;
+        public GCBoolean smoothingProjectileCollisions;
         
         public WeaponSlotConfig[] weaponSlots = new WeaponSlotConfig[WEAPON_SLOT.values().length];
         
@@ -321,6 +317,7 @@ public class Actor extends MapEntity
                 this.pid = pid;
                 
                 moveHistory = new RollingHistory<>(createdAt_tick, HISTORY_LENGTH);
+                this.mostRecentMove_tick = this.createdAt_tick;
                 velHistory = new PhysicsPointHistory(createdAt_tick, HISTORY_LENGTH);
                 rotHistory = new PhysicsPointHistory(createdAt_tick, HISTORY_LENGTH);
                 smoothHistory = new PhysicsPointHistorySmooth(posHistory, velHistory);
@@ -355,6 +352,7 @@ public class Actor extends MapEntity
                 this.smoothingAlgorithm = actorConfigSelection.getString("smoothing-algorithm");
                 this.smoothingLookAheadTicks = actorConfigSelection.getInteger("smoothing-look-ahead-ticks");
                 this.smoothingDistanceLimit = actorConfigSelection.getInteger("smoothing-distance-limit");
+                this.smoothingProjectileCollisions = actorConfigSelection.getBoolean("smoothing-projectile-collisions");
                 
                 smoothingAlgorithm.addWeakChangeListenerAndFire(smoothingChangeListener);
                 smoothingLookAheadTicks.addWeakChangeListenerAndFire(smoothingChangeListener);
@@ -653,6 +651,11 @@ public class Actor extends MapEntity
                         return;
                 }
                 
+                if (tick > mostRecentMove_tick)
+                {
+                        mostRecentMove_tick = tick;
+                }
+                
                 if (move_ instanceof PhysicsWarp)
                 {
                         PhysicsWarp warp = (PhysicsWarp) move_;
@@ -793,6 +796,7 @@ public class Actor extends MapEntity
                 velHistory.set(other.velHistory);
                 rotHistory.set(other.rotHistory);
                 moveHistory.set(other.moveHistory);
+                mostRecentMove_tick = other.mostRecentMove_tick;
 
                 if (pid != publicWrapper.pid)
                 {
@@ -938,6 +942,50 @@ public class Actor extends MapEntity
                 pos.rot_snapped = actor.rotHistory.getY(tick);
                 pos.set = true;
                 return true;  
+        }
+        
+        /** {@inheritDoc} */
+        @Override
+        public boolean getHistoricSmoothPosition(PhysicsPoint pos, long tick, boolean lookAtOtherStates)
+        {
+                pos.set = false;
+                
+                Actor actor = getOlderActor(tick, false, lookAtOtherStates);
+
+                if (actor == null)
+                {
+                        return false; // deleted or too far in the past
+                }
+                
+                actor.smoothHistory.getSmooth(pos, tick);
+                return pos.set;
+        }
+        
+        /** {@inheritDoc} */
+        @Override
+        public boolean useSmoothForCollision(long tick)
+        {
+                if (state.isLast)
+                {
+                        // The last state should consistent across all servers and clients
+                        // Smoothed position is not consistent because it does its magic by
+                        // relying on the order moves are received.
+                        return false;
+                }
+                
+                // No need to use smoothed if we have up to date movement data
+                // This implementation might cause jumpiness, for example, if:
+                // 1. now = tick 120
+                // 2. A move has been received at tick 100
+                // Moments later:
+                // 3. A move has been received at tick 90
+                // This should not occur often because move packets overlap each other.
+                if (tick > mostRecentMove_tick)
+                {
+                        return false;
+                }
+                
+                return this.smoothingProjectileCollisions.get();
         }
         
         public int getHistoricEnergy(long tick, boolean lookAtOlderStates)

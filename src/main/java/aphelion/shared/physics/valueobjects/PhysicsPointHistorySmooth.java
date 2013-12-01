@@ -56,7 +56,6 @@ public class PhysicsPointHistorySmooth
         private final int[] baseline_y;
         private final int[] smooth_x;
         private final int[] smooth_y;
-        private final boolean[] dirty;
         private SMOOTHING_ALGORITHM algorithm = SMOOTHING_ALGORITHM.NONE;
         private int lookAheadTicks = 20;
         private long smoothLimitDistanceSq = 10_000 * 10_000;
@@ -71,14 +70,12 @@ public class PhysicsPointHistorySmooth
                 this.positionHist = positionHist;
                 this.velocityHist = velocityHist;
                 positionHist.setListener(posListener);
-                velocityHist.setListener(velListener);
-                
+                velocityHist.setListener(posListener);
                 
                 baseline_x = new int[positionHist.HISTORY_LENGTH];
                 baseline_y = new int[positionHist.HISTORY_LENGTH];
                 smooth_x = new int[positionHist.HISTORY_LENGTH];
                 smooth_y = new int[positionHist.HISTORY_LENGTH];
-                dirty = new boolean[positionHist.HISTORY_LENGTH];
         }
 
         public void setAlgorithm(SMOOTHING_ALGORITHM algorithm)
@@ -118,11 +115,6 @@ public class PhysicsPointHistorySmooth
                         return;
                 }
                 
-                if (dirty[index])
-                {
-                        calculate(tick, index);
-                }
-                
                 ret.set = true;
                 ret.x = smooth_x[index];
                 ret.y = smooth_y[index];
@@ -136,11 +128,6 @@ public class PhysicsPointHistorySmooth
                         return 0;
                 }
                 
-                if (dirty[index])
-                {
-                        calculate(tick, index);
-                }
-                
                 return smooth_x[index];
         }
 
@@ -150,11 +137,6 @@ public class PhysicsPointHistorySmooth
                 if (index < 0)
                 {
                         return 0;
-                }
-                
-                if (dirty[index])
-                {
-                        calculate(tick, index);
                 }
                 
                 return smooth_y[index];
@@ -197,8 +179,6 @@ public class PhysicsPointHistorySmooth
                                 smooth_y[index] = smoothed.y;
                         }
                 }
-                
-                dirty[index] = false;
         }
 
         private final PhysicsPointHistory.UpdateListener posListener = new PhysicsPointHistory.UpdateListener()
@@ -206,32 +186,28 @@ public class PhysicsPointHistorySmooth
                 @Override
                 public void updated(long tick, int index)
                 {
-                        dirty[index] = true;
-                }
-
-                @Override
-                public void updatedAll()
-                {
-                        Arrays.fill(dirty, true);
-                }
-        };
-        
-        private final PhysicsPointHistory.UpdateListener velListener = new PhysicsPointHistory.UpdateListener()
-        {
-                @Override
-                public void updated(long tick, int index)
-                {
                         index = positionHist.getIndex(tick);
                         if (index >= 0)
                         {
-                                dirty[index] = true;
+                                calculate(tick, index);
                         }
                 }
 
                 @Override
                 public void updatedAll()
                 {
-                        Arrays.fill(dirty, true);
+                        long tick = positionHist.getMostRecentTick();
+                        while(true)
+                        {
+                                int index = positionHist.getIndex(tick);
+                                if (index < 0)
+                                {
+                                        break;
+                                }
+                                
+                                calculate(tick, index);
+                                --tick;
+                        }
                 }
         };
 

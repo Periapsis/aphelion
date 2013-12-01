@@ -190,6 +190,31 @@ public abstract class MapEntity
                 return true;
         }
         
+        /** Get the historic smooth position of this entity.
+         * @param pos The position is filled in this object
+         * @param tick 
+         * @param lookAtOtherStates If set, also look at entities in older states. 
+         *        If the history of this actor overlaps with the older one, the position 
+         *        from the older one is used.
+         * @return true if a position was found (the entity existed at this point in time)
+         */
+        public boolean getHistoricSmoothPosition(PhysicsPoint pos, long tick, boolean lookAtOtherStates)
+        {
+                // Smooth history is not tracked for all map entities
+                pos.unset();
+                return false;
+        }
+        
+        /** If true, Collision will use getHistoricSmoothPosition to attempt collisions.
+         * 
+         * @param tick The tick the collision is being attempted at
+         * @return Use smooth positiosn for collision
+         */
+        public boolean useSmoothForCollision(long tick)
+        {
+                return false;
+        }
+        
         /** Add (or update) the current position to the history
          *
          * @param tick The tick the current position (this.pos) belongs to

@@ -320,17 +320,27 @@ public class Collision
                 final PhysicsPoint prev = new PhysicsPoint();
                 final PhysicsPoint next = new PhysicsPoint();
                 
-                if (!en.getHistoricPosition(prev, tick - 1, false))
-                {
-                        return false;
-                }
+                PhysicsPointHistoryDetailed posHistory;
                 
-                PhysicsPointHistoryDetailed posHistory = en.getAndSeekHistoryDetail(tick, true);
-                if (posHistory == null) // too far back, did not exist back then
+                if (en.useSmoothForCollision(tick))
                 {
-                        return false;
+                        if (!en.getHistoricSmoothPosition(prev, tick - 1, false))
+                        {
+                                return false;
+                        }
+                        
+                        posHistory = null;
                 }
-                
+                else
+                {
+                        if (!en.getHistoricPosition(prev, tick - 1, false))
+                        {
+                                return false;
+                        }
+                        
+                        posHistory = en.getAndSeekHistoryDetail(tick, true);
+                }
+
                 int posDiffX = Math.abs(newPos.x - oldPos.x);
                 int posDiffY = Math.abs(newPos.y - oldPos.y);
                 
@@ -339,7 +349,7 @@ public class Collision
                 while (true)
                 {
                         boolean lastIteration = false;
-                        if (posHistory.hasNextDetail())
+                        if (posHistory != null && posHistory.hasNextDetail())
                         {
                                 posHistory.nextDetail(next);
                         }
@@ -348,9 +358,19 @@ public class Collision
                                 // run out of details
                                 // the final line to match is the last detail + 
                                 // the final position for this tick.
-                                if (!en.getHistoricPosition(next, tick, false))
+                                if (en.useSmoothForCollision(tick))
                                 {
-                                        break;
+                                        if (!en.getHistoricSmoothPosition(next, tick, false))
+                                        {
+                                                break;
+                                        }
+                                }
+                                else
+                                {
+                                        if (!en.getHistoricPosition(next, tick, false))
+                                        {
+                                                break;
+                                        }
                                 }
                                 
                                 lastIteration = true;
@@ -603,21 +623,32 @@ public class Collision
                 prev.unset();
                 next.unset();
                 
-                if (!en.getHistoricPosition(prev, tick - 1, false))
-                {
-                        return false;
-                }
+                PhysicsPointHistoryDetailed posHistory;
                 
-                PhysicsPointHistoryDetailed posHistory = en.getAndSeekHistoryDetail(tick, false);
-                if (posHistory == null) // too far back, did not exist back then
+                if (en.useSmoothForCollision(tick))
                 {
-                        return false;
+                        if (!en.getHistoricSmoothPosition(prev, tick - 1, false))
+                        {
+                                return false;
+                        }
+                        
+                        // Smooth position does not have details
+                        posHistory = null;
+                }
+                else
+                {
+                        if (!en.getHistoricPosition(prev, tick - 1, false))
+                        {
+                                return false;
+                        }
+                        
+                        posHistory = en.getAndSeekHistoryDetail(tick, false);
                 }
                 
                 while (true)
                 {
                         boolean lastIteration = false;
-                        if (posHistory.hasNextDetail())
+                        if (posHistory != null && posHistory.hasNextDetail())
                         {
                                 posHistory.nextDetail(next);
                         }
@@ -626,9 +657,19 @@ public class Collision
                                 // run out of details
                                 // the final line to match is the last detail + 
                                 // the final position for this tick.
-                                if (!en.getHistoricPosition(next, tick, false))
+                                if (en.useSmoothForCollision(tick))
                                 {
-                                        break;
+                                        if (!en.getHistoricSmoothPosition(next, tick, false))
+                                        {
+                                                break;
+                                        }
+                                }
+                                else
+                                {
+                                        if (!en.getHistoricPosition(next, tick, false))
+                                        {
+                                                break;
+                                        }
                                 }
 
                                 lastIteration = true;
