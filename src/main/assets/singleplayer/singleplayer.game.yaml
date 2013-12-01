@@ -155,12 +155,17 @@
         tiles: [6, 6]
         frame-duration: 50
 
+  # Latency compensation stuff
   render-delay: 0
   render-delay-latency-factor: 0
   render-delay-projectiles: false
   render-delay-maximize-local-time: false
   render-delay-update-ship-delay-every-ticks: 50
   render-delay-update-projectile-delay-every-ticks: 2
+  smoothing-algorithm: LINEAR
+  smoothing-look-ahead-ticks: 20
+  smoothing-distance-limit: 160
+  smoothing-projectile-collisions: true
 
 
 # Weapon images

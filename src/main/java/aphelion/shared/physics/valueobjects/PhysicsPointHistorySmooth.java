@@ -59,7 +59,7 @@ public class PhysicsPointHistorySmooth
         private final boolean[] dirty;
         private SMOOTHING_ALGORITHM algorithm = SMOOTHING_ALGORITHM.NONE;
         private int lookAheadTicks = 20;
-        private long smoothLimitDistanceSq = 15000 * 15000;
+        private long smoothLimitDistanceSq = 10_000 * 10_000;
         
         public PhysicsPointHistorySmooth(PhysicsPointHistory positionHist, PhysicsPointHistory velocityHist)
         {

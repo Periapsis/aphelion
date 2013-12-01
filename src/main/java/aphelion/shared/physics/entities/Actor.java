@@ -141,14 +141,15 @@ public class Actor extends MapEntity
         public GCInteger boostSpeed;
         public GCInteger boostThrust;
         public GCInteger boostEnergy;
-        
-        
         public GCInteger maxEnergy;
         public GCInteger recharge;
         public GCInteger spawnX;
         public GCInteger spawnY;
         public GCInteger spawnRadius;
         public GCInteger respawnDelay;
+        public GCString  smoothingAlgorithm;
+        public GCInteger smoothingLookAheadTicks;
+        public GCInteger smoothingDistanceLimit;
         
         public WeaponSlotConfig[] weaponSlots = new WeaponSlotConfig[WEAPON_SLOT.values().length];
         
@@ -351,6 +352,13 @@ public class Actor extends MapEntity
                 this.spawnY = actorConfigSelection.getInteger("ship-spawn-y");
                 this.spawnRadius = actorConfigSelection.getInteger("ship-spawn-radius");
                 this.respawnDelay = actorConfigSelection.getInteger("ship-respawn-delay");
+                this.smoothingAlgorithm = actorConfigSelection.getString("smoothing-algorithm");
+                this.smoothingLookAheadTicks = actorConfigSelection.getInteger("smoothing-look-ahead-ticks");
+                this.smoothingDistanceLimit = actorConfigSelection.getInteger("smoothing-distance-limit");
+                
+                smoothingAlgorithm.addWeakChangeListenerAndFire(smoothingChangeListener);
+                smoothingLookAheadTicks.addWeakChangeListenerAndFire(smoothingChangeListener);
+                smoothingDistanceLimit.addWeakChangeListenerAndFire(smoothingChangeListener);
                 
                 for (int slotId = 0; slotId < weaponSlots.length; ++slotId)
                 {
@@ -361,6 +369,41 @@ public class Actor extends MapEntity
                 publicWrapper = new ActorPublicImpl(this, state);
         }
         
+        private final WrappedValueAbstract.ChangeListener smoothingChangeListener = new WrappedValueAbstract.ChangeListener()
+        {
+                @Override
+                public void gameConfigValueChanged(WrappedValueAbstract val)
+                {
+                        if (val == smoothingAlgorithm)
+                        {
+                                SMOOTHING_ALGORITHM algo = SMOOTHING_ALGORITHM.NONE;
+                                String algoStr = smoothingAlgorithm.get();
+                                try
+                                {
+                                        if (!algoStr.isEmpty())
+                                        {
+                                                algo = SMOOTHING_ALGORITHM.valueOf(algoStr);
+                                        }
+                                }
+                                catch (IllegalArgumentException ex)
+                                {
+                                        log.log(Level.WARNING, "Given smoothing-algorithm algorithm {0} is not a known algorithm", smoothingAlgorithm.get());
+                                }
+
+                                smoothHistory.setAlgorithm(algo);
+                        }
+                        
+                        if (val == smoothingLookAheadTicks)
+                        {
+                                smoothHistory.setLookAheadTicks(smoothingLookAheadTicks.get());
+                        }
+                        
+                        if (val == smoothingDistanceLimit)
+                        {
+                                smoothHistory.setSmoothLimitDistance(smoothingDistanceLimit.get() * 1024);
+                        }
+                }
+        };
         
         public void getSync(GameOperation.ActorSync.Builder s)
         {

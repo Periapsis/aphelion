@@ -77,6 +77,12 @@ public abstract class WrappedValueAbstract
                 listeners.add(listener);
         }
         
+        public void addWeakChangeListenerAndFire(ChangeListener listener)
+        {
+                addWeakChangeListener(listener);
+                listener.gameConfigValueChanged(this);
+        }
+        
         public void removeWeakChangeListener(ChangeListener listener)
         {
                 listeners.remove(listener);
