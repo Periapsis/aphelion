@@ -163,8 +163,8 @@
   render-delay-update-ship-delay-every-ticks: 50
   render-delay-update-projectile-delay-every-ticks: 2
   smoothing-algorithm: LINEAR
-  smoothing-look-ahead-ticks: 20
-  smoothing-distance-limit: 160
+  smoothing-look-ahead-ticks: 200
+  smoothing-distance-limit: 1000
   smoothing-projectile-collisions: true
 
 
