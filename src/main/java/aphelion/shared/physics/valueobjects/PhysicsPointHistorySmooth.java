@@ -89,17 +89,12 @@ public class PhysicsPointHistorySmooth
         }
         
         /** This method should be called before each iteration of the state.
-         * It ensures that setting the position multiple times within the same state iteration,
+         * It ensures that setting the actor position multiple times within the same state iteration,
          * has the exact same result as setting it only once.
          */
         public void updateBaseLine()
         {
-                PhysicsPoint p = new PhysicsPoint();
-                for (long t = positionHist.getLowestTick(); t <= positionHist.getHighestTick(); ++t)
-                {
-                        smooth.get(p, t - 1);
-                        baseline.setHistory(t, p);
-                }
+                baseline.set(smooth);
         }
         
         public void getSmooth(PhysicsPoint ret, long tick)
@@ -123,13 +118,13 @@ public class PhysicsPointHistorySmooth
                 PhysicsPoint desired = new PhysicsPoint();
                 PhysicsPoint velocity = new PhysicsPoint();
                 
-                baseline.get(base, tick);
+                baseline.get(base, tick - 1);
                 positionHist.get(desired, tick);
                 velocityHist.get(velocity, tick);
                 
                 smooth.setHistory(tick, desired);
                 
-                if (base.distanceSquared(desired) <= smoothLimitDistanceSq)
+                if (base.set && base.distanceSquared(desired) <= smoothLimitDistanceSq)
                 {
                         if (algorithm == SMOOTHING_ALGORITHM.NONE)
                         {
@@ -175,5 +170,6 @@ public class PhysicsPointHistorySmooth
         {
                 NONE,
                 LINEAR;
+                // quadratic, cubic spline, etc
         }
 }
