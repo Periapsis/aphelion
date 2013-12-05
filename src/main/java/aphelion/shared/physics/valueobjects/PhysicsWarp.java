@@ -107,12 +107,12 @@ public class PhysicsWarp implements Comparable<PhysicsWarp>, PhysicsMoveable
                 
                 if (has_x_vel)
                 {
-                        b.setXVel(x);
+                        b.setXVel(x_vel);
                 }
                 
                 if (has_y_vel)
                 {
-                        b.setYVel(y);
+                        b.setYVel(y_vel);
                 }
                 
                 if (has_rotation)
