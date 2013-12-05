@@ -282,6 +282,18 @@ public final class PhysicsPoint
                 this.y = SwissArmyKnife.divideCeil(this.y, number);
                 set = true;
         }
+        
+        /** Divides by rounding up. In such a way that:
+         * x = x / number
+         * x = (x < 0) ? floor(x) : ceil(x)
+         * 
+         */
+        public void divideUp(int number)
+        {
+                this.x = SwissArmyKnife.divideUp(this.x, number);
+                this.y = SwissArmyKnife.divideUp(this.y, number);
+                set = true;
+        }
 
         public void multiply(int number)
         {

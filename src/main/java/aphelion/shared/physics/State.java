@@ -111,7 +111,7 @@ public class State
                         itActor.advance();
 
                         Actor actor = itActor.value();
-                        actor.smoothHistory.setBaseLine();
+                        actor.smoothHistory.updateBaseLine();
                 }
         }
 

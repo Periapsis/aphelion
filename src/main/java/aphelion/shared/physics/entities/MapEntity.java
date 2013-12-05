@@ -39,8 +39,6 @@
 package aphelion.shared.physics.entities;
 
 import aphelion.shared.gameconfig.GCInteger;
-import aphelion.shared.physics.PhysicsEnvironment;
-import aphelion.shared.physics.PhysicsMap;
 import aphelion.shared.physics.State;
 import aphelion.shared.physics.valueobjects.PhysicsPoint;
 import aphelion.shared.physics.valueobjects.PhysicsPointHistoryDetailed;

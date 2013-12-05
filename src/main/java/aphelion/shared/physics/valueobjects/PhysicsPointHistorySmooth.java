@@ -38,8 +38,6 @@
 
 package aphelion.shared.physics.valueobjects;
 
-import java.util.Arrays;
-
 /**
  *
  * @author Joris
@@ -50,17 +48,16 @@ public class PhysicsPointHistorySmooth
         private final PhysicsPointHistory velocityHist;
         private final int HISTORY_LENGTH;
         
-        // The "baseline" is used so that multiple changes in the position do not cause multiple 
-        // steps in the convergence
-        private final int[] baseline_x;
-        private final int[] baseline_y;
-        private final int[] smooth_x;
-        private final int[] smooth_y;
+        /** The "baseline" is used so that multiple changes in the position do not cause multiple 
+         * steps in the convergence
+         */
+        private final PhysicsPointHistory baseline;
+        private final PhysicsPointHistory smooth;
         private SMOOTHING_ALGORITHM algorithm = SMOOTHING_ALGORITHM.NONE;
         private int lookAheadTicks = 20;
         private long smoothLimitDistanceSq = 10_000 * 10_000;
         
-        public PhysicsPointHistorySmooth(PhysicsPointHistory positionHist, PhysicsPointHistory velocityHist)
+        public PhysicsPointHistorySmooth(long initial_tick, PhysicsPointHistory positionHist, PhysicsPointHistory velocityHist)
         {
                 HISTORY_LENGTH = positionHist.HISTORY_LENGTH;
                 assert HISTORY_LENGTH == velocityHist.HISTORY_LENGTH;
@@ -72,10 +69,8 @@ public class PhysicsPointHistorySmooth
                 positionHist.setListener(posListener);
                 velocityHist.setListener(posListener);
                 
-                baseline_x = new int[positionHist.HISTORY_LENGTH];
-                baseline_y = new int[positionHist.HISTORY_LENGTH];
-                smooth_x = new int[positionHist.HISTORY_LENGTH];
-                smooth_y = new int[positionHist.HISTORY_LENGTH];
+                baseline = new PhysicsPointHistory(initial_tick, HISTORY_LENGTH);
+                smooth = new PhysicsPointHistory(initial_tick, HISTORY_LENGTH);
         }
 
         public void setAlgorithm(SMOOTHING_ALGORITHM algorithm)
@@ -97,67 +92,42 @@ public class PhysicsPointHistorySmooth
          * It ensures that setting the position multiple times within the same state iteration,
          * has the exact same result as setting it only once.
          */
-        public void setBaseLine()
+        public void updateBaseLine()
         {
-                for (int i = 0; i < HISTORY_LENGTH; ++i)
+                PhysicsPoint p = new PhysicsPoint();
+                for (long t = positionHist.getLowestTick(); t <= positionHist.getHighestTick(); ++t)
                 {
-                        baseline_x[i] = smooth_x[i];
-                        baseline_y[i] = smooth_y[i];
+                        smooth.get(p, t - 1);
+                        baseline.setHistory(t, p);
                 }
         }
         
         public void getSmooth(PhysicsPoint ret, long tick)
         {
-                int index = positionHist.getIndex(tick);
-                if (index < 0)
-                {
-                        ret.unset();
-                        return;
-                }
-                
-                ret.set = true;
-                ret.x = smooth_x[index];
-                ret.y = smooth_y[index];
+                smooth.get(ret, tick);
         }
         
         public int getX(long tick)
         {
-                int index = positionHist.getIndex(tick);
-                if (index < 0)
-                {
-                        return 0;
-                }
-                
-                return smooth_x[index];
+                return smooth.getX(tick);
         }
 
         public int getY(long tick)
         {
-                int index = positionHist.getIndex(tick);
-                if (index < 0)
-                {
-                        return 0;
-                }
-                
-                return smooth_y[index];
+                return smooth.getY(tick);
         }
         
-        private void calculate(long tick, int index)
+        private void calculate(long tick)
         {
                 PhysicsPoint base = new PhysicsPoint();
                 PhysicsPoint desired = new PhysicsPoint();
                 PhysicsPoint velocity = new PhysicsPoint();
                 
-                base.set(baseline_x[index], baseline_y[index]);
-                positionHist.getByIndex(desired, index);
+                baseline.get(base, tick);
+                positionHist.get(desired, tick);
                 velocityHist.get(velocity, tick);
                 
-                assert base.set;
-                assert desired.set;
-                
-                
-                smooth_x[index] = desired.x;
-                smooth_y[index] = desired.y;
+                smooth.setHistory(tick, desired);
                 
                 if (base.distanceSquared(desired) <= smoothLimitDistanceSq)
                 {
@@ -172,11 +142,12 @@ public class PhysicsPointHistorySmooth
                                 smoothed.add(desired);
 
                                 smoothed.sub(base);
-                                smoothed.divide(lookAheadTicks);
+                                smoothed.divideUp(lookAheadTicks);
                                 smoothed.add(base);
                                 
-                                smooth_x[index] = smoothed.x;
-                                smooth_y[index] = smoothed.y;
+                                smooth.setHistory(tick, smoothed);
+                                
+                                //System.out.println(base + " " + desired + " " + velocity + " " + smoothed);
                         }
                 }
         }
@@ -186,32 +157,18 @@ public class PhysicsPointHistorySmooth
                 @Override
                 public void updated(long tick, int index)
                 {
-                        index = positionHist.getIndex(tick);
-                        if (index >= 0)
-                        {
-                                calculate(tick, index);
-                        }
+                        calculate(tick);
                 }
 
                 @Override
                 public void updatedAll()
                 {
-                        long tick = positionHist.getMostRecentTick();
-                        while(true)
+                        for (long t = positionHist.getLowestTick(); t <= positionHist.getHighestTick(); ++t)
                         {
-                                int index = positionHist.getIndex(tick);
-                                if (index < 0)
-                                {
-                                        break;
-                                }
-                                
-                                calculate(tick, index);
-                                --tick;
+                                calculate(t);
                         }
                 }
         };
-
-        
         
         
         public static enum SMOOTHING_ALGORITHM

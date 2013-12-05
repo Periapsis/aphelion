@@ -626,6 +626,56 @@ public final class SwissArmyKnife
 
                 return d + 1;
         }
+        
+        /** Divides by rounding up. In such a way that:
+         * d = a / b
+         * d = (d < 0) ? floor(d) : ceil(d)
+         * 
+         */
+        @ThreadSafe
+        public static int divideUp(int a, int b)
+        {
+                int d;
+                
+                d = a / b;
+                
+                if (d * b == a)
+                {
+                        return d;
+                }
+                
+                if (a < 0 != b < 0) // a xor b is negative
+                {
+                        return d - 1;
+                }
+                
+                return d + 1;
+        }
+        
+        /** Divides by rounding up. In such a way that:
+         * d = a / b
+         * d = (d < 0) ? floor(d) : ceil(d)
+         * 
+         */
+        @ThreadSafe
+        public static long divideUp(long a, long b)
+        {
+                long d;
+                
+                d = a / b;
+                
+                if (d * b == a)
+                {
+                        return d;
+                }
+                
+                if (a < 0 != b < 0) // a xor b is negative
+                {
+                        return d - 1;
+                }
+                
+                return d + 1;
+        }
 
         @ThreadSafe
         public static int abs(int a)

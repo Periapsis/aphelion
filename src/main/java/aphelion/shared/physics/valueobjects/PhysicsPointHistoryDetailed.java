@@ -223,7 +223,7 @@ public class PhysicsPointHistoryDetailed extends PhysicsPointHistory
         
         public void seekDetailRelative(int tick)
         {
-                seekDetail(getMostRecentTick() - tick);
+                seekDetail(getHighestTick() - tick);
         }
         
         public boolean hasNextDetail()
@@ -267,7 +267,7 @@ public class PhysicsPointHistoryDetailed extends PhysicsPointHistory
         private void removeOldData()
         {
                 // remove old data
-                long removeBefore = getMostRecentTick() - HISTORY_LENGTH + 1;
+                long removeBefore = getHighestTick() - HISTORY_LENGTH + 1;
                 
                 Entry prev = null;
                 // highest tick come first

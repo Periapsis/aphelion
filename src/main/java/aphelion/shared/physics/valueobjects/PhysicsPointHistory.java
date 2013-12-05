@@ -147,14 +147,14 @@ public class PhysicsPointHistory
                 getByIndex(ret, index);
         }
         
-        void getByIndex(PhysicsPoint ret, int index)
+        protected void getByIndex(PhysicsPoint ret, int index)
         {
                 ret.set = true;
                 ret.x = history_x[index];
                 ret.y = history_y[index];
         }
         
-        int getIndex(long tick)
+        protected int getIndex(long tick)
         {
                 long ticks_ago = history_tick - tick;
                 if (ticks_ago < 0 || ticks_ago >= HISTORY_LENGTH)
@@ -187,9 +187,22 @@ public class PhysicsPointHistory
                 return history_index;
         }
         
-        public long getMostRecentTick()
+        /** The highest tick we can currently get data for. 
+         * Calling setHistory with a value greater than this value will discard the oldest history.
+         * @return tick
+         */
+        public long getHighestTick()
         {
                 return history_tick;
+        }
+        
+        /** The highest tick we can currently get data for. 
+         * Calling setHistory with a value lower than this value will have no effect
+         * @return tick
+         */
+        public long getLowestTick()
+        {
+                return history_tick - HISTORY_LENGTH + 1;
         }
         
         public void set(PhysicsPointHistory other)

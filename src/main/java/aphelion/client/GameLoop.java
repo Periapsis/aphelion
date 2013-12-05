@@ -721,6 +721,8 @@ public class GameLoop
 
                 if (physicsActor.getHistoricPosition(actorPos, actorShip.renderingAt_tick, true))
                 {
+                        actorShip.setRealPositionFromPhysics(actorPos.x, actorPos.y);
+                        
                         if (actorShip.isLocalPlayer())
                         {
                                 actorShip.setPositionFromPhysics(actorPos.x, actorPos.y);

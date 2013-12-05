@@ -320,7 +320,7 @@ public class Actor extends MapEntity
                 this.mostRecentMove_tick = this.createdAt_tick;
                 velHistory = new PhysicsPointHistory(createdAt_tick, HISTORY_LENGTH);
                 rotHistory = new PhysicsPointHistory(createdAt_tick, HISTORY_LENGTH);
-                smoothHistory = new PhysicsPointHistorySmooth(posHistory, velHistory);
+                smoothHistory = new PhysicsPointHistorySmooth(createdAt_tick, posHistory, velHistory);
                 
                 // Do not smooth on the last state so that any inconsistencies will always be resolved
                 smoothHistory.setAlgorithm(state.isLast ? SMOOTHING_ALGORITHM.NONE : SMOOTHING_ALGORITHM.LINEAR);

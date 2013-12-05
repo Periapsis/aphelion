@@ -51,9 +51,11 @@ import aphelion.shared.physics.PhysicsMath;
 import aphelion.shared.physics.valueobjects.PhysicsMoveable;
 import aphelion.shared.physics.valueobjects.PhysicsMovement;
 import aphelion.shared.physics.valueobjects.PhysicsPoint;
+import aphelion.shared.physics.valueobjects.PhysicsShipPosition;
 import aphelion.shared.swissarmyknife.Point;
 
 import de.lessvoid.nifty.tools.Color;
+import org.lwjgl.opengl.GL11;
 import org.newdawn.slick.Image;
 import org.newdawn.slick.SpriteSheetCounted;
 
@@ -73,7 +75,9 @@ public class ActorShip extends MapEntity implements TickEvent, WrappedValueAbstr
         
         public float distSqToLocal;
         
-        /** The position without delay (with dead reckoning) */
+        /** The position without smoothing. */
+        public final Point realPosition = new Point(0, 0);
+        /** The position without delay (with dead reckoning). */
         public final Point shadowPosition = new Point(0, 0);
 
         // RenderDelay
@@ -161,6 +165,13 @@ public class ActorShip extends MapEntity implements TickEvent, WrappedValueAbstr
         {
                 shadowPosition.x = x / 1024f;
                 shadowPosition.y = y / 1024f;
+        }
+        
+        /** Without smoothing. */
+        public void setRealPositionFromPhysics(int x, int y)
+        {
+                realPosition.x = x / 1024f;
+                realPosition.y = y / 1024f;
         }
         
         public void updateDistanceToLocal(Point localPos)
@@ -358,7 +369,20 @@ public class ActorShip extends MapEntity implements TickEvent, WrappedValueAbstr
 
                 if (image != null)
                 {
+                        /*
+                        // Draw the position without smoothing
+                        if (!this.isLocalPlayer())
+                        {
+                                Point testScreen = new Point();
+                                camera.mapToScreenPosition(realPosition, testScreen);
+                                testScreen.x -= image.getWidth() / 2f * camera.zoom;
+                                testScreen.y -= image.getHeight() / 2f * camera.zoom;
+                           
+                                image.draw(testScreen.x, testScreen.y, w, h, org.newdawn.slick.Color.magenta);
+                        }*/
+                        
                         image.draw(x, y, w, h);
+                        
 
                         if (netActor.name != null)
                         {
