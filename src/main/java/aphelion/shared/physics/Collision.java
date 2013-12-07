@@ -39,6 +39,7 @@
 package aphelion.shared.physics;
 
 
+import aphelion.shared.gameconfig.GCInteger;
 import aphelion.shared.physics.entities.MapEntity;
 import static aphelion.shared.swissarmyknife.SwissArmyKnife.abs;
 import static aphelion.shared.swissarmyknife.SwissArmyKnife.clip;
@@ -914,8 +915,8 @@ public class Collision
                         if (hasBouncesLeft())
                         {
                                 // this is not the result of the last bounce
-                                vel.x = (int) (((long) vel.x) * -bounceFriction / 1024L);
-                                vel.y = (int) (((long) vel.y) * otherAxisFriction / 1024L);
+                                vel.x = (int) ((long) vel.x * -bounceFriction / GCInteger.RATIO);
+                                vel.y = (int) ((long) vel.y * otherAxisFriction / GCInteger.RATIO);
                         }
                         
                 }
@@ -937,8 +938,8 @@ public class Collision
                         if (hasBouncesLeft())
                         {
                                 // this is not the result of the last bounce
-                                vel.x = (int) (((long) vel.x) * otherAxisFriction / 1024l);
-                                vel.y = (int) (((long) vel.y) * -bounceFriction / 1024l);
+                                vel.x = (int) ((long) vel.x * otherAxisFriction / GCInteger.RATIO);
+                                vel.y = (int) ((long) vel.y * -bounceFriction / GCInteger.RATIO);
                         }
 
                 }

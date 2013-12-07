@@ -44,6 +44,9 @@ package aphelion.shared.gameconfig;
  */
 public class GCInteger extends SimpleAbstract<Integer>
 {
+        public static final int RATIO = 1024;
+        public static final int RATIO_PRECISE = RATIO * RATIO; // 1048576
+        
         public static final WrappedValueAbstract.Factory factory = new Factory() {
 
                 @Override

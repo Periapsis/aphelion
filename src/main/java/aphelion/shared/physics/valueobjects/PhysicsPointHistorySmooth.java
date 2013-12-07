@@ -38,6 +38,8 @@
 
 package aphelion.shared.physics.valueobjects;
 
+import aphelion.shared.gameconfig.GCInteger;
+
 /**
  * Used to provide dead reckon convergence / smoothing.
  * Note that the results of this object might not be deterministic!
@@ -62,7 +64,7 @@ public class PhysicsPointHistorySmooth
         private final PhysicsPointHistory smooth;
         private SMOOTHING_ALGORITHM algorithm = SMOOTHING_ALGORITHM.NONE;
         private int lookAheadTicks = 20;
-        private int stepRatioPermille = 100;
+        private int stepRatio = 5000;
         private long smoothLimitDistanceSq = 10_000 * 10_000;
         
         public PhysicsPointHistorySmooth(long initial_tick, PhysicsPointHistory positionHist, PhysicsPointHistory velocityHist)
@@ -91,9 +93,12 @@ public class PhysicsPointHistorySmooth
                 this.lookAheadTicks = lookAheadTicks;
         }
         
+        /**
+         * @param permille A ratio between 0 and 1048576
+         */
         public void setStepRatio(int permille)
         {
-                this.stepRatioPermille = permille;
+                this.stepRatio = permille;
         }
 
         public void setSmoothLimitDistance(int smoothLimitDistance)
@@ -149,13 +154,11 @@ public class PhysicsPointHistorySmooth
                                 smoothed.multiply(lookAheadTicks);
                                 smoothed.add(desired);
 
-                                smoothed.sub(base);                                
-                                smoothed.applyRatio(stepRatioPermille, 1024);
+                                smoothed.sub(base);
+                                smoothed.applyRatio(stepRatio, GCInteger.RATIO_PRECISE);
                                 smoothed.add(base);
                                 
                                 smooth.setHistory(tick, smoothed);
-                                
-                                //System.out.println(base + " " + desired + " " + velocity + " " + smoothed);
                         }
                 }
         }

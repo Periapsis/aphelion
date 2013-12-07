@@ -308,7 +308,7 @@ public class RenderDelay implements GameS2CListener
                                         if (!ship.renderDelay_value.hasBeenSet() || positionTick > ship.renderDelay_mostRecentMove)
                                         {
                                                 long desired = physicsEnv.getTick() - positionTick; // the latency
-                                                desired = desired * latencyRatio.get() / 1024;
+                                                desired = desired * latencyRatio.get() / GCInteger.RATIO;
                                                 desired += this.delay.get();
                                                 if (desired < 0) { desired = 0; }
 

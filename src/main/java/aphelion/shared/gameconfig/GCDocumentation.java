@@ -80,7 +80,9 @@ public class GCDocumentation
                 TICK_POSITIVE,
                 TICK_NON_NEGATIVE,
                 /** Ratio between 0 and 1024 */
-                RATIO;
+                RATIO,
+                /** Ratio between 0 and 1048576 (1024*1024) */
+                RATIO_PRECISE;
         }
         
         public static class GCDocumentationEntry
