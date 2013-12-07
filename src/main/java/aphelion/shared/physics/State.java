@@ -48,11 +48,7 @@ import aphelion.shared.physics.valueobjects.PhysicsPoint;
 import aphelion.shared.swissarmyknife.LinkedListEntry;
 import aphelion.shared.swissarmyknife.LinkedListHead;
 import aphelion.shared.swissarmyknife.SwissArmyKnife;
-import gnu.trove.iterator.TIntObjectIterator;
-import gnu.trove.map.hash.TIntObjectHashMap;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.LinkedList;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -79,7 +75,7 @@ public class State
         public long tick_now;
         public boolean needTimewarpToThisState;
         
-        public final TIntObjectHashMap<Actor> actors = new TIntObjectHashMap<>(ACTOR_INITIALCAPACITY); // actor id -> entity
+        public final HashMap<Integer, Actor> actors = new HashMap<>(ACTOR_INITIALCAPACITY); // actor id -> entity
         public final ArrayList<Actor> actorsList = new ArrayList<>(ACTOR_INITIALCAPACITY);
         public final LinkedList<Actor> actorsRemovedDuringReset = new LinkedList<>();
         
@@ -105,24 +101,19 @@ public class State
         
         private void setActorSmoothPositionBaseline()
         {
-                TIntObjectIterator<Actor> itActor = this.actors.iterator();
-                while (itActor.hasNext())
+                for (Actor actor : actorsList)
                 {
-                        itActor.advance();
-
-                        Actor actor = itActor.value();
                         actor.smoothHistory.updateBaseLine();
                 }
         }
 
         private void tickActors()
         {
-                TIntObjectIterator<Actor> itActor = this.actors.iterator();
+                Iterator<Actor> itActor = this.actorsList.iterator();
                 while (itActor.hasNext())
                 {
-                        itActor.advance();
-
-                        Actor actor = itActor.value();
+                        Actor actor = itActor.next();
+                        
                         actor.updatePositionHistory(tick_now);
                         if (actor.moveHistory.getMostRecentTick() < this.tick_now)
                         {
@@ -154,9 +145,9 @@ public class State
 
                                                         if (state == this)
                                                         {
-                                                                itActor.remove();
-                                                                boolean removed = state.actorsList.remove(actor);
-                                                                assert removed;
+                                                                Actor removed = state.actors.remove(actor.pid);
+                                                                assert removed != null;
+                                                                itActor.remove(); // actorsList
                                                         }
                                                         else
                                                         {
@@ -165,7 +156,6 @@ public class State
                                                                 {
                                                                         boolean removed = state.actorsList.remove(stateActor);
                                                                         assert removed;
-                                                                        state.actors.compact();
                                                                 }
                                                         }
 
@@ -339,12 +329,8 @@ public class State
         
         private void tickActorsLate()
         {
-                TIntObjectIterator<Actor> itActor = this.actors.iterator();
-                while (itActor.hasNext())
+                for (Actor actor : actorsList)
                 {
-                        itActor.advance();
-
-                        Actor actor = itActor.value();
                         actor.tickEnergy();
                 }
         }
@@ -442,21 +428,19 @@ public class State
                 
                 // Reset actors
                 {
-                        TIntObjectIterator<Actor> actorIt = this.actors.iterator();
+                        Iterator<Actor> actorIt = this.actorsList.iterator();
                         while (actorIt.hasNext())
                         {
-                                actorIt.advance();
-
-                                Actor actorMine = actorIt.value();
-                                Actor actorOther = older.actors.get(actorIt.key());
+                                Actor actorMine = actorIt.next();
+                                Actor actorOther = older.actors.get(actorMine.pid);
 
                                 // actor in my state does not exist in the other state, so remove it
                                 if (actorOther == null)
                                 {
                                         actorMine.softRemove(old_tick_now);
-                                        actorIt.remove();
-                                        boolean removed = this.actorsList.remove(actorMine);
-                                        assert removed;
+                                        
+                                        this.actors.remove(actorMine.pid);
+                                        actorIt.remove(); // actorsList
                                         
                                         actorMine.crossStateList[this.id] = null;
                                         
@@ -483,13 +467,10 @@ public class State
                         // a fake player, and the firing of that weapon depends on energy
                         // or a fire delay).
                         
-                        TIntObjectIterator<Actor> actorIt = older.actors.iterator();
-                        while (actorIt.hasNext())
+                        
+                        for (Actor actorOther : older.actorsList)
                         {
-                                actorIt.advance();
-
-                                Actor actorOther = actorIt.value();
-                                Actor actorMine = this.actors.get(actorIt.key());
+                                Actor actorMine = this.actors.get(actorOther.pid);
 
                                 // actor that is in the other state, does not exist in mine
                                 if (actorMine == null)
@@ -507,9 +488,7 @@ public class State
                                 }
                         }
                 }
-
-                this.actors.compact();
-
+                
                 // Reset projectiles
                 {
                         LinkedListHead<Projectile> oldProjectiles = this.projectiles;

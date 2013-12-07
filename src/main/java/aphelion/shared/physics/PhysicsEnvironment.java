@@ -564,7 +564,7 @@ public class PhysicsEnvironment implements TickEvent
                 
                 state = trailingStates[stateid];
                 
-                return new ActorIterator(state.actors.iterator(), state);
+                return new ActorIterator(state.actorsList.iterator(), state);
         }
         
         /** Loop over all the known actors in a given state using an iterator.
@@ -583,11 +583,10 @@ public class PhysicsEnvironment implements TickEvent
                 
                 return new Iterable<ActorPublic>()
                 {
-
                         @Override
                         public Iterator<ActorPublic> iterator()
                         {
-                                return new ActorIterator(state.actors.iterator(), state);
+                                return new ActorIterator(state.actorsList.iterator(), state);
                         }
                 };
         }

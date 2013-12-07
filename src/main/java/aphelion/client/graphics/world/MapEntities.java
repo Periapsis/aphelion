@@ -42,11 +42,7 @@ import aphelion.client.RENDER_LAYER;
 import aphelion.shared.event.LoopEvent;
 import aphelion.shared.event.TickEvent;
 import aphelion.shared.net.game.ActorListener;
-import aphelion.shared.net.game.GameProtocolConnection;
-import aphelion.shared.net.game.GameS2CListener;
 import aphelion.shared.net.game.NetworkedActor;
-import aphelion.shared.net.protobuf.GameOperation;
-import aphelion.shared.net.protobuf.GameS2C;
 import aphelion.shared.physics.entities.ProjectilePublic;
 import aphelion.shared.physics.PhysicsEnvironment;
 import aphelion.shared.resource.ResourceDB;
@@ -55,8 +51,7 @@ import aphelion.shared.swissarmyknife.EmptyIterator;
 import aphelion.shared.swissarmyknife.FilteredIterator;
 import aphelion.shared.swissarmyknife.LinkedListHead;
 import aphelion.shared.swissarmyknife.Point;
-import gnu.trove.iterator.TIntObjectIterator;
-import gnu.trove.map.hash.TIntObjectHashMap;
+import java.util.HashMap;
 import java.util.Iterator;
 
 /**
@@ -68,11 +63,12 @@ public class MapEntities implements TickEvent, LoopEvent, Animator, ActorListene
         private static final AttachmentConsumer<ProjectilePublic, Projectile> projectileAttachment 
                 = new AttachmentConsumer<>(aphelion.shared.physics.entities.Projectile.attachmentManager);
         
-        private TIntObjectHashMap<ActorShip> actorShips = new TIntObjectHashMap<>(64); // pid
+        /** pid -> ActorShip */
+        private final HashMap<Integer,ActorShip> actorShips = new HashMap<>(64);
         private PhysicsEnvironment physicsEnv;
-        private ResourceDB resourceDB;
+        private final ResourceDB resourceDB;
         private ActorShip localShip;
-        private LinkedListHead<MapAnimation> animations[] = new LinkedListHead[RENDER_LAYER.values().length];
+        private final LinkedListHead<MapAnimation> animations[] = new LinkedListHead[RENDER_LAYER.values().length];
 
         public MapEntities(ResourceDB db)
         {
@@ -118,41 +114,18 @@ public class MapEntities implements TickEvent, LoopEvent, Animator, ActorListene
         
         public Iterator<ActorShip> shipIterator()
         {
-                Iterator<ActorShip> it = new Iterator<ActorShip>() 
-                {
-                        TIntObjectIterator<ActorShip> wrapped = actorShips.iterator();
-                        
-                        @Override
-                        public boolean hasNext()
-                        {
-                                return wrapped.hasNext();
-                        }
-
-                        @Override
-                        public ActorShip next()
-                        {
-                                wrapped.advance();
-                                return wrapped.value();
-                        }
-
-                        @Override
-                        public void remove()
-                        {
-                                wrapped.remove();
-                        }
-                };
-                return it;
+                return actorShips.values().iterator();
         }
         
         public Iterator<ActorShip> shipNoLocalIterator()
         {
                 Iterator<ActorShip> it = new Iterator<ActorShip>() 
                 {
-                        TIntObjectIterator<ActorShip> wrapped;
+                        Iterator<ActorShip> wrapped;
                         ActorShip next;
                         
                         {
-                                wrapped =  actorShips.iterator();
+                                wrapped = actorShips.values().iterator();
                                 advanceUntilCorrect();
                         }
                         
@@ -180,8 +153,7 @@ public class MapEntities implements TickEvent, LoopEvent, Animator, ActorListene
                         {
                                 while (wrapped.hasNext())
                                 {
-                                        wrapped.advance();
-                                        next = wrapped.value();
+                                        next = wrapped.next();
                                         if (!next.isLocalPlayer())
                                         {
                                                 return;
@@ -266,7 +238,7 @@ public class MapEntities implements TickEvent, LoopEvent, Animator, ActorListene
         
         public ActorShip findNearestActor(Point pos, boolean includeLocal)
         {
-                TIntObjectIterator<ActorShip> it = actorShips.iterator();
+                Iterator<ActorShip> it = actorShips.values().iterator();
                 
                 Point diff = new Point();
                 
@@ -275,8 +247,7 @@ public class MapEntities implements TickEvent, LoopEvent, Animator, ActorListene
                 
                 while (it.hasNext())
                 {
-                        it.advance();
-                        ActorShip ship = it.value();
+                        ActorShip ship = it.next();
                         
                         if (ship.isLocalPlayer() && !includeLocal)
                         {
@@ -342,12 +313,11 @@ public class MapEntities implements TickEvent, LoopEvent, Animator, ActorListene
         @Override
         public void tick(long tick)
         {
-                TIntObjectIterator<ActorShip> itActor = actorShips.iterator();
+                Iterator<ActorShip> itActor = actorShips.values().iterator();
                 
                 while (itActor.hasNext())
                 {
-                        itActor.advance();
-                        itActor.value().tick(tick);
+                        itActor.next().tick(tick);
                 }
                 
                 Iterator<Projectile> itProj = projectileIterator(true);

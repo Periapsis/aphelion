@@ -40,7 +40,6 @@ package aphelion.shared.physics.entities;
 
 
 import aphelion.shared.physics.State;
-import gnu.trove.iterator.TIntObjectIterator;
 import java.util.Iterator;
 
 /**
@@ -49,10 +48,10 @@ import java.util.Iterator;
  */
 public class ActorIterator implements Iterator<ActorPublic>
 {
-        private final TIntObjectIterator<Actor> it;
+        private final Iterator<Actor> it;
         private final State state;
 
-        public ActorIterator(TIntObjectIterator<Actor> it, State state)
+        public ActorIterator(Iterator<Actor> it, State state)
         {
                 this.it = it;
                 this.state = state;
@@ -67,8 +66,7 @@ public class ActorIterator implements Iterator<ActorPublic>
         @Override
         public ActorPublic next()
         {
-                it.advance();
-                return new ActorPublicImpl(it.value(), state);
+                return new ActorPublicImpl(it.next(), state);
         }
 
         @Override

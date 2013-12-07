@@ -43,20 +43,17 @@ import aphelion.shared.gameconfig.GCStringList;
 import aphelion.shared.physics.EnvironmentConfiguration;
 import aphelion.shared.physics.entities.Actor;
 import aphelion.shared.physics.entities.Actor.WeaponConfig;
-import aphelion.shared.physics.entities.MapEntity;
 import aphelion.shared.physics.entities.Projectile;
 import aphelion.shared.physics.entities.ProjectilePublic;
 import aphelion.shared.physics.events.pub.ProjectileExplosionPublic;
-import aphelion.shared.physics.PhysicsEnvironment;
 import aphelion.shared.physics.State;
 import aphelion.shared.physics.entities.*;
 import aphelion.shared.physics.valueobjects.PhysicsPoint;
 import aphelion.shared.physics.valueobjects.PhysicsShipPosition;
-import aphelion.shared.swissarmyknife.LinkedListEntry;
 import aphelion.shared.swissarmyknife.SwissArmyKnife;
-import gnu.trove.map.hash.TIntObjectHashMap;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -78,7 +75,7 @@ public class ProjectileExplosion extends Event implements ProjectileExplosionPub
           * PhysicsEnvironment will handle resetting the history of ActorDied, that does
           * not has to be performed here.
           */
-        final TIntObjectHashMap<ActorDied> diedEvents = new TIntObjectHashMap<>(4);
+        final HashMap<Integer, ActorDied> diedEvents = new HashMap<>(4);
         
         public ProjectileExplosion(EnvironmentConfiguration econfig)
         {

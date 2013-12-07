@@ -54,8 +54,7 @@ import aphelion.shared.physics.operations.pub.ActorNewPublic;
 import aphelion.shared.physics.valueobjects.PhysicsPoint;
 import aphelion.shared.swissarmyknife.MySecureRandom;
 import aphelion.shared.swissarmyknife.SwissArmyKnife;
-import gnu.trove.iterator.TIntObjectIterator;
-import gnu.trove.map.hash.TIntObjectHashMap;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 
@@ -360,8 +359,8 @@ public class ClientState
                 }
 
 
-
-                TIntObjectHashMap<GameS2C.S2C.Builder> s2cMessages = new TIntObjectHashMap<>(actors);
+                
+                HashMap<Integer, GameS2C.S2C.Builder> s2cMessages = new HashMap<>(actors);
 
                 // play back all the operations in the todo list of the oldest state
                 Iterator<OperationPublic> opIt = physicsEnv.todoListIterator(oldestState); // the todo list is ordered by tick
@@ -385,11 +384,9 @@ public class ClientState
                         serverGame.addPhysicsOperationToMessage(s2c, op);
                 }
 
-                TIntObjectIterator<GameS2C.S2C.Builder> s2cIt = s2cMessages.iterator();
-                while (s2cIt.hasNext())
+                for (GameS2C.S2C.Builder val : s2cMessages.values())
                 {
-                        s2cIt.advance();
-                        gameConn.send(s2cIt.value());
+                        gameConn.send(val);
                 }
                 
                 lastActorSyncBroadcast_nanos = System.nanoTime();
