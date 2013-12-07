@@ -43,7 +43,6 @@ import de.lessvoid.nifty.Nifty;
 import de.lessvoid.nifty.input.NiftyInputEvent;
 import de.lessvoid.nifty.input.NiftyInputMapping;
 import de.lessvoid.nifty.input.keyboard.KeyboardInputEvent;
-import de.lessvoid.nifty.renderer.lwjgl.input.LwjglKeyboardInputEventCreator;
 import de.lessvoid.nifty.screen.KeyInputHandler;
 import de.lessvoid.nifty.screen.Screen;
 import de.lessvoid.nifty.screen.ScreenController;
@@ -108,11 +107,6 @@ public class MainScreenController implements ScreenController, NiftyInputMapping
         public boolean sendCommand3(String command, String arg1, String arg2)
         {
                 return sendCommand(command, arg1, arg2);
-        }
-
-        public void quit()
-        {
-                nifty.exit();
         }
 
         @Override

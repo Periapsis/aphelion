@@ -55,6 +55,8 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.ByteBuffer;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -295,6 +297,108 @@ public class Client
                 GL11.glDisable(GL11.GL_POLYGON_SMOOTH);
                 GL11.glDisable(GL11.GL_SCISSOR_TEST);
                 GL11.glDisable(GL11.GL_STENCIL_TEST);
+        }
+        
+        public static boolean wasResized()
+        {
+                boolean ret = Display.wasResized() || wasFullscreenChanged;
+                wasFullscreenChanged = false;
+                return ret;
+        }
+        
+        private static boolean wasFullscreenChanged = false;
+        private static int previousDesktopWidth = 1024;
+        private static int previousDesktopHeight = 768;
+        private static int previousDesktopX = 0;
+        private static int previousDesktopY = 0;
+        public static boolean setFullScreen(boolean fullscreen)
+        {
+                if (Display.isFullscreen() == fullscreen)
+                {
+                        return true;
+                }
+                
+                wasFullscreenChanged = true;
+                if (fullscreen)
+                {
+                        previousDesktopWidth = Display.getWidth();
+                        previousDesktopHeight = Display.getHeight();
+                        previousDesktopX = Display.getX();
+                        previousDesktopY = Display.getY();
+                        
+                        DisplayMode[] modes;
+                        try
+                        {
+                                modes = Display.getAvailableDisplayModes();
+                        }
+                        catch (LWJGLException ex)
+                        {
+                                log.log(Level.SEVERE, "Unable to determine available display modes!", ex);
+                                return false;
+                        }
+                        
+                        Arrays.sort(modes, new Comparator<DisplayMode>()
+                        {
+                                @Override
+                                public int compare(DisplayMode o1, DisplayMode o2)
+                                {
+                                        // more is better
+                                        int size1 = o1.getWidth() * o1.getHeight();
+                                        int size2 = o2.getWidth() * o2.getHeight();
+
+                                        if (o1.getBitsPerPixel() == o2.getBitsPerPixel())
+                                        {
+                                                if (size1 == size2)
+                                                {
+                                                        return -Integer.compare(o1.getFrequency(), o2.getFrequency());
+                                                }
+
+                                                return -Integer.compare(size1, size2);
+                                        }
+                                        
+                                        return -Integer.compare(o1.getBitsPerPixel(), o2.getBitsPerPixel());
+                                }
+                        });
+                        
+                        for (DisplayMode mode : modes)
+                        {
+                                try
+                                {
+                                        Display.setDisplayModeAndFullscreen(mode);
+                                        return true;
+                                }
+                                catch (LWJGLException ex)
+                                {
+                                        log.log(Level.WARNING, "Unable to use display mode {0} ({1}). Trying next one", new Object[]{
+                                                mode,
+                                                ex.getMessage()
+                                        });
+                                }
+                        }
+                        
+                        log.log(Level.SEVERE, "Exhausted display modes, none work");
+                }
+                else
+                {
+                        try
+                        {
+                                Display.setDisplayMode(new DisplayMode(previousDesktopWidth, previousDesktopHeight));
+                                Display.setLocation(previousDesktopX, previousDesktopY);
+                                return true;
+                        }
+                        catch (LWJGLException ex)
+                        {
+                                log.log(Level.SEVERE, "Unable to exit fullscreen!", ex);
+                                return false;
+                        }
+                }
+                
+                return false;
+        }
+        
+        public static boolean toggleFullScreen()
+        {
+                return setFullScreen(!Display.isFullscreen());
         }
 
         public static void main(String[] args) throws Exception

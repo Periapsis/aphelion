@@ -39,6 +39,7 @@ import de.lessvoid.nifty.screen.Screen;
 import de.lessvoid.xml.xpp3.Attributes;
 import java.util.Map;
 import java.util.Properties;
+import java.util.logging.Logger;
 
 /**
  *
@@ -46,6 +47,8 @@ import java.util.Properties;
  */
 public class GameMenuController extends AbstractController implements NiftyInputMapping
 {
+        private static final Logger log = Logger.getLogger("aphelion.client.graphics");
+        
         private Nifty nifty;
         private Screen screen;
         private NetworkedGame netGame;
@@ -153,5 +156,10 @@ public class GameMenuController extends AbstractController implements NiftyInput
         public void toggleDebug()
         {
                 Client.showDebug = !Client.showDebug;
+        }
+        
+        public void toggleFullscreen()
+        {
+                Client.toggleFullScreen();
         }
 }

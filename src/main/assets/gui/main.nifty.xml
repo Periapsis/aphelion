@@ -269,6 +269,8 @@
                                         <panel width="*" height="100%" childLayout="vertical">
                                                 <control name="gameMenuButton" char="q" command="quit()" 
                                                          text="Q = Quit" width="100%"/>
+                                                <control name="gameMenuButton" char="f" command="toggleFullscreen()" 
+                                                         text="F = Fullscreen" width="100%"/>
                                                 <control name="gameMenuButton" char="d" command="toggleDebug()" 
                                                          text="D = Debug" width="100%"/>
                                         </panel>

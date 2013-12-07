@@ -60,7 +60,7 @@ import java.util.logging.Logger;
  */
 public class RenderDelay implements GameS2CListener
 {
-        private static final Logger log = Logger.getLogger(RenderDelay.class.getName());
+        private static final Logger log = Logger.getLogger("aphelion.client.graphics");
         
         private final MapEntities mapEntities;
         private final PhysicsEnvironment physicsEnv;

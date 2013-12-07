@@ -87,13 +87,7 @@ import de.lessvoid.nifty.spi.time.impl.AccurateTimeProvider;
 import de.lessvoid.nifty.tools.resourceloader.ClasspathLocation;
 import de.lessvoid.nifty.tools.resourceloader.NiftyResourceLoader;
 import java.io.IOException;
-import java.lang.ref.WeakReference;
-import java.util.Arrays;
-
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JOptionPane;
@@ -497,7 +491,7 @@ public class GameLoop
                         
                         Client.initGL();
                         
-                        if (Display.wasResized())
+                        if (Client.wasResized())
                         {
                                 nifty.resolutionChanged();
                         }
