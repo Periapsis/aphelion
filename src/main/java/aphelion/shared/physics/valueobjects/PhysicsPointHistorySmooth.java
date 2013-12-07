@@ -39,7 +39,14 @@
 package aphelion.shared.physics.valueobjects;
 
 /**
- *
+ * Used to provide dead reckon convergence / smoothing.
+ * Note that the results of this object might not be deterministic!
+ * Also, the output depends on the order that the input is given (this is how dead 
+ * reckon convergence works).
+ * It should not used be used for things that need strong consistency across clients,
+ * or the results should be checked by later states for consistency, (eventual 
+ * consistency).
+ * 
  * @author Joris
  */
 public class PhysicsPointHistorySmooth 
@@ -55,6 +62,7 @@ public class PhysicsPointHistorySmooth
         private final PhysicsPointHistory smooth;
         private SMOOTHING_ALGORITHM algorithm = SMOOTHING_ALGORITHM.NONE;
         private int lookAheadTicks = 20;
+        private int stepRatioPermille = 100;
         private long smoothLimitDistanceSq = 10_000 * 10_000;
         
         public PhysicsPointHistorySmooth(long initial_tick, PhysicsPointHistory positionHist, PhysicsPointHistory velocityHist)
@@ -81,6 +89,11 @@ public class PhysicsPointHistorySmooth
         public void setLookAheadTicks(int lookAheadTicks)
         {
                 this.lookAheadTicks = lookAheadTicks;
+        }
+        
+        public void setStepRatio(int permille)
+        {
+                this.stepRatioPermille = permille;
         }
 
         public void setSmoothLimitDistance(int smoothLimitDistance)
@@ -136,8 +149,8 @@ public class PhysicsPointHistorySmooth
                                 smoothed.multiply(lookAheadTicks);
                                 smoothed.add(desired);
 
-                                smoothed.sub(base);
-                                smoothed.divideUp(lookAheadTicks);
+                                smoothed.sub(base);                                
+                                smoothed.applyRatio(stepRatioPermille, 1024);
                                 smoothed.add(base);
                                 
                                 smooth.setHistory(tick, smoothed);

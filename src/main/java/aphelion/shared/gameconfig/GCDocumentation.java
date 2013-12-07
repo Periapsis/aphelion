@@ -79,7 +79,8 @@ public class GCDocumentation
                 TICK,
                 TICK_POSITIVE,
                 TICK_NON_NEGATIVE,
-                PERMILLE;
+                /** Ratio between 0 and 1024 */
+                RATIO;
         }
         
         public static class GCDocumentationEntry

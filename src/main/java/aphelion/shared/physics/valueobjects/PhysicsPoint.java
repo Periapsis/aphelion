@@ -419,4 +419,16 @@ public final class PhysicsPoint
                         this.y = (int) ((this.y * len) / length);
                 }
         }
+        
+        public void applyRatio(int fraction, int consequent)
+        {
+                if (fraction == 0)
+                {
+                        this.x = 0;
+                        this.y = 0;
+                        return;
+                }
+                this.x = (int) (this.x * (long) consequent / fraction);
+                this.y = (int) (this.y * (long) consequent / fraction);
+        }
 }

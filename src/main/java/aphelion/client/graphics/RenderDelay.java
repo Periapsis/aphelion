@@ -66,7 +66,7 @@ public class RenderDelay implements GameS2CListener
         private final PhysicsEnvironment physicsEnv;
         
         private GCInteger delay = GCIntegerFixed.ZERO;
-        private GCInteger latencyFactor = GCIntegerFixed.ZERO;
+        private GCInteger latencyRatio = GCIntegerFixed.ZERO;
         private GCBoolean projectiles = GCBooleanFixed.FALSE;
         private GCBoolean maximizeLocalTime = GCBooleanFixed.FALSE;
         private GCInteger updateShipEvery = GCIntegerFixed.ZERO;
@@ -87,8 +87,8 @@ public class RenderDelay implements GameS2CListener
                         "A fixed amount of render delay to always apply to ships.");
                 
                 GCDocumentation.put(
-                        "render-delay-latency-factor", 
-                        GCDOCUMENTATION_TYPE.PERMILLE, 
+                        "render-delay-latency-ratio", 
+                        GCDOCUMENTATION_TYPE.RATIO, 
                         false, 
                         "Adds a permille of the remote ships latency to its render delay.");
                 
@@ -126,7 +126,7 @@ public class RenderDelay implements GameS2CListener
                 if (localActor == null)
                 {
                         delay = GCIntegerFixed.ZERO;
-                        latencyFactor = GCIntegerFixed.ZERO;
+                        latencyRatio = GCIntegerFixed.ZERO;
                         projectiles = GCBooleanFixed.FALSE;
                         maximizeLocalTime = GCBooleanFixed.FALSE;
                         updateShipEvery = GCIntegerFixed.ZERO;
@@ -135,7 +135,7 @@ public class RenderDelay implements GameS2CListener
                 }
                 
                 delay = localActor.getActorConfigInteger("render-delay");
-                latencyFactor = localActor.getActorConfigInteger("render-delay-latency-factor");
+                latencyRatio = localActor.getActorConfigInteger("render-delay-latency-ratio");
                 projectiles = localActor.getActorConfigBoolean("render-delay-projectiles");
                 maximizeLocalTime = localActor.getActorConfigBoolean("render-delay-maximize-local-time");
                 updateShipEvery = localActor.getActorConfigInteger("render-delay-update-ship-delay-every-ticks");
@@ -148,7 +148,7 @@ public class RenderDelay implements GameS2CListener
                 
                 ship.renderDelay_value.setUpdateDelay(updateShipEvery.get());
                 
-                if (this.delay.get() <= 0 && this.latencyFactor.get() <= 0)
+                if (this.delay.get() <= 0 && this.latencyRatio.get() <= 0)
                 {
                         ship.renderDelay_value.set(0);
                 }
@@ -308,7 +308,7 @@ public class RenderDelay implements GameS2CListener
                                         if (!ship.renderDelay_value.hasBeenSet() || positionTick > ship.renderDelay_mostRecentMove)
                                         {
                                                 long desired = physicsEnv.getTick() - positionTick; // the latency
-                                                desired = desired * latencyFactor.get() / 1000;
+                                                desired = desired * latencyRatio.get() / 1024;
                                                 desired += this.delay.get();
                                                 if (desired < 0) { desired = 0; }
 

@@ -144,6 +144,7 @@ public class Actor extends MapEntity
         public GCInteger respawnDelay;
         public GCString  smoothingAlgorithm;
         public GCInteger smoothingLookAheadTicks;
+        public GCInteger smoothingStepRatio;
         public GCInteger smoothingDistanceLimit;
         public GCBoolean smoothingProjectileCollisions;
         
@@ -351,11 +352,13 @@ public class Actor extends MapEntity
                 this.respawnDelay = actorConfigSelection.getInteger("ship-respawn-delay");
                 this.smoothingAlgorithm = actorConfigSelection.getString("smoothing-algorithm");
                 this.smoothingLookAheadTicks = actorConfigSelection.getInteger("smoothing-look-ahead-ticks");
+                this.smoothingStepRatio = actorConfigSelection.getInteger("smoothing-step-ratio");
                 this.smoothingDistanceLimit = actorConfigSelection.getInteger("smoothing-distance-limit");
                 this.smoothingProjectileCollisions = actorConfigSelection.getBoolean("smoothing-projectile-collisions");
                 
                 smoothingAlgorithm.addWeakChangeListenerAndFire(smoothingChangeListener);
                 smoothingLookAheadTicks.addWeakChangeListenerAndFire(smoothingChangeListener);
+                smoothingStepRatio.addWeakChangeListenerAndFire(smoothingChangeListener);
                 smoothingDistanceLimit.addWeakChangeListenerAndFire(smoothingChangeListener);
                 
                 for (int slotId = 0; slotId < weaponSlots.length; ++slotId)
@@ -394,6 +397,11 @@ public class Actor extends MapEntity
                         if (val == smoothingLookAheadTicks)
                         {
                                 smoothHistory.setLookAheadTicks(smoothingLookAheadTicks.get());
+                        }
+                        
+                        if (val == smoothingStepRatio)
+                        {
+                                smoothHistory.setStepRatio(smoothingStepRatio.get());
                         }
                         
                         if (val == smoothingDistanceLimit)

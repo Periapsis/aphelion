@@ -1,6 +1,6 @@
 ---
 # There are 735134400 rotation points, 18378360 would be equivalent to 1 continuum rot point.
-# Note that all position, speed values, factors etc are based on 1024 steps and not 1000 (continuum)
+# Note that all position, speed values, ratios etc are based on 1024 steps and not 1000 (continuum)
 # Any values that are relative to the ship rotation are based on a rotation of 0 (facing up)
 
 - noop: &GUNS
@@ -157,13 +157,14 @@
 
   # Latency compensation stuff
   render-delay: 0
-  render-delay-latency-factor: 0
+  render-delay-latency-ratio: 0
   render-delay-projectiles: false
   render-delay-maximize-local-time: false
   render-delay-update-ship-delay-every-ticks: 50
   render-delay-update-projectile-delay-every-ticks: 2
   smoothing-algorithm: LINEAR
   smoothing-look-ahead-ticks: 200
+  smoothing-step-ratio: 128
   smoothing-distance-limit: 1000
   smoothing-projectile-collisions: true
 
