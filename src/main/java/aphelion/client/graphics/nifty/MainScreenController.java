@@ -40,6 +40,8 @@ package aphelion.client.graphics.nifty;
 import aphelion.client.net.NetworkedGame;
 import aphelion.shared.net.COMMAND_SOURCE;
 import de.lessvoid.nifty.Nifty;
+import de.lessvoid.nifty.controls.FocusHandler;
+import de.lessvoid.nifty.elements.Element;
 import de.lessvoid.nifty.input.NiftyInputEvent;
 import de.lessvoid.nifty.input.NiftyInputMapping;
 import de.lessvoid.nifty.input.keyboard.KeyboardInputEvent;
@@ -63,7 +65,7 @@ public class MainScreenController implements ScreenController, NiftyInputMapping
                 this.nifty = nifty;
                 this.screen = screen;
 
-                screen.addKeyboardInputHandler(this, this);
+                screen.addPreKeyboardInputHandler(this, this);
         }
 
         public void aphelionBind(NetworkedGame netGame)
@@ -109,20 +111,13 @@ public class MainScreenController implements ScreenController, NiftyInputMapping
                 return sendCommand(command, arg1, arg2);
         }
 
+        
         @Override
         public NiftyInputEvent convert(KeyboardInputEvent inputEvent)
         {
                 if (inputEvent.isKeyDown())
                 {
-                        if (inputEvent.getKey() == KeyboardInputEvent.KEY_RETURN)
-                        {
-                                return NiftyInputEvent.Activate;
-                        }
-                        else if (inputEvent.getKey() == KeyboardInputEvent.KEY_SPACE)
-                        {
-                                return NiftyInputEvent.Activate;
-                        }
-                        else if (inputEvent.getKey() == KeyboardInputEvent.KEY_NEXT && inputEvent.isShiftDown())
+                        if (inputEvent.getKey() == KeyboardInputEvent.KEY_NEXT && inputEvent.isShiftDown())
                         {
                                 return NiftyInputEvent.NextInputElement;
                         }
@@ -130,13 +125,54 @@ public class MainScreenController implements ScreenController, NiftyInputMapping
                         {
                                 return NiftyInputEvent.PrevInputElement;
                         }
+                        else if (inputEvent.getKey() == KeyboardInputEvent.KEY_TAB)
+                        {
+                                // disable the default nifty behaviour for tab
+                                // otherwise we have to provide an inputMapping for every focusable element.
+                                
+                                NiftyInputEvent.Character.setCharacter((char) 0);
+                                return NiftyInputEvent.Character;
+                        }
                 }
+                
+                
                 return null;
         }
 
         @Override
         public boolean keyEvent(NiftyInputEvent inputEvent)
         {
+                FocusHandler focusHandler = screen.getFocusHandler();
+                if (inputEvent == NiftyInputEvent.Character && NiftyInputEvent.Character.getCharacter() == 0)
+                {
+                        // nop
+                        return true;
+                }
+                else if (inputEvent == NiftyInputEvent.NextInputElement)
+                {
+                        if (focusHandler != null)
+                        {
+                                Element el = focusHandler.getNext(focusHandler.getKeyboardFocusElement());
+                                if (el != null)
+                                {
+                                        el.setFocus();
+                                }
+                                return true;
+                        }
+                }
+                else if (inputEvent == NiftyInputEvent.PrevInputElement)
+                {
+                        if (focusHandler != null)
+                        {
+                                Element el = focusHandler.getPrev(focusHandler.getKeyboardFocusElement());
+                                if (el != null)
+                                {
+                                        el.setFocus();
+                                }
+                                return true;
+                        }
+                }
+                
                 return false;
         }
 }
