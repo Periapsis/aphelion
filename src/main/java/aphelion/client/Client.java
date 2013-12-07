@@ -77,6 +77,7 @@ import org.yaml.snakeyaml.error.YAMLException;
 public class Client
 {
         private static final Logger log = Logger.getLogger("aphelion.client");
+        public static boolean showDebug = false;
         private TickedEventLoop loop;
         private ResourceDB resourceDB;
         private AphelionServerThread serverThread;

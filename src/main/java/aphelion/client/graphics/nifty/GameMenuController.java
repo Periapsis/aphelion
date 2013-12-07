@@ -25,6 +25,7 @@
  */
 package aphelion.client.graphics.nifty;
 
+import aphelion.client.Client;
 import aphelion.client.net.NetworkedGame;
 import aphelion.shared.net.COMMAND_SOURCE;
 import de.lessvoid.nifty.Nifty;
@@ -36,7 +37,6 @@ import de.lessvoid.nifty.input.NiftyInputMapping;
 import de.lessvoid.nifty.input.keyboard.KeyboardInputEvent;
 import de.lessvoid.nifty.screen.Screen;
 import de.lessvoid.xml.xpp3.Attributes;
-import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.Properties;
 
@@ -145,18 +145,13 @@ public class GameMenuController extends AbstractController implements NiftyInput
                 return sendCommand(command, arg1, arg2);
         }
         
-
-        
         public void quit()
         {
                 nifty.exit();
         }
         
-        public static void main(String[] args) throws Exception
+        public void toggleDebug()
         {
-                Method m = GameMenuController.class.getMethod("sendCommand", String.class, String[].class);
-                GameMenuController test = new GameMenuController();
-                m.invoke(test, new Object[] {"a", "b", "c"});
-                
+                Client.showDebug = !Client.showDebug;
         }
 }

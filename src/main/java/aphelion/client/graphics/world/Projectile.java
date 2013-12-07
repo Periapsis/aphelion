@@ -37,6 +37,7 @@
  */
 package aphelion.client.graphics.world;
 
+import aphelion.client.Client;
 import aphelion.client.graphics.AnimatedColour;
 import aphelion.client.graphics.Graph;
 import aphelion.client.graphics.screen.Camera;
@@ -278,7 +279,10 @@ public class Projectile extends MapEntity implements WrappedValueAbstract.Change
                                         anim.getHeight() * camera.zoom);
                         }
                         
-                        camera.renderPlayerText(this.renderDelay_current + "", screenPos.x + 5, screenPos.y + 5, Color.WHITE);
+                        if (Client.showDebug)
+                        {
+                                camera.renderPlayerText(this.renderDelay_current + "", screenPos.x + 5, screenPos.y + 5, Color.WHITE);
+                        }
                 }
                 
                 return iteration < 1;

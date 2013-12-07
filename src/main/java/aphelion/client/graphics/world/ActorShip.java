@@ -37,6 +37,7 @@
  */
 package aphelion.client.graphics.world;
 
+import aphelion.client.Client;
 import aphelion.client.graphics.Graph;
 import aphelion.client.RENDER_LAYER;
 import aphelion.shared.resource.ResourceDB;
@@ -51,11 +52,9 @@ import aphelion.shared.physics.PhysicsMath;
 import aphelion.shared.physics.valueobjects.PhysicsMoveable;
 import aphelion.shared.physics.valueobjects.PhysicsMovement;
 import aphelion.shared.physics.valueobjects.PhysicsPoint;
-import aphelion.shared.physics.valueobjects.PhysicsShipPosition;
 import aphelion.shared.swissarmyknife.Point;
 
 import de.lessvoid.nifty.tools.Color;
-import org.lwjgl.opengl.GL11;
 import org.newdawn.slick.Image;
 import org.newdawn.slick.SpriteSheetCounted;
 
@@ -369,9 +368,9 @@ public class ActorShip extends MapEntity implements TickEvent, WrappedValueAbstr
 
                 if (image != null)
                 {
-                        /*
+                        
                         // Draw the position without smoothing
-                        if (!this.isLocalPlayer())
+                        if (Client.showDebug && !this.isLocalPlayer())
                         {
                                 Point testScreen = new Point();
                                 camera.mapToScreenPosition(realPosition, testScreen);
@@ -379,7 +378,7 @@ public class ActorShip extends MapEntity implements TickEvent, WrappedValueAbstr
                                 testScreen.y -= image.getHeight() / 2f * camera.zoom;
                            
                                 image.draw(testScreen.x, testScreen.y, w, h, org.newdawn.slick.Color.magenta);
-                        }*/
+                        }
                         
                         image.draw(x, y, w, h);
                         
@@ -387,7 +386,7 @@ public class ActorShip extends MapEntity implements TickEvent, WrappedValueAbstr
                         if (netActor.name != null)
                         {
                                 camera.renderPlayerText(
-                                        netActor.name + (renderDelay_current == 0 ? "" : " [" + renderDelay_current + "]"),
+                                        netActor.name + (Client.showDebug ? " [" + renderDelay_current + "]" : ""),
                                         x + image.getWidth(), 
                                         y + image.getHeight() / 2f,
                                         playerColor); 
