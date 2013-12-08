@@ -113,6 +113,7 @@ public class GameLoop
         private final SingleGameConnection connection;
         private final NetworkedGame networkedGame;
         private LocalChat localChat;
+        private DownloadAssetsTask downloadAssetsTask; // set if we are downloading something
         
         // Input:
         private LwjglInputSystem inputSystem;
@@ -169,13 +170,15 @@ public class GameLoop
         
         private void initLoop()
         {
-                AbstractPromise downloadPromise = loop.addWorkerTask(new DownloadAssetsTask(), networkedGame.getRequiredAssets());
+                downloadAssetsTask = new DownloadAssetsTask();
+                AbstractPromise downloadPromise = loop.addWorkerTask(downloadAssetsTask, networkedGame.getRequiredAssets());
                 
                 downloadPromise.then(new PromiseResolved()
                 {
                         @Override
                         public Object resolved(Object ret) throws PromiseException
                         {
+                                downloadAssetsTask = null;
                                 List<Asset> assets = (List<Asset>) ret;
                                 
                                 for (Asset ass : assets)
@@ -299,6 +302,7 @@ public class GameLoop
                         @Override
                         public void rejected(PromiseException error)
                         {
+                                downloadAssetsTask = null;
                                 log.log(Level.SEVERE, "Error while loading the arena", error);
                                 loop.interrupt();
                                 JOptionPane.showMessageDialog(Display.getParent(), 
@@ -511,13 +515,43 @@ public class GameLoop
                         
                         if (!networkedGame.isReady())
                         {
+                                int displayHalfWidth = Display.getWidth() / 2;
+                                int displayHalfHeight = Display.getHeight() / 2;
+                                
                                 if (loadingTex != null)
                                 {
                                         Image loadingBanner = loadingTex.getCachedImage();
                                         if (loadingBanner != null)
                                         {
-                                                loadingBanner.drawCentered(Display.getWidth() / 2, Display.getHeight() / 2);
+                                                loadingBanner.drawCentered(displayHalfWidth, displayHalfHeight);
                                         }
+                                }
+                                
+                                if (downloadAssetsTask != null)
+                                {
+                                        long totalBytes = downloadAssetsTask.getTotalBytes();
+                                        long completedBytes = downloadAssetsTask.getCompletedBytes();
+                                        double percentageComplete = (double) completedBytes / (double) totalBytes * 100.0;
+                                        double speedMiB = downloadAssetsTask.getSpeed() / 1024.0;
+                                        
+                                        String line1 = String.format("Downloading: %2.1f%% (%3.1f KiB/s)", 
+                                                                     percentageComplete,
+                                                                     speedMiB);
+                                        
+                                        String line2 = String.format("File %d of %d; %d of %d bytes", 
+                                                                     downloadAssetsTask.getVerifiedFiles() + 1,
+                                                                     downloadAssetsTask.getTotalFiles(),
+                                                                     completedBytes,
+                                                                     totalBytes);
+                                        
+                                        // use the default slick font
+                                        
+                                        int line1_width = Graph.g.getFont().getWidth(line1);
+                                        int line2_width = Graph.g.getFont().getWidth(line2);
+                                        int line_height = Graph.g.getFont().getLineHeight();
+                                        
+                                        Graph.g.drawString(line1, displayHalfWidth - line1_width / 2, displayHalfHeight + 120);
+                                        Graph.g.drawString(line2, displayHalfWidth - line2_width / 2, displayHalfHeight + 120 + line_height);
                                 }
                         }
                         else

@@ -61,11 +61,63 @@ public class DownloadAssetsTask extends WorkerTask<List<Asset>, List<Asset>>
         private static final Logger log = Logger.getLogger("aphelion.resource");
         private final int READ_TIMEOUT_MILLIS = 10 * 1000;
         private final int BUFFER_SIZE = 128 * 1024;
+        
+        // statistics:
+        private volatile long totalBytes;
+        private volatile long verifiedBytes;
+        private volatile long currentReceivedBytes;
+        private volatile long speed;
+        private volatile int totalFiles;
+        private volatile int verifiedFiles;
+        
+        private long secondResetMillis;
+        private long secondBytes;
+        
+        // todo: speed
+        
+        /** The total amount of bytes we have to download.
+         * This is excluding assets that come from the cache.
+         * @return bytes
+         */
+        public long getTotalBytes()
+        {
+                return totalBytes;
+        }
+        
+        /** The total amount of bytes have been downloaded.
+         * This value may decrease if it turns out that an asset was invalid and has to be retried.
+         * @return bytes
+         */
+        public long getCompletedBytes()
+        {
+                return verifiedBytes + currentReceivedBytes;
+        }
+
+        /** The current download speed.
+         * @return bytes per second
+         */
+        public long getSpeed()
+        {
+                return speed;
+        }
+
+        public int getTotalFiles()
+        {
+                return totalFiles;
+        }
+
+        public int getVerifiedFiles()
+        {
+                return verifiedFiles;
+        }
 
         @Override
         public List<Asset> work(List<Asset> argument) throws PromiseException
         {
-                ASSETS_LOOP: for (Asset ass : argument)
+                totalBytes = 0;
+                ArrayList<Asset> todo = new ArrayList<>(argument.size());
+                
+                for (Asset ass : argument)
                 {
                         if (ass.validateCachedEntry())
                         {
@@ -73,6 +125,14 @@ public class DownloadAssetsTask extends WorkerTask<List<Asset>, List<Asset>>
                                 continue;
                         }
                         
+                        todo.add(ass);
+                        ++totalFiles;
+                        totalBytes += ass.size;
+                }
+                
+                
+                ASSETS_LOOP: for (Asset ass : todo)
+                {
                         assert ass.mirrors instanceof RandomAccess;
                         
                         // ass.mirrors is sorted by higest priority first.
@@ -103,6 +163,9 @@ public class DownloadAssetsTask extends WorkerTask<List<Asset>, List<Asset>>
                                 {
                                         if (tryMirror(ass, mirror))
                                         {
+                                                currentReceivedBytes = 0;
+                                                verifiedBytes += ass.size;
+                                                ++verifiedFiles;
                                                 continue ASSETS_LOOP;
                                         }
                                 }
@@ -137,6 +200,14 @@ public class DownloadAssetsTask extends WorkerTask<List<Asset>, List<Asset>>
                 {
                         log.log(Level.INFO, "Trying to download asset {0} from {1}", new Object[] {ass.cachedName, mirror.url});
 
+                        currentReceivedBytes = 0;
+                        
+                        // currentTimeMillis is much faster than nanoTime, 
+                        // but might be disrupted by the user/NTP changing the clock
+                        // this is not harmful because these value are only used as statistics
+                        secondResetMillis = System.currentTimeMillis();
+                        secondBytes = 0;
+                        
                         HttpURLConnection conn = (HttpURLConnection) mirror.url.openConnection();
                         conn.setRequestMethod("GET");
                         conn.setReadTimeout(READ_TIMEOUT_MILLIS);
@@ -169,10 +240,23 @@ public class DownloadAssetsTask extends WorkerTask<List<Asset>, List<Asset>>
                                         while (true)
                                         {
                                                 int read = in.read(buffer);
+                                                
                                                 if (read < 0)
                                                 {
                                                         break;
                                                 }
+                                                
+                                                currentReceivedBytes += read;
+                                                secondBytes += read;
+                                                
+                                                long now = System.currentTimeMillis();
+                                                if (Math.abs(now - secondResetMillis) >= 1000)
+                                                {
+                                                        speed = secondBytes;
+                                                        secondResetMillis = now;
+                                                        secondBytes = 0;
+                                                }
+                                                
                                                 out.write(buffer, 0, read);
                                         }
                                 }

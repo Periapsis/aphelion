@@ -48,7 +48,11 @@ import org.newdawn.slick.Graphics;
 public class Graph extends Graphics
 {
         public static final Graph g = new Graph();
-        
+
+        public Graph()
+        {
+                super(1024, 768);
+        }
         
         private static long nanoTime;
         
