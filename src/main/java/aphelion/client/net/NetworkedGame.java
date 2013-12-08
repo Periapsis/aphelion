@@ -514,7 +514,7 @@ public class NetworkedGame implements GameProtoListener, TickEvent
                         physicsEnv.actorNew(msg.getCurrentTicks(), myPid, msg.getYourSeed(), msg.getShip());
 
                         NetworkedActor actor = new NetworkedActor(myPid, true, msg.getName());
-                        this.actors.put(myPid, actor);
+                        this.actors.put(actor.pid, actor);
                         
                         nextState(STATE.RECEIVED_ARENASYNC);
                         
@@ -582,7 +582,7 @@ public class NetworkedGame implements GameProtoListener, TickEvent
                         else
                         {
                                 NetworkedActor actor = new NetworkedActor(msg.getPid(), false, msg.getName());
-                                this.actors.put(myPid, actor);
+                                this.actors.put(actor.pid, actor);
 
                                 for (ActorListener listener : actorListeners)
                                 {

@@ -46,55 +46,36 @@ import aphelion.client.graphics.nifty.*;
 import aphelion.client.net.NetworkedGame;
 import aphelion.client.net.SingleGameConnection;
 import aphelion.shared.resource.ResourceDB;
-import aphelion.client.graphics.screen.CameraNiftyController;
 import aphelion.client.graphics.screen.Gauges;
-import aphelion.client.graphics.screen.Camera;
-import aphelion.client.graphics.screen.CameraNiftyController.CameraForNifty;
+import aphelion.client.graphics.screen.NiftyCameraImpl;
 import aphelion.client.graphics.world.*;
 import aphelion.client.graphics.world.event.ActorDiedTracker;
 import aphelion.client.graphics.world.event.EventTracker;
 import aphelion.client.graphics.world.event.ProjectileExplosionTracker;
-import aphelion.client.resource.AsyncTexture;
-import aphelion.client.resource.DBNiftyResourceLocation;
 import aphelion.shared.event.TickedEventLoop;
-import aphelion.shared.event.promise.*;
-import aphelion.shared.gameconfig.LoadYamlTask;
 import aphelion.shared.physics.entities.ActorPublic;
 import aphelion.shared.physics.events.pub.EventPublic;
 import aphelion.shared.physics.PhysicsEnvironment;
 import aphelion.shared.physics.valueobjects.PhysicsShipPosition;
 import aphelion.shared.swissarmyknife.Point;
 import aphelion.shared.map.MapClassic;
-import aphelion.shared.map.tile.TileType;
 import aphelion.shared.physics.entities.ProjectilePublic;
 import aphelion.shared.physics.events.Event;
 import aphelion.shared.physics.events.pub.ActorDiedPublic;
 import aphelion.shared.physics.events.pub.ProjectileExplosionPublic;
 import aphelion.shared.physics.valueobjects.PhysicsPoint;
-import aphelion.shared.resource.Asset;
-import aphelion.shared.resource.DownloadAssetsTask;
 import aphelion.shared.swissarmyknife.AttachmentConsumer;
 import de.lessvoid.nifty.Nifty;
 import de.lessvoid.nifty.controls.Controller;
 import de.lessvoid.nifty.elements.Element;
 import de.lessvoid.nifty.elements.render.TextRenderer;
-import de.lessvoid.nifty.nulldevice.NullSoundDevice;
 import de.lessvoid.nifty.renderer.lwjgl.input.LwjglInputSystem;
-import de.lessvoid.nifty.renderer.lwjgl.render.LwjglRenderDevice;
 import de.lessvoid.nifty.screen.Screen;
-import de.lessvoid.nifty.screen.ScreenController;
-import de.lessvoid.nifty.spi.time.impl.AccurateTimeProvider;
-import de.lessvoid.nifty.tools.resourceloader.ClasspathLocation;
-import de.lessvoid.nifty.tools.resourceloader.NiftyResourceLoader;
-import java.io.IOException;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.swing.JOptionPane;
 
 import org.lwjgl.opengl.Display;
-import org.lwjgl.opengl.GL11;
-import org.newdawn.slick.Image;
 
 /**
  *
@@ -106,38 +87,36 @@ public class GameLoop
         
         private final ResourceDB resourceDB;
         private final TickedEventLoop loop;
-        private boolean loadedResources = false;
         private boolean connectionError = false;
         
         // Network:
         private final SingleGameConnection connection;
         private final NetworkedGame networkedGame;
         private LocalChat localChat;
-        private DownloadAssetsTask downloadAssetsTask; // set if we are downloading something
         
         // Input:
-        private LwjglInputSystem inputSystem;
+        private final LwjglInputSystem inputSystem;
         private MyKeyboard myKeyboard;
         
         // Physics:
-        private PhysicsEnvironment physicsEnv;
+        private final PhysicsEnvironment physicsEnv;
         private ActorPublic localActor;
         
         // Map:
-        private MapClassic mapClassic;
+        private final MapClassic mapClassic;
         
         // Graphics:
-        private StarField stars;
-        private MapEntities mapEntities;
-        private RenderDelay renderDelay;
+        private final StarField stars;
+        private final MapEntities mapEntities;
+        private final RenderDelay renderDelay;
         
         private static final AttachmentConsumer<EventPublic, EventTracker> eventTrackers 
                 = new AttachmentConsumer<>(Event.attachmentManager);
         
         // Screen Graphics
-        private Nifty nifty;
-        private final Point defaultCameraPosition = new Point();
-        private Screen mainScreen;        
+        private final Nifty nifty;
+        private final NiftyCameraImpl niftyCameraImpl;
+        private final Screen mainScreen;   
         private EnergyBar[] energyBars;
         private Element[] energyTexts;
         private Gauges gauges;
@@ -150,200 +129,26 @@ public class GameLoop
         private long lastFrameReset;
         private long lastFps;
 
-        public GameLoop(ResourceDB resourceDB, TickedEventLoop loop, SingleGameConnection connection, NetworkedGame networkedGame)
+        public GameLoop(InitializeLoop initializeLoop)
         {
-                this.resourceDB = resourceDB;
-                this.loop = loop;
-                this.connection = connection;
-                this.networkedGame = networkedGame;
-        }
-        
-        public boolean isLoadingResources()
-        {
-                return !loadedResources;
+                this.resourceDB = initializeLoop.resourceDB;
+                this.loop = initializeLoop.loop;
+                this.connection = initializeLoop.connection;
+                this.networkedGame = initializeLoop.networkedGame;
+                this.mapClassic = initializeLoop.mapClassic;
+                this.physicsEnv = initializeLoop.physicsEnv;
+                this.inputSystem = initializeLoop.inputSystem;
+                this.stars = initializeLoop.stars;
+                this.mapEntities = initializeLoop.mapEntities;
+                this.renderDelay = initializeLoop.renderDelay;
+                this.nifty = initializeLoop.nifty;
+                this.mainScreen = initializeLoop.mainScreen;
+                this.niftyCameraImpl = initializeLoop.niftyCameraImpl;
         }
         
         public boolean isConnectionError()
         {
                 return connectionError;
-        }
-        
-        private void initLoop()
-        {
-                downloadAssetsTask = new DownloadAssetsTask();
-                AbstractPromise downloadPromise = loop.addWorkerTask(downloadAssetsTask, networkedGame.getRequiredAssets());
-                
-                downloadPromise.then(new PromiseResolved()
-                {
-                        @Override
-                        public Object resolved(Object ret) throws PromiseException
-                        {
-                                downloadAssetsTask = null;
-                                List<Asset> assets = (List<Asset>) ret;
-                                
-                                for (Asset ass : assets)
-                                {
-                                        try
-                                        {
-                                                // ass.file is now valid
-                                                // (the DownloadAssetsTask fails even if only 1 asset fails)
-                                                resourceDB.addZip(ass.file);
-                                        }
-                                        catch (IOException ex)
-                                        {
-                                                log.log(Level.SEVERE, "Received an asset file from the server that is not a zip", ex);
-                                                throw new PromiseException("Received an asset file from the server that is not a zip", ex);
-                                        }
-                                }
-                                
-                                AbstractPromise loadMapPromise = 
-                                loop.addWorkerTask(new MapClassic.LoadMapTask(resourceDB, true), networkedGame.mapResource)
-                                .then(new PromiseResolved()
-                                {
-                                        @Override
-                                        public Object resolved(Object ret) throws PromiseException
-                                        {
-                                                log.log(Level.INFO, "Map loaded");
-                                                mapClassic = (MapClassic) ret;
-                                                // should work fine for lvl files < 2 GiB
-                                                stars = new StarField((int) mapClassic.getLevelSize(), resourceDB);
-                                                return mapClassic;
-                                        }
-                                });
-
-                                AbstractPromise loadConfigPromise = 
-                                loop.addWorkerTask(new LoadYamlTask(resourceDB), Collections.unmodifiableList(networkedGame.gameConfigResources))
-                                .then(new PromiseResolved()
-                                {
-                                        @Override
-                                        public Object resolved(Object ret) throws PromiseException
-                                        {
-                                                 log.log(Level.INFO, "Game config read");
-
-                                                 // ret is List<LoadYamlTask.Return>
-                                                 return ret;
-                                        }
-                                });
-
-                                return new All(loop, loadMapPromise, loadConfigPromise);
-                        }
-                })
-                .then(new PromiseResolved()
-                {
-                        @Override
-                        public Object resolved(Object ret_) throws PromiseException
-                        {
-                                List ret = (List) ret_;
-                                List<LoadYamlTask.Return> loadYamlResult = (List<LoadYamlTask.Return>) ret.get(1);
-                                
-                                physicsEnv = new PhysicsEnvironment(false, mapClassic);
-                                mapEntities.setPhysicsEnv(physicsEnv);
-
-                                for (LoadYamlTask.Return yamlResult : loadYamlResult)
-                                {
-                                        physicsEnv.loadConfig(
-                                                physicsEnv.getTick()-physicsEnv.econfig.HIGHEST_DELAY,
-                                                yamlResult.fileIdentifier, 
-                                                yamlResult.yamlDocuments);
-                                }
-                                
-                                renderDelay = new RenderDelay(physicsEnv, mapEntities);
-                                connection.addListener(renderDelay);
-                                
-                                boolean first = true;
-                                
-                                /*{
-                                        Logger logger = Logger.getLogger("de.lessvoid.nifty");
-                                        logger.setLevel(Level.FINER);
-
-                                        ConsoleHandler handler = new ConsoleHandler();
-                                        handler.setLevel(Level.FINER);
-                                        logger.addHandler(handler);
-                                }*/
-                                
-                                for (String res : networkedGame.niftyGuiResources)
-                                {
-                                        if (first)
-                                        {
-                                                nifty.fromXmlWithoutStartScreen(res);
-                                                first = false;
-                                        }
-                                        else
-                                        {
-                                                nifty.addXml(res);
-                                        }
-                                        
-                                }
-                                
-                                networkedGame.arenaLoaded(physicsEnv);
-                                loadedResources = true;
-                                
-                                mainScreen = nifty.getScreen("aphelion-main");
-                                if (mainScreen == null)
-                                {
-                                        throw new PromiseException("Missing nifty-gui screen: aphelion-main");
-                                }
-                                ScreenController screenControl = mainScreen.getScreenController();
-                                if (screenControl instanceof MainScreenController)
-                                {
-                                        ((MainScreenController) screenControl).aphelionBind(networkedGame);
-                                }
-                                nifty.gotoScreen("aphelion-main");
-                                
-                                lookUpNiftyElements();
-                                
-                                localChat = new LocalChat(networkedGame, Collections.unmodifiableList(Arrays.asList(chatLocals)));
-                                localChat.subscribeListeners(networkedGame, mainScreen);
-                                
-                                return null;
-                        }
-                }).then(new PromiseRejected()
-                {
-                        @Override
-                        public void rejected(PromiseException error)
-                        {
-                                downloadAssetsTask = null;
-                                log.log(Level.SEVERE, "Error while loading the arena", error);
-                                loop.interrupt();
-                                JOptionPane.showMessageDialog(Display.getParent(), 
-                                                              "Error while loading the arena:\n" 
-                                                              + error.getMessage() 
-                                                              + "\nSee log for further details");
-                        }
-                });
-                
-                mapEntities = new MapEntities(resourceDB);
-                networkedGame.addActorListener(mapEntities);
-                
-                loop.addTickEvent(mapEntities);
-                loop.addLoopEvent(mapEntities);
-                
-                
-                inputSystem = new LwjglInputSystem();
-                try
-                {
-                        inputSystem.startup();
-                }
-                catch (Exception ex)
-                {
-                        throw new Error(ex);
-                }
-                
-                nifty = new Nifty(new LwjglRenderDevice(), new NullSoundDevice(), inputSystem, new AccurateTimeProvider());
-                NiftyResourceLoader niftyResourceLoader = nifty.getResourceLoader();
-                niftyResourceLoader.removeAllResourceLocations();
-                // nifty first tries stuff on the class path (needed for its internal files)
-                niftyResourceLoader.addResourceLocation(new ClasspathLocation());
-                // Then try the same reference as a resource key 
-                // (add this second so that zones can not override nifty build-ins)
-                niftyResourceLoader.addResourceLocation(new DBNiftyResourceLocation(resourceDB));
-                
-                CameraNiftyController.registerControl(nifty, cameraForNifty);
-                TriggerOnShowEffect.registerEffect(nifty);
-                SpriteAnimationEffect.registerEffect(nifty);
-                BackgroundColorSpriteEffect.registerEffect(nifty);
-                BackgroundColorAnimated.registerEffect(nifty);
-                ClockTextEffect.registerEffect(nifty);
         }
         
         /** Find all controls that begin with the given prefix by adding up numbers.
@@ -418,14 +223,17 @@ public class GameLoop
         
         public void loop()
         {
-                initLoop();
+                lookUpNiftyElements();
+
+                localChat = new LocalChat(networkedGame, Collections.unmodifiableList(Arrays.asList(chatLocals)));
+                localChat.subscribeListeners(networkedGame, mainScreen);
+                
+                
                 
                 lastFrameReset = System.nanoTime();
                 frames = 60;
                 
                 boolean tickingPhysics = false;
-                
-                AsyncTexture loadingTex = resourceDB.getTextureLoader().getTexture("gui.loading.graphics");
                 
                 while (!loop.isInterruped())
                 {
@@ -437,7 +245,7 @@ public class GameLoop
                                 log.log(Level.WARNING, "Close requested in game loop");
                                 loop.interrupt();
                                 break;
-                        }       
+                        }
                         
                         Graph.graphicsLoop();
                         
@@ -511,86 +319,39 @@ public class GameLoop
                         
                         
                         ActorShip localShip = mapEntities.getLocalShip();
-                        
-                        
-                        if (!networkedGame.isReady())
+
+                        updateGraphicsFromPhysics();
+
+                        if (localShip == null || localActor == null)
                         {
-                                int displayHalfWidth = Display.getWidth() / 2;
-                                int displayHalfHeight = Display.getHeight() / 2;
-                                
-                                if (loadingTex != null)
-                                {
-                                        Image loadingBanner = loadingTex.getCachedImage();
-                                        if (loadingBanner != null)
-                                        {
-                                                loadingBanner.drawCentered(displayHalfWidth, displayHalfHeight);
-                                        }
-                                }
-                                
-                                if (downloadAssetsTask != null)
-                                {
-                                        long totalBytes = downloadAssetsTask.getTotalBytes();
-                                        long completedBytes = downloadAssetsTask.getCompletedBytes();
-                                        double percentageComplete = (double) completedBytes / (double) totalBytes * 100.0;
-                                        double speedMiB = downloadAssetsTask.getSpeed() / 1024.0;
-                                        
-                                        String line1 = String.format("Downloading: %2.1f%% (%3.1f KiB/s)", 
-                                                                     percentageComplete,
-                                                                     speedMiB);
-                                        
-                                        String line2 = String.format("File %d of %d; %d of %d bytes", 
-                                                                     downloadAssetsTask.getVerifiedFiles() + 1,
-                                                                     downloadAssetsTask.getTotalFiles(),
-                                                                     completedBytes,
-                                                                     totalBytes);
-                                        
-                                        // use the default slick font
-                                        
-                                        int line1_width = Graph.g.getFont().getWidth(line1);
-                                        int line2_width = Graph.g.getFont().getWidth(line2);
-                                        int line_height = Graph.g.getFont().getLineHeight();
-                                        
-                                        Graph.g.drawString(line1, displayHalfWidth - line1_width / 2, displayHalfHeight + 120);
-                                        Graph.g.drawString(line2, displayHalfWidth - line2_width / 2, displayHalfHeight + 120 + line_height);
-                                }
+                                niftyCameraImpl.setDefaultCameraPosition(8192, 8192);
                         }
                         else
                         {
-                                loadingTex = null;
-                                
-                                updateGraphicsFromPhysics();
-                                
-                                if (localShip == null || localActor == null)
+                                int energy = localShip.getEnergy(false);
+                                float energyProgress = energy / (float) localShip.getMaxEnergy();
+
+                                for (EnergyBar energyBar : this.energyBars)
                                 {
-                                        defaultCameraPosition.set(8192, 8192);
+                                        energyBar.setProgress(energyProgress);
                                 }
-                                else
+
+                                for (Element energyText : this.energyTexts)
                                 {
-                                        int energy = localShip.getEnergy(false);
-                                        float energyProgress = energy / (float) localShip.getMaxEnergy();
-                                        
-                                        for (EnergyBar energyBar : this.energyBars)
-                                        {
-                                                energyBar.setProgress(energyProgress);
-                                        }
-                                        
-                                        for (Element energyText : this.energyTexts)
-                                        {
-                                                energyText.getRenderer(TextRenderer.class).setText(energy + "");
-                                        }
-                                        
-                                        if (gauges == null)
-                                        {
-                                                assert mainScreen != null;
-                                                gauges = new Gauges(mainScreen, localActor);
-                                        }
-                                        
-                                        
-                                        defaultCameraPosition.set(localShip.pos);
+                                        energyText.getRenderer(TextRenderer.class).setText(energy + "");
                                 }
-                                
-                                nifty.render(false);
+
+                                if (gauges == null)
+                                {
+                                        assert mainScreen != null;
+                                        gauges = new Gauges(mainScreen, localActor);
+                                }
+
+                                niftyCameraImpl.setDefaultCameraPosition(localShip.pos);
                         }
+
+                        nifty.render(false);
+
                         
                         // statistics
                         long now = System.nanoTime();
@@ -631,43 +392,6 @@ public class GameLoop
                 }       
         }
         
-        private final CameraForNifty cameraForNifty = new CameraNiftyController.CameraForNifty()
-        {
-
-                @Override
-                public ResourceDB getResourceDB()
-                {
-                        return resourceDB;
-                }
-
-                @Override
-                public void renderCamera(Camera camera, boolean renderStars)
-                {
-                        GL11.glColor3f(1, 1, 1);
-                        
-                        camera.setPosition(defaultCameraPosition);
-                        camera.clipPosition(0, 0, 1024*16, 1024*16);
-                        
-                        if (renderStars)
-                        {
-                                stars.render(camera);
-                        }
-
-                        camera.renderEntities(mapEntities.animations(RENDER_LAYER.BACKGROUND, camera));
-                        camera.renderTiles(mapClassic, TileType.TILE_LAYER.PLAIN);
-                        // rendered in a seperate iteration so that we do not have to switch between textures as often
-                        // (tile set is one big texture)
-                        camera.renderTiles(mapClassic, TileType. TILE_LAYER.ANIMATED);
-                        camera.renderEntities(mapEntities.animations(RENDER_LAYER.AFTER_TILES, camera));
-                        camera.renderEntities(mapEntities.projectiles(false));
-                        camera.renderEntities(mapEntities.animations(RENDER_LAYER.AFTER_PROJECTILES, camera));
-                        camera.renderEntities(mapEntities.shipsNoLocal());
-                        camera.renderEntities(mapEntities.animations(RENDER_LAYER.AFTER_SHIPS, camera));
-                        camera.renderEntity(mapEntities.getLocalShip());
-                        camera.renderTiles(mapClassic, TileType.TILE_LAYER.PLAIN_OVER_SHIP);
-                        camera.renderEntities(mapEntities.animations(RENDER_LAYER.AFTER_LOCAL_SHIP, camera));
-                }
-        };
         
         private void updateGraphicsFromPhysics()
         {

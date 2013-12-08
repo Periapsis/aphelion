@@ -172,19 +172,11 @@ public class Client
                 {
                         log.log(Level.SEVERE, "Connection failed");
                         NetworkedGame networkedGame = connectLoop.getNetworkedGame();
-                        loop.breakdown();
-                        Display.destroy();
-                        Keyboard.destroy();
-                        connectLoop.getConnection().stop();
-
-                        if (serverThread != null)
-                        {
-                                serverThread.stopServer();
-                        }
-                        
-                        
                         AuthenticateResponse.ERROR authError = networkedGame.getAuthError();
                         WS_CLOSE_STATUS closeStatus = networkedGame.getDisconnectCode();
+                        
+                        breakdown();
+                        
                         
                         if (authError != null)
                         {
@@ -209,18 +201,28 @@ public class Client
 
                 state = STATE.PLAYING;
                 NetworkedGame netGame = connectLoop.getNetworkedGame();
-                GameLoop gameLoop = new GameLoop(resourceDB, loop, connectLoop.getConnection(), netGame);
-                gameLoop.loop();
-                state = STATE.QUITTING;
-                breakdown();
                 
-                if (gameLoop.isConnectionError())
+                InitializeLoop initLoop = new InitializeLoop(resourceDB, loop, connectLoop.getConnection(), netGame);
+                if (initLoop.loop())
                 {
-                        WS_CLOSE_STATUS code = netGame.getDisconnectCode();
-                        String reason = netGame.getDisconnectReason();
-                        if (reason == null) reason = "";
-                        
-                        JOptionPane.showMessageDialog(null, "Connection to the server suddenly dropped (" + uri + ") (code:"+code +")\n\n"+reason, "Aphelion", JOptionPane.ERROR_MESSAGE);
+                        GameLoop gameLoop = new GameLoop(initLoop);
+                        initLoop = null;
+                        gameLoop.loop();
+                        breakdown();
+
+                        if (gameLoop.isConnectionError())
+                        {
+                                WS_CLOSE_STATUS code = netGame.getDisconnectCode();
+                                String reason = netGame.getDisconnectReason();
+                                if (reason == null) reason = "";
+
+                                JOptionPane.showMessageDialog(null, "Connection to the server suddenly dropped (" + uri + ") (code:"+code +")\n\n"+reason, "Aphelion", JOptionPane.ERROR_MESSAGE);
+                        }
+                }
+                else
+                {
+                        log.log(Level.SEVERE, "Initialize failed");
+                        breakdown();
                 }
         }
         
@@ -246,7 +248,7 @@ public class Client
                 }
 
 
-                log.log(Level.INFO, "Done");
+                log.log(Level.INFO, "Breakdown completed");
         }
 
         public static void initGL()
