@@ -91,10 +91,10 @@ public class ResourceDB implements LoopEvent
         
         private AsyncTextureLoader textureLoader;
         
-        private LinkedHashMap<String, FileEntry> entries = new LinkedHashMap<>();
+        private final LinkedHashMap<String, FileEntry> entries = new LinkedHashMap<>();
         private final Workable workable;
-        private HashMap<String, SoftReference<byte[]>> byteCache = new HashMap<>();
-        private LinkedList<LoadSynchronizer> loadSynchronizers = new LinkedList<>();
+        private final HashMap<String, SoftReference<byte[]>> byteCache = new HashMap<>();
+        private final LinkedList<LoadSynchronizer> loadSynchronizers = new LinkedList<>();
         private int cleanupCounter = 0;
 
         public ResourceDB(Workable workable)
@@ -105,7 +105,10 @@ public class ResourceDB implements LoopEvent
         @Override
         public void loop(long systemNanoTime, long sourceNanoTime)
         {
-                textureLoader.loop(systemNanoTime, sourceNanoTime);
+                if (textureLoader != null)
+                {
+                        textureLoader.loop(systemNanoTime, sourceNanoTime);
+                }
         }
         
         public AsyncTextureLoader getTextureLoader()

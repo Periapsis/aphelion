@@ -54,7 +54,7 @@ import org.newdawn.slick.Image;
  */
 public class StarField
 {
-        private int seed;
+        private final int seed;
         private static final int STAR_TILE_SIZE = 512;
         private Color layer1Color;
         private Color layer2Color;
@@ -86,13 +86,21 @@ public class StarField
                 //Load background objects
                 for (int n = 0; n < bg.length; ++n)
                 {
-                        bg[n] = db.getTextureLoader().getTexture(String.format("classic.background.bg%02d", n));
+                        String key = String.format("classic.background.bg%02d", n);
+                        if (db.resourceExists(key))
+                        {
+                                bg[n] = db.getTextureLoader().getTexture(key);
+                        }
                 }
 
                 //Load star objects
                 for (int n = 0; n < star.length; ++n)
                 {
-                        star[n] = db.getTextureLoader().getTexture(String.format("classic.background.star%02d", n));
+                        String key = String.format("classic.background.star%02d", n);
+                        if (db.resourceExists(key))
+                        {
+                                star[n] = db.getTextureLoader().getTexture(key);
+                        }
                 }
 
         }
@@ -234,18 +242,26 @@ public class StarField
                                         }
                                         else if (backgroundObjectType > 0)
                                         {
-                                                Image img = star[backgroundObjectType-1].getCachedImage();
-                                                if (img != null)
+                                                AsyncTexture tex = star[backgroundObjectType-1];
+                                                if (tex != null)
                                                 {
-                                                        img.draw(pxi, pyi);
+                                                        Image img = tex.getCachedImage();
+                                                        if (img != null)
+                                                        {
+                                                                img.draw(pxi, pyi);
+                                                        }
                                                 }
                                         }
                                         else if (backgroundObjectType < 0)
                                         {
-                                                Image img = bg[-backgroundObjectType-1].getCachedImage();
-                                                if (img != null)
+                                                AsyncTexture tex = bg[-backgroundObjectType-1];
+                                                if (tex != null)
                                                 {
-                                                        img.draw(pxi, pyi);
+                                                        Image img = tex.getCachedImage();
+                                                        if (img != null)
+                                                        {
+                                                                img.draw(pxi, pyi);
+                                                        }
                                                 }
                                         }
                                 }

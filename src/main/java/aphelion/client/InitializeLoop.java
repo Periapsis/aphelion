@@ -41,6 +41,7 @@ package aphelion.client;
 import aphelion.client.graphics.Graph;
 import aphelion.client.graphics.RenderDelay;
 import aphelion.client.graphics.nifty.*;
+import aphelion.client.graphics.screen.Camera;
 import aphelion.client.graphics.screen.CameraNiftyController;
 import aphelion.client.graphics.screen.NiftyCameraImpl;
 import aphelion.client.graphics.world.MapEntities;
@@ -77,6 +78,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JOptionPane;
 import org.lwjgl.opengl.Display;
+import org.newdawn.slick.Color;
 import org.newdawn.slick.Image;
 
 /**
@@ -91,6 +93,9 @@ public class InitializeLoop
         final TickedEventLoop loop;
         
         private boolean initComplete = false;
+        final Camera loadingCamera;
+        final StarField loadingStarfield;
+        int loadingCameraY;
         
         // Network:
         private boolean failure = false;
@@ -118,13 +123,15 @@ public class InitializeLoop
         NiftyCameraImpl niftyCameraImpl;
         
 
-        public InitializeLoop(ResourceDB resourceDB, TickedEventLoop loop, SingleGameConnection connection,
-                              NetworkedGame networkedGame)
+        public InitializeLoop(ConnectLoop connectLoop)
         {
-                this.resourceDB = resourceDB;
-                this.loop = loop;
-                this.connection = connection;
-                this.networkedGame = networkedGame;
+                this.resourceDB = connectLoop.resourceDB;
+                this.loop =  connectLoop.loop;
+                this.connection =  connectLoop.connection;
+                this.networkedGame =  connectLoop.networkedGame;
+                this.loadingCamera = connectLoop.loadingCamera;
+                this.loadingStarfield = connectLoop.loadingStarfield;
+                this.loadingCameraY = connectLoop.loadingCameraY;
         }
         
         private AbstractPromise downloadAssets()
@@ -334,10 +341,10 @@ public class InitializeLoop
                 loop.addTickEvent(mapEntities);
                 loop.addLoopEvent(mapEntities);
                 
+                loadingCamera.setPosition(0, loadingCameraY);
+                
                 // Asynchronous:
                 downloadAssets().then(loadAssets).then(assetsLoaded).then(initializeComplete).then(initializeError);
-                
-                AsyncTexture loadingTex = resourceDB.getTextureLoader().getTexture("gui.loading.graphics");
                 
                 while (!loop.isInterruped())
                 {
@@ -374,20 +381,10 @@ public class InitializeLoop
                                 // continue on to GameLoop
                                 return true;
                         }
-                        
-                        int displayHalfWidth = Display.getWidth() / 2;
-                        int displayHalfHeight = Display.getHeight() / 2;
 
-                        if (loadingTex != null)
-                        {
-                                Image loadingBanner = loadingTex.getCachedImage();
-                                if (loadingBanner != null)
-                                {
-                                        loadingBanner.drawCentered(displayHalfWidth, displayHalfHeight);
-                                }
-                        }
+                        loadingStarfield.render(loadingCamera);
 
-                        if (downloadAssetsTask != null)
+                        if (downloadAssetsTask != null && downloadAssetsTask.getTotalFiles() > 0)
                         {
                                 long totalBytes = downloadAssetsTask.getTotalBytes();
                                 long completedBytes = downloadAssetsTask.getCompletedBytes();
@@ -410,9 +407,23 @@ public class InitializeLoop
                                 int line2_width = Graph.g.getFont().getWidth(line2);
                                 int line_height = Graph.g.getFont().getLineHeight();
 
-                                Graph.g.drawString(line1, displayHalfWidth - line1_width / 2, displayHalfHeight + 120);
-                                Graph.g.drawString(line2, displayHalfWidth - line2_width / 2, displayHalfHeight + 120 + line_height);
+                                float y = loadingCamera.dimension.y * 0.75f;
+                                Graph.g.setColor(Color.white);
+                                Graph.g.drawString(line1, loadingCamera.dimensionHalf.x - line1_width / 2, y);
+                                Graph.g.drawString(line2, loadingCamera.dimensionHalf.x - line2_width / 2, y + line_height);
                         }
+                        else
+                        {
+                                String line = "Loading...";
+                                int line_width = Graph.g.getFont().getWidth(line);
+                                Graph.g.setColor(Color.white);
+                                Graph.g.drawString(line, loadingCamera.dimensionHalf.x - line_width / 2, loadingCamera.dimension.y * 0.75f);
+                        }
+                        
+                        loadingCameraY -= 10;
+                        loadingCamera.setPosition(0, loadingCameraY);
+                        
+                        Display.sync(60);
                 }
                 
                 return false;

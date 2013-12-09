@@ -202,7 +202,7 @@ public class Client
                 state = STATE.PLAYING;
                 NetworkedGame netGame = connectLoop.getNetworkedGame();
                 
-                InitializeLoop initLoop = new InitializeLoop(resourceDB, loop, connectLoop.getConnection(), netGame);
+                InitializeLoop initLoop = new InitializeLoop(connectLoop);
                 if (initLoop.loop())
                 {
                         GameLoop gameLoop = new GameLoop(initLoop);

@@ -40,6 +40,8 @@ package aphelion.client;
 
 
 import aphelion.client.graphics.Graph;
+import aphelion.client.graphics.screen.Camera;
+import aphelion.client.graphics.world.StarField;
 import aphelion.client.net.NetworkedGame;
 import aphelion.client.net.SingleGameConnection;
 import aphelion.client.resource.AsyncTexture;
@@ -53,6 +55,7 @@ import java.net.URL;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.lwjgl.opengl.Display;
+import org.newdawn.slick.Color;
 import org.newdawn.slick.Image;
 
 /**
@@ -63,15 +66,18 @@ public class ConnectLoop
 {
         private static final Logger log = Logger.getLogger("aphelion.client");
         
-        private final URI wsUri;
-        private final URL httpUrl;
-        private final ResourceDB resourceDB;
-        private final TickedEventLoop loop;
-        private final String nickname;
+        final URI wsUri;
+        final URL httpUrl;
+        final ResourceDB resourceDB;
+        final TickedEventLoop loop;
+        final String nickname;
         
-        private SingleGameConnection connection;
-        private NetworkedGame networkedGame;
+        SingleGameConnection connection;
+        NetworkedGame networkedGame;
         
+        Camera loadingCamera;
+        StarField loadingStarfield;
+        int loadingCameraY = 16777216;
         
 
         public ConnectLoop(URI wsUri, ResourceDB resourceDB, TickedEventLoop loop, String nickname) throws MalformedURLException
@@ -93,8 +99,11 @@ public class ConnectLoop
         {
                 networkedGame = new NetworkedGame(resourceDB, loop, httpUrl, nickname);
                 
-                AsyncTexture loadingTex = resourceDB.getTextureLoader().getTexture("gui.loading.connecting");
+                loadingCamera = new Camera(resourceDB);
+                loadingStarfield = new StarField(SwissArmyKnife.random.nextInt(), resourceDB);
                 
+                loadingCamera.setScreenPosition(0, 0);
+                loadingCamera.setPosition(0, loadingCameraY);
                 
                 connection = new SingleGameConnection(wsUri, loop);
                 connection.addListener(networkedGame);
@@ -110,19 +119,25 @@ public class ConnectLoop
                                 return false;
                         }
                         
+                        loadingCamera.setDimension(Display.getWidth(), Display.getHeight());
+                        
                         Graph.graphicsLoop();
                         
                         Client.initGL();
                         
                         loop.loop();
                         
-                        Image loadingBanner = loadingTex.getCachedImage();
-                        if (loadingBanner != null)
-                        {
-                                loadingBanner.drawCentered(Display.getWidth() / 2, Display.getHeight() / 2);
-                        }
+                        loadingStarfield.render(loadingCamera);
                         
-                        Display.sync(120);
+                        String line = "Connecting...";
+                        int line_width = Graph.g.getFont().getWidth(line);
+                        Graph.g.setColor(Color.white);
+                        Graph.g.drawString(line, loadingCamera.dimensionHalf.x - line_width / 2, loadingCamera.dimension.y * 0.75f);
+                        
+                        loadingCameraY -= 10;
+                        loadingCamera.setPosition(0, loadingCameraY);
+                        
+                        Display.sync(60);
                 }
                 
                 if (loop.isInterruped())
