@@ -76,9 +76,9 @@ public class LocalChat implements EventTopicSubscriber<AphelionChatTextSendEvent
                 this.chatLocals = chatLocals;
         }
         
-        public void subscribeListeners(NetworkedGame netGame, Screen screen)
+        public void subscribeListeners(Screen screen)
         {
-                netGame.addActorListener(this);
+                netGame.addActorListener(this, true);
                 netGame.getGameConn().addListener(this);
                 for (AphelionChatControl control : chatLocals)
                 {

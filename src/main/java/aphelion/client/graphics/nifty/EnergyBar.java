@@ -27,9 +27,6 @@ package aphelion.client.graphics.nifty;
 
 import de.lessvoid.nifty.Nifty;
 import de.lessvoid.nifty.controls.Controller;
-import de.lessvoid.nifty.effects.Effect;
-import de.lessvoid.nifty.effects.EffectEventId;
-import de.lessvoid.nifty.effects.EffectImpl;
 import de.lessvoid.nifty.elements.Element;
 import de.lessvoid.nifty.elements.render.TextRenderer;
 import de.lessvoid.nifty.input.NiftyInputEvent;
@@ -37,9 +34,6 @@ import de.lessvoid.nifty.layout.align.HorizontalAlign;
 import de.lessvoid.nifty.screen.Screen;
 import de.lessvoid.nifty.tools.SizeValue;
 import de.lessvoid.xml.xpp3.Attributes;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 import java.util.Properties;
 
 public class EnergyBar implements Controller

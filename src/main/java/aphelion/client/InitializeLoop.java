@@ -214,7 +214,7 @@ public class InitializeLoop implements TickEvent
                 }
                 
                 renderDelay = new RenderDelay(physicsEnv, mapEntities);
-                connection.addListener(renderDelay);
+                renderDelay.subscribeListeners(connection);
         }
         
         private void initializeNifty() throws PromiseException
@@ -335,7 +335,7 @@ public class InitializeLoop implements TickEvent
         public boolean loop()
         {
                 mapEntities = new MapEntities(resourceDB);
-                networkedGame.addActorListener(mapEntities);
+                networkedGame.addActorListener(mapEntities, true);
                 
                 loop.addTickEvent(mapEntities);
                 loop.addLoopEvent(mapEntities);

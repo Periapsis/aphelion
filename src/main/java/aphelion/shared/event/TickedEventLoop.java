@@ -442,8 +442,19 @@ public class TickedEventLoop implements Workable, Timerable
                 {
                         throw new IllegalArgumentException();
                 }
-                tickEvents.add(event);
                 
+                tickEvents.add(event);
+        }
+        
+        /** Adds an event that will be fired every tick.
+         * @param events
+         */
+        public void addTickEvent(TickEvent[] events)
+        {
+                for (TickEvent event : events)
+                {
+                        addTickEvent(event);
+                }
         }
         
         /** Adds an event that will be fired every tick before any event that has already been registered.
@@ -456,6 +467,17 @@ public class TickedEventLoop implements Workable, Timerable
                         throw new IllegalArgumentException();
                 }
                 tickEvents.add(0, event);
+        }
+        
+        /** Adds an event that will be fired every tick before any event that has already been registered.
+         * @param events
+         */
+        public void prependTickEvent(TickEvent[] events)
+        {
+                for (TickEvent event : events)
+                {
+                        prependTickEvent(event);
+                }
         }
         
         /** Removes a tick event that was previously added.
@@ -475,6 +497,17 @@ public class TickedEventLoop implements Workable, Timerable
                 return false;
         }
         
+        /** Removes a tick event that was previously added.
+         * @param events 
+         */
+        public void removeTickEvent(TickEvent[] events)
+        {
+                for (TickEvent event : events)
+                {
+                        removeTickEvent(event);
+                }
+        }
+        
         /** Adds an event that will be fired every loop.
          * @param event 
          */
@@ -486,6 +519,17 @@ public class TickedEventLoop implements Workable, Timerable
                 }
                 loopEvents.add(event);
                 
+        }
+        
+        /** Adds an event that will be fired every loop.
+         * @param events
+         */
+        public void addLoopEvent(LoopEvent[] events)
+        {
+                for (LoopEvent event : events)
+                {
+                        addLoopEvent(event);
+                }
         }
         
         /** Removes a loop event that was previously added.
@@ -503,6 +547,17 @@ public class TickedEventLoop implements Workable, Timerable
                         }
                 }
                 return false;
+        }
+        
+        /** Removes a loop event that was previously added.
+         * @param events
+         */
+        public void removeLoopEvent(LoopEvent[] events)
+        {
+                for (LoopEvent event : events)
+                {
+                        removeLoopEvent(event);
+                }
         }
         
         /** Adds an event that will be fired every X ticks.

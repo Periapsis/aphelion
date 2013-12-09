@@ -186,13 +186,21 @@ public class NetworkedGame implements GameProtoListener, TickEvent
                 }
         }
         
-        public void addActorListener(ActorListener listener)
+        public NetworkedActor getActor(int pid)
+        {
+                return actors.get(pid);
+        }
+        
+        public void addActorListener(ActorListener listener, boolean playback)
         {
                 this.actorListeners.add(listener);
                 
-                for (NetworkedActor actor : this.actors.values())
+                if (playback)
                 {
-                        listener.newActor(actor);
+                        for (NetworkedActor actor : this.actors.values())
+                        {
+                                listener.newActor(actor);
+                        }
                 }
         }
 
@@ -522,11 +530,6 @@ public class NetworkedGame implements GameProtoListener, TickEvent
                         {
                                 listener.newActor(actor);
                         }
-                }
-                
-                for (GameS2C.ActorDied msg : s2c.getActorDiedList())
-                {
-                        // ...
                 }
 
                 if (s2c.getActorNewCount() > 0 || 

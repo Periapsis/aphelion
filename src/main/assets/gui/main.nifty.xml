@@ -50,6 +50,16 @@
                 </panel>
         </controlDefinition>
         
+        <controlDefinition name="game-events" controller="aphelion.client.graphics.nifty.GameEventsDisplay">
+                <panel childLayout="vertical">
+                        <text id="#line-0" font="font.ubuntu-mono-bold-16" color="#ffff" textHAlign="left" textVAlign="bottom" width="100%" height="16px"/>
+                        <text id="#line-1" font="font.ubuntu-mono-bold-16" color="#ffff" textHAlign="left" textVAlign="bottom" width="100%" height="16px"/>
+                        <text id="#line-2" font="font.ubuntu-mono-bold-16" color="#ffff" textHAlign="left" textVAlign="bottom" width="100%" height="16px"/>
+                        <text id="#line-3" font="font.ubuntu-mono-bold-16" color="#ffff" textHAlign="left" textVAlign="bottom" width="100%" height="16px"/>
+                </panel>
+
+        </controlDefinition>        
+        
         <style id="button-font">
                 <attributes font="font.ubuntu-mono-bold-16"/>
         </style>
@@ -214,6 +224,11 @@
                                 <panel childLayout="center" width="26" height="24"/>
                         </panel>
                 </layer>
+                
+                <layer childLayout="absolute">
+                        <control id="game-events" name="game-events" childLayout="vertical" x="10%" y="50%" width="300"/>
+                </layer>
+                
                 
                 <layer childLayout="center">
                         <!-- chat -->

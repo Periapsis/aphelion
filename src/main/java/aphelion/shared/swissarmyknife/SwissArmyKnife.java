@@ -37,12 +37,15 @@
  */
 package aphelion.shared.swissarmyknife;
 
+import de.lessvoid.nifty.elements.Element;
+import de.lessvoid.nifty.screen.Screen;
 import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.Random;
 import java.util.logging.Level;
@@ -1089,5 +1092,61 @@ public final class SwissArmyKnife
                         uri.getHost() + 
                         (uri.getPort() > 0 ? ":" + uri.getPort() : "") +
                         uri.getRawPath());
+        }
+        
+        public static Element[] findNiftyElementsByIdPrefix(Screen screen, String elementNamePrefix)
+        {
+                LinkedList<Element> ret = new LinkedList<>();
+                
+                Element element = screen.findElementByName(elementNamePrefix);
+                
+                if (element != null)
+                {
+                        ret.add(element);
+                }
+                
+                int i = 0;
+                while (true)
+                {
+                        element = screen.findElementByName(elementNamePrefix + "-" + i);
+                        ++i;
+                        
+                        if (element == null)
+                        {
+                                break;
+                        }
+                        
+                        ret.add(element);
+                }
+                
+                return ret.toArray(new Element[]{});
+        }
+        
+        public static Element[] findNiftyElementsByIdPrefix(Element parent, String elementNamePrefix)
+        {
+                LinkedList<Element> ret = new LinkedList<>();
+                
+                Element element = parent.findElementByName(elementNamePrefix);
+                
+                if (element != null)
+                {
+                        ret.add(element);
+                }
+                
+                int i = 0;
+                while (true)
+                {
+                        element = parent.findElementByName(elementNamePrefix + "-" + i);
+                        ++i;
+                        
+                        if (element == null)
+                        {
+                                break;
+                        }
+                        
+                        ret.add(element);
+                }
+                
+                return ret.toArray(new Element[]{});
         }
 }

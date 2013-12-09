@@ -41,6 +41,7 @@ package aphelion.client.graphics;
 import aphelion.client.graphics.world.ActorShip;
 import aphelion.client.graphics.world.MapEntities;
 import aphelion.client.graphics.world.Projectile;
+import aphelion.client.net.SingleGameConnection;
 import aphelion.shared.gameconfig.*;
 import aphelion.shared.gameconfig.GCDocumentation.GCDOCUMENTATION_TYPE;
 import aphelion.shared.net.game.GameProtocolConnection;
@@ -76,6 +77,11 @@ public class RenderDelay implements GameS2CListener
         {
                 this.physicsEnv = physicsEnv;
                 this.mapEntities = mapEntities;
+        }
+        
+        public void subscribeListeners(SingleGameConnection connection)
+        {
+                connection.addListener(this);
         }
         
         static
