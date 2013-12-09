@@ -44,9 +44,9 @@ import aphelion.client.graphics.screen.Camera;
 import aphelion.client.graphics.world.StarField;
 import aphelion.client.net.NetworkedGame;
 import aphelion.client.net.SingleGameConnection;
-import aphelion.client.resource.AsyncTexture;
 import aphelion.shared.resource.ResourceDB;
 import aphelion.shared.event.ClockSource;
+import aphelion.shared.event.TickEvent;
 import aphelion.shared.event.TickedEventLoop;
 import aphelion.shared.swissarmyknife.SwissArmyKnife;
 import java.net.MalformedURLException;
@@ -56,13 +56,12 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.lwjgl.opengl.Display;
 import org.newdawn.slick.Color;
-import org.newdawn.slick.Image;
 
 /**
  *
  * @author Joris
  */
-public class ConnectLoop
+public class ConnectLoop implements TickEvent
 {
         private static final Logger log = Logger.getLogger("aphelion.client");
         
@@ -109,44 +108,52 @@ public class ConnectLoop
                 connection.addListener(networkedGame);
                 connection.connect();
                 
-                while(!loop.isInterruped() && networkedGame.isConnecting())
+                loop.addTickEvent(this);
+                
+                try
                 {
-                        Display.update();
-                        
-                        if (Display.isCloseRequested())
+                        while(!loop.isInterruped() && networkedGame.isConnecting())
                         {
-                                log.log(Level.WARNING, "Close requested in connect loop");
+                                Display.update();
+
+                                if (Display.isCloseRequested())
+                                {
+                                        log.log(Level.WARNING, "Close requested in connect loop");
+                                        return false;
+                                }
+
+                                loadingCamera.setDimension(Display.getWidth(), Display.getHeight());
+
+                                Graph.graphicsLoop();
+
+                                Client.initGL();
+
+                                loop.loop();
+
+                                loadingStarfield.render(loadingCamera);
+
+                                String line = "Connecting...";
+                                int line_width = Graph.g.getFont().getWidth(line);
+                                Graph.g.setColor(Color.white);
+                                Graph.g.drawString(line, loadingCamera.dimensionHalf.x - line_width / 2, loadingCamera.dimension.y * 0.75f);
+
+                                loadingCamera.setPosition(0, loadingCameraY);
+
+                                Display.sync(60);
+                        }
+
+                        if (loop.isInterruped())
+                        {
+                                log.log(Level.WARNING, "Connect loop interrupted");
                                 return false;
                         }
-                        
-                        loadingCamera.setDimension(Display.getWidth(), Display.getHeight());
-                        
-                        Graph.graphicsLoop();
-                        
-                        Client.initGL();
-                        
-                        loop.loop();
-                        
-                        loadingStarfield.render(loadingCamera);
-                        
-                        String line = "Connecting...";
-                        int line_width = Graph.g.getFont().getWidth(line);
-                        Graph.g.setColor(Color.white);
-                        Graph.g.drawString(line, loadingCamera.dimensionHalf.x - line_width / 2, loadingCamera.dimension.y * 0.75f);
-                        
-                        loadingCameraY -= 10;
-                        loadingCamera.setPosition(0, loadingCameraY);
-                        
-                        Display.sync(60);
+
+                        return !networkedGame.isConnecting() && !networkedGame.isDisconnected();
                 }
-                
-                if (loop.isInterruped())
+                finally
                 {
-                        log.log(Level.WARNING, "Connect loop interrupted");
-                        return false;
+                        loop.removeTickEvent(this);
                 }
-                
-                return !networkedGame.isConnecting() && !networkedGame.isDisconnected();
         }
         
         public ClockSource getSyncedClockSource()
@@ -162,5 +169,11 @@ public class ConnectLoop
         public NetworkedGame getNetworkedGame()
         {
                 return networkedGame;
+        }
+
+        @Override
+        public void tick(long tick)
+        {
+                loadingCameraY -= 5;
         }
 }

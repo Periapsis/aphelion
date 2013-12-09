@@ -48,8 +48,8 @@ import aphelion.client.graphics.world.MapEntities;
 import aphelion.client.graphics.world.StarField;
 import aphelion.client.net.NetworkedGame;
 import aphelion.client.net.SingleGameConnection;
-import aphelion.client.resource.AsyncTexture;
 import aphelion.client.resource.DBNiftyResourceLocation;
+import aphelion.shared.event.TickEvent;
 import aphelion.shared.event.TickedEventLoop;
 import aphelion.shared.event.promise.AbstractPromise;
 import aphelion.shared.event.promise.All;
@@ -79,13 +79,12 @@ import java.util.logging.Logger;
 import javax.swing.JOptionPane;
 import org.lwjgl.opengl.Display;
 import org.newdawn.slick.Color;
-import org.newdawn.slick.Image;
 
 /**
  * Download assets, load assets, etc.
  * @author Joris
  */
-public class InitializeLoop
+public class InitializeLoop implements TickEvent
 {
         private static final Logger log = Logger.getLogger("aphelion.client");
         
@@ -346,86 +345,99 @@ public class InitializeLoop
                 // Asynchronous:
                 downloadAssets().then(loadAssets).then(assetsLoaded).then(initializeComplete).then(initializeError);
                 
-                while (!loop.isInterruped())
+                loop.addTickEvent(this);
+                try
                 {
-                        Display.update();
-                        if (Display.isCloseRequested())
+                        while (!loop.isInterruped())
                         {
-                                log.log(Level.WARNING, "Close requested in game loop");
-                                loop.interrupt();
-                                break;
-                        }
-                        
-                        Client.initGL();
-                        
-                        if (Client.wasResized() && nifty != null)
-                        {
-                                nifty.resolutionChanged();
-                        }
-                        
-                        loop.loop(); // logic, call Promise callbacks
-                        
-                        if (failure)
-                        {
-                                return false;
-                        }
-                        
-                        if (networkedGame.isDisconnected())
-                        {
-                                failure = true;
-                                return false;
-                        }
-                        
-                        if (initComplete && networkedGame.isReady())
-                        {
-                                // continue on to GameLoop
-                                return true;
+                                Display.update();
+                                if (Display.isCloseRequested())
+                                {
+                                        log.log(Level.WARNING, "Close requested in game loop");
+                                        loop.interrupt();
+                                        break;
+                                }
+
+                                Client.initGL();
+
+                                if (Client.wasResized() && nifty != null)
+                                {
+                                        nifty.resolutionChanged();
+                                }
+
+                                loop.loop(); // logic, call Promise callbacks
+
+                                if (failure)
+                                {
+                                        return false;
+                                }
+
+                                if (networkedGame.isDisconnected())
+                                {
+                                        failure = true;
+                                        return false;
+                                }
+
+                                if (initComplete && networkedGame.isReady())
+                                {
+                                        // continue on to GameLoop
+                                        return true;
+                                }
+
+                                loadingStarfield.render(loadingCamera);
+
+                                if (downloadAssetsTask != null && downloadAssetsTask.getTotalFiles() > 0)
+                                {
+                                        long totalBytes = downloadAssetsTask.getTotalBytes();
+                                        long completedBytes = downloadAssetsTask.getCompletedBytes();
+                                        double percentageComplete = (double) completedBytes / (double) totalBytes * 100.0;
+                                        double speedMiB = downloadAssetsTask.getSpeed() / 1024.0;
+
+                                        String line1 = String.format("Downloading: %2.1f%% (%3.1f KiB/s)", 
+                                                                     percentageComplete,
+                                                                     speedMiB);
+
+                                        String line2 = String.format("File %d of %d; %d of %d bytes", 
+                                                                     downloadAssetsTask.getVerifiedFiles() + 1,
+                                                                     downloadAssetsTask.getTotalFiles(),
+                                                                     completedBytes,
+                                                                     totalBytes);
+
+                                        // use the default slick font
+
+                                        int line1_width = Graph.g.getFont().getWidth(line1);
+                                        int line2_width = Graph.g.getFont().getWidth(line2);
+                                        int line_height = Graph.g.getFont().getLineHeight();
+
+                                        float y = loadingCamera.dimension.y * 0.75f;
+                                        Graph.g.setColor(Color.white);
+                                        Graph.g.drawString(line1, loadingCamera.dimensionHalf.x - line1_width / 2, y);
+                                        Graph.g.drawString(line2, loadingCamera.dimensionHalf.x - line2_width / 2, y + line_height);
+                                }
+                                else
+                                {
+                                        String line = "Loading...";
+                                        int line_width = Graph.g.getFont().getWidth(line);
+                                        Graph.g.setColor(Color.white);
+                                        Graph.g.drawString(line, loadingCamera.dimensionHalf.x - line_width / 2, loadingCamera.dimension.y * 0.75f);
+                                }
+
+                                loadingCamera.setPosition(0, loadingCameraY);
+
+                                Display.sync(60);
                         }
 
-                        loadingStarfield.render(loadingCamera);
-
-                        if (downloadAssetsTask != null && downloadAssetsTask.getTotalFiles() > 0)
-                        {
-                                long totalBytes = downloadAssetsTask.getTotalBytes();
-                                long completedBytes = downloadAssetsTask.getCompletedBytes();
-                                double percentageComplete = (double) completedBytes / (double) totalBytes * 100.0;
-                                double speedMiB = downloadAssetsTask.getSpeed() / 1024.0;
-
-                                String line1 = String.format("Downloading: %2.1f%% (%3.1f KiB/s)", 
-                                                             percentageComplete,
-                                                             speedMiB);
-
-                                String line2 = String.format("File %d of %d; %d of %d bytes", 
-                                                             downloadAssetsTask.getVerifiedFiles() + 1,
-                                                             downloadAssetsTask.getTotalFiles(),
-                                                             completedBytes,
-                                                             totalBytes);
-
-                                // use the default slick font
-
-                                int line1_width = Graph.g.getFont().getWidth(line1);
-                                int line2_width = Graph.g.getFont().getWidth(line2);
-                                int line_height = Graph.g.getFont().getLineHeight();
-
-                                float y = loadingCamera.dimension.y * 0.75f;
-                                Graph.g.setColor(Color.white);
-                                Graph.g.drawString(line1, loadingCamera.dimensionHalf.x - line1_width / 2, y);
-                                Graph.g.drawString(line2, loadingCamera.dimensionHalf.x - line2_width / 2, y + line_height);
-                        }
-                        else
-                        {
-                                String line = "Loading...";
-                                int line_width = Graph.g.getFont().getWidth(line);
-                                Graph.g.setColor(Color.white);
-                                Graph.g.drawString(line, loadingCamera.dimensionHalf.x - line_width / 2, loadingCamera.dimension.y * 0.75f);
-                        }
-                        
-                        loadingCameraY -= 10;
-                        loadingCamera.setPosition(0, loadingCameraY);
-                        
-                        Display.sync(60);
+                        return false;
                 }
-                
-                return false;
+                finally
+                {
+                        loop.removeTickEvent(this);
+                }
+        }
+
+        @Override
+        public void tick(long tick)
+        {
+                loadingCameraY -= 5;
         }
 }
