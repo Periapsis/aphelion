@@ -158,7 +158,7 @@ public class NetworkedGame implements GameProtoListener, TickEvent
                         this.sequence = sequence;
                 }
                 
-                public boolean hasOccured(STATE other)
+                public boolean hasOccurred(STATE other)
                 {
                         return this.sequence >= other.sequence;
                 }
@@ -217,12 +217,12 @@ public class NetworkedGame implements GameProtoListener, TickEvent
         {
                 // all states before WAIT_FOR_ARENALOAD count as "connecting"
                 // DISCONNECTED should return false!
-                return !state.hasOccured(STATE.ARENA_LOADING);
+                return !state.hasOccurred(STATE.ARENA_LOADING);
         }
         
         public boolean hasArenaSynced()
         {
-                return state.hasOccured(STATE.RECEIVED_ARENASYNC);
+                return state.hasOccurred(STATE.RECEIVED_ARENASYNC);
         }
 
         public boolean isReady()
@@ -523,6 +523,11 @@ public class NetworkedGame implements GameProtoListener, TickEvent
                                 listener.newActor(actor);
                         }
                 }
+                
+                for (GameS2C.ActorDied msg : s2c.getActorDiedList())
+                {
+                        // ...
+                }
 
                 if (s2c.getActorNewCount() > 0 || 
                         s2c.getActorSyncCount() > 0 ||
@@ -715,7 +720,7 @@ public class NetworkedGame implements GameProtoListener, TickEvent
          */
         public int getMyPid()
         {
-                if (!state.hasOccured(STATE.RECEIVED_ARENASYNC))
+                if (!state.hasOccurred(STATE.RECEIVED_ARENASYNC))
                 {
                         throw new IllegalStateException();
                 }

@@ -86,7 +86,7 @@ public class ClientState
                         this.sequence = sequence;
                 }
                 
-                public boolean hasOccured(STATE other)
+                public boolean hasOccurred(STATE other)
                 {
                         return this.sequence >= other.sequence;
                 }

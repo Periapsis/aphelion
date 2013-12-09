@@ -285,9 +285,9 @@ public class TickedEventLoop implements Workable, Timerable
                 
                 // suppose:
                 // TICK = 10ms
-                // tick 20 occured at 40'000ms
-                // tick 21 occured at 40'010ms
-                // tick 22 occured at 40'020ms (current tick)
+                // tick 20 occurred at 40'000ms
+                // tick 21 occurred at 40'010ms
+                // tick 22 occurred at 40'020ms (current tick)
                 
                 // synchronize(40'050, 20) is called:
                 // currentTickTime = 40'020 - (22 - 20) * 10 = 40'000

@@ -66,7 +66,7 @@ public class ActorDied extends Event implements ActorDiedPublic
                 }
         }
         
-        public void execute(long tick, State state, Actor died, Event cause)
+        public void execute(long tick, State state, Actor died, Event cause, Actor killer)
         {
                 super.execute(tick, state);
                 
@@ -92,6 +92,7 @@ public class ActorDied extends Event implements ActorDiedPublic
                 hist.tick = tick;
                 hist.died = died;
                 hist.cause = cause;
+                hist.killer = killer;
                 
                 // nothing interesting to do yet, at the moment this event is only used for external notification
         }
@@ -99,7 +100,8 @@ public class ActorDied extends Event implements ActorDiedPublic
         @Override
         public boolean isConsistent(State older, State newer)
         {
-                // consistency should be checked by whatever calls this event
+                // This event is called by the result of other events.
+                // Those events already check consistency.
                 return true;
         }
         
@@ -113,18 +115,18 @@ public class ActorDied extends Event implements ActorDiedPublic
         }
 
         @Override
-        public long getOccuredAt(int stateid)
+        public long getOccurredAt(int stateid)
         {
                 History hist = history[stateid];
                 if (!hist.set)
                 {
-                        return 0; // use hasOccured first
+                        return 0; // use hasOccurred first
                 }
                 return hist.tick;
         }
         
         @Override
-        public boolean hasOccured(int stateid)
+        public boolean hasOccurred(int stateid)
         {
                  History hist = history[stateid];
                  return hist.set;
@@ -143,6 +145,13 @@ public class ActorDied extends Event implements ActorDiedPublic
                 History hist = history[stateid];
                 return hist.died == null ? 0 : hist.died.pid;
         }
+
+        @Override
+        public int getKiller(int stateid)
+        {
+                History hist = history[stateid];
+                return hist.killer == null ? 0 : hist.killer.pid;
+        }
         
         private static class History
         {
@@ -150,6 +159,7 @@ public class ActorDied extends Event implements ActorDiedPublic
                 long tick;
                 Actor died;
                 Event cause;
+                Actor killer;
                 
                 public void set(History other, State myState, State otherState)
                 {
@@ -164,6 +174,15 @@ public class ActorDied extends Event implements ActorDiedPublic
                         else
                         {
                                 died = (Actor) other.died.crossStateList[myState.id];
+                        }
+                        
+                        if (other.killer == null)
+                        {
+                                killer = null;
+                        }
+                        else
+                        {
+                                killer = (Actor) other.killer.crossStateList[myState.id];
                         }
                 }
         }

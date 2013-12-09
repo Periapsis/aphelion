@@ -118,8 +118,8 @@ public class ProjectileExplosionTracker implements EventTracker
                 // using the render delay of the projectile
                 
                 if (physicsProjectile_state0 != null &&
-                    event.hasOccured(renderingAt_state) && 
-                    event.getOccuredAt(renderingAt_state) <= physicsEnv.getTick() - renderDelay)
+                    event.hasOccurred(renderingAt_state) && 
+                    event.getOccurredAt(renderingAt_state) <= physicsEnv.getTick() - renderDelay)
                 {
                         if (projectileAnimations == null)
                         {
@@ -128,7 +128,7 @@ public class ProjectileExplosionTracker implements EventTracker
                 }
                 else
                 {
-                        // the event no longer occured (timewarp), 
+                        // the event no longer occurred (timewarp), 
                         // remove the animations
                         removeAnimations();
                 }
@@ -152,7 +152,7 @@ public class ProjectileExplosionTracker implements EventTracker
                 
                 ProjectilePublic physicsProjectile_state0 = event.getProjectile(0);
                 
-                long occuredAt_tick = event.getOccuredAt(renderingAt_state);
+                long occurredAt_tick = event.getOccurredAt(renderingAt_state);
                 
                 projectileAnimations = new ArrayList<>(1 + event.getCoupledProjectilesSize(renderingAt_state));
 
@@ -213,7 +213,7 @@ public class ProjectileExplosionTracker implements EventTracker
 
                         for (ProjectilePublic coupledProjectile : event.getCoupledProjectiles(renderingAt_state))
                         {
-                                coupledProjectile.getHistoricPosition(pos, occuredAt_tick, false);
+                                coupledProjectile.getHistoricPosition(pos, occurredAt_tick, false);
 
                                 GCImageAnimation anim = new GCImageAnimation(resourceDB, hitImage);
 

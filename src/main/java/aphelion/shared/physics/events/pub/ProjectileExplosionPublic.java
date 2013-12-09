@@ -52,7 +52,7 @@ public interface ProjectileExplosionPublic extends EventPublic
          * @return 
          */
         public ProjectilePublic getProjectile(int stateid);
-        public EXPLODE_REASON getReason(int stateid); // null if hasOccured = false
+        public EXPLODE_REASON getReason(int stateid); // null if hasOccurred = false
         public void getPosition(int stateid, PhysicsPoint pos);
         public void getVelocity(int stateid, PhysicsPoint vel);
         

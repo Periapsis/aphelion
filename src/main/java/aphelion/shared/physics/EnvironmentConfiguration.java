@@ -80,6 +80,8 @@ public final class EnvironmentConfiguration
          * (for example dead reckoning needs the move of the previous tick)
          */
         public final int MINIMUM_HISTORY_TICKS = 2;
+        
+        public final int KEEP_EVENTS_FOR_TICKS;
 
         public EnvironmentConfiguration(boolean server)
         {
@@ -97,10 +99,13 @@ public final class EnvironmentConfiguration
                 {
                         FIRST_STATE_DELAY = 0;
                         TRAILING_STATES = 8;
-                        
                 }
                 
                 HIGHEST_DELAY = FIRST_STATE_DELAY + (TRAILING_STATES-1) * TRAILING_STATE_DELAY;
+                
+                // +1 to ensure that an event that is generated in the state with the highest delay,
+                // will be readable before removal.
+                KEEP_EVENTS_FOR_TICKS = HIGHEST_DELAY + 1;
                 
                 assert MINIMUM_HISTORY_TICKS >= 1 : "Histories must overlap by atleast 1 tick!";
         }

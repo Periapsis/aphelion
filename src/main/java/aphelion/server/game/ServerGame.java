@@ -60,6 +60,9 @@ import aphelion.shared.physics.operations.pub.OperationPublic;
 import aphelion.shared.physics.PhysicsEnvironment;
 import aphelion.shared.physics.valueobjects.PhysicsMovement;
 import aphelion.shared.physics.WEAPON_SLOT;
+import aphelion.shared.physics.events.Event;
+import aphelion.shared.physics.events.pub.ActorDiedPublic;
+import aphelion.shared.physics.events.pub.EventPublic;
 import aphelion.shared.swissarmyknife.AttachmentConsumer;
 import aphelion.shared.swissarmyknife.SwissArmyKnife;
 import java.util.*;
@@ -95,6 +98,9 @@ public class ServerGame implements LoopEvent, TickEvent, GameProtoListener
         // all players that are in STATE.READY
         private LinkedList<GameProtocolConnection> readyPlayers = new LinkedList<>();
         private Map<Integer, NetworkedActor> actors = new HashMap<>(); // actor pid -> client state
+        
+        private static final AttachmentConsumer<EventPublic, Boolean> hasHandledEventConsumer 
+                = new AttachmentConsumer<>(Event.attachmentManager);
         
         public ServerGame(PhysicsEnvironment physicsEnv, 
                           TickedEventLoop loop, 
@@ -158,6 +164,34 @@ public class ServerGame implements LoopEvent, TickEvent, GameProtoListener
         public void tick(long tick)
         {
                 physicsEnv.tick();
+                
+                for (EventPublic event_ : physicsEnv.eventIterable())
+                {
+                        if (hasHandledEventConsumer.get(event_) == Boolean.TRUE)
+                        {
+                                continue;
+                        }
+                        
+                        if (event_ instanceof ActorDiedPublic)
+                        {
+                                ActorDiedPublic event = (ActorDiedPublic) event_;
+                                
+                                if (event.hasOccurred(0))
+                                {
+                                        hasHandledEventConsumer.set(event_, Boolean.TRUE);
+                                
+                                        GameS2C.S2C.Builder s2c = GameS2C.S2C.newBuilder();
+                                        GameS2C.ActorDied.Builder actorDied = s2c.addActorDiedBuilder();
+                                        actorDied.setTick(event.getOccurredAt(0));
+                                        actorDied.setDied(event.getDied(0));
+                                        if (event.getKiller(0) != 0)
+                                        {
+                                                actorDied.setKiller(event.getKiller(0));
+                                        }
+                                        broadcast(s2c);
+                                }
+                        }
+                }
         }
         
         @Override
@@ -543,7 +577,7 @@ public class ServerGame implements LoopEvent, TickEvent, GameProtoListener
                 }
         }
         
-        private TimerEvent actorSyncTimer = new TimerEvent()
+        private final TimerEvent actorSyncTimer = new TimerEvent()
         {
                 @Override
                 public boolean timerElapsed(long tick)

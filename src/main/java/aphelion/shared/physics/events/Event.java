@@ -41,7 +41,6 @@ package aphelion.shared.physics.events;
 
 import aphelion.shared.physics.events.pub.EventPublic;
 import aphelion.shared.physics.State;
-import static aphelion.shared.physics.entities.Projectile.attachmentManager;
 import aphelion.shared.swissarmyknife.AttachmentData;
 import aphelion.shared.swissarmyknife.AttachmentManager;
 import aphelion.shared.swissarmyknife.LinkedListEntry;
@@ -53,7 +52,7 @@ import aphelion.shared.swissarmyknife.LinkedListEntry;
 public abstract class Event implements EventPublic
 {
         public static final AttachmentManager attachmentManager = new AttachmentManager();
-        private AttachmentData attachments = attachmentManager.getNewDataContainer();
+        private final AttachmentData attachments = attachmentManager.getNewDataContainer();
         
         public final LinkedListEntry<Event> link;
         

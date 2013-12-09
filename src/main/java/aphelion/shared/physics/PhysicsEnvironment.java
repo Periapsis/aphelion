@@ -366,7 +366,8 @@ public class PhysicsEnvironment implements TickEvent
                 while (linkEv != null)
                 {
                         linkEvNext = linkEv.next;
-                        if (linkEv.data.isOld(oldestState.tick_now))
+                        
+                        if (linkEv.data.isOld(this.tick_now - econfig.KEEP_EVENTS_FOR_TICKS))
                         {
                                 linkEv.remove();
                                 linkEv.data.inEnvList = false;       

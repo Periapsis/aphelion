@@ -601,17 +601,17 @@ public class State
                         assert event.link == linkEv;
                         event.resetExecutionHistory(this, older);
                         
-                        boolean occuredSomewhere = false;
+                        boolean occurredSomewhere = false;
                         for (int s = 0; s < econfig.TRAILING_STATES; ++s)
                         {
-                                if (event.hasOccured(s))
+                                if (event.hasOccurred(s))
                                 {
-                                        occuredSomewhere = true;
+                                        occurredSomewhere = true;
                                         break;
                                 }
                         }
                         
-                        if (!occuredSomewhere)
+                        if (!occurredSomewhere)
                         {
                                 linkEv.remove();
                                 event.inEnvList = false;

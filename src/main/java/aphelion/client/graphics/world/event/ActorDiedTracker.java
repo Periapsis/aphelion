@@ -111,8 +111,8 @@ public class ActorDiedTracker implements EventTracker
                 firstRun = false;
                 
                 if (pid_state0 != 0  &&
-                    event.hasOccured(renderingAt_state) && 
-                    event.getOccuredAt(renderingAt_state) <= physicsEnv.getTick() - renderDelay)
+                    event.hasOccurred(renderingAt_state) && 
+                    event.getOccurredAt(renderingAt_state) <= physicsEnv.getTick() - renderDelay)
                 {
                         if (anim == null)
                         {
@@ -121,7 +121,7 @@ public class ActorDiedTracker implements EventTracker
                 }
                 else
                 {
-                        // the event no longer occured (timewarp), 
+                        // the event no longer occurred (timewarp), 
                         // remove the animations
                         removeAnimations();
                 }
@@ -140,7 +140,7 @@ public class ActorDiedTracker implements EventTracker
         {
                 final PhysicsShipPosition actorPos = new PhysicsShipPosition();
                 
-                long occuredAt_tick = event.getOccuredAt(renderingAt_state);
+                long occurredAt_tick = event.getOccurredAt(renderingAt_state);
                 
                 ActorPublic actor = physicsEnv.getActor(event.getDied(0));
                 if (actor == null)
@@ -150,7 +150,7 @@ public class ActorDiedTracker implements EventTracker
 
                 GCImage image = actor.getActorConfigImage("ship-explosion-animation", resourceDB);
 
-                if (image != null && actor.getHistoricPosition(actorPos, occuredAt_tick, false))
+                if (image != null && actor.getHistoricPosition(actorPos, occurredAt_tick, false))
                 {
                         anim = new GCImageAnimation(resourceDB, image);
                         anim.setPositionFromPhysics(actorPos.smooth_x, actorPos.smooth_y);

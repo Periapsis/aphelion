@@ -50,4 +50,12 @@ public interface ActorDiedPublic extends EventPublic
          */
         int getDied(int stateid);
         EventPublic getCause(int stateid);
+        
+        /** The actor that caused the death.
+         * This might be the same actor as the one that died.
+         * It might also be 0 in which case the killer is unknown.
+         * @param stateid
+         * @return pid or 0 if not set
+         */
+        int getKiller(int stateid);
 }

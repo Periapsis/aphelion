@@ -463,10 +463,10 @@ public class TimewarpTest extends PhysicsTest
                         if (e instanceof ProjectileExplosionPublic)
                         {
                                 ProjectileExplosionPublic ev = (ProjectileExplosionPublic) e;
-                                assert ev.hasOccured(state);
+                                assert ev.hasOccurred(state);
                                 assertEquals(ACTOR_FIRST, ev.getFireActor(state));
                                 assertEquals(ACTOR_SECOND, ev.getHitActor(state));
-                                assertEquals(4, ev.getOccuredAt(state));
+                                assertEquals(4, ev.getOccurredAt(state));
                                 
                                 PhysicsPoint pos = new PhysicsPoint();
                                 ev.getPosition(state, pos);
@@ -475,8 +475,8 @@ public class TimewarpTest extends PhysicsTest
                         else if (e instanceof ActorDiedPublic)
                         {
                                 ActorDiedPublic ev = (ActorDiedPublic) e;
-                                assert ev.hasOccured(state);
-                                assertEquals(4, ev.getOccuredAt(state));
+                                assert ev.hasOccurred(state);
+                                assertEquals(4, ev.getOccurredAt(state));
                                 assertEquals(ACTOR_SECOND, ev.getDied(state));
                                 assert ev.getCause(state) instanceof ProjectileExplosionPublic;
                         }
@@ -553,10 +553,10 @@ public class TimewarpTest extends PhysicsTest
                         if (e instanceof ProjectileExplosionPublic)
                         {
                                 ProjectileExplosionPublic ev = (ProjectileExplosionPublic) e;
-                                assert ev.hasOccured(state);
+                                assert ev.hasOccurred(state);
                                 assertEquals(ACTOR_FIRST, ev.getFireActor(state));
                                 assertEquals(ACTOR_SECOND, ev.getHitActor(state));
-                                assertEquals(21, ev.getOccuredAt(state));
+                                assertEquals(21, ev.getOccurredAt(state));
                                 
                                 PhysicsPoint pos = new PhysicsPoint();
                                 ev.getPosition(state, pos);
@@ -565,8 +565,8 @@ public class TimewarpTest extends PhysicsTest
                         else if (e instanceof ActorDiedPublic)
                         {
                                 ActorDiedPublic ev = (ActorDiedPublic) e;
-                                assert ev.hasOccured(state);
-                                assertEquals(21, ev.getOccuredAt(state));
+                                assert ev.hasOccurred(state);
+                                assertEquals(21, ev.getOccurredAt(state));
                                 assertEquals(ACTOR_SECOND, ev.getDied(state));
                                 assert ev.getCause(state) instanceof ProjectileExplosionPublic;
                         }

@@ -253,7 +253,7 @@ public class ProjectileExplosion extends Event implements ProjectileExplosionPub
                         }
                         
                         state.env.addEvent(diedEvent);
-                        diedEvent.execute(tick, state, state.actors.get(killed_pid), this);
+                        diedEvent.execute(tick, state, state.actors.get(killed_pid), this, explodedProjectile.owner);
                 }
                 
                 // Fire a chained weapon
@@ -326,18 +326,18 @@ public class ProjectileExplosion extends Event implements ProjectileExplosionPub
         }
 
         @Override
-        public long getOccuredAt(int stateid)
+        public long getOccurredAt(int stateid)
         {
                 History hist = history[stateid];
                 if (!hist.set)
                 {
-                        return 0; // use hasOccured first
+                        return 0; // use hasOccurred first
                 }
                 return hist.tick;
         }
         
         @Override
-        public boolean hasOccured(int stateid)
+        public boolean hasOccurred(int stateid)
         {
                  History hist = history[stateid];
                  return hist.set;

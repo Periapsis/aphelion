@@ -46,23 +46,23 @@ import aphelion.shared.swissarmyknife.AttachmentData;
  */
 public interface EventPublic extends Attachable
 {
-        /** Has this event occured at the given state?.
+        /** Has this event occurred at the given state?.
          * Other getters will probably not return sensible values if 
          * false is returned here.
-         * It is possible for an event to have not occured at all as the
+         * It is possible for an event to have not occurred at all as the
          * result of a timewarp, even if this method returned true at the time 
          * of previous invocations.
          * @param stateid
          * @return  
          */
-        boolean hasOccured(int stateid);
+        boolean hasOccurred(int stateid);
         
-        /** The tick this event occured at. 
-         * This value is only valid if hasOccured() returns true
+        /** The tick this event occurred at. 
+         * This value is only valid if hasOccurred() returns true.
          * In a timewarp, if this value is newer than the state we are resetting to,
          * this event is removed.
          * @param stateid The state id
-         * @return null if it has not occured
+         * @return null if it has not occurred
          */
-        long getOccuredAt(int stateid);
+        long getOccurredAt(int stateid);
 }

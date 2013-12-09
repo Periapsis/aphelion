@@ -1397,7 +1397,7 @@ public class Collision
         }
         
         // calculate a * b / c
-        // returns Long.MIN_VALUE when an overflow would have occured.
+        // returns Long.MIN_VALUE when an overflow would have occurred.
         // if this occurs the solution is outside the range of integers, 
         // which is never a solution we would want
         private static long divmul(long a, long b, int c)

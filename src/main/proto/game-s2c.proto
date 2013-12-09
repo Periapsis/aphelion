@@ -129,6 +129,13 @@ message LocalChatMessage {
         optional int32 command_response_code = 3;
 }
 
+message ActorDied {
+        required int64 tick = 1;
+        // pid
+        required int32 died = 2;
+        optional int32 killer = 3;
+}
+
 
 message S2C {
 	// Multiple message may be contained in a single S2C message.
@@ -146,6 +153,7 @@ message S2C {
 	repeated aphelion.shared.net.protobuf.ActorRemove actorRemove = 18;
 	repeated aphelion.shared.net.protobuf.ActorSync actorSync = 19;
         repeated aphelion.shared.net.protobuf.WeaponSync weaponSync = 20;
+        repeated ActorDied actorDied = 21;
 
 	repeated Hello hello = 100;
 	repeated AuthenticateResponse authenticateResponse = 101;
