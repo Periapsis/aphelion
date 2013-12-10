@@ -96,7 +96,7 @@ public class ConnectLoop implements TickEvent
          */
         public boolean loop()
         {
-                networkedGame = new NetworkedGame(resourceDB, loop, httpUrl, nickname);
+                networkedGame = new NetworkedGame(loop, httpUrl, nickname);
                 
                 loadingCamera = new Camera(resourceDB);
                 loadingStarfield = new StarField(SwissArmyKnife.random.nextInt(), resourceDB);

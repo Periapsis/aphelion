@@ -353,6 +353,7 @@ public class ServerGame implements LoopEvent, TickEvent, GameProtoListener
 
                                 if (!valid)
                                 {
+                                        state.warnDroppedOperation();
                                         move = 0;
                                 }
                                 
@@ -418,13 +419,17 @@ public class ServerGame implements LoopEvent, TickEvent, GameProtoListener
                         
                         boolean has_hint = msg.hasX() && msg.hasY() && msg.hasXVel() && msg.hasYVel() && msg.hasSnappedRotation();
                                 
-                        physicsEnv.actorWeapon(
+                        boolean valid = physicsEnv.actorWeapon(
                                 msg.getTick(), msg.getPid(), slot,
                                 has_hint, 
                                 msg.getX(), msg.getY(), 
                                 msg.getXVel(), msg.getYVel(), 
                                 msg.getSnappedRotation());
                         
+                        if (!valid)
+                        {
+                                state.warnDroppedOperation();
+                        }
                         
                         broadcast(s2c, game); // forward to all other clients
                 }

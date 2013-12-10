@@ -62,6 +62,9 @@ public class TickedEventLoop implements Workable, Timerable
         private boolean breakdown = false;
         private volatile boolean interrupted = false;
         
+        private long loop_nanoTime;
+        private long loop_systemNanoTime;
+        
         // used by deadlock
         Thread myThread;
         volatile long deadlock_tick = 0; // can be updated as often as desired
@@ -111,6 +114,24 @@ public class TickedEventLoop implements Workable, Timerable
                         this.workerThreads[a] = new WorkerThread(this, tasks, completedTasks);
                         this.workerThreads[a].setDaemon(true);
                 }
+        }
+
+        /** The nanoTime at which the current loop began.
+         * Using clockSource.nanoTime
+         * @return nanoseconds
+         */
+        public long getLoopNanoTime()
+        {
+                return loop_nanoTime;
+        }
+
+        /** The nanoTime at which the current loop began.
+         * Using System.nanoTime()
+         * @return nanoseconds
+         */
+        public long getLoopSystemNanoTime()
+        {
+                return loop_systemNanoTime;
         }
         
         /** Replace the current clock source with a new one.
@@ -243,13 +264,13 @@ public class TickedEventLoop implements Workable, Timerable
                         }
                 }
                 
-                long nanoTime = nanoTime();
-                long systemNanoTime = this.clockSource instanceof DefaultClockSource ? nanoTime : System.nanoTime();
+                loop_nanoTime = nanoTime();
+                loop_systemNanoTime = this.clockSource instanceof DefaultClockSource ? loop_nanoTime : System.nanoTime();
                 
                 
                 for (LoopEvent event : loopEvents)
                 {
-                        event.loop(systemNanoTime, nanoTime);
+                        event.loop(loop_systemNanoTime, loop_nanoTime);
                         ++deadlock_tick;
                 }
                 
@@ -261,7 +282,7 @@ public class TickedEventLoop implements Workable, Timerable
                 // Time = 2147483647:                   2147483647 - 2147483547 = 100
                 // Time = 2147483647+1 = -2147483648:  -2147483648 - 2147483547 = 101
                 // Time = 2147483647+2 = -2147483647:  -2147483647 - 2147483547 = 102
-                long delta = nanoTime - nano;
+                long delta = loop_nanoTime - nano;
                 while (delta >= TICK)
                 {
                         delta -= TICK;

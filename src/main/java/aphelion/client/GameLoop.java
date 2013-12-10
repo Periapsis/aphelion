@@ -210,7 +210,7 @@ public class GameLoop
                 {
                         lookUpNiftyElements();
 
-                        localChat = new LocalChat(networkedGame, Collections.unmodifiableList(Arrays.asList(chatLocals)));
+                        localChat = new LocalChat(loop, networkedGame, Collections.unmodifiableList(Arrays.asList(chatLocals)));
                         localChat.subscribeListeners(mainScreen);
 
                         gameEvents = new GameEvents(networkedGame, Collections.unmodifiableList(Arrays.asList(gameEventsDisplays)));

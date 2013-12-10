@@ -100,6 +100,8 @@ public class ClientState
         public String nickname;
         private GCStringList ships;
         public long lastActorSyncBroadcast_nanos;
+        private final long WARNING_DROPPED_OPERATION_INTERVAL = 30_000_000_000L; // 30s
+        private long lastDroppedWarning_nanos;
         
         public NetworkedActor myNetActor;
 
@@ -437,6 +439,21 @@ public class ClientState
                 }
                 
                 gameConn.send(s2c);
+        }
+        
+        public void warnDroppedOperation()
+        {
+                long now = serverGame.loop.getLoopSystemNanoTime();
+                
+                if (lastDroppedWarning_nanos == 0 || now - lastDroppedWarning_nanos >= WARNING_DROPPED_OPERATION_INTERVAL)
+                {
+                        GameS2C.S2C.Builder s2c = GameS2C.S2C.newBuilder();
+                        GameS2C.LocalChatMessage.Builder chat = s2c.addLocalChatMessageBuilder();
+                        chat.setMessage("\\#de3108#You are experiencing very high lag, please check your network connection. (server)");
+                        gameConn.send(s2c);
+
+                        lastDroppedWarning_nanos = now;
+                }
         }
 
         public void parseCommand(String name, int responseCode, List<String> argumentsList)

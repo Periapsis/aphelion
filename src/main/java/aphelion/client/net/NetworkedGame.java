@@ -38,7 +38,6 @@
 package aphelion.client.net;
 
 import aphelion.shared.net.game.NetworkedActor;
-import aphelion.shared.resource.ResourceDB;
 import aphelion.shared.net.game.GameProtoListener;
 import aphelion.shared.net.game.GameProtocolConnection;
 import aphelion.shared.net.WS_CLOSE_STATUS;
@@ -92,8 +91,6 @@ public class NetworkedGame implements GameProtoListener, TickEvent
          * The clock sync is also used to measure round trip latency.
          */
         private static final long CLOCKSYNC_DELAY = 30 * 1000_000_000L;
-        
-        private final ResourceDB resourceDB;
         private final TickedEventLoop loop;
         private final URL httpServer;
         
@@ -110,6 +107,7 @@ public class NetworkedGame implements GameProtoListener, TickEvent
         
         private final ArrayList<ActorListener> actorListeners = new ArrayList<>(4);
         private final Map<Integer, NetworkedActor> actors = new HashMap<>();
+        private final ArrayList<OperationDroppedListener> operationDroppedListeners = new ArrayList<>(4);
         
         private String nickname;
         private STATE state;
@@ -164,9 +162,8 @@ public class NetworkedGame implements GameProtoListener, TickEvent
                 }
         }
 
-        public NetworkedGame(ResourceDB resourceDB, TickedEventLoop loop, URL httpServer, String nickname)
+        public NetworkedGame(TickedEventLoop loop, URL httpServer, String nickname)
         {
-                this.resourceDB = resourceDB;
                 this.loop = loop;
                 this.httpServer = httpServer;
                 this.nickname = nickname;
@@ -201,6 +198,19 @@ public class NetworkedGame implements GameProtoListener, TickEvent
                         {
                                 listener.newActor(actor);
                         }
+                }
+        }
+        
+        public void addOperationDroppedLIstener(OperationDroppedListener listener)
+        {
+                operationDroppedListeners.add(listener);
+        }
+        
+        private void fireOperationDroppedListeners(long tick, int pid, Object messsage)
+        {
+                for (OperationDroppedListener listener : operationDroppedListeners)
+                {
+                        listener.operationDropped(tick, pid, messsage);
                 }
         }
 
@@ -637,10 +647,15 @@ public class NetworkedGame implements GameProtoListener, TickEvent
                 for (GameOperation.ActorWarp msg : s2c.getActorWarpList())
                 {
                         //log.log(Level.INFO, "Received ActorWarp {0} {1}", new Object[] { msg.getTick(), msg.getPid()});
-                        physicsEnv.actorWarp(
+                        boolean valid = physicsEnv.actorWarp(
                                 msg.getTick(), msg.getPid(), msg.getHint(),
                                 msg.getX(), msg.getY(), msg.getXVel(), msg.getYVel(), msg.getRotation(),
                                 msg.hasX(), msg.hasY(), msg.hasXVel(), msg.hasYVel(), msg.hasRotation());
+                        
+                        if (!valid)
+                        {
+                                fireOperationDroppedListeners(msg.getTick(), msg.getPid(), msg);
+                        }
                 }
 
                 for (GameOperation.ActorMove msg : s2c.getActorMoveList())
@@ -650,11 +665,16 @@ public class NetworkedGame implements GameProtoListener, TickEvent
                         
                         for (int move : msg.getMoveList())
                         {
-                                physicsEnv.actorMove(
+                                boolean valid = physicsEnv.actorMove(
                                         tick,
                                         msg.getPid(),
                                         PhysicsMovement.get(move)
                                         );
+                                
+                                if (!valid)
+                                {
+                                        fireOperationDroppedListeners(tick, msg.getPid(), msg);
+                                }
 
                                 ++tick;
                         }
@@ -674,23 +694,33 @@ public class NetworkedGame implements GameProtoListener, TickEvent
                         
                         WEAPON_SLOT slot = WEAPON_SLOT.byId(msg.getSlot());
                         
-                        physicsEnv.actorWeapon(
+                        boolean valid = physicsEnv.actorWeapon(
                                 tick, msg.getPid(), slot,
                                 has_hint, 
                                 msg.getX(), msg.getY(), 
                                 msg.getXVel(), msg.getYVel(), 
                                 msg.getSnappedRotation());
+                        
+                        if (!valid)
+                        {
+                                fireOperationDroppedListeners(tick, msg.getPid(), msg);
+                        }
                 }
                 
                 for (GameOperation.WeaponSync msg : s2c.getWeaponSyncList())
                 {
                         long tick = msg.getTick();
                         
-                        physicsEnv.weaponSync(
+                        boolean valid = physicsEnv.weaponSync(
                                 tick, 
                                 msg.getPid(), 
                                 msg.getWeaponKey(),
                                 msg.getProjectilesList().toArray(new GameOperation.WeaponSync.Projectile[0]));
+                        
+                        if (!valid)
+                        {
+                                fireOperationDroppedListeners(tick, msg.getPid(), msg);
+                        }
                 }
                 
                 

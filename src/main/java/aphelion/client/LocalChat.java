@@ -43,6 +43,8 @@ package aphelion.client;
 import aphelion.client.graphics.nifty.chat.AphelionChatControl;
 import aphelion.client.graphics.nifty.chat.AphelionChatControl.AphelionChatTextSendEvent;
 import aphelion.client.net.NetworkedGame;
+import aphelion.client.net.OperationDroppedListener;
+import aphelion.shared.event.TickedEventLoop;
 import aphelion.shared.net.COMMAND_SOURCE;
 import aphelion.shared.net.game.ActorListener;
 import aphelion.shared.net.protobuf.GameC2S;
@@ -60,18 +62,22 @@ import org.bushe.swing.event.EventTopicSubscriber;
  *
  * @author Joris
  */
-public class LocalChat implements EventTopicSubscriber<AphelionChatTextSendEvent>, GameS2CListener, ActorListener
+public class LocalChat implements EventTopicSubscriber<AphelionChatTextSendEvent>, GameS2CListener, ActorListener, OperationDroppedListener
 {
+        private final TickedEventLoop loop;
         private final NetworkedGame netGame;
         private final List<AphelionChatControl> chatLocals;
+        private final long WARNING_DROPPED_OPERATION_INTERVAL = 30_000_000_000L; // 30s
+        private long lastDroppedWarning_nanos;
 
-        public LocalChat(NetworkedGame netGame, List<AphelionChatControl> chatLocals)
+        public LocalChat(TickedEventLoop loop, NetworkedGame netGame, List<AphelionChatControl> chatLocals)
         {
                 if (netGame == null)
                 {
                         throw new IllegalArgumentException();
                 }
                 
+                this.loop = loop;
                 this.netGame = netGame;
                 this.chatLocals = chatLocals;
         }
@@ -80,9 +86,25 @@ public class LocalChat implements EventTopicSubscriber<AphelionChatTextSendEvent
         {
                 netGame.addActorListener(this, true);
                 netGame.getGameConn().addListener(this);
+                netGame.addOperationDroppedLIstener(this);
                 for (AphelionChatControl control : chatLocals)
                 {
                         control.getElement().getNifty().subscribe(screen, control.getElement().getId(), AphelionChatTextSendEvent.class, this);
+                }
+        }
+        
+        public void addLine(String sender, String line)
+        {
+                for (AphelionChatControl control : chatLocals)
+                {
+                        if (sender == null)
+                        {
+                                control.receivedChatLine(line, null);
+                        }
+                        else
+                        {
+                                control.receivedChatLine(sender + "> " + line, null);
+                        }
                 }
         }
         
@@ -120,17 +142,7 @@ public class LocalChat implements EventTopicSubscriber<AphelionChatTextSendEvent
         {
                 for (GameS2C.LocalChatMessage message : s2c.getLocalChatMessageList())
                 {
-                        for (AphelionChatControl control : chatLocals)
-                        {
-                                if (message.hasSender())
-                                {
-                                        control.receivedChatLine(message.getSender() + "> " + message.getMessage(), null);
-                                }
-                                else
-                                {
-                                        control.receivedChatLine(message.getMessage(), null);
-                                }
-                        }
+                        addLine(message.hasSender() ? message.getSender() : null, message.getMessage());
                 }
         }
 
@@ -158,6 +170,18 @@ public class LocalChat implements EventTopicSubscriber<AphelionChatTextSendEvent
                 for (AphelionChatControl control : chatLocals)
                 {
                         control.removePlayer(actor.pid);
+                }
+        }
+
+        @Override
+        public void operationDropped(long tick, int pid, Object messsage)
+        {
+                long now = loop.getLoopSystemNanoTime();
+                
+                if (lastDroppedWarning_nanos == 0 || now - lastDroppedWarning_nanos >= WARNING_DROPPED_OPERATION_INTERVAL)
+                {
+                        lastDroppedWarning_nanos = now;
+                        addLine(null, "\\#de3108#You are experiencing very high lag, please check your network connection.");
                 }
         }
 }
