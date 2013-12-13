@@ -370,7 +370,7 @@ public class ActorShip extends MapEntity implements TickEvent, WrappedValueAbstr
                 {
                         
                         // Draw the position without smoothing
-                        if (Client.showDebug && !this.isLocalPlayer())
+                        if (Client.showDebug)
                         {
                                 Point testScreen = new Point();
                                 camera.mapToScreenPosition(realPosition, testScreen);
