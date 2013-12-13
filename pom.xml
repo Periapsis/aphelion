@@ -92,6 +92,22 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
         <build>
                 <plugins>
                         <plugin>
+                                <groupId>com.google.protobuf.tools</groupId>
+                                <artifactId>maven-protoc-plugin</artifactId>
+                                <version>0.1.10</version>
+                                <!--<configuration>
+                                        <protocExecutable>/bla/protoc</protocExecutable>
+                                </configuration>-->
+                                <executions>
+                                        <execution>
+                                                <goals>
+                                                        <goal>compile</goal>
+                                                        <goal>testCompile</goal>
+                                                </goals>
+                                        </execution>
+                                </executions>
+                        </plugin>
+                        <plugin>
                                 <groupId>org.apache.maven.plugins</groupId>
                                 <artifactId>maven-compiler-plugin</artifactId>
                                 <version>3.1</version>
@@ -117,22 +133,6 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
                                         <nativesTargetDir>target/bin/jni</nativesTargetDir>
                                         <separateDirs>false</separateDirs>
                                 </configuration>
-                        </plugin>
-                        <plugin>
-                                <groupId>com.google.protobuf.tools</groupId>
-                                <artifactId>maven-protoc-plugin</artifactId>
-                                <version>0.1.10</version>
-                                <!--<configuration>
-                                        <protocExecutable>/bla/protoc</protocExecutable>
-                                </configuration>-->
-                                <executions>
-                                        <execution>
-                                                <goals>
-                                                        <goal>compile</goal>
-                                                        <goal>testCompile</goal>
-                                                </goals>
-                                        </execution>
-                                </executions>
                         </plugin>
                         <plugin>
                                 <artifactId>maven-resources-plugin</artifactId>
