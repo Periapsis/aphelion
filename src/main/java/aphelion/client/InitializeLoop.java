@@ -114,7 +114,6 @@ public class InitializeLoop implements TickEvent
         // Graphics:
         StarField stars;
         MapEntities mapEntities;
-        RenderDelay renderDelay;
         
         // Screen Graphics
         Nifty nifty;
@@ -203,7 +202,7 @@ public class InitializeLoop implements TickEvent
         private void initializePhysics(List<LoadYamlTask.Return> loadYamlResult)
         {
                 physicsEnv = new PhysicsEnvironment(false, mapClassic);
-                mapEntities.setPhysicsEnv(physicsEnv);
+                mapEntities.tryInitialize(physicsEnv, connection);
 
                 for (LoadYamlTask.Return yamlResult : loadYamlResult)
                 {
@@ -212,9 +211,6 @@ public class InitializeLoop implements TickEvent
                                 yamlResult.fileIdentifier, 
                                 yamlResult.yamlDocuments);
                 }
-                
-                renderDelay = new RenderDelay(physicsEnv, mapEntities);
-                renderDelay.subscribeListeners(connection);
         }
         
         private void initializeNifty() throws PromiseException

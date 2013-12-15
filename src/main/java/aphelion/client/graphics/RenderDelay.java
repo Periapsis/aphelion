@@ -65,6 +65,7 @@ public class RenderDelay implements GameS2CListener
         
         private final MapEntities mapEntities;
         private final PhysicsEnvironment physicsEnv;
+        private boolean initialized = false;
         
         private GCInteger delay = GCIntegerFixed.ZERO;
         private GCInteger latencyRatio = GCIntegerFixed.ZERO;
@@ -83,7 +84,7 @@ public class RenderDelay implements GameS2CListener
         {
                 connection.addListener(this);
         }
-        
+
         static
         {
                 GCDocumentation.put(
@@ -126,20 +127,20 @@ public class RenderDelay implements GameS2CListener
                         "Every x ticks, add/substract one tick to the actual render delay. Use x = zero to disable. " +
                         "If this setting is set too high, projectiles might appear to pass through remote ships.");
         }
+
+        public boolean isInitialized()
+        {
+                return initialized;
+        }
         
         public void init(ActorPublic localActor)
         {
                 if (localActor == null)
                 {
-                        delay = GCIntegerFixed.ZERO;
-                        latencyRatio = GCIntegerFixed.ZERO;
-                        projectiles = GCBooleanFixed.FALSE;
-                        maximizeLocalTime = GCBooleanFixed.FALSE;
-                        updateShipEvery = GCIntegerFixed.ZERO;
-                        updateProjectileEvery = GCIntegerFixed.ZERO;
-                        return;
+                        throw new IllegalArgumentException();
                 }
                 
+                initialized = true;
                 delay = localActor.getActorConfigInteger("render-delay");
                 latencyRatio = localActor.getActorConfigInteger("render-delay-latency-ratio");
                 projectiles = localActor.getActorConfigBoolean("render-delay-projectiles");

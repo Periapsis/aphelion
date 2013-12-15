@@ -47,7 +47,6 @@ import aphelion.shared.gameconfig.GCString;
 import aphelion.shared.gameconfig.GCStringList;
 import aphelion.shared.net.protobuf.GameOperation;
 import aphelion.shared.physics.valueobjects.PhysicsMoveable;
-import aphelion.shared.physics.valueobjects.PhysicsMovement;
 import aphelion.shared.physics.valueobjects.PhysicsPoint;
 import aphelion.shared.physics.valueobjects.PhysicsShipPosition;
 import aphelion.shared.physics.WEAPON_SLOT;

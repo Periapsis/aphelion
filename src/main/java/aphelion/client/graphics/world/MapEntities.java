@@ -39,12 +39,24 @@ package aphelion.client.graphics.world;
 
 import aphelion.client.graphics.screen.Camera;
 import aphelion.client.RENDER_LAYER;
+import aphelion.client.graphics.RenderDelay;
+import aphelion.client.graphics.world.event.ActorDiedTracker;
+import aphelion.client.graphics.world.event.EventTracker;
+import aphelion.client.graphics.world.event.ProjectileExplosionTracker;
+import aphelion.client.net.SingleGameConnection;
 import aphelion.shared.event.LoopEvent;
 import aphelion.shared.event.TickEvent;
 import aphelion.shared.net.game.ActorListener;
 import aphelion.shared.net.game.NetworkedActor;
 import aphelion.shared.physics.entities.ProjectilePublic;
 import aphelion.shared.physics.PhysicsEnvironment;
+import aphelion.shared.physics.entities.ActorPublic;
+import aphelion.shared.physics.events.Event;
+import aphelion.shared.physics.events.pub.ActorDiedPublic;
+import aphelion.shared.physics.events.pub.EventPublic;
+import aphelion.shared.physics.events.pub.ProjectileExplosionPublic;
+import aphelion.shared.physics.valueobjects.PhysicsPoint;
+import aphelion.shared.physics.valueobjects.PhysicsShipPosition;
 import aphelion.shared.resource.ResourceDB;
 import aphelion.shared.swissarmyknife.AttachmentConsumer;
 import aphelion.shared.swissarmyknife.EmptyIterator;
@@ -69,6 +81,9 @@ public class MapEntities implements TickEvent, LoopEvent, Animator, ActorListene
         private final ResourceDB resourceDB;
         private ActorShip localShip;
         private final LinkedListHead<MapAnimation> animations[] = new LinkedListHead[RENDER_LAYER.values().length];
+        private RenderDelay renderDelay;
+        private static final AttachmentConsumer<EventPublic, EventTracker> eventTrackers 
+                = new AttachmentConsumer<>(Event.attachmentManager);
 
         public MapEntities(ResourceDB db)
         {
@@ -78,12 +93,6 @@ public class MapEntities implements TickEvent, LoopEvent, Animator, ActorListene
                 {
                         animations[i] = new LinkedListHead<>();
                 }
-        }
-        
-        
-        public void setPhysicsEnv(PhysicsEnvironment physicsEnv)
-        {
-                this.physicsEnv = physicsEnv;
         }
 
         
@@ -372,5 +381,179 @@ public class MapEntities implements TickEvent, LoopEvent, Animator, ActorListene
                 ActorShip ship = this.getActorShip(actor.pid);
                 assert ship != null;
                 this.removeShip(ship);
+        }
+        
+        public void tryInitialize(PhysicsEnvironment physicsEnv, SingleGameConnection connection)
+        {
+                if (physicsEnv == null || connection == null)
+                {
+                        throw new IllegalArgumentException();
+                }
+                
+                this.physicsEnv = physicsEnv;
+                
+                if (renderDelay == null)
+                {
+                        renderDelay = new RenderDelay(physicsEnv, this);
+                        renderDelay.subscribeListeners(connection);
+                }
+                
+                if (!renderDelay.isInitialized() && localShip != null && localShip.getActor() != null)
+                {
+                        renderDelay.init(localShip.getActor());
+                }
+        }
+        
+        public void updateGraphicsFromPhysics()
+        {
+                if (this.physicsEnv == null)
+                {
+                        throw new IllegalStateException();
+                }
+                
+                Iterator<ActorShip> shipIt = this.shipIterator();
+                while (shipIt.hasNext())
+                {
+                        updateShipFromPhysics(shipIt.next());
+                }
+                
+                Iterator<Projectile> projectileIt = this.projectileIterator(true);
+                while (projectileIt.hasNext())
+                {
+                        updateProjectileFromPhysics(projectileIt.next());
+                }
+                
+                for (EventPublic event : physicsEnv.eventIterable())
+                {
+                        if (event instanceof ProjectileExplosionPublic)
+                        {
+                                ProjectileExplosionTracker tracker = (ProjectileExplosionTracker) eventTrackers.get(event);
+                
+                                if (tracker == null)
+                                {
+                                        tracker = new ProjectileExplosionTracker(resourceDB, physicsEnv, this);
+                                        eventTrackers.set(event, tracker);
+                                }
+
+                                tracker.update((ProjectileExplosionPublic) event);
+                        }
+                        else if (event instanceof ActorDiedPublic)
+                        {
+                                ActorDiedTracker tracker = (ActorDiedTracker) eventTrackers.get(event);
+                                
+                                if (tracker == null)
+                                {
+                                        tracker = new ActorDiedTracker(resourceDB, physicsEnv, this);
+                                        eventTrackers.set(event, tracker);
+                                }
+
+                                tracker.update((ActorDiedPublic) event);
+                        }
+                }
+        }
+        
+        private void updateShipFromPhysics(ActorShip actorShip)
+        {
+                PhysicsShipPosition actorPos = new PhysicsShipPosition();
+                Point localActorPos = new Point();
+                
+                ActorPublic physicsActor = actorShip.getActor();
+                
+                if (localShip != null && localShip.getActor() != null 
+                    && localShip.getActor().getPosition(actorPos))
+                {
+                        localActorPos.set(actorPos.x, actorPos.y);
+                }
+                
+                if (renderDelay == null)
+                {
+                        actorShip.renderingAt_tick = physicsEnv.getTick();
+                }
+                else
+                {
+                        renderDelay.calculateRenderAtTick(actorShip);
+                }
+                
+                actorShip.exists = true;
+
+                if (physicsActor.isRemoved(actorShip.renderingAt_tick))
+                {
+                        actorShip.exists = false;
+                }
+
+                if (physicsActor.isDead(actorShip.renderingAt_tick))
+                {
+                        actorShip.exists = false;
+                }  
+
+                if (physicsActor.getHistoricPosition(actorPos, actorShip.renderingAt_tick, true))
+                {
+                        actorShip.setRealPositionFromPhysics(actorPos.x, actorPos.y);
+                        
+                        if (actorShip.isLocalPlayer())
+                        {
+                                actorShip.setPositionFromPhysics(actorPos.x, actorPos.y);
+                        }
+                        else
+                        {
+                                actorShip.setPositionFromPhysics(actorPos.smooth_x, actorPos.smooth_y);
+                        }
+                        actorShip.setRotationFromPhysics(actorPos.rot_snapped);
+                }
+                else
+                {
+                        actorShip.exists = false;
+                }
+
+
+                if (physicsActor.getPosition(actorPos))
+                {
+                        actorShip.setShadowPositionFromPhysics(actorPos.x, actorPos.y);
+                }
+
+                if (actorShip != localShip)
+                {
+                        actorShip.updateDistanceToLocal(localActorPos);
+                }
+        }
+        
+        private void updateProjectileFromPhysics(Projectile projectile)
+        {
+                ProjectilePublic.Position projectilePos = new ProjectilePublic.Position();
+                PhysicsPoint historicProjectilePos = new PhysicsPoint();
+                
+                ProjectilePublic physicsProjectile = projectile.getPhysicsProjectile();
+                        
+                if (physicsProjectile.getPosition(projectilePos))
+                {
+                        projectile.setShadowPositionFromPhysics(projectilePos.x, projectilePos.y);
+                }
+                
+                if (renderDelay == null)
+                {
+                        projectile.renderingAt_tick = physicsEnv.getTick();
+                }
+                else
+                {
+                        renderDelay.calculateRenderAtTick(projectile);
+                }
+                projectile.exists = true;
+
+                if (physicsProjectile.isRemoved(projectile.renderingAt_tick))
+                {
+                        projectile.exists = false;
+                }
+
+                if (physicsProjectile.getHistoricPosition(
+                        historicProjectilePos, 
+                        projectile.renderingAt_tick, 
+                        true))
+                {
+                        projectile.setPositionFromPhysics(historicProjectilePos.x, historicProjectilePos.y);
+                }
+                else
+                {
+                        projectile.exists = false;
+                }
         }
 }
