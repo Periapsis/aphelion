@@ -844,6 +844,24 @@ public class Actor extends MapEntity
         
         public boolean canFireWeapon(WEAPON_SLOT weapon, long tick)
         {
+                return canFireWeapon(weapon, tick, false);
+        }
+        
+        /** Check if the actor is able to fire thew weapon at the given tick.
+         * 
+         * @param weapon
+         * @param tick
+         * @param weakCheck If set, do not check for conditions that are likely to be 
+         *        (temporarily) incorrect when dealing with networking. 
+         *        For example when energy of an enemy is decreased by hitting him, 
+         *        his weapon might not be able to fire. A timewarp then decides the
+         *        enemy was not hit after all, and the weapon is spawned. Therefor 
+         *        energy is not included if weakCheck=true.
+         *                   
+         * @return true if the given weapon is able to fire.
+         */
+        public boolean canFireWeapon(WEAPON_SLOT weapon, long tick, boolean weakCheck)
+        {
                 Actor.WeaponConfig config = this.weaponSlots[weapon.id].config;
                 if (isDead(tick))
                 {
@@ -877,6 +895,11 @@ public class Actor extends MapEntity
                                 // weapon switch delay
                                 return false;
                         }
+                }
+                
+                if (weakCheck)
+                {
+                        return true;
                 }
                 
                 if (this.energy.get(tick - 1) < weaponSlots[weapon.id].config.fireEnergy.get() * 1024)

@@ -115,7 +115,18 @@ public class ActorWeaponFire extends Operation implements ActorWeaponFirePublic
                         return true;
                 }
                 
-                if (!actor.canFireWeapon(weapon_slot, this.tick))
+                boolean hint = state.allowHints && this.hint_set && !usedHint[state.id];
+                if (hint)
+                {
+                        // Only use the hint once per state
+                        // The hint might be wrong so a timewarp must be able to resolve it.
+                        
+						// TODO: only discard the hint if this operation was executed in a state
+						// that does not allow hints?
+                        usedHint[state.id] = true;
+                }
+                
+                if (!actor.canFireWeapon(weapon_slot, this.tick, hint))
                 {
                         return true;
                 }
@@ -137,11 +148,8 @@ public class ActorWeaponFire extends Operation implements ActorWeaponFirePublic
                 
                 PhysicsShipPosition actorPos = new PhysicsShipPosition();
                 
-                if (state.allowHints && this.hint_set && !usedHint[state.id])
+                if (hint)
                 {
-                        // Only use the hint once per state
-                        // The hint might be wrong so a timewarp must be able to resolve it.
-                        usedHint[state.id] = true;
                         actorPos.x = this.hint_x;
                         actorPos.y = this.hint_y;
                         actorPos.x_vel = this.hint_x_vel;
