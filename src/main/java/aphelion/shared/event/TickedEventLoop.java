@@ -186,6 +186,7 @@ public class TickedEventLoop implements Workable, Timerable
                 
                 breakdown = true;
                 setup = false;
+                interrupted = true;
                 
                 if (workerThreads != null)
                 {

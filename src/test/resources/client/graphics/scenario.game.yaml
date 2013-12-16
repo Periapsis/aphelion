@@ -1,0 +1,107 @@
+- ship-rotation-points: 40
+  ships: [warbird]
+  ship-speed: 1000
+  ship-thrust: 10
+  ship-rotation-speed: 3000000
+  ship-bounce-friction: 600
+  ship-bounce-friction-other-axis: 900 
+  ship-radius: 14336 # 14 * 1024
+  ship-spawn-x: 512
+  ship-spawn-y: 512
+  ship-spawn-radius: 5
+  ship-energy: 1000
+  ship-recharge: 1000
+  ship-respawn-delay: 400
+  ship-change-respawn: true
+  
+  ship-exhaust-image:
+        resource: classic.exhaust
+        offset: [0, 0, 304, 16]
+        tiles: [19, 1] 
+        frame-duration: [10, 50]
+  ship-exhaust-delay: 100 # a new puff every X ms
+  ship-exhaust-remote-players: false
+  
+  ship-emped-image:
+        resource: classic.emped
+        offset: [0, 0, 400, 40]
+        tiles: [10, 1] 
+        frame-duration: 50
+  ship-emped-delay: 200 # a new spark every X ms
+  
+  ship-radar-colour: 0xFFFF39
+  ship-local-radar-colour:
+        colour: [0xFFFF39, 0x000000]
+        frame-duration: 160
+  
+  
+  weapon-fire-delay: 100  # prevent wasting lots of bandwidth when a weapon has not been configured
+  projectile-hit-ship: true
+  projectile-hit-tile: true
+  projectile-bounce-friction: 1024
+  projectile-bounce-friction-other-axis: 1024
+  projectile-offset-y: 14336 # same as the radius
+  projectile-image-trail-randomized: true
+  projectile-expiration-ticks: 500
+  projectile-speed-relative: true
+  projectile-damage-self: true
+  projectile-damage-self-kill: false
+  projectile-damage-team: true
+  projectile-damage-team-kill: true
+  projectile-emp-self: false
+  projectile-emp-team: true
+  projectile-angle-relative: true
+  projectile-hit-ship-coupled: true # if multiple projectiles are used, remove them all if 1 hits an actor. Damage is only dealth once.
+  weapon-fire-projectile-limit: 1024
+  
+  ship-explosion-animation:
+        resource: classic.explosion-ship
+        tiles: [6, 6]
+        frame-duration: 50
+
+  # Latency compensation stuff
+  render-delay: 0
+  render-delay-latency-ratio: 0
+  render-delay-projectiles: false
+  render-delay-maximize-local-time: false
+  render-delay-update-ship-delay-every-ticks: 50
+  render-delay-update-projectile-delay-every-ticks: 2
+  smoothing-algorithm: NONE
+  smoothing-look-ahead-ticks: 10
+  smoothing-step-ratio: 5000
+  smoothing-distance-limit: 500
+  smoothing-projectile-collisions: true
+  
+- selector: {ship: warbird}
+  ship-image:
+        resource: classic.ships
+        offset: [0, 0, 480, 192]
+        tiles: [10, 4]
+        
+  ship-speed: 2000
+  ship-thrust: 16
+  ship-boost-speed: 6000
+  ship-boost-thrust: 24
+  ship-boost-energy: 5500
+  
+  ship-energy: 1500
+  ship-recharge: 4000
+  ship-rotation-speed: 3675672 # round(735134400/40000 * 200)
+  
+  weapon-slot-gun: classic-gun-lvl3
+  weapon-slot-gun-multi: classic-gun-lvl3
+  
+- selector: {weapon: [classic-gun-lvl3, classic-mgun-lvl3]}
+  projectile-image:         {resource: classic.bullets,        offset: [0, 10, 20, 5], tiles: [ 4, 1]}
+  projectile-image-bounces: {resource: classic.bullets,        offset: [0, 35, 20, 5], tiles: [ 4, 1]}
+  projectile-image-trail:   {resource: classic-bullets-trails, offset: [0,  2, 14, 1], tiles: [14, 1]}
+  projectile-damage: 1560
+  projectile-hit-ship-animation:
+        resource: classic.explosion-bullet
+        tiles: [7, 1]
+        frame-duration: 150
+  projectile-hit-tile-animation:
+        resource: classic.explosion-bullet
+        tiles: [7, 1]
+        frame-duration: 150
+  
