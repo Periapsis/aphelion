@@ -84,6 +84,7 @@ public class MapEntities implements TickEvent, LoopEvent, Animator, ActorListene
         private RenderDelay renderDelay;
         private static final AttachmentConsumer<EventPublic, EventTracker> eventTrackers 
                 = new AttachmentConsumer<>(Event.attachmentManager);
+        private SingleGameConnection connection;
 
         public MapEntities(ResourceDB db)
         {
@@ -383,24 +384,37 @@ public class MapEntities implements TickEvent, LoopEvent, Animator, ActorListene
                 this.removeShip(ship);
         }
         
-        public void tryInitialize(PhysicsEnvironment physicsEnv, SingleGameConnection connection)
+        public void tryInitialize(PhysicsEnvironment physicsEnv_, SingleGameConnection connection_)
         {
-                if (physicsEnv == null || connection == null)
+                if (physicsEnv != null)
                 {
-                        throw new IllegalArgumentException();
+                        this.physicsEnv = physicsEnv_;
                 }
                 
-                this.physicsEnv = physicsEnv;
+                if (connection != null)
+                {
+                        this.connection = connection_;
+                }
                 
                 if (renderDelay == null)
                 {
-                        renderDelay = new RenderDelay(physicsEnv, this);
-                        renderDelay.subscribeListeners(connection);
+                        if (physicsEnv != null)
+                        {
+                                renderDelay = new RenderDelay(physicsEnv, this);
+                        }
                 }
                 
-                if (!renderDelay.isInitialized() && localShip != null && localShip.getActor() != null)
+                if (renderDelay != null)
                 {
-                        renderDelay.init(localShip.getActor());
+                        if (connection != null && !renderDelay.isSubscribed())
+                        {
+                                renderDelay.subscribeListeners(connection);
+                        }
+
+                        if (!renderDelay.isInitialized() && localShip != null && localShip.getActor() != null)
+                        {
+                                renderDelay.init(localShip.getActor());
+                        }
                 }
         }
         

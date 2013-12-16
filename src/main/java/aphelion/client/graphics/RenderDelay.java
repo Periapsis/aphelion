@@ -66,6 +66,7 @@ public class RenderDelay implements GameS2CListener
         private final MapEntities mapEntities;
         private final PhysicsEnvironment physicsEnv;
         private boolean initialized = false;
+        private boolean subscribed = false;
         
         private GCInteger delay = GCIntegerFixed.ZERO;
         private GCInteger latencyRatio = GCIntegerFixed.ZERO;
@@ -83,8 +84,19 @@ public class RenderDelay implements GameS2CListener
         public void subscribeListeners(SingleGameConnection connection)
         {
                 connection.addListener(this);
+                subscribed = true;
         }
 
+        public boolean isInitialized()
+        {
+                return initialized;
+        }
+
+        public boolean isSubscribed()
+        {
+                return subscribed;
+        }
+        
         static
         {
                 GCDocumentation.put(
@@ -126,11 +138,6 @@ public class RenderDelay implements GameS2CListener
                         "When the desired render delay of a projectile suddenly changes, this setting will help smooth it out over time. " +
                         "Every x ticks, add/substract one tick to the actual render delay. Use x = zero to disable. " +
                         "If this setting is set too high, projectiles might appear to pass through remote ships.");
-        }
-
-        public boolean isInitialized()
-        {
-                return initialized;
         }
         
         public void init(ActorPublic localActor)
