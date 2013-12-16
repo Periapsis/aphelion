@@ -39,7 +39,6 @@ package aphelion.client.graphics;
 
 import aphelion.client.Client;
 import aphelion.client.RENDER_LAYER;
-import aphelion.client.graphics.scenario.FlyHorizontalLine;
 import aphelion.client.graphics.screen.Camera;
 import aphelion.client.graphics.world.ActorShip;
 import aphelion.client.graphics.world.MapEntities;
@@ -56,8 +55,6 @@ import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.lwjgl.LWJGLException;
 import org.lwjgl.opengl.Display;
 import org.lwjgl.opengl.DisplayMode;
@@ -283,6 +280,7 @@ public class ScenarioPlayer
                 frame.setVisible(true);
                 
                 player.run();
+                frame.dispose();
         }
 
         

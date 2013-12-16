@@ -61,6 +61,7 @@ public class ScenarioSelector extends JFrame
                 setDefaultCloseOperation(DISPOSE_ON_CLOSE);
                 
                 add(new ScenarioButton(FlyHorizontalLine.class));
+                add(new ScenarioButton(SmoothedFastShips500msLag.class));
         }
         
         

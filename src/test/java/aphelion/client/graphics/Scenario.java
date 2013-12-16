@@ -118,7 +118,7 @@ public abstract class Scenario implements TickEvent
         }
         
         @Override
-        public final void tick(long tick)
+        public void tick(long unused)
         {
                 Iterator<Todo> it = todo.iterator();
                 while (it.hasNext())
@@ -136,7 +136,6 @@ public abstract class Scenario implements TickEvent
         
         public final void actorNew(long tick, int pid, long seed, String ship)
         {
-                assert env.getTick() == 0;
                 env.actorNew(tick, pid, seed, ship);
                 
                 ActorShip actorShip = new ActorShip(
@@ -149,7 +148,11 @@ public abstract class Scenario implements TickEvent
         
         public final void actorWarp(long executeAt_tick, final long tick, final int pid, final boolean hint, final int x, final int y, final int x_vel, final int y_vel, final int rotation)
         {
-                assert env.getTick() == 0;
+                if (executeAt_tick <= env.getTick())
+                {
+                        env.actorWarp(tick, pid, hint, x, y, x_vel, y_vel, rotation);
+                        return;
+                }
                 
                 todo.add(new Todo(executeAt_tick)
                 {
@@ -163,7 +166,11 @@ public abstract class Scenario implements TickEvent
         
         public final void actorMove(long executeAt_tick, final long tick, final int pid, final PhysicsMovement move)
         {
-                assert env.getTick() == 0;
+                if (executeAt_tick <= env.getTick())
+                {
+                        env.actorMove(tick, pid, move);
+                        return;
+                }
                 
                 todo.add(new Todo(executeAt_tick)
                 {
@@ -183,7 +190,11 @@ public abstract class Scenario implements TickEvent
                 final int hint_x_vel, final int hint_y_vel, 
                 final int hint_snapped_rotation)
         {
-                assert env.getTick() == 0;
+                if (executeAt_tick <= env.getTick())
+                {
+                        env.actorWeapon(tick, pid, weapon_slot, hint_set, hint_x, hint_y, hint_x_vel, hint_y_vel, hint_snapped_rotation);
+                        return;
+                }
                 
                 todo.add(new Todo(executeAt_tick)
                 {

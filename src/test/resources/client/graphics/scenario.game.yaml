@@ -78,8 +78,8 @@
         offset: [0, 0, 480, 192]
         tiles: [10, 4]
         
-  ship-speed: 2000
-  ship-thrust: 16
+  ship-speed: 5000
+  ship-thrust: 50
   ship-boost-speed: 6000
   ship-boost-thrust: 24
   ship-boost-energy: 5500
