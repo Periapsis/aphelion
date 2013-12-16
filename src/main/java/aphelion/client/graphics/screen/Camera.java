@@ -408,14 +408,22 @@ public final class Camera
         
         public void renderPlayerText(String text, int x, int y, Color color)
         {
-                if (playerFont == null) { return; }
-                TextureImpl.unbind();
-                nifty.getRenderEngine().setColor(color);
-                nifty.getRenderEngine().setFont(playerFont);
-                nifty.getRenderEngine().renderText(text, x, y, -1, -1, Color.NONE);
-                nifty.getRenderEngine().setColor(Color.WHITE);
-                Graph.g.setColor(org.newdawn.slick.Color.white);
-                TextureImpl.unbind();
+                if (playerFont == null || nifty == null)
+                {
+                        // Without nifty, use slick with its default font
+                        Graph.g.setColor(new org.newdawn.slick.Color(color.getRed(), color.getGreen(), color.getBlue(), color.getAlpha()));
+                        Graph.g.drawString(text, x, y);
+                }
+                else
+                {
+                        TextureImpl.unbind();
+                        nifty.getRenderEngine().setColor(color);
+                        nifty.getRenderEngine().setFont(playerFont);
+                        nifty.getRenderEngine().renderText(text, x, y, -1, -1, Color.NONE);
+                        nifty.getRenderEngine().setColor(Color.WHITE);
+                        Graph.g.setColor(org.newdawn.slick.Color.white);
+                        TextureImpl.unbind();
+                }
         }
         
         public void renderPlayerText(String text, float x, float y, Color color)
