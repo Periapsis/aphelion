@@ -158,6 +158,12 @@ public class PhysicsPointHistorySmooth
                                 smoothed.applyRatio(stepRatio, GCInteger.RATIO_PRECISE);
                                 smoothed.add(base);
                                 
+                                if (base.distanceSquared(desired) <= base.distanceSquared(smoothed) )
+                                {
+                                        // do not bother with smoothed if the real position is closer!
+                                        smoothed.set(desired);
+                                }
+                                
                                 smooth.setHistory(tick, smoothed);
                         }
                 }
