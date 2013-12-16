@@ -561,9 +561,9 @@ public class TickedEventLoop implements Workable, Timerable
         {
                 for (int a = loopEvents.size()-1; a >= 0; --a)
                 {
-                        if (tickEvents.get(a) == event)
+                        if (loopEvents.get(a) == event)
                         {
-                                tickEvents.remove(a);
+                                loopEvents.remove(a);
                                 return true;
                         }
                 }
