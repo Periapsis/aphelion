@@ -48,6 +48,7 @@ import aphelion.shared.physics.PhysicsMap;
 import aphelion.shared.swissarmyknife.Colori;
 import aphelion.shared.swissarmyknife.SWASlickImageBuffer;
 import aphelion.shared.swissarmyknife.SwissArmyKnife;
+import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -100,7 +101,13 @@ public class MapClassic implements PhysicsMap
                 if (tileset)
                 {
                         // dimensions of the tileset should be 304, 160
-                        parseTileSet(ImageIO.read(new ByteArrayInputStream(mapFile)));
+                        BufferedImage tilesetImage = ImageIO.read(new ByteArrayInputStream(mapFile));
+                        if (tilesetImage == null)
+                        {
+                                // If a map does not include a tileset, a default tileset should be used
+                                throw new IOException("Unable to parse the map tileset. (maps without a tileset are not currently supported)");
+                        }
+                        parseTileSet(tilesetImage);
                 }
                 
                 ByteBuffer buf = ByteBuffer.wrap(mapFile);
@@ -222,7 +229,7 @@ public class MapClassic implements PhysicsMap
                 return tiles[tileX][tileY];
         }
 
-        private void parseTileSet(java.awt.image.BufferedImage src)
+        private void parseTileSet(BufferedImage src)
         {
                 tilesetBuffer = new SWASlickImageBuffer(src.getWidth(), src.getHeight());
                 for (int y = 0; y < src.getHeight(); y++)
