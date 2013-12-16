@@ -386,12 +386,12 @@ public class MapEntities implements TickEvent, LoopEvent, Animator, ActorListene
         
         public void tryInitialize(PhysicsEnvironment physicsEnv_, SingleGameConnection connection_)
         {
-                if (physicsEnv != null)
+                if (physicsEnv_ != null)
                 {
                         this.physicsEnv = physicsEnv_;
                 }
                 
-                if (connection != null)
+                if (connection_ != null)
                 {
                         this.connection = connection_;
                 }
