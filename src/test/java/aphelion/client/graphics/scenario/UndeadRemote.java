@@ -38,32 +38,46 @@
 package aphelion.client.graphics.scenario;
 
 import aphelion.client.graphics.Scenario;
+import static aphelion.client.graphics.Scenario.ACTOR_2;
+import static aphelion.client.graphics.Scenario.ACTOR_3;
+import static aphelion.client.graphics.Scenario.ACTOR_LOCAL;
 import aphelion.shared.physics.PhysicsEnvironment;
 import aphelion.shared.physics.PhysicsMap;
+import aphelion.shared.physics.WEAPON_SLOT;
+import aphelion.shared.physics.valueobjects.PhysicsMovement;
+
 
 /**
  *
  * @author Joris
  */
-public class FlyHorizontalLine extends Scenario
+public class UndeadRemote extends Scenario
 {
-
         @Override
         protected String getConfig()
         {
-                return null;
+                 return "- smoothing-algorithm: LINEAR\n" +
+                        "  smoothing-look-ahead-ticks: 10\n" +
+                        "  smoothing-step-ratio: 104857\n" +
+                        "  smoothing-distance-limit: 500\n" +
+                        "  smoothing-projectile-collisions: true\n";
         }
 
         @Override
         protected void setup()
         {
                 actorNew(0, ACTOR_LOCAL, 1234, "warbird");
-                actorWarp(0, 0, ACTOR_LOCAL, false, 512 * PhysicsMap.TILE_PIXELS, 512 * PhysicsMap.TILE_PIXELS, 50000, 0, PhysicsEnvironment.ROTATION_1_4TH);
+                actorWarp(0, 0, ACTOR_LOCAL, false, 508 * PhysicsMap.TILE_PIXELS, 512 * PhysicsMap.TILE_PIXELS, -1024, 0, PhysicsEnvironment.ROTATION_1_4TH);
                 
                 actorNew(0, ACTOR_2, 5678, "warbird");
-                actorWarp(0, 0, ACTOR_2, false, 512 * PhysicsMap.TILE_PIXELS, 508 * PhysicsMap.TILE_PIXELS, 50000, 0, PhysicsEnvironment.ROTATION_1_4TH);
+                actorWarp(0, 0, ACTOR_2, false, 517 * PhysicsMap.TILE_PIXELS, 512 * PhysicsMap.TILE_PIXELS + 8000, -1024, 0, PhysicsEnvironment.ROTATION_1_2TH);
                 
-                actorNew(0, ACTOR_3, 5678, "warbird");
-                actorWarp(0, 0, ACTOR_3, false, 512 * PhysicsMap.TILE_PIXELS, 516 * PhysicsMap.TILE_PIXELS, -50000, 0, PhysicsEnvironment.ROTATION_1_4TH);
+                actorWeapon(0, 100, ACTOR_LOCAL, WEAPON_SLOT.GUN);
+                
+                for (long t = 90; t < 100; ++t)
+                {
+                        actorMove(150, t, ACTOR_2, PhysicsMovement.get(true, false, false, false, true));
+                }
+                
         }
 }

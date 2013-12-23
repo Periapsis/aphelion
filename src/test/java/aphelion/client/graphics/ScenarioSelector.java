@@ -62,6 +62,14 @@ public class ScenarioSelector extends JFrame
                 
                 add(new ScenarioButton(FlyHorizontalLine.class));
                 add(new ScenarioButton(SmoothedFastShips500msLag.class));
+                add(new ScenarioButton(UnhitRemote.class));
+                add(new ScenarioButton(UnhitLocal.class));
+                add(new ScenarioButton(UndeadRemote.class));
+                add(new ScenarioButton(UndeadLocal.class));
+                add(new ScenarioButton(UnmissRemote.class));
+                add(new ScenarioButton(UnmissLocal.class));
+                add(new ScenarioButton(UnmissDeadRemote.class));
+                add(new ScenarioButton(UnmissDeadLocal.class));
         }
         
         

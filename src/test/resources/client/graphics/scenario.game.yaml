@@ -89,13 +89,18 @@
   ship-rotation-speed: 3675672 # round(735134400/40000 * 200)
   
   weapon-slot-gun: classic-gun-lvl3
-  weapon-slot-gun-multi: classic-gun-lvl3
+  weapon-slot-gun-multi: classic-gun-lvl1
   
-- selector: {weapon: [classic-gun-lvl3, classic-mgun-lvl3]}
-  projectile-image:         {resource: classic.bullets,        offset: [0, 10, 20, 5], tiles: [ 4, 1]}
-  projectile-image-bounces: {resource: classic.bullets,        offset: [0, 35, 20, 5], tiles: [ 4, 1]}
-  projectile-image-trail:   {resource: classic-bullets-trails, offset: [0,  2, 14, 1], tiles: [14, 1]}
-  projectile-damage: 1560
+  
+- selector: {weapon: [classic-gun-lvl1, classic-mgun-lvl1]}
+  projectile-image:         {resource: classic.bullets,        offset: [0,  0, 20, 5], tiles: [ 4, 1]}
+  projectile-image-bounces: {resource: classic.bullets,        offset: [0, 25, 20, 5], tiles: [ 4, 1]}
+  projectile-image-trail:   {resource: classic-bullets-trails, offset: [0,  0, 14, 1], tiles: [14, 1]}
+  projectile-damage:  520
+  projectile-speed: 5000
+  weapon-fire-energy: 1350
+  weapon-fire-delay: 100
+  weapon-switch-delay: 100
   projectile-hit-ship-animation:
         resource: classic.explosion-bullet
         tiles: [7, 1]
@@ -104,4 +109,25 @@
         resource: classic.explosion-bullet
         tiles: [7, 1]
         frame-duration: 150
+  
+  
+  
+- selector: {weapon: [classic-gun-lvl3, classic-mgun-lvl3]}
+  projectile-image:         {resource: classic.bullets,        offset: [0, 10, 20, 5], tiles: [ 4, 1]}
+  projectile-image-bounces: {resource: classic.bullets,        offset: [0, 35, 20, 5], tiles: [ 4, 1]}
+  projectile-image-trail:   {resource: classic-bullets-trails, offset: [0,  2, 14, 1], tiles: [14, 1]}
+  projectile-damage: 1560
+  weapon-fire-energy: 225
+  weapon-fire-delay: 35
+  weapon-switch-delay: 35
+  projectile-speed: 4000
+  projectile-hit-ship-animation:
+        resource: classic.explosion-bullet
+        tiles: [7, 1]
+        frame-duration: 150
+  projectile-hit-tile-animation:
+        resource: classic.explosion-bullet
+        tiles: [7, 1]
+        frame-duration: 150
+  
   

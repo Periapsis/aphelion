@@ -380,6 +380,11 @@ public final class Camera
         
         public void renderEntity(MapEntity en)
         {
+                if (en == null)
+                {
+                        return;
+                }
+                
                 boolean needMore = true;
                 
                 int iteration = 0;

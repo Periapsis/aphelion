@@ -184,6 +184,26 @@ public abstract class Scenario implements TickEvent
         
         public final void actorWeapon(
                 long executeAt_tick, 
+                final long tick, final int pid, final WEAPON_SLOT weapon_slot)
+        {
+                if (executeAt_tick <= env.getTick())
+                {
+                        env.actorWeapon(tick, pid, weapon_slot, false, 0, 0, 0, 0, 0);
+                        return;
+                }
+                
+                todo.add(new Todo(executeAt_tick)
+                {
+                        @Override
+                        void run()
+                        {
+                                env.actorWeapon(tick, pid, weapon_slot, false, 0, 0, 0, 0, 0);
+                        }
+                });
+        }
+        
+        public final void actorWeapon(
+                long executeAt_tick, 
                 final long tick, final int pid, final WEAPON_SLOT weapon_slot,
                 final boolean hint_set, 
                 final int hint_x, final int hint_y, 
