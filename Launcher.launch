@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+                                                        <launchConfiguration type="org.eclipse.jdt.launching.localJavaApplication">
+                                                        <listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_PATHS">
+                                                        <listEntry value="/aphelion/src/main/java/aphelion/launcher/Main.java"/>
+                                                        </listAttribute>
+                                                        <listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_TYPES">
+                                                        <listEntry value="1"/>
+                                                        </listAttribute>
+                                                        <stringAttribute key="org.eclipse.debug.ui.ATTR_CONSOLE_ENCODING" value="UTF-8"/>
+                                                        <listAttribute key="org.eclipse.debug.ui.favoriteGroups">
+                                                        <listEntry value="org.eclipse.debug.ui.launchGroup.run"/>
+                                                        </listAttribute>
+                                                        <stringAttribute key="org.eclipse.jdt.launching.MAIN_TYPE" value="aphelion.launcher.Main"/>
+                                                        <stringAttribute key="org.eclipse.jdt.launching.PROJECT_ATTR" value="aphelion"/>
+                                                        <stringAttribute key="org.eclipse.jdt.launching.VM_ARGUMENTS" value="-ea -server -XX:+DoEscapeAnalysis -XX:+UseG1GC -XX:MaxGCPauseMillis=15 -XX:+TieredCompilation -Djava.library.path=bin/jni"/>
+                                                        <stringAttribute key="org.eclipse.jdt.launching.WORKING_DIRECTORY" value="${workspace_loc:aphelion/target}"/>
+                                                        </launchConfiguration>
