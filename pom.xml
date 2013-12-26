@@ -6,7 +6,7 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
         <packaging>jar</packaging>
         <version>0.2-SNAPSHOT</version>
         <name>aphelion</name>
-        <url>http://maven.apache.org</url>
+        <url>https://github.com/Periapsis/aphelion</url>
         
         <properties>
                 <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -251,6 +251,134 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
                                         </execution>
                                 </executions>
                         </plugin>
+                        <plugin>
+                                <groupId>org.apache.maven.plugins</groupId>
+                                <artifactId>maven-eclipse-plugin</artifactId>
+                                <version>2.9</version>
+                                <configuration>
+                                        <downloadJavadocs>true</downloadJavadocs>
+                                        <downloadSources>true</downloadSources>
+                                        <additionalConfig>
+                                                <file>
+                                                        <name>Launcher.launch</name>
+                                                        <content>
+                                                        <![CDATA[<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+                                                        <launchConfiguration type="org.eclipse.jdt.launching.localJavaApplication">
+                                                        <listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_PATHS">
+                                                        <listEntry value="/aphelion/src/main/java/aphelion/launcher/Main.java"/>
+                                                        </listAttribute>
+                                                        <listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_TYPES">
+                                                        <listEntry value="1"/>
+                                                        </listAttribute>
+                                                        <stringAttribute key="org.eclipse.debug.ui.ATTR_CONSOLE_ENCODING" value="UTF-8"/>
+                                                        <listAttribute key="org.eclipse.debug.ui.favoriteGroups">
+                                                        <listEntry value="org.eclipse.debug.ui.launchGroup.run"/>
+                                                        </listAttribute>
+                                                        <stringAttribute key="org.eclipse.jdt.launching.MAIN_TYPE" value="aphelion.launcher.Main"/>
+                                                        <stringAttribute key="org.eclipse.jdt.launching.PROJECT_ATTR" value="aphelion"/>
+                                                        <stringAttribute key="org.eclipse.jdt.launching.VM_ARGUMENTS" value="-ea -server -XX:+DoEscapeAnalysis -XX:+UseG1GC -XX:MaxGCPauseMillis=15 -XX:+TieredCompilation -Djava.library.path=bin/jni"/>
+                                                        <stringAttribute key="org.eclipse.jdt.launching.WORKING_DIRECTORY" value="${workspace_loc:aphelion/target}"/>
+                                                        </launchConfiguration>
+                                                        ]]>
+                                                        </content>
+                                                </file>
+                                                <file>
+                                                        <name>Server.launch</name>
+                                                        <content>
+                                                        <![CDATA[<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+                                                        <launchConfiguration type="org.eclipse.jdt.launching.localJavaApplication">
+                                                        <listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_PATHS">
+                                                        <listEntry value="/aphelion/src/main/java/aphelion/server/ServerMain.java"/>
+                                                        </listAttribute>
+                                                        <listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_TYPES">
+                                                        <listEntry value="1"/>
+                                                        </listAttribute>
+                                                        <stringAttribute key="org.eclipse.debug.ui.ATTR_CONSOLE_ENCODING" value="UTF-8"/>
+                                                        <stringAttribute key="org.eclipse.jdt.launching.MAIN_TYPE" value="aphelion.server.ServerMain"/>
+                                                        <stringAttribute key="org.eclipse.jdt.launching.PROGRAM_ARGUMENTS" value="server.yaml"/>
+                                                        <stringAttribute key="org.eclipse.jdt.launching.PROJECT_ATTR" value="aphelion"/>
+                                                        <stringAttribute key="org.eclipse.jdt.launching.VM_ARGUMENTS" value="-ea -server -XX:+DoEscapeAnalysis -XX:+UseG1GC -XX:MaxGCPauseMillis=15 -XX:+TieredCompilation -Djava.library.path=bin/jni"/>
+                                                        <stringAttribute key="org.eclipse.jdt.launching.WORKING_DIRECTORY" value="${workspace_loc:aphelion/target}"/>
+                                                        </launchConfiguration>
+
+                                                        ]]>
+                                                        </content>
+                                                </file>
+                                                <file>
+                                                        <name>Singleplayer.launch</name>
+                                                        <content>
+                                                        <![CDATA[<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+                                                        <launchConfiguration type="org.eclipse.jdt.launching.localJavaApplication">
+                                                        <listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_PATHS">
+                                                        <listEntry value="/aphelion/src/main/java/aphelion/client/Client.java"/>
+                                                        </listAttribute>
+                                                        <listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_TYPES">
+                                                        <listEntry value="1"/>
+                                                        </listAttribute>
+                                                        <stringAttribute key="org.eclipse.debug.ui.ATTR_CONSOLE_ENCODING" value="UTF-8"/>
+                                                        <stringAttribute key="org.eclipse.jdt.launching.MAIN_TYPE" value="aphelion.client.Client"/>
+                                                        <stringAttribute key="org.eclipse.jdt.launching.PROJECT_ATTR" value="aphelion"/>
+                                                        <stringAttribute key="org.eclipse.jdt.launching.VM_ARGUMENTS" value="-ea -server -XX:+DoEscapeAnalysis -XX:+UseG1GC -XX:MaxGCPauseMillis=15 -XX:+TieredCompilation -Djava.library.path=bin/jni"/>
+                                                        <stringAttribute key="org.eclipse.jdt.launching.WORKING_DIRECTORY" value="${workspace_loc:aphelion/target}"/>
+                                                        </launchConfiguration>
+                                                        ]]>
+                                                        </content>
+                                                </file>
+                                                <file>
+                                                        <name>Scenario.launch</name>
+                                                        <content>
+                                                        <![CDATA[<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+                                                        <launchConfiguration type="org.eclipse.jdt.launching.localJavaApplication">
+                                                        <listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_PATHS">
+                                                        <listEntry value="/aphelion/src/test/java/aphelion/client/graphics/ScenarioPlayer.java"/>
+                                                        </listAttribute>
+                                                        <listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_TYPES">
+                                                        <listEntry value="1"/>
+                                                        </listAttribute>
+                                                        <stringAttribute key="org.eclipse.debug.ui.ATTR_CONSOLE_ENCODING" value="UTF-8"/>
+                                                        <stringAttribute key="org.eclipse.jdt.launching.MAIN_TYPE" value="aphelion.client.graphics.ScenarioPlayer"/>
+                                                        <stringAttribute key="org.eclipse.jdt.launching.PROJECT_ATTR" value="aphelion"/>
+                                                        <stringAttribute key="org.eclipse.jdt.launching.VM_ARGUMENTS" value="-ea -server -XX:+DoEscapeAnalysis -XX:+UseG1GC -XX:MaxGCPauseMillis=15 -XX:+TieredCompilation -Djava.library.path=bin/jni"/>
+                                                        <stringAttribute key="org.eclipse.jdt.launching.WORKING_DIRECTORY" value="${workspace_loc:aphelion/target}"/>
+                                                        </launchConfiguration>
+                                                        ]]>
+                                                        </content>
+                                                </file>
+                                        </additionalConfig>
+                                </configuration>
+                        </plugin>
                 </plugins>
+                <pluginManagement>
+                        <plugins>
+                                <!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself.-->
+                                <plugin>
+                                        <groupId>org.eclipse.m2e</groupId>
+                                        <artifactId>lifecycle-mapping</artifactId>
+                                        <version>1.0.0</version>
+                                        <configuration>
+                                                <lifecycleMappingMetadata>
+                                                        <pluginExecutions>
+                                                                <pluginExecution>
+                                                                        <pluginExecutionFilter>
+                                                                                <groupId>com.google.protobuf.tools</groupId>
+                                                                                <artifactId>maven-protoc-plugin</artifactId>
+                                                                                <versionRange>[0.0,)</versionRange>
+                                                                                <goals>
+                                                                                        <goal>compile</goal>
+                                                                                        <goal>testCompile</goal>
+                                                                                </goals>
+                                                                        </pluginExecutionFilter>
+                                                                        <action>
+                                                                                <execute>
+                                                                                        <runOnIncremental>false</runOnIncremental>
+                                                                                </execute>
+                                                                        </action>
+                                                                </pluginExecution>
+                                                        </pluginExecutions>
+                                                </lifecycleMappingMetadata>
+                                        </configuration>
+                                </plugin>
+                        </plugins>
+                </pluginManagement>
         </build>
 </project>
