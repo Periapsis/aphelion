@@ -45,6 +45,7 @@ import aphelion.client.graphics.world.MapEntities;
 import aphelion.client.graphics.world.StarField;
 import aphelion.server.ServerConfigException;
 import aphelion.shared.event.TickedEventLoop;
+import aphelion.shared.gameconfig.GameConfig;
 import aphelion.shared.map.MapClassic;
 import aphelion.shared.map.tile.TileType;
 import aphelion.shared.physics.PhysicsEnvironment;
@@ -55,6 +56,7 @@ import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
 import org.lwjgl.LWJGLException;
 import org.lwjgl.opengl.Display;
 import org.lwjgl.opengl.DisplayMode;
@@ -223,6 +225,21 @@ public class ScenarioPlayer
                 }
         }
         
+        public void addConfig(String config)
+        {
+                List<Object> yamlDocuments;
+                try
+                {
+                        yamlDocuments = GameConfig.loadYaml(config);
+                }
+                catch (Exception ex)
+                {
+                        throw new Error(ex);
+                }
+
+                env.loadConfig(env.getTick() - env.econfig.HIGHEST_DELAY, "player", yamlDocuments);
+        }
+        
         public void interrupt()
         {
                 loop.interrupt();
@@ -246,7 +263,7 @@ public class ScenarioPlayer
                 ScenarioSelector frame = new ScenarioSelector(new ScenarioSelector.ScenarioSelectorListener()
                 {
                         @Override
-                        public void selected(Class klass)
+                        public void selected(Class klass, final String config)
                         {
                                 try
                                 {
@@ -258,6 +275,7 @@ public class ScenarioPlayer
                                                 public void run()
                                                 {
                                                         player.setScenario(scene);
+                                                        player.addConfig(config);
                                                 }
                                         });
                                 }

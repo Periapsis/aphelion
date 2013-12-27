@@ -38,12 +38,15 @@
 package aphelion.client.graphics;
 
 import aphelion.client.graphics.scenario.*;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 import java.awt.HeadlessException;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import javax.swing.JButton;
 import javax.swing.JFrame;
+import javax.swing.JPanel;
 
 /**
  *
@@ -52,26 +55,47 @@ import javax.swing.JFrame;
 public class ScenarioSelector extends JFrame
 {
         private final ScenarioSelectorListener listener;
+        private final ConfigPanel configPanel;
+        
         public ScenarioSelector(ScenarioSelectorListener listener) throws HeadlessException
         {
                 this.listener = listener;
                 setTitle("Scenario selector");
-                setSize(1024, 200);
-                setLayout(new GridLayout(0, 6));
+                setSize(600, 500);
+                setLayout(new GridBagLayout());
                 setDefaultCloseOperation(DISPOSE_ON_CLOSE);
                 
-                add(new ScenarioButton(FlyHorizontalLine.class));
-                add(new ScenarioButton(SmoothedFastShips500msLag.class));
-                add(new ScenarioButton(UnhitRemote.class));
-                add(new ScenarioButton(UnhitLocal.class));
-                add(new ScenarioButton(UnhitRemoteHitLocal.class));
-                add(new ScenarioButton(UndeadRemote.class));
-                add(new ScenarioButton(UndeadLocal.class));
-                add(new ScenarioButton(UndeadRemoteHitLocal.class));
-                add(new ScenarioButton(UnmissRemote.class));
-                add(new ScenarioButton(UnmissLocal.class));
-                add(new ScenarioButton(UnmissDeadRemote.class));
-                add(new ScenarioButton(UnmissDeadLocal.class));
+                JPanel buttons = new JPanel();
+                buttons.setLayout(new GridLayout(0, 3));
+                buttons.add(new ScenarioButton(FlyHorizontalLine.class));
+                buttons.add(new ScenarioButton(SmoothedFastShips500msLag.class));
+                buttons.add(new ScenarioButton(UnhitRemote.class));
+                buttons.add(new ScenarioButton(UnhitLocal.class));
+                buttons.add(new ScenarioButton(UnhitRemoteHitLocal.class));
+                buttons.add(new ScenarioButton(UndeadRemote.class));
+                buttons.add(new ScenarioButton(UndeadLocal.class));
+                buttons.add(new ScenarioButton(UndeadRemoteHitLocal.class));
+                buttons.add(new ScenarioButton(UnmissRemote.class));
+                buttons.add(new ScenarioButton(UnmissLocal.class));
+                buttons.add(new ScenarioButton(UnmissDeadRemote.class));
+                buttons.add(new ScenarioButton(UnmissDeadLocal.class));
+                
+                GridBagConstraints c;
+                c = new GridBagConstraints();
+                c.gridx = 0;
+                c.gridy = 0;
+                c.fill = GridBagConstraints.HORIZONTAL;
+                c.weightx = 1;
+                c.weighty = 1;
+                add(buttons, c);
+                
+                c = new GridBagConstraints();
+                c.gridx = 0;
+                c.gridy = 1;
+                c.fill = GridBagConstraints.BOTH;
+                c.weightx = 1;
+                c.weighty = 0.5;
+                add(configPanel = new ConfigPanel(), c);
         }
         
         
@@ -92,7 +116,7 @@ public class ScenarioSelector extends JFrame
                                 @Override
                                 public void actionPerformed(ActionEvent e)
                                 {
-                                        listener.selected(klas);
+                                        listener.selected(klas, configPanel.getValue());
                                 }
                         });
                 }
@@ -100,6 +124,6 @@ public class ScenarioSelector extends JFrame
         
         public static interface ScenarioSelectorListener
         {
-                void selected(Class klass);
+                void selected(Class klass, String config);
         }
 }

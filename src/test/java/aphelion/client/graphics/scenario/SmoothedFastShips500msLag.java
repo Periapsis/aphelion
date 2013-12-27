@@ -53,13 +53,7 @@ public class SmoothedFastShips500msLag extends Scenario
         @Override
         protected String getConfig()
         {
-                return  "- smoothing-algorithm: LINEAR\n" +
-                        "  smoothing-look-ahead-ticks: 10\n" +
-                        "  smoothing-step-ratio: 104857\n" +
-                        "  smoothing-distance-limit: 500\n" +
-                        "  smoothing-projectile-collisions: true\n" +
-                        
-                        "- selector: {ship: warbird}\n" +
+                return "- selector: {ship: warbird}\n" +
                         "  ship-speed: 5000\n" +
                         "  ship-thrust: 50";
                 
