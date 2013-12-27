@@ -128,6 +128,8 @@ public class ScenarioPlayer
                                 break;
                         }
                         
+                        Client.showDebug = true;
+                        
                         camera.setDimension(Display.getWidth(), Display.getHeight());
                         
                         loop.loop();
@@ -141,6 +143,7 @@ public class ScenarioPlayer
                         }
                         else
                         {
+                                mapEntities.tryInitialize(env, null);
                                 mapEntities.updateGraphicsFromPhysics();
                                 
                                 ActorShip localShip = mapEntities.getLocalShip();

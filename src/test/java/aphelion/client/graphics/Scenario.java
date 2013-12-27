@@ -169,6 +169,12 @@ public abstract class Scenario implements TickEvent
                 if (executeAt_tick <= env.getTick())
                 {
                         env.actorMove(tick, pid, move);
+                        
+                        RenderDelay renderDelayHandler = mapEntities.getRenderDelay();
+                        if (renderDelayHandler != null)
+                        {
+                                renderDelayHandler.receivedMove(pid, tick);
+                        }
                         return;
                 }
                 
@@ -178,6 +184,12 @@ public abstract class Scenario implements TickEvent
                         void run()
                         {
                                 env.actorMove(tick, pid, move);
+                                
+                                RenderDelay renderDelayHandler = mapEntities.getRenderDelay();
+                                if (renderDelayHandler != null)
+                                {
+                                        renderDelayHandler.receivedMove(pid, tick);
+                                }
                         }
                 });
         }

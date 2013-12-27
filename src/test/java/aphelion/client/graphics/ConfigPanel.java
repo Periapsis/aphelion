@@ -112,13 +112,12 @@ public class ConfigPanel extends JPanel
                 {
                         if (first)
                         {
-                                ret.append("- ");
+                                ret.append("- selector: {importance: 1}\n");
                                 first = false;
                         }
-                        else
-                        {
-                                ret.append("  ");
-                        }
+                        
+                        ret.append("  ");
+                        
                         ret.append(e.getKey());
                         ret.append(": ");
                         
