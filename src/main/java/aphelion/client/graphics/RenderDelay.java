@@ -167,7 +167,6 @@ public class RenderDelay implements GameS2CListener
                         ship.renderDelay_value.set(0);
                 }
                 
-                
                 long createdAgo = physicsEnv.getTick() - actor.getCreatedAt();
                 
                 ship.renderDelay_current = SwissArmyKnife.clip(
@@ -292,6 +291,42 @@ public class RenderDelay implements GameS2CListener
                 projectile.renderingAt_tick = physicsEnv.getTick() - projectile.renderDelay_current;
         }
         
+        /** Call this method to update the render delay of the given player when a move for him is received.
+         * If <strong>this</strong> object has been registered as a GameS2CListener, this is done for you.
+         * @param pid
+         * @param firstMoveTick If this move message contains multiple moves, this should be the tick of the first move
+         */
+        public void receivedMove(int pid, long firstMoveTick)
+        {
+                ActorShip ship = mapEntities.getActorShip(pid);
+                if (ship == null)
+                {
+                        return;
+                }
+
+                if (ship.isLocalPlayer())
+                {
+                        ship.renderDelay_value.set(0);
+                        return;
+                }
+                
+                // Use the tick of the first move
+                // This way the render delay does not continuesly drift because 
+                // of the delayed move update mechanism (SEND_MOVE_DELAY, 
+                // which is very similar to Nagle's algorithm).
+
+                if (!ship.renderDelay_value.hasBeenSet() || firstMoveTick > ship.renderDelay_mostRecentMove)
+                {
+                        long desired = physicsEnv.getTick() - firstMoveTick; // the latency
+                        desired = desired * latencyRatio.get() / GCInteger.RATIO;
+                        desired += this.delay.get();
+                        if (desired < 0) { desired = 0; }
+
+                        ship.renderDelay_value.set((int) desired);
+                        ship.renderDelay_mostRecentMove = firstMoveTick;
+                }
+        }
+        
         @Override
         public void gameS2CMessage(GameProtocolConnection game, GameS2C.S2C s2c, long receivedAt)
         {
@@ -301,35 +336,7 @@ public class RenderDelay implements GameS2CListener
                 {
                         if (msg.getDirect())
                         {
-                                ActorShip ship = mapEntities.getActorShip(msg.getPid());
-                                if (ship == null)
-                                {
-                                        continue;
-                                }
-
-                                if (ship.isLocalPlayer())
-                                {
-                                        ship.renderDelay_value.set(0);
-                                }
-                                else
-                                {
-                                        // Use the tick of the first move
-                                        // This way the render delay does not continuesly drift because 
-                                        // of the delayed move update mechanism (SEND_MOVE_DELAY, 
-                                        // which is very similar to Nagle's algorithm).
-                                        long positionTick = msg.getTick();
-
-                                        if (!ship.renderDelay_value.hasBeenSet() || positionTick > ship.renderDelay_mostRecentMove)
-                                        {
-                                                long desired = physicsEnv.getTick() - positionTick; // the latency
-                                                desired = desired * latencyRatio.get() / GCInteger.RATIO;
-                                                desired += this.delay.get();
-                                                if (desired < 0) { desired = 0; }
-
-                                                ship.renderDelay_value.set((int) desired);
-                                                ship.renderDelay_mostRecentMove = positionTick;
-                                        }
-                                }
+                                receivedMove(msg.getPid(), msg.getTick());
                         }
                 }
         }

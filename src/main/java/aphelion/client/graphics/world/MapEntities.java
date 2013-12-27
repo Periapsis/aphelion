@@ -417,6 +417,11 @@ public class MapEntities implements TickEvent, LoopEvent, Animator, ActorListene
                         }
                 }
         }
+
+        public RenderDelay getRenderDelay()
+        {
+                return renderDelay;
+        }
         
         public void updateGraphicsFromPhysics()
         {
