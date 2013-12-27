@@ -41,11 +41,14 @@
 
 package aphelion.client.graphics;
 
+import aphelion.client.Client;
 import java.awt.GridLayout;
 import java.text.NumberFormat;
 import java.util.HashMap;
 import java.util.Map;
 import javax.swing.*;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 
 
@@ -56,10 +59,14 @@ import javax.swing.*;
 public class ConfigPanel extends JPanel
 {
         private final HashMap<String, JComponent> fields = new HashMap<>();
+        private final JCheckBox debug;
         
         public ConfigPanel()
         {
                 setLayout(new GridLayout(0, 2));
+                
+                add(new JLabel("debug"));
+                add(debug = new JCheckBox());
                 
                 addIntegerConfig("render-delay", 0);
                 addIntegerConfig("render-delay-latency-ratio", 0);
@@ -73,6 +80,16 @@ public class ConfigPanel extends JPanel
                 addIntegerConfig("smoothing-step-ratio", 100000);
                 addIntegerConfig("smoothing-distance-limit", 500);
                 addBooleanConfig("smoothing-projectile-collisions", true);
+                
+                debug.addChangeListener(new ChangeListener()
+                {
+
+                        @Override
+                        public void stateChanged(ChangeEvent e)
+                        {
+                                Client.showDebug = debug.isSelected();
+                        }
+                });
         }
         
         private void addIntegerConfig(String key, int def)

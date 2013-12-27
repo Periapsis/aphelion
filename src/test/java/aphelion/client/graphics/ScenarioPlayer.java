@@ -128,8 +128,6 @@ public class ScenarioPlayer
                                 break;
                         }
                         
-                        Client.showDebug = true;
-                        
                         camera.setDimension(Display.getWidth(), Display.getHeight());
                         
                         loop.loop();
