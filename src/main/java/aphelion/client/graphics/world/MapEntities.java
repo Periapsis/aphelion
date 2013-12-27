@@ -127,6 +127,18 @@ public class MapEntities implements TickEvent, LoopEvent, Animator, ActorListene
                 return actorShips.values().iterator();
         }
         
+        public Iterable<ActorShip> ships()
+        {
+                return new Iterable<ActorShip>()
+                {
+                        @Override
+                        public Iterator<ActorShip> iterator()
+                        {
+                                return shipIterator();
+                        }
+                };
+        }
+        
         public Iterator<ActorShip> shipNoLocalIterator()
         {
                 Iterator<ActorShip> it = new Iterator<ActorShip>() 
@@ -323,6 +335,11 @@ public class MapEntities implements TickEvent, LoopEvent, Animator, ActorListene
         @Override
         public void tick(long tick)
         {
+                if (renderDelay != null)
+                {
+                        renderDelay.tick(tick);
+                }
+                
                 Iterator<ActorShip> itActor = actorShips.values().iterator();
                 
                 while (itActor.hasNext())

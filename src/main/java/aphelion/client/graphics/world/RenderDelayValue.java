@@ -113,19 +113,27 @@ public class RenderDelayValue implements TickEvent
         
         public void set(int renderDelay)
         {
+                if (renderDelay < 0) { renderDelay = 0; }
+                
                 this.desired = renderDelay;
                 if (set == 0)
                 {
                         this.renderDelay = renderDelay;
-                        set = 1;
+                        
+                        if (renderDelay != 0)
+                        {
+                                set = 1;
+                        }
                 }
         }
         
         public void setImmediate(int renderDelay)
         {
+                if (renderDelay < 0) { renderDelay = 0; }
+                
                 this.desired = renderDelay;
                 this.renderDelay = renderDelay;
-                if (set == 0)
+                if (set == 0 && renderDelay != 0)
                 {
                         set = 1;
                 }

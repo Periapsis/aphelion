@@ -83,6 +83,7 @@ public class ActorShip extends MapEntity implements TickEvent, WrappedValueAbstr
         public final RenderDelayValue renderDelay_value = new RenderDelayValue(0);
         public long renderDelay_current;
         public long renderDelay_mostRecentMove;
+        public long renderDelay_mostRecentMoveLatency;
         public long renderingAt_tick;
         
 

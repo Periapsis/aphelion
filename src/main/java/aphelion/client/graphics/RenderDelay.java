@@ -42,6 +42,7 @@ import aphelion.client.graphics.world.ActorShip;
 import aphelion.client.graphics.world.MapEntities;
 import aphelion.client.graphics.world.Projectile;
 import aphelion.client.net.SingleGameConnection;
+import aphelion.shared.event.TickEvent;
 import aphelion.shared.gameconfig.*;
 import aphelion.shared.gameconfig.GCDocumentation.GCDOCUMENTATION_TYPE;
 import aphelion.shared.net.game.GameProtocolConnection;
@@ -59,7 +60,7 @@ import java.util.logging.Logger;
  *
  * @author Joris
  */
-public class RenderDelay implements GameS2CListener
+public class RenderDelay implements GameS2CListener, TickEvent
 {
         private static final Logger log = Logger.getLogger("aphelion.client.graphics");
         
@@ -303,12 +304,6 @@ public class RenderDelay implements GameS2CListener
                 {
                         return;
                 }
-
-                if (ship.isLocalPlayer())
-                {
-                        ship.renderDelay_value.set(0);
-                        return;
-                }
                 
                 // Use the tick of the first move
                 // This way the render delay does not continuesly drift because 
@@ -317,14 +312,25 @@ public class RenderDelay implements GameS2CListener
 
                 if (!ship.renderDelay_value.hasBeenSet() || firstMoveTick > ship.renderDelay_mostRecentMove)
                 {
-                        long desired = physicsEnv.getTick() - firstMoveTick; // the latency
-                        desired = desired * latencyRatio.get() / GCInteger.RATIO;
-                        desired += this.delay.get();
-                        if (desired < 0) { desired = 0; }
-
-                        ship.renderDelay_value.set((int) desired);
                         ship.renderDelay_mostRecentMove = firstMoveTick;
+                        ship.renderDelay_mostRecentMoveLatency = physicsEnv.getTick() - firstMoveTick;
+                        calculateDesiredDelay(ship);
                 }
+        }
+        
+        private void calculateDesiredDelay(ActorShip ship)
+        {
+                if (ship.isLocalPlayer())
+                {
+                        ship.renderDelay_value.set(0);
+                        return;
+                }
+                
+                long desired = ship.renderDelay_mostRecentMoveLatency;
+                desired = desired * latencyRatio.get() / GCInteger.RATIO;
+                desired += this.delay.get();
+                
+                ship.renderDelay_value.set((int) desired);
         }
         
         @Override
@@ -338,6 +344,15 @@ public class RenderDelay implements GameS2CListener
                         {
                                 receivedMove(msg.getPid(), msg.getTick());
                         }
+                }
+        }
+
+        @Override
+        public void tick(long tick)
+        {
+                for (ActorShip ship : mapEntities.ships())
+                {
+                        calculateDesiredDelay(ship);
                 }
         }
 }
