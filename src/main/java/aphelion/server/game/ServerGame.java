@@ -409,6 +409,9 @@ public class ServerGame implements LoopEvent, TickEvent, GameProtoListener
                         weaponBuilder.setPid(msg.getPid());
                         weaponBuilder.setTick(msg.getTick());
                         weaponBuilder.setSlot(msg.getSlot());
+                        
+                        // Doing nothing with the weapon hint for now.
+                        // It might be useful for trusted clients (bots etc)
                                 
                         boolean valid = physicsEnv.actorWeapon(msg.getTick(), msg.getPid(), slot);
                         
