@@ -50,12 +50,16 @@ import aphelion.shared.net.protobuf.GameOperation.ActorMove;
 import aphelion.shared.net.protobuf.GameS2C;
 import aphelion.shared.net.protobuf.GameS2C.ArenaSync;
 import aphelion.shared.net.protobuf.GameS2C.S2C;
+import aphelion.shared.physics.valueobjects.PhysicsMovement;
+import com.google.protobuf.ByteString;
 import java.io.File;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.channels.ServerSocketChannel;
+import java.util.Arrays;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.junit.*;
@@ -193,11 +197,13 @@ public class WebSocketTest
                         receivedC2SMove = System.nanoTime();
                         assertEquals(123, move.getTick());
                         assertEquals(456, move.getPid());
-                        assertEquals(4, move.getMoveCount());
-                        assertEquals(0x1, move.getMove(0));
-                        assertEquals(0x1 | 0x4, move.getMove(1));
-                        assertEquals(0x0, move.getMove(2));
-                        assertEquals(0x8, move.getMove(3));
+                        
+                        List<PhysicsMovement> moves = PhysicsMovement.unserializeListLE(move.getMove().asReadOnlyByteBuffer());
+                        assertEquals(4, moves.size());
+                        assertEquals(0x1, moves.get(0).bits);
+                        assertEquals(0x1 | 0x4, moves.get(1).bits);
+                        assertEquals(0x0, moves.get(2).bits);
+                        assertEquals(0x8, moves.get(3).bits);
                         
                         
                         S2C.Builder s2c = S2C.newBuilder();
@@ -262,10 +268,11 @@ public class WebSocketTest
                         actorMove.setTick(123);
                         actorMove.setPid(456);
                         
-                        actorMove.addMove(0x1);
-                        actorMove.addMove(0x1 | 0x4);
-                        actorMove.addMove(0x0);
-                        actorMove.addMove(0x8);
+                        actorMove.setMove(ByteString.copyFrom(PhysicsMovement.serializeListLE(Arrays.asList(
+                                PhysicsMovement.get(0x1), 
+                                PhysicsMovement.get(0x1 | 0x4), 
+                                PhysicsMovement.get(0x0), 
+                                PhysicsMovement.get(0x8)))));
                         
                         sentC2SMove = System.nanoTime();
                         game.send(c2s.build());
@@ -422,11 +429,14 @@ public class WebSocketTest
                                 ActorMove move = c2s.getActorMove(a);
                                 assertEquals(123, move.getTick());
                                 serverPidSum += move.getPid();
-                                assertEquals(4, move.getMoveCount());
-                                assertEquals(0x1, move.getMove(0));
-                                assertEquals(0x1 | 0x4, move.getMove(1));
-                                assertEquals(0x0, move.getMove(2));
-                                assertEquals(0x8, move.getMove(3));
+                                
+                                List<PhysicsMovement> moves = PhysicsMovement.unserializeListLE(move.getMove().asReadOnlyByteBuffer());
+                                assertEquals(4, moves.size());
+                                assertEquals(0x1, moves.get(0).bits);
+                                assertEquals(0x1 | 0x4, moves.get(1).bits);
+                                assertEquals(0x0, moves.get(2).bits);
+                                assertEquals(0x8, moves.get(3).bits);
+                                
                         }
                         
                         if (clientMessages == 18 && serverMessages == 28)
@@ -461,10 +471,11 @@ public class WebSocketTest
                                         actorMove.setTick(123);
                                         actorMove.setPid(a + 1);
 
-                                        actorMove.addMove(0x1);
-                                        actorMove.addMove(0x1 | 0x4);
-                                        actorMove.addMove(0x0);
-                                        actorMove.addMove(0x8);
+                                        actorMove.setMove(ByteString.copyFrom(PhysicsMovement.serializeListLE(Arrays.asList(
+                                        PhysicsMovement.get(0x1), 
+                                        PhysicsMovement.get(0x1 | 0x4), 
+                                        PhysicsMovement.get(0x0), 
+                                        PhysicsMovement.get(0x8)))));
 
                                         if (a < 17)
                                         {
@@ -546,11 +557,13 @@ public class WebSocketTest
                                 assertEquals(123, move.getTick());
                                 
                                 clientPidSum += move.getPid();
-                                assertEquals(4, move.getMoveCount());
-                                assertEquals(0x1, move.getMove(0));
-                                assertEquals(0x1 | 0x4, move.getMove(1));
-                                assertEquals(0x0, move.getMove(2));
-                                assertEquals(0x8, move.getMove(3));
+                                
+                                List<PhysicsMovement> moves = PhysicsMovement.unserializeListLE(move.getMove().asReadOnlyByteBuffer());
+                                assertEquals(4, moves.size());
+                                assertEquals(0x1, moves.get(0).bits);
+                                assertEquals(0x1 | 0x4, moves.get(1).bits);
+                                assertEquals(0x0, moves.get(2).bits);
+                                assertEquals(0x8, moves.get(3).bits);
                         }
                         
                         if (clientMessages == 18 && serverMessages == 28)
@@ -579,10 +592,11 @@ public class WebSocketTest
                                         actorMove.setTick(123);
                                         actorMove.setPid(a + 1);
 
-                                        actorMove.addMove(0x1);
-                                        actorMove.addMove(0x1 | 0x4);
-                                        actorMove.addMove(0x0);
-                                        actorMove.addMove(0x8);
+                                        actorMove.setMove(ByteString.copyFrom(PhysicsMovement.serializeListLE(Arrays.asList(
+                                        PhysicsMovement.get(0x1), 
+                                        PhysicsMovement.get(0x1 | 0x4), 
+                                        PhysicsMovement.get(0x0), 
+                                        PhysicsMovement.get(0x8)))));
 
                                         if (a < 27)
                                         {

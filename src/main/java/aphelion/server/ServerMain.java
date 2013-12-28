@@ -56,6 +56,7 @@ import aphelion.shared.resource.AssetCache;
 import aphelion.shared.resource.FileStorage;
 import aphelion.shared.resource.ResourceDB;
 import aphelion.shared.swissarmyknife.SwissArmyKnife;
+import com.google.protobuf.ByteString;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -63,6 +64,8 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.channels.ServerSocketChannel;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
@@ -280,8 +283,9 @@ public class ServerMain implements LoopEvent, TickEvent
                                 for (int i = 20; i > 0; --i)
                                 {
                                         physicsEnv.actorMove(physicsEnv.getTick()-i, DUMMY_1_PID, move);
-                                        moveBuilder.addMove(move.bits);
                                 }
+                                
+                                moveBuilder.setMove(ByteString.copyFrom(PhysicsMovement.serializeListLE(Collections.nCopies(20, move))));
                                 
                                 
                                 if (tick % 1000 == 0 && SwissArmyKnife.random.nextInt(3) == 0)
@@ -308,8 +312,9 @@ public class ServerMain implements LoopEvent, TickEvent
                                 for (int i = 20; i > 0; --i)
                                 {
                                         physicsEnv.actorMove(physicsEnv.getTick()-i, DUMMY_2_PID, move);
-                                        moveBuilder.addMove(move.bits);
                                 }
+                                
+                                moveBuilder.setMove(ByteString.copyFrom(PhysicsMovement.serializeListLE(Collections.nCopies(20, move))));
                         }
                         
                         serverGame.broadcast(s2c);

@@ -38,6 +38,11 @@
 
 package aphelion.shared.physics.valueobjects;
 
+import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.BitSet;
+import java.util.List;
+
 /**
  *
  * @author Joris
@@ -107,6 +112,10 @@ public class PhysicsMovement implements PhysicsMoveable
                 return (up || down) && boost;
         }
         
+        /** Does this movement do anything useful?.
+         * If this method returns false, it is okay to ignore this movement.
+         * @return 
+         */
         public boolean hasEffect()
         {
                 return up || down || left || right;
@@ -131,5 +140,42 @@ public class PhysicsMovement implements PhysicsMoveable
                 }
                 final PhysicsMovement other = (PhysicsMovement) obj;
                 return this.bits == other.bits;
+        }
+        
+        /** Serialize a list of movements as a compact bit set (little endian).
+         * Trailing 0's will not be included, unless needed for padding.
+         * This means that trailing NONE moves, will not be included!
+         * @param list
+         * @return 
+         */
+        public static byte[] serializeListLE(List<PhysicsMovement> list)
+        {
+                BitSet bits = new BitSet(list.size() * 5);
+                
+                int i = 0;
+                for (PhysicsMovement move : list)
+                {
+                        bits.set(i++, move.boost);
+                        bits.set(i++, move.right);
+                        bits.set(i++, move.left);
+                        bits.set(i++, move.down);
+                        bits.set(i++, move.up);
+                }
+                
+                return bits.toByteArray();
+        }
+        
+        public static ArrayList<PhysicsMovement> unserializeListLE(ByteBuffer bytes)
+        {
+                ArrayList<PhysicsMovement> list = new ArrayList<>(bytes.remaining() * 8 / 5);
+                
+                BitSet bits = BitSet.valueOf(bytes);
+                
+                for (int i = 0; i < bits.length(); i += 5)
+                {
+                        list.add(get(bits.get(i + 4), bits.get(i + 3), bits.get(i + 2), bits.get(i + 1), bits.get(i + 0)));
+                }
+                
+                return list;
         }
 }

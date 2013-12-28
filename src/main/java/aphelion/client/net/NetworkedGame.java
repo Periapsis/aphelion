@@ -62,6 +62,7 @@ import aphelion.shared.resource.Asset;
 import aphelion.shared.resource.AssetCache;
 import aphelion.shared.resource.LocalUserStorage;
 import aphelion.shared.swissarmyknife.RollingHistory;
+import com.google.protobuf.ByteString;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -663,12 +664,14 @@ public class NetworkedGame implements GameProtoListener, TickEvent
                         //log.log(Level.INFO, "Received ActorMove {0} {1}", new Object[] { msg.getTick(), msg.getPid()});
                         long tick = msg.getTick();
                         
-                        for (int move : msg.getMoveList())
+                        List<PhysicsMovement> moves = PhysicsMovement.unserializeListLE(msg.getMove().asReadOnlyByteBuffer());
+                        
+                        for (PhysicsMovement move : moves)
                         {
                                 boolean valid = physicsEnv.actorMove(
                                         tick,
                                         msg.getPid(),
-                                        PhysicsMovement.get(move)
+                                        move
                                         );
                                 
                                 if (!valid)
@@ -856,15 +859,13 @@ public class NetworkedGame implements GameProtoListener, TickEvent
                 actorMove.setTick(first_tick);
                 actorMove.setDirect(true);
                 
+                ArrayList<PhysicsMovement> moves = new ArrayList<>((int) (last_tick - first_tick + 1));
                 for (long t = first_tick; t <= last_tick; ++t)
                 {
                         PhysicsMovement m = sendMove_history.get(t);
-                        if (m == null)
-                        {
-                                m = PhysicsMovement.NONE;
-                        }
-                        actorMove.addMove(m.bits);
+                        moves.add(m == null ? PhysicsMovement.NONE : m);
                 }
+                actorMove.setMove(ByteString.copyFrom(PhysicsMovement.serializeListLE(moves)));
 
                 gameConn.send(c2s);
 

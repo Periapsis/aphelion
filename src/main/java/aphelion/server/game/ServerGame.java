@@ -65,6 +65,7 @@ import aphelion.shared.physics.events.pub.ActorDiedPublic;
 import aphelion.shared.physics.events.pub.EventPublic;
 import aphelion.shared.swissarmyknife.AttachmentConsumer;
 import aphelion.shared.swissarmyknife.SwissArmyKnife;
+import com.google.protobuf.ByteString;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -327,7 +328,9 @@ public class ServerGame implements LoopEvent, TickEvent, GameProtoListener
                                 break;
                         }
                         
-                        if (msg.getMoveCount() < 1)
+                        List<PhysicsMovement> moves = PhysicsMovement.unserializeListLE(msg.getMove().asReadOnlyByteBuffer());
+                        
+                        if (moves.isEmpty())
                         {
                                 log.log(Level.WARNING, "Received no actual moves in ActorMove");
                                 break;
@@ -340,34 +343,26 @@ public class ServerGame implements LoopEvent, TickEvent, GameProtoListener
                         moveBuilder.setPid(msg.getPid());
                         moveBuilder.setDirect(true);
                         
-                        
-                        int[] moves = new int[msg.getMoveCount()];
-                        
-                        int i = 0;
-                        for (int move : msg.getMoveList())
+                        for (int i = 0; i < moves.size(); ++i)
                         {
                                 boolean valid = physicsEnv.actorMove(
                                         msg.getTick() + i,
                                         msg.getPid(),
-                                        PhysicsMovement.get(move));
+                                        moves.get(i));
 
                                 if (!valid)
                                 {
                                         state.warnDroppedOperation();
-                                        move = 0;
+                                        moves.set(i, PhysicsMovement.NONE);
                                 }
-                                
-                                moves[i] = move;
-                                
-                                ++i;
                         }
                         
                         
                         // find end
                         int end;
-                        for (end = moves.length - 1; end >= 0; --end)
+                        for (end = moves.size() - 1; end >= 0; --end)
                         {
-                                if (moves[end] != 0)
+                                if (moves.get(end).hasEffect())
                                 {
                                         break;
                                 }
@@ -375,21 +370,19 @@ public class ServerGame implements LoopEvent, TickEvent, GameProtoListener
                         
                         int start;
                         // find start
-                        for (start = 0; start < moves.length; ++start)
+                        for (start = 0; start < moves.size(); ++start)
                         {
-                                if (moves[start] != 0)
+                                if (moves.get(start).hasEffect())
                                 {
                                         break;
                                 }
                         }
                         
-                        for (i = start; i <= end; ++i)
-                        {
-                                moveBuilder.addMove(moves[i]);
-                        }
+                        moves = moves.subList(start, end + 1);
                         
-                        if (moveBuilder.getMoveCount() > 0)
+                        if (!moves.isEmpty())
                         {
+                                moveBuilder.setMove(ByteString.copyFrom(PhysicsMovement.serializeListLE(moves)));
                                 moveBuilder.setTick(msg.getTick() + start);
                                 broadcast(s2c, game); // forward to all other clients
                         }
@@ -503,35 +496,15 @@ public class ServerGame implements LoopEvent, TickEvent, GameProtoListener
                 else if (op instanceof ActorMovePublic)
                 {
                         ActorMovePublic opMove = (ActorMovePublic) op;
-                        int move = opMove.getMove().bits;
+                        PhysicsMovement move = opMove.getMove();
 
-                        if (move > 0)
+                        if (move.hasEffect())
                         {
-                                GameOperation.ActorMove.Builder actorMove = null;
+                                GameOperation.ActorMove.Builder actorMove = s2c.addActorMoveBuilder();
+                                actorMove.setTick(op.getTick());
+                                actorMove.setPid(op.getPid());
                                 
-                                if (s2c.getActorMoveCount() > 0)
-                                {
-                                        // if we had a move for the previous tick, use it
-                                        // this optimalization only works properly when this method is called in order of tick
-                                        // and the builder is unique for each pid.
-                                        actorMove = s2c.getActorMoveBuilder(s2c.getActorMoveCount() - 1);
-                                        
-                                        // this would be the tick for the move if we would call addMove() right now.
-                                        long newTick = actorMove.getTick() + actorMove.getMoveCount();
-                                        
-                                        if (actorMove.getPid() != op.getPid() && newTick != op.getTick() - 1)
-                                        {
-                                                actorMove = null;
-                                        }
-                                }
-                                
-                                if (actorMove == null)
-                                {
-                                        actorMove = s2c.addActorMoveBuilder();
-                                        actorMove.setTick(op.getTick());
-                                        actorMove.setPid(op.getPid());
-                                }
-                                actorMove.addMove(move);
+                                actorMove.setMove(ByteString.copyFrom(PhysicsMovement.serializeListLE(Arrays.asList(move))));
                                 return true;
                         }
                         

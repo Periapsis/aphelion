@@ -106,13 +106,16 @@ message ActorMove { // Mutually exclusive with Move
 	required int32   pid       = 2;
 	
 	
-	// repeated bitfield. index 0 is tick+0, index 1 is tick+1, etc
+	// repeated bitfield. index 0 is tick+0, index 1 is tick+1, etc (little endian)
+        // these bits are NOT padded up to a byte. For example 2 moves will result in 2 bytes,
+        // with the first byte containing the 5 bits of move 0 and 3 bits of move 1. byte 2 will
+        // contain the 2 remaining bits of move 1.
 	// 0x1 = up
 	// 0x2 = down
 	// 0x4 = left
 	// 0x8 = right
         // 0x10 = boost
-	repeated uint32 move = 3 [packed=true];
+	required bytes move = 3;
         
         // was this warp sent as a direct response to user input?
         // If not, the server may be sending you history.
