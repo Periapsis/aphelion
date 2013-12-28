@@ -849,6 +849,21 @@ public class PhysicsEnvironment implements TickEvent
                 return addOperation(op);
         }
         
+        public boolean actorWeapon(long tick, int pid, WEAPON_SLOT weapon_slot)
+        {
+                ActorWeaponFire op = new ActorWeaponFire(econfig);
+                op.tick = tick;
+                op.pid = pid;
+                op.weapon_slot = weapon_slot;
+                
+                if (weapon_slot == null)
+                {
+                        throw new IllegalArgumentException();
+                }
+                
+                return addOperation(op);
+        }
+        
         public boolean weaponSync(long tick, 
                 int owner_pid, 
                 String weaponKey, 

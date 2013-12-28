@@ -409,15 +409,8 @@ public class ServerGame implements LoopEvent, TickEvent, GameProtoListener
                         weaponBuilder.setPid(msg.getPid());
                         weaponBuilder.setTick(msg.getTick());
                         weaponBuilder.setSlot(msg.getSlot());
-                        
-                        boolean has_hint = msg.hasX() && msg.hasY() && msg.hasXVel() && msg.hasYVel() && msg.hasSnappedRotation();
                                 
-                        boolean valid = physicsEnv.actorWeapon(
-                                msg.getTick(), msg.getPid(), slot,
-                                has_hint, 
-                                msg.getX(), msg.getY(), 
-                                msg.getXVel(), msg.getYVel(), 
-                                msg.getSnappedRotation());
+                        boolean valid = physicsEnv.actorWeapon(msg.getTick(), msg.getPid(), slot);
                         
                         if (!valid)
                         {
