@@ -50,9 +50,12 @@ import aphelion.shared.physics.entities.ProjectilePublic;
 import aphelion.shared.physics.operations.pub.OperationPublic;
 import aphelion.shared.physics.PhysicsEnvironment;
 import aphelion.shared.physics.PhysicsMap;
+import aphelion.shared.physics.WEAPON_SLOT;
 import aphelion.shared.physics.operations.pub.ActorNewPublic;
+import aphelion.shared.physics.valueobjects.PhysicsMovement;
 import aphelion.shared.physics.valueobjects.PhysicsPoint;
 import aphelion.shared.swissarmyknife.MySecureRandom;
+import aphelion.shared.swissarmyknife.RollingHistory;
 import aphelion.shared.swissarmyknife.SwissArmyKnife;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -94,8 +97,27 @@ public class ClientState
         
         private final ServerGame serverGame;
         private final PhysicsEnvironment physicsEnv;
-        public int pid;
         public final GameProtocolConnection gameConn;
+        
+        /** Used to track duplicate moves, and to prevent them from being forwarded if unequal.
+         * Make sure to check MAX_FUTURE_TICKS before you use the setter of this object.
+         * Otherwise it will push out the history of older ticks.
+         */
+        public final RollingHistory<PhysicsMovement> receivedMove;
+        
+        /** Used to track duplicate weapons, and to prevent them from being forwarded if unequal.
+         * Make sure to check MAX_FUTURE_TICKS before you use the setter of this object.
+         * Otherwise it will push out the history of older ticks.
+         */
+        public final RollingHistory<WEAPON_SLOT> receivedWeapon;
+        
+        /** Do not accept operations from this client 
+         *  that are more than this many ticks into the future.
+         */
+        public final int MAX_FUTURE_TICKS = 10;
+        
+        public int pid;
+        
         public STATE state;
         public String nickname;
         private GCStringList ships;
@@ -111,6 +133,8 @@ public class ClientState
                 this.physicsEnv = serverGame.physicsEnv;
                 this.gameConn = gameConn;
                 this.ships = physicsEnv.getGlobalConfigStringList(0, "ships");
+                this.receivedMove = new RollingHistory<>(physicsEnv.getTick(), physicsEnv.econfig.HIGHEST_DELAY + MAX_FUTURE_TICKS + 1);
+                this.receivedWeapon = new RollingHistory<>(physicsEnv.getTick(), physicsEnv.econfig.HIGHEST_DELAY + MAX_FUTURE_TICKS + 1);
         }
         
         public void setNickname(String nickname)

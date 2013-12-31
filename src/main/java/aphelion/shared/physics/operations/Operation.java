@@ -39,7 +39,6 @@ package aphelion.shared.physics.operations;
 
 import aphelion.shared.physics.EnvironmentConfiguration;
 import aphelion.shared.physics.operations.pub.OperationPublic;
-import aphelion.shared.physics.PhysicsEnvironment;
 import aphelion.shared.physics.State;
 import aphelion.shared.swissarmyknife.LinkedListEntry;
 

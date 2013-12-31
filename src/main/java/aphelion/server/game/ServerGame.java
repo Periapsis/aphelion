@@ -328,6 +328,8 @@ public class ServerGame implements LoopEvent, TickEvent, GameProtoListener
                                 break;
                         }
                         
+                        
+                        
                         List<PhysicsMovement> moves = PhysicsMovement.unserializeListLE(msg.getMove().asReadOnlyByteBuffer());
                         
                         if (moves.isEmpty())
@@ -345,8 +347,29 @@ public class ServerGame implements LoopEvent, TickEvent, GameProtoListener
                         
                         for (int i = 0; i < moves.size(); ++i)
                         {
+                                long move_tick = msg.getTick() + i;
+                                
+                                if (move_tick > physicsEnv.getTick() + state.MAX_FUTURE_TICKS)
+                                {
+                                        // too far into the future, ignore it.
+                                        // This also prevents history from being lost in state.receivedMove
+                                        continue;
+                                }
+                                
+                                PhysicsMovement messageMove = moves.get(i);
+                                PhysicsMovement existingMove = state.receivedMove.get(move_tick);
+                                
+                                if (existingMove != null && !existingMove.equals(messageMove))
+                                {
+                                        // duplicate move which is unequal, ignore it
+                                        log.log(Level.WARNING, "Received a duplicate move from a client which does not match what he sent previously! pid={0}", state.pid);
+                                        continue;
+                                }
+                                
+                                state.receivedMove.setHistory(move_tick, messageMove);
+                                
                                 boolean valid = physicsEnv.actorMove(
-                                        msg.getTick() + i,
+                                        move_tick,
                                         msg.getPid(),
                                         moves.get(i));
 
@@ -402,7 +425,25 @@ public class ServerGame implements LoopEvent, TickEvent, GameProtoListener
                                 continue;
                         }
                         
-                        WEAPON_SLOT slot = WEAPON_SLOT.byId(msg.getSlot());
+                        if (msg.getTick() > physicsEnv.getTick() + state.MAX_FUTURE_TICKS)
+                        {
+                                // too far into the future, ignore it
+                                // This also prevents history from being lost in state.receivedWeapon
+                                continue;
+                        }
+                        
+                        WEAPON_SLOT messageSlut = WEAPON_SLOT.byId(msg.getSlot());
+                        WEAPON_SLOT existingSlut = state.receivedWeapon.get(msg.getTick());
+                        
+                        if (existingSlut != null && !existingSlut.equals(messageSlut))
+                        {
+                                // duplicate weapon which is unequal, ignore it
+                                log.log(Level.WARNING, "Received a duplicate weapon from a client which does not match what he sent previously! pid={0}", state.pid);
+                                continue;
+                        }
+                        
+                        state.receivedWeapon.setHistory(msg.getTick(), messageSlut);
+                        
                         
                         GameS2C.S2C.Builder s2c = GameS2C.S2C.newBuilder();
                         GameOperation.ActorWeapon.Builder weaponBuilder = s2c.addActorWeaponBuilder();
@@ -413,7 +454,7 @@ public class ServerGame implements LoopEvent, TickEvent, GameProtoListener
                         // Doing nothing with the weapon hint for now.
                         // It might be useful for trusted clients (bots etc)
                                 
-                        boolean valid = physicsEnv.actorWeapon(msg.getTick(), msg.getPid(), slot);
+                        boolean valid = physicsEnv.actorWeapon(msg.getTick(), msg.getPid(), messageSlut);
                         
                         if (!valid)
                         {

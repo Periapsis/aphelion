@@ -68,7 +68,7 @@ public final class EnvironmentConfiguration
         public final int TRAILING_STATES;
         
         /** The highest delay we simulate for.
-         * Do not accept operations that are older than this many ticks. (unless the operation is nog ignorable) */
+         * Do not accept operations that are older than this many ticks. (if Operation.ignorable) */
         public final int HIGHEST_DELAY;
         
         /** If two timewarps need to be executed in rapid succession, wait this many ticks. */
@@ -81,6 +81,10 @@ public final class EnvironmentConfiguration
          */
         public final int MINIMUM_HISTORY_TICKS = 2;
         
+        /** Discard events that are older than this many ticks.
+         * Events are tracked per environment, not per state.
+         * Events that are older than "env.tick_now - KEEP_EVENTS_FOR_TICKS" are discarded.
+         */
         public final int KEEP_EVENTS_FOR_TICKS;
 
         public EnvironmentConfiguration(boolean server)
