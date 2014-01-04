@@ -115,7 +115,9 @@ public class ServerMain implements LoopEvent, TickEvent
                 
                 try
                 {
-                        FileStorage assetCacheStorage = new FileStorage(new File((String) config.get("assets-cache-path")).getCanonicalFile());
+                        File dir = new File((String) config.get("assets-cache-path")).getCanonicalFile();
+                        dir.mkdirs();
+                        FileStorage assetCacheStorage = new FileStorage(dir);
                         
                         if (!assetCacheStorage.isUseable())
                         {
