@@ -55,9 +55,9 @@ import aphelion.shared.resource.ResourceDB;
  */
 public class ActorDiedTracker implements EventTracker
 {
-        private ResourceDB resourceDB;
-        private PhysicsEnvironment physicsEnv;
-        private MapEntities mapEntities;
+        private final ResourceDB resourceDB;
+        private final PhysicsEnvironment physicsEnv;
+        private final MapEntities mapEntities;
         
         private boolean firstRun = true;
         private ActorDiedPublic event;
@@ -138,24 +138,50 @@ public class ActorDiedTracker implements EventTracker
         
         private void spawnAnimations()
         {
-                final PhysicsShipPosition actorPos = new PhysicsShipPosition();
-                
-                long occurredAt_tick = event.getOccurredAt(renderingAt_state);
-                
-                ActorPublic actor = physicsEnv.getActor(event.getDied(0));
-                if (actor == null)
+                ActorShip ship = mapEntities.getActorShip(event.getDied(0));
+                if (ship == null)
                 {
                         return;
                 }
+                
+                ActorPublic actor = ship.getActor();
 
                 GCImage image = actor.getActorConfigImage("ship-explosion-animation", resourceDB);
 
-                if (image != null && actor.getHistoricPosition(actorPos, occurredAt_tick, false))
+                final PhysicsShipPosition actorPos = new PhysicsShipPosition();
+                if (image != null && actor.getHistoricPosition(actorPos, ship.renderingAt_tick, false))
                 {
-                        anim = new GCImageAnimation(resourceDB, image);
+                        anim = new DeathAnimation(resourceDB, image);
                         anim.setPositionFromPhysics(actorPos.smooth_x, actorPos.smooth_y);
-                        anim.setVelocityFromPhysics(actorPos.x_vel, actorPos.y_vel);
                         mapEntities.addAnimation(RENDER_LAYER.AFTER_LOCAL_SHIP, anim, null);
+                }
+        }
+        
+        private class DeathAnimation extends GCImageAnimation
+        {
+                DeathAnimation(ResourceDB db, GCImage image)
+                {
+                        super(db, image);
+                }
+
+                @Override
+                public void tick(long tick)
+                {
+                        super.tick(tick);
+                        
+                        ActorShip ship = mapEntities.getActorShip(event.getDied(0));
+                        if (ship == null)
+                        {
+                                return;
+                        }
+
+                        ActorPublic actor = ship.getActor();
+                        
+                        final PhysicsShipPosition actorPos = new PhysicsShipPosition();
+                        if (actor.getHistoricPosition(actorPos, ship.renderingAt_tick, false))
+                        {
+                                this.setPositionFromPhysics(actorPos.smooth_x, actorPos.smooth_y);
+                        }                        
                 }
         }
 }

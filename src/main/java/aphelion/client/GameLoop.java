@@ -48,14 +48,10 @@ import aphelion.shared.resource.ResourceDB;
 import aphelion.client.graphics.screen.Gauges;
 import aphelion.client.graphics.screen.NiftyCameraImpl;
 import aphelion.client.graphics.world.*;
-import aphelion.client.graphics.world.event.EventTracker;
 import aphelion.shared.event.TickedEventLoop;
 import aphelion.shared.physics.entities.ActorPublic;
-import aphelion.shared.physics.events.pub.EventPublic;
 import aphelion.shared.physics.PhysicsEnvironment;
 import aphelion.shared.map.MapClassic;
-import aphelion.shared.physics.events.Event;
-import aphelion.shared.swissarmyknife.AttachmentConsumer;
 import aphelion.shared.swissarmyknife.SwissArmyKnife;
 import de.lessvoid.nifty.Nifty;
 import de.lessvoid.nifty.controls.Controller;
@@ -316,7 +312,7 @@ public class GameLoop
                                                 assert mainScreen != null;
                                                 gauges = new Gauges(mainScreen, localActor);
                                         }
-
+                                        
                                         niftyCameraImpl.setDefaultCameraPosition(localShip.pos);
                                 }
 

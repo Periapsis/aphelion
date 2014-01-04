@@ -86,18 +86,10 @@ public abstract class MapAnimation extends MapEntity implements TickEvent
                 return animating;
         }
         
-        public void setVelocityFromPhysics(int x, int y)
+        public void setVelocity(Point vel)
         {
-                vel.x = x / 1024f;
-                vel.y = y / 1024f;
+                this.vel.set(vel);
         }
-        
-        public void setVelocityFromPhysics(PhysicsPoint pos)
-        {
-                setVelocityFromPhysics(pos.x, pos.y);
-        }
-        
-        
 
         @Override
         public void tick(long tick)

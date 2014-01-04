@@ -194,7 +194,8 @@ public class State
                                         actor.updatePositionHistory(tick_now);
                                 }
                                 
-                                continue; // skip dead reckoning
+                                // Keep updating the position even if the actor is dead
+                                // This makes it possible to show an explosion animation that follow path of the actor
                         }
                         
                         actor.performDeadReckoning(env.getMap(), tick_now, 1);
