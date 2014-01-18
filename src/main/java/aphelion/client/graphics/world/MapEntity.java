@@ -53,6 +53,7 @@ public abstract class MapEntity
         
         public boolean exists = false;
         final public Point pos = new Point(0,0);
+        final public PhysicsPoint physicsPos = new PhysicsPoint(0, 0);
         
         public MapEntity(ResourceDB db)
 	{
@@ -84,14 +85,27 @@ public abstract class MapEntity
                 return SwissArmyKnife.isPointInsideRectangle(low, high, pos);
         }
         
-        public void setPositionFromPhysics(int x, int y)
+        public final void setPositionFromPhysics(int x, int y)
         {
-                pos.x = x / 1024f;
-                pos.y = y / 1024f;
+                physicsPos.set(x, y);
+                setPositionFromPhysics();
         }
         
-        public void setPositionFromPhysics(PhysicsPoint pos)
+        public final void setPositionFromPhysics(PhysicsPoint pos)
         {
-                setPositionFromPhysics(pos.x, pos.y);
+                physicsPos.set(pos);
+                setPositionFromPhysics();
+        }
+        
+        public final void setPositionFromPhysics()
+        {
+                pos.x = physicsPos.x / 1024f;
+                pos.y = physicsPos.y / 1024f;
+        }
+        
+        public void setPosition(MapEntity other)
+        {
+                this.pos.set(other.pos);
+                this.physicsPos.set(other.physicsPos);
         }
 }

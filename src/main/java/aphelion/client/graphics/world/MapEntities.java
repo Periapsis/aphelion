@@ -48,6 +48,7 @@ import aphelion.shared.event.LoopEvent;
 import aphelion.shared.event.TickEvent;
 import aphelion.shared.net.game.ActorListener;
 import aphelion.shared.net.game.NetworkedActor;
+import aphelion.shared.physics.Collision;
 import aphelion.shared.physics.entities.ProjectilePublic;
 import aphelion.shared.physics.PhysicsEnvironment;
 import aphelion.shared.physics.entities.ActorPublic;
@@ -85,6 +86,8 @@ public class MapEntities implements TickEvent, LoopEvent, Animator, ActorListene
         private static final AttachmentConsumer<EventPublic, EventTracker> eventTrackers 
                 = new AttachmentConsumer<>(Event.attachmentManager);
         private SingleGameConnection connection;
+        
+        public final Collision collision = new Collision(); // used for animations
 
         public MapEntities(ResourceDB db)
         {

@@ -313,32 +313,26 @@ public class ActorShip extends MapEntity implements TickEvent, WrappedValueAbstr
                                 {
                                         ExhaustAnimation left = exhaustAnimations.register(RENDER_LAYER.AFTER_TILES, camera);
                                         ExhaustAnimation right = exhaustAnimations.register(RENDER_LAYER.AFTER_TILES, camera);
-                                        left.pos.set(this.pos);
+                                        left.setPosition(this);
 
-                                        PhysicsPoint offset = new PhysicsPoint();
-                                        PhysicsMath.rotationToPoint(offset, 
+                                        
+                                        PhysicsMath.rotationToPoint(left.physicsPos,
                                                 this.physRotation + PhysicsEnvironment.ROTATION_1_2TH, 
                                                 this.shipRadius.get() + 1024 * 5);
-                                        left.pos.x += offset.x / 1024f;
-                                        left.pos.y += offset.y / 1024f;
-
-                                        right.pos.set(left.pos);
-
-                                        offset.set(0, 0);
-                                        PhysicsMath.rotationToPoint(offset, 
+                                        left.setPositionFromPhysics();
+                                        
+                                        right.setPosition(left);
+                                        
+                                        PhysicsMath.rotationToPoint(left.physicsPos,
                                                 this.physRotation - PhysicsEnvironment.ROTATION_1_4TH, 
                                                 1024 * 5);
+                                        left.setPositionFromPhysics();
 
-                                        left.pos.x += offset.x / 1024f;
-                                        left.pos.y += offset.y / 1024f;
-
-                                        offset.set(0, 0);
-                                        PhysicsMath.rotationToPoint(offset, 
+                                        
+                                        PhysicsMath.rotationToPoint(right.physicsPos,
                                                 this.physRotation + PhysicsEnvironment.ROTATION_1_4TH, 
                                                 1024 * 5);
-
-                                        right.pos.x += offset.x / 1024f;
-                                        right.pos.y += offset.y / 1024f;
+                                        right.setPositionFromPhysics();
 
 
                                 }
@@ -358,7 +352,8 @@ public class ActorShip extends MapEntity implements TickEvent, WrappedValueAbstr
                                 if (actor.isEmped())
                                 {
                                         GCImageAnimation anim = empedAnimations.register(RENDER_LAYER.AFTER_TILES, camera);
-                                        anim.pos.set(this.pos);
+                                        anim.setPosition(this);
+                                        anim.setVelocityFromPhysics(0, 0);
                                 }
                         }
                 }

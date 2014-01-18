@@ -43,6 +43,7 @@ import aphelion.client.graphics.world.ActorShip;
 import aphelion.client.graphics.world.GCImageAnimation;
 import aphelion.client.graphics.world.MapEntities;
 import aphelion.shared.gameconfig.GCImage;
+import aphelion.shared.gameconfig.GCInteger;
 import aphelion.shared.physics.PhysicsEnvironment;
 import aphelion.shared.physics.entities.ActorPublic;
 import aphelion.shared.physics.events.pub.ActorDiedPublic;
@@ -151,8 +152,23 @@ public class ActorDiedTracker implements EventTracker
                 final PhysicsShipPosition actorPos = new PhysicsShipPosition();
                 if (image != null && actor.getHistoricPosition(actorPos, ship.renderingAt_tick, false))
                 {
+                        
                         anim = new DeathAnimation(resourceDB, image);
                         anim.setPositionFromPhysics(actorPos.smooth_x, actorPos.smooth_y);
+                        anim.setVelocityFromPhysics(actorPos.x_vel, actorPos.y_vel);
+                        anim.setStopOnHit(true);
+                        
+                        GCInteger radius = actor.getActorConfigInteger("ship-radius");
+                        GCInteger bounceFriction = actor.getActorConfigInteger("ship-bounce-friction");
+                        GCInteger bounceOtherAxisFriction = actor.getActorConfigInteger("ship-bounce-friction-other-axis");
+                        
+                        anim.setMapCollision(
+                                mapEntities.collision, 
+                                physicsEnv.getMap(), 
+                                radius.get(),
+                                bounceFriction.get(),
+                                bounceOtherAxisFriction.get());
+                        
                         mapEntities.addAnimation(RENDER_LAYER.AFTER_LOCAL_SHIP, anim, null);
                 }
         }
@@ -175,13 +191,10 @@ public class ActorDiedTracker implements EventTracker
                                 return;
                         }
 
-                        ActorPublic actor = ship.getActor();
+                        ActorPublic actor = ship.getActor();                
                         
-                        final PhysicsShipPosition actorPos = new PhysicsShipPosition();
-                        if (actor.getHistoricPosition(actorPos, ship.renderingAt_tick, false))
-                        {
-                                this.setPositionFromPhysics(actorPos.smooth_x, actorPos.smooth_y);
-                        }                        
+                        // todo : fade out if the event no longer occured
+
                 }
         }
 }

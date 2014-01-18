@@ -40,10 +40,11 @@ package aphelion.client.graphics.world;
 
 import aphelion.client.graphics.screen.Camera;
 import aphelion.shared.event.TickEvent;
+import aphelion.shared.physics.Collision;
+import aphelion.shared.physics.PhysicsMap;
 import aphelion.shared.physics.valueobjects.PhysicsPoint;
 import aphelion.shared.resource.ResourceDB;
 import aphelion.shared.swissarmyknife.LinkedListEntry;
-import aphelion.shared.swissarmyknife.Point;
 
 
 /**
@@ -56,16 +57,24 @@ public abstract class MapAnimation extends MapEntity implements TickEvent
         public Camera camera;
         boolean animating;
         protected boolean done;
-        final public Point vel = new Point(0, 0);
+        
+        final public PhysicsPoint physicsVel = new PhysicsPoint(0, 0);
+        
+        protected int collision_radius = -1; // in physics points, -1 to disable map collision
+        protected Collision collision;
+        protected PhysicsMap collision_map;
+        protected int collision_bounceFriction;
+        protected int collision_bounceOtherAxisFriction;
+        protected boolean collision_stopOnHit;
                 
         public MapAnimation(ResourceDB db)
         {
                 super(db);
         }
         
-        /** Mark that animation is done.
+        /** Mark that the animation is done.
          * After calling this method, isDone() should always return true.
-         * Using this method animations can be stopped prematurely.
+         * Using this method to stop animations prematurely.
          */
         public void setDone()
         {
@@ -86,14 +95,71 @@ public abstract class MapAnimation extends MapEntity implements TickEvent
                 return animating;
         }
         
-        public void setVelocity(Point vel)
+        public void setVelocityFromPhysics(int x, int y)
         {
-                this.vel.set(vel);
+                this.physicsVel.set(x, y);
+        }
+        
+        public void setVelocityFromPhysics(PhysicsPoint vel)
+        {
+                this.physicsVel.set(vel);
+        }
+        
+        public void setMapCollision(Collision collision, PhysicsMap collision_map, 
+                                    int collision_radius, 
+                                    int collision_bounceFriction, int collision_bounceOtherAxisFriction)
+        {
+                this.collision = collision;
+                this.collision_map = collision_map;
+                this.collision_radius = collision_radius;
+                this.collision_bounceFriction = collision_bounceFriction;
+                this.collision_bounceOtherAxisFriction = collision_bounceOtherAxisFriction;
+        }
+        
+        public void setStopOnHit(boolean collision_stopOnHit)
+        {
+                this.collision_stopOnHit = collision_stopOnHit;
+        }
+
+        @Override
+        public void setPosition(MapEntity other)
+        {
+                super.setPosition(other);
+                if (other instanceof MapAnimation)
+                {
+                        this.physicsVel.set(((MapAnimation)other).physicsVel);
+                }
+                else
+                {
+                        this.physicsVel.set(0, 0);
+                }
         }
 
         @Override
         public void tick(long tick)
         {
-                pos.add(vel);
+                if (collision_radius >= 0)
+                {
+                        if (!this.physicsVel.isZero())
+                        {
+                                boolean lastHit = collision.deadReckonTick(
+                                        this.physicsPos, this.physicsVel, 
+                                        collision_map, 
+                                        collision_radius, 
+                                        collision_bounceFriction, collision_bounceOtherAxisFriction, 
+                                        collision_stopOnHit ? 0 : -1);
+
+                                if (lastHit)
+                                {
+                                        this.physicsVel.set(0, 0);
+                                }
+                        }
+                }
+                else
+                {
+                        physicsPos.add(physicsVel);
+                }
+                
+                this.setPositionFromPhysics();
         }
 }

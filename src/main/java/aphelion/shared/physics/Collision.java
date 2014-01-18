@@ -91,8 +91,36 @@ public class Collision
         public final PhysicsPoint hitTile = new PhysicsPoint();
         public int bounces; // how many times did the object bounce of a tile?
 
+        /** Perform a dead reckon tick with only tile collision.
+         * @param oldPos The position to update
+         * @param vel The velocity to update
+         * @param map The map to use for collision
+         * @param radius The radius in pixels * 1024 (not diameter) of the object. The radius may be 0 if it has no
+         * diameter, like a bullet.
+         * @param bounceFriction The velocity should decrease by this factor when bouncing (1024 = no slow down, 0 = stop)
+         * @param otherAxisFriction The velocity of the axis that did not bounce should decrease by this factor when 
+         *                     bouncing (1024 = no slow down, 0 = stop)
+         * @param bounces_left Number of bounces on a tile the simulates object has left. Use -1 for infinite.
+         *        if this value is 0 and hits a tile, the object has collided
+         * @return True if a final collision for this object was made (projectile hitting an actor, hitting a tile).
+         * use collision.hitEntity and hitTile to find out what was hit.
+         * the argument oldPos will be set at the point of collision
+         */
+        public boolean deadReckonTick(PhysicsPoint oldPos, PhysicsPoint vel, 
+                PhysicsMap map, 
+                int radius, int bounceFriction, int otherAxisFriction, 
+                int bounces_left)
+        {
+                return deadReckonTick(0, 
+                                      null, 
+                                      oldPos, vel, 
+                                      map, true, 
+                                      null, LoopFilter.NO_FILTER, 
+                                      radius, bounceFriction, otherAxisFriction, 
+                                      bounces_left, 0);
+        }
         
-        /**
+        /** Perform a dead reckon tick with tile and entity-entity collision.
          * @param tick 
          * @param posHistoryDetails If not null, every bounce or any other change in direction is added here as a history detail.
          * @param oldPos The position to update
