@@ -51,10 +51,10 @@ import aphelion.shared.physics.PhysicsEnvironment;
 import aphelion.shared.physics.PhysicsMath;
 import aphelion.shared.physics.valueobjects.PhysicsMoveable;
 import aphelion.shared.physics.valueobjects.PhysicsMovement;
-import aphelion.shared.physics.valueobjects.PhysicsPoint;
 import aphelion.shared.swissarmyknife.Point;
 
 import de.lessvoid.nifty.tools.Color;
+import java.lang.ref.WeakReference;
 import org.newdawn.slick.Image;
 import org.newdawn.slick.SpriteSheetCounted;
 
@@ -104,6 +104,7 @@ public class ActorShip extends MapEntity implements TickEvent, WrappedValueAbstr
         public GCInteger emped_delay;
         
         public AnimatedColour radarAnim;
+        public MapAnimation activeDeathAnimation;
         
         private Color playerColor = new Color(1f, 1f, 0f, 1f);
         private Color lowEnergyColor = new Color(1f, 0f, 0f, 1f);
@@ -158,6 +159,21 @@ public class ActorShip extends MapEntity implements TickEvent, WrappedValueAbstr
                         {
                                 spriteTile = physRotation / pointsPerTile;
                         }
+                }
+        }
+        
+        public void getCameraPosition(Point pos)
+        {
+                if (this.actor.isDead())
+                {
+                        if (activeDeathAnimation != null)
+                        {
+                                pos.set(this.activeDeathAnimation.pos);
+                        }
+                }
+                else
+                {
+                        pos.set(this.pos);
                 }
         }
         
@@ -411,6 +427,15 @@ public class ActorShip extends MapEntity implements TickEvent, WrappedValueAbstr
         {
                 tryInitPhysics();
         	renderDelay_value.tick(tick);
+                
+                if (activeDeathAnimation != null 
+                    && !activeDeathAnimation.isAnimating() 
+                    && !this.actor.isDead(this.renderingAt_tick))
+                {
+                        // have to unset it because it might mess up the camera position
+                        // in case death animations _just_ got disabled.
+                        activeDeathAnimation = null;
+                }
         }
 
         public boolean isLocalPlayer()

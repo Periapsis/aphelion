@@ -55,7 +55,7 @@ public abstract class MapAnimation extends MapEntity implements TickEvent
 {
         final LinkedListEntry<MapAnimation> link = new LinkedListEntry<>(null, this);
         public Camera camera;
-        boolean animating;
+        boolean animating; // set by MapEntities
         protected boolean done;
         
         final public PhysicsPoint physicsVel = new PhysicsPoint(0, 0);
@@ -66,7 +66,7 @@ public abstract class MapAnimation extends MapEntity implements TickEvent
         protected int collision_bounceFriction;
         protected int collision_bounceOtherAxisFriction;
         protected boolean collision_stopOnHit;
-                
+        
         public MapAnimation(ResourceDB db)
         {
                 super(db);
@@ -138,6 +138,11 @@ public abstract class MapAnimation extends MapEntity implements TickEvent
         @Override
         public void tick(long tick)
         {
+                if (this.isDone())
+                {
+                        return; // do not update velocity
+                }
+                
                 if (collision_radius >= 0)
                 {
                         if (!this.physicsVel.isZero())

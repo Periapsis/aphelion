@@ -41,6 +41,7 @@ package aphelion.client.graphics.world.event;
 import aphelion.client.RENDER_LAYER;
 import aphelion.client.graphics.world.ActorShip;
 import aphelion.client.graphics.world.GCImageAnimation;
+import aphelion.client.graphics.world.MapAnimation;
 import aphelion.client.graphics.world.MapEntities;
 import aphelion.shared.gameconfig.GCImage;
 import aphelion.shared.gameconfig.GCInteger;
@@ -49,6 +50,7 @@ import aphelion.shared.physics.entities.ActorPublic;
 import aphelion.shared.physics.events.pub.ActorDiedPublic;
 import aphelion.shared.physics.valueobjects.PhysicsShipPosition;
 import aphelion.shared.resource.ResourceDB;
+import java.lang.ref.WeakReference;
 
 /**
  *
@@ -152,7 +154,6 @@ public class ActorDiedTracker implements EventTracker
                 final PhysicsShipPosition actorPos = new PhysicsShipPosition();
                 if (image != null && actor.getHistoricPosition(actorPos, ship.renderingAt_tick, false))
                 {
-                        
                         anim = new DeathAnimation(resourceDB, image);
                         anim.setPositionFromPhysics(actorPos.smooth_x, actorPos.smooth_y);
                         anim.setVelocityFromPhysics(actorPos.x_vel, actorPos.y_vel);
@@ -169,7 +170,8 @@ public class ActorDiedTracker implements EventTracker
                                 bounceFriction.get(),
                                 bounceOtherAxisFriction.get());
                         
-                        mapEntities.addAnimation(RENDER_LAYER.AFTER_LOCAL_SHIP, anim, null);
+                        mapEntities.addAnimation(RENDER_LAYER.AFTER_PROJECTILES, anim, null);
+                        ship.activeDeathAnimation = anim;
                 }
         }
         

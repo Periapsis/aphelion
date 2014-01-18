@@ -52,6 +52,7 @@ import aphelion.shared.event.TickedEventLoop;
 import aphelion.shared.physics.entities.ActorPublic;
 import aphelion.shared.physics.PhysicsEnvironment;
 import aphelion.shared.map.MapClassic;
+import aphelion.shared.swissarmyknife.Point;
 import aphelion.shared.swissarmyknife.SwissArmyKnife;
 import de.lessvoid.nifty.Nifty;
 import de.lessvoid.nifty.controls.Controller;
@@ -313,7 +314,10 @@ public class GameLoop
                                                 gauges = new Gauges(mainScreen, localActor);
                                         }
                                         
-                                        niftyCameraImpl.setDefaultCameraPosition(localShip.pos);
+                                        Point cameraPos = new Point();
+                                        localShip.getCameraPosition(cameraPos);
+                                        niftyCameraImpl.setDefaultCameraPosition(cameraPos);
+                                        
                                 }
 
                                 nifty.render(false);

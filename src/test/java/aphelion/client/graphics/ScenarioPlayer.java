@@ -50,6 +50,7 @@ import aphelion.shared.map.MapClassic;
 import aphelion.shared.map.tile.TileType;
 import aphelion.shared.physics.PhysicsEnvironment;
 import aphelion.shared.resource.ResourceDB;
+import aphelion.shared.swissarmyknife.Point;
 import aphelion.shared.swissarmyknife.SwissArmyKnife;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
@@ -145,10 +146,9 @@ public class ScenarioPlayer
                                 mapEntities.updateGraphicsFromPhysics();
                                 
                                 ActorShip localShip = mapEntities.getLocalShip();
-                                if (localShip != null)
-                                {
-                                        camera.setPosition(localShip.pos);
-                                }
+                                Point cameraPos = new Point();
+                                localShip.getCameraPosition(cameraPos);
+                                camera.setPosition(cameraPos);
                         }
                         
                         stars.render(camera);
