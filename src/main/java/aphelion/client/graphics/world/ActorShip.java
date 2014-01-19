@@ -162,6 +162,7 @@ public class ActorShip extends MapEntity implements TickEvent, WrappedValueAbstr
                 }
         }
         
+        private final Point lastCameraPosition = new Point();
         public void getCameraPosition(Point pos)
         {
                 if (this.actor.isDead())
@@ -170,11 +171,18 @@ public class ActorShip extends MapEntity implements TickEvent, WrappedValueAbstr
                         {
                                 pos.set(this.activeDeathAnimation.pos);
                         }
+                        else
+                        {
+                                // player is dead and the animation is done.
+                                // keep the camera where it was
+                                pos.set(lastCameraPosition);
+                        }
                 }
                 else
                 {
                         pos.set(this.pos);
                 }
+                lastCameraPosition.set(pos);
         }
         
         public void setShadowPositionFromPhysics(int x, int y)
