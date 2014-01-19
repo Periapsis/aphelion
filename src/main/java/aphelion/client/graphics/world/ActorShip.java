@@ -54,7 +54,6 @@ import aphelion.shared.physics.valueobjects.PhysicsMovement;
 import aphelion.shared.swissarmyknife.Point;
 
 import de.lessvoid.nifty.tools.Color;
-import java.lang.ref.WeakReference;
 import org.newdawn.slick.Image;
 import org.newdawn.slick.SpriteSheetCounted;
 

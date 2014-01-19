@@ -207,7 +207,10 @@ public class ProjectileExplosionTracker implements EventTracker
                         if (pos.set)
                         {
                                 GCImageAnimation anim = new MyAnimation(spawnID, resourceDB, hitImage);
-
+                                
+                                Projectile proj = mapEntities.physicsProjectileToGraphics(physicsProjectile_state0);
+                                if (proj != null) { anim.setAlpha(proj.getAlpha()); }
+                                
                                 anim.setPositionFromPhysics(pos);
                                 mapEntities.addAnimation(RENDER_LAYER.AFTER_LOCAL_SHIP, anim, null);
                                 projectileAnimations.add(anim);
@@ -218,6 +221,9 @@ public class ProjectileExplosionTracker implements EventTracker
                                 coupledProjectile.getHistoricPosition(pos, occurredAt_tick, false);
 
                                 GCImageAnimation anim = new MyAnimation(spawnID, resourceDB, hitImage);
+                                
+                                Projectile proj = mapEntities.physicsProjectileToGraphics(coupledProjectile);
+                                if (proj != null) { anim.setAlpha(proj.getAlpha()); }
 
                                 anim.setPositionFromPhysics(pos);
                                 mapEntities.addAnimation(RENDER_LAYER.AFTER_LOCAL_SHIP, anim, null);
@@ -241,6 +247,8 @@ public class ProjectileExplosionTracker implements EventTracker
                 {
                         super.tick(tick);
 
+                        // TODO: perhaps limit the alpha to the alpha of the projectile?
+                        // (or inherit the velocity?)
                         if (spawnID == this.mySpawnID && event.hasOccurred(0))
                         {
                                 this.setAlphaVelocity(TIMEWARP_ALPHA_VELOCITY);

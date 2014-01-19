@@ -162,6 +162,7 @@ public class ActorDiedTracker implements EventTracker
                         latestAnim.setPositionFromPhysics(actorPos.smooth_x, actorPos.smooth_y);
                         latestAnim.setVelocityFromPhysics(actorPos.x_vel, actorPos.y_vel);
                         latestAnim.setStopOnHit(true);
+                        latestAnim.setAlpha(ship.getAlpha());
                         
                         GCInteger radius = actor.getActorConfigInteger("ship-radius");
                         GCInteger bounceFriction = actor.getActorConfigInteger("ship-bounce-friction");

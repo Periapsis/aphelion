@@ -132,6 +132,11 @@ public abstract class MapEntity implements TickEvent
         {
                 this.alphaVelocity = alphaVelocity;
         }
+
+        public float getAlpha()
+        {
+                return alpha;
+        }
         
         @Override
         public void tick(long tick)
