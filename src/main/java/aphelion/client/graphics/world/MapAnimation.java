@@ -45,13 +45,14 @@ import aphelion.shared.physics.PhysicsMap;
 import aphelion.shared.physics.valueobjects.PhysicsPoint;
 import aphelion.shared.resource.ResourceDB;
 import aphelion.shared.swissarmyknife.LinkedListEntry;
+import aphelion.shared.swissarmyknife.SwissArmyKnife;
 
 
 /**
  *
  * @author Joris
  */
-public abstract class MapAnimation extends MapEntity implements TickEvent
+public abstract class MapAnimation extends MapEntity
 {
         final LinkedListEntry<MapAnimation> link = new LinkedListEntry<>(null, this);
         public Camera camera;
@@ -140,8 +141,10 @@ public abstract class MapAnimation extends MapEntity implements TickEvent
         {
                 if (this.isDone())
                 {
-                        return; // do not update velocity
+                        return; // no need to update stuff
                 }
+                
+                super.tick(tick);
                 
                 if (collision_radius >= 0)
                 {

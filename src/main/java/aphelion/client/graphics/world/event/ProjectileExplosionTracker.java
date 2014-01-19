@@ -204,7 +204,7 @@ public class ProjectileExplosionTracker implements EventTracker
                         event.getPosition(renderingAt_state, pos);
                         if (pos.set)
                         {
-                                GCImageAnimation anim = new GCImageAnimation(resourceDB, hitImage);
+                                GCImageAnimation anim = new MyAnimation(resourceDB, hitImage);
 
                                 anim.setPositionFromPhysics(pos);
                                 mapEntities.addAnimation(RENDER_LAYER.AFTER_LOCAL_SHIP, anim, null);
@@ -215,12 +215,30 @@ public class ProjectileExplosionTracker implements EventTracker
                         {
                                 coupledProjectile.getHistoricPosition(pos, occurredAt_tick, false);
 
-                                GCImageAnimation anim = new GCImageAnimation(resourceDB, hitImage);
+                                GCImageAnimation anim = new MyAnimation(resourceDB, hitImage);
 
                                 anim.setPositionFromPhysics(pos);
                                 mapEntities.addAnimation(RENDER_LAYER.AFTER_LOCAL_SHIP, anim, null);
                                 projectileAnimations.add(anim);
                         }
+                }
+        }
+        
+        
+        private class MyAnimation extends GCImageAnimation
+        {
+                MyAnimation(ResourceDB db, GCImage image)
+                {
+                        super(db, image);
+                }
+
+                @Override
+                public void tick(long tick)
+                {
+                        super.tick(tick);
+                        
+                        // fade out if the event was timewarped (or: fade it back in)
+                        this.setAlphaVelocity(event.hasOccurred(0) ? 0.025f : -0.025f); // TODO: 0.025f to a setting?
                 }
         }
 }

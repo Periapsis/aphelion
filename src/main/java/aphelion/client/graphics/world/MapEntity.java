@@ -39,21 +39,27 @@ package aphelion.client.graphics.world;
 
 import aphelion.shared.resource.ResourceDB;
 import aphelion.client.graphics.screen.Camera;
+import aphelion.shared.event.TickEvent;
 import aphelion.shared.physics.valueobjects.PhysicsPoint;
 import aphelion.shared.swissarmyknife.Point;
 import aphelion.shared.swissarmyknife.SwissArmyKnife;
+import org.newdawn.slick.Color;
 
 /**
  *
  * @author Joris
  */
-public abstract class MapEntity
+public abstract class MapEntity implements TickEvent
 {
 	protected ResourceDB db;
         
         public boolean exists = false;
         final public Point pos = new Point(0,0);
         final public PhysicsPoint physicsPos = new PhysicsPoint(0, 0);
+        
+        protected float alpha = 1f;
+        protected float alphaVelocity;
+        protected final org.newdawn.slick.Color alphaFilter = new Color(1f, 1f, 1f, 1f);
         
         public MapEntity(ResourceDB db)
 	{
@@ -107,5 +113,30 @@ public abstract class MapEntity
         {
                 this.pos.set(other.pos);
                 this.physicsPos.set(other.physicsPos);
+        }
+        
+        public void setAlpha(float alpha)
+        {
+                this.alpha = alpha;
+                alphaFilter.a = this.alpha;
+        }
+        
+        public void setAlpha(float alpha, float alphaVelocity)
+        {
+                this.alpha = alpha;
+                this.alphaVelocity = alphaVelocity;
+                alphaFilter.a = this.alpha;
+        }
+        
+        public void setAlphaVelocity(float alphaVelocity)
+        {
+                this.alphaVelocity = alphaVelocity;
+        }
+        
+        @Override
+        public void tick(long tick)
+        {
+                this.alpha = SwissArmyKnife.clip(this.alpha + this.alphaVelocity, 0f, 1f);
+                alphaFilter.a = this.alpha;
         }
 }

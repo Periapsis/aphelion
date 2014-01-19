@@ -54,9 +54,12 @@ import aphelion.shared.swissarmyknife.Point;
 import aphelion.shared.swissarmyknife.SwissArmyKnife;
 import de.lessvoid.nifty.tools.Color;
 import java.lang.ref.WeakReference;
+import org.lwjgl.opengl.GL11;
 import org.newdawn.slick.Animation;
 import org.newdawn.slick.Image;
 import org.newdawn.slick.SpriteSheetCounted;
+import org.newdawn.slick.opengl.TextureImpl;
+import org.newdawn.slick.opengl.renderer.SGL;
 
 /**
  * The graphic counter part of physics.Projectile. 
@@ -203,13 +206,21 @@ public class Projectile extends MapEntity implements WrappedValueAbstract.Change
                 Point screenPos = new Point();
                 camera.mapToScreenPosition(pos, screenPos);
                 
-                
                 if (camera.radarRendering)
                 {
                         if (iteration == 0 && this.animRadar != null)
                         {
-                                Graph.g.setColor(this.animRadar.get());
-                                Graph.g.fillRect(screenPos.x - 0.5f, screenPos.y - 0.5f, 1, 1);
+                                org.newdawn.slick.Color color = this.animRadar.get();
+                                TextureImpl.bindNone();
+                                GL11.glColor4f(color.r, color.g, color.b, color.a * this.alpha);
+                                float x = screenPos.x - 0.5f;
+                                float y = screenPos.y - 0.5f;
+                                GL11.glBegin(SGL.GL_QUADS);
+                                GL11.glVertex2f(x, y);
+                                GL11.glVertex2f(x + 1, y);
+                                GL11.glVertex2f(x + 1, y + 1);
+                                GL11.glVertex2f(x, y + 1);
+                                GL11.glEnd();
                         }
                         
                         return false;
@@ -228,7 +239,7 @@ public class Projectile extends MapEntity implements WrappedValueAbstract.Change
 
                                 long tick = this.renderingAt_tick - (rand & 0b11); // 0, 1, 2, 3
                                 rand >>= 2;
-
+                                
                                 for (int tile = 0; 
                                         tile < trail.getTilesCount(); 
                                         tile += (rand & 0b1) + 1, rand >>= 1)
@@ -245,7 +256,9 @@ public class Projectile extends MapEntity implements WrappedValueAbstract.Change
                                                 camera.mapToScreenPosition(trailPos, trailPos);
 
                                                 Image img = trail.getSubImage(tile);
-                                                img.drawCentered(trailPos.x, trailPos.y);
+                                                img.draw(trailPos.x - img.getWidth()/2, 
+                                                         trailPos.y - img.getHeight()/2, 
+                                                         this.alphaFilter);
                                         }
 
 
@@ -276,7 +289,8 @@ public class Projectile extends MapEntity implements WrappedValueAbstract.Change
                                         screenPos.x - anim.getWidth() / 2 * camera.zoom, 
                                         screenPos.y - anim.getHeight() / 2 * camera.zoom, 
                                         anim.getWidth() * camera.zoom,
-                                        anim.getHeight() * camera.zoom);
+                                        anim.getHeight() * camera.zoom,
+                                        this.alphaFilter);
                         }
                         
                         if (Client.showDebug)

@@ -45,6 +45,7 @@ import org.newdawn.slick.Graphics;
  *
  * @author Joris
  */
+@Deprecated // Use opengl
 public class Graph extends Graphics
 {
         public static final Graph g = new Graph();

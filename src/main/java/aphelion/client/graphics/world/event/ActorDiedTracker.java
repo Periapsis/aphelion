@@ -154,7 +154,7 @@ public class ActorDiedTracker implements EventTracker
                 final PhysicsShipPosition actorPos = new PhysicsShipPosition();
                 if (image != null && actor.getHistoricPosition(actorPos, ship.renderingAt_tick, false))
                 {
-                        anim = new DeathAnimation(resourceDB, image);
+                        anim = new MyAnimation(resourceDB, image);
                         anim.setPositionFromPhysics(actorPos.smooth_x, actorPos.smooth_y);
                         anim.setVelocityFromPhysics(actorPos.x_vel, actorPos.y_vel);
                         anim.setStopOnHit(true);
@@ -175,9 +175,9 @@ public class ActorDiedTracker implements EventTracker
                 }
         }
         
-        private class DeathAnimation extends GCImageAnimation
+        private class MyAnimation extends GCImageAnimation
         {
-                DeathAnimation(ResourceDB db, GCImage image)
+                MyAnimation(ResourceDB db, GCImage image)
                 {
                         super(db, image);
                 }
@@ -187,16 +187,8 @@ public class ActorDiedTracker implements EventTracker
                 {
                         super.tick(tick);
                         
-                        ActorShip ship = mapEntities.getActorShip(event.getDied(0));
-                        if (ship == null)
-                        {
-                                return;
-                        }
-
-                        ActorPublic actor = ship.getActor();                
-                        
-                        // todo : fade out if the event no longer occured
-
+                        // fade out if the event was timewarped (or: fade it back in)
+                        this.setAlphaVelocity(event.hasOccurred(0) ? 0.025f : -0.025f); // TODO: 0.025f to a setting?
                 }
         }
 }

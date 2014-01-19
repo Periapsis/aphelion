@@ -122,7 +122,8 @@ public class GCImageAnimation extends MapAnimation
                         screenPos.x, 
                         screenPos.y ,
                         anim.getWidth() * camera.zoom,
-                        anim.getHeight() * camera.zoom);
+                        anim.getHeight() * camera.zoom,
+                        this.alphaFilter);
                 
                 return false;
         }

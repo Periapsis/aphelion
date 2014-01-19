@@ -400,7 +400,7 @@ public class ActorShip extends MapEntity implements TickEvent, WrappedValueAbstr
                                 image.draw(testScreen.x, testScreen.y, w, h, org.newdawn.slick.Color.magenta);
                         }
                         
-                        image.draw(x, y, w, h);
+                        image.draw(x, y, w, h, this.alphaFilter);
                         
 
                         if (netActor.name != null)
