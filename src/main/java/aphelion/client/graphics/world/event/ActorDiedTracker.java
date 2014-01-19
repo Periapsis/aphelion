@@ -41,7 +41,6 @@ package aphelion.client.graphics.world.event;
 import aphelion.client.RENDER_LAYER;
 import aphelion.client.graphics.world.ActorShip;
 import aphelion.client.graphics.world.GCImageAnimation;
-import aphelion.client.graphics.world.MapAnimation;
 import aphelion.client.graphics.world.MapEntities;
 import aphelion.shared.gameconfig.GCImage;
 import aphelion.shared.gameconfig.GCInteger;
@@ -50,7 +49,6 @@ import aphelion.shared.physics.entities.ActorPublic;
 import aphelion.shared.physics.events.pub.ActorDiedPublic;
 import aphelion.shared.physics.valueobjects.PhysicsShipPosition;
 import aphelion.shared.resource.ResourceDB;
-import java.lang.ref.WeakReference;
 
 /**
  *
@@ -64,10 +62,21 @@ public class ActorDiedTracker implements EventTracker
         
         private boolean firstRun = true;
         private ActorDiedPublic event;
-        private GCImageAnimation anim;
+        
+        /** the latest correct animation.
+         * (we might have spawned other animations that are no longer correct) */
+        private GCImageAnimation latestAnim;
+        /** the anim is playing for this pid. */
+        private int latestAnim_died; 
+        
+        /** Used to track old animations incase a new animation is spawned somewhere else. */
+        private int spawnID = 0;
         
         private long renderDelay;
         private int renderingAt_state;
+        
+        // Todo: setting?:
+        private static final float TIMEWARP_ALPHA_VELOCITY = 0.025f;
 
         public ActorDiedTracker(ResourceDB resourceDB, PhysicsEnvironment physicsEnv, MapEntities mapEntities)
         {
@@ -113,29 +122,21 @@ public class ActorDiedTracker implements EventTracker
                 
                 firstRun = false;
                 
-                if (pid_state0 != 0  &&
-                    event.hasOccurred(renderingAt_state) && 
-                    event.getOccurredAt(renderingAt_state) <= physicsEnv.getTick() - renderDelay)
+                if (latestAnim != null && this.latestAnim_died != event.getDied(0))
                 {
-                        if (anim == null)
+                        // respawn, a different player died
+                        latestAnim = null;
+                        latestAnim_died = 0;
+                }
+                
+                if (latestAnim == null)
+                {
+                        if (pid_state0 != 0  &&
+                            event.hasOccurred(renderingAt_state) && 
+                            event.getOccurredAt(renderingAt_state) <= physicsEnv.getTick() - renderDelay)
                         {
                                 spawnAnimations();
                         }
-                }
-                else
-                {
-                        // the event no longer occurred (timewarp), 
-                        // remove the animations
-                        removeAnimations();
-                }
-        }
-        
-        private void removeAnimations()
-        {
-                if (anim != null)
-                {
-                        anim.setDone();
-                        anim = null;
                 }
         }
         
@@ -147,6 +148,9 @@ public class ActorDiedTracker implements EventTracker
                         return;
                 }
                 
+                ++spawnID;
+                
+                this.latestAnim_died = event.getDied(0);
                 ActorPublic actor = ship.getActor();
 
                 GCImage image = actor.getActorConfigImage("ship-explosion-animation", resourceDB);
@@ -154,32 +158,34 @@ public class ActorDiedTracker implements EventTracker
                 final PhysicsShipPosition actorPos = new PhysicsShipPosition();
                 if (image != null && actor.getHistoricPosition(actorPos, ship.renderingAt_tick, false))
                 {
-                        anim = new MyAnimation(resourceDB, image);
-                        anim.setPositionFromPhysics(actorPos.smooth_x, actorPos.smooth_y);
-                        anim.setVelocityFromPhysics(actorPos.x_vel, actorPos.y_vel);
-                        anim.setStopOnHit(true);
+                        latestAnim = new MyAnimation(spawnID, resourceDB, image);
+                        latestAnim.setPositionFromPhysics(actorPos.smooth_x, actorPos.smooth_y);
+                        latestAnim.setVelocityFromPhysics(actorPos.x_vel, actorPos.y_vel);
+                        latestAnim.setStopOnHit(true);
                         
                         GCInteger radius = actor.getActorConfigInteger("ship-radius");
                         GCInteger bounceFriction = actor.getActorConfigInteger("ship-bounce-friction");
                         GCInteger bounceOtherAxisFriction = actor.getActorConfigInteger("ship-bounce-friction-other-axis");
                         
-                        anim.setMapCollision(
+                        latestAnim.setMapCollision(
                                 mapEntities.collision, 
                                 physicsEnv.getMap(), 
                                 radius.get(),
                                 bounceFriction.get(),
                                 bounceOtherAxisFriction.get());
                         
-                        mapEntities.addAnimation(RENDER_LAYER.AFTER_PROJECTILES, anim, null);
-                        ship.activeDeathAnimation = anim;
+                        mapEntities.addAnimation(RENDER_LAYER.AFTER_PROJECTILES, latestAnim, null);
+                        ship.activeDeathAnimation = latestAnim;
                 }
         }
         
         private class MyAnimation extends GCImageAnimation
         {
-                MyAnimation(ResourceDB db, GCImage image)
+                private final int mySpawnID;
+                MyAnimation(int spawnID, ResourceDB db, GCImage image)
                 {
                         super(db, image);
+                        this.mySpawnID = spawnID;
                 }
 
                 @Override
@@ -188,7 +194,21 @@ public class ActorDiedTracker implements EventTracker
                         super.tick(tick);
                         
                         // fade out if the event was timewarped (or: fade it back in)
-                        this.setAlphaVelocity(event.hasOccurred(0) ? 0.025f : -0.025f); // TODO: 0.025f to a setting?
+                        
+                        // Note: currently three animations are spawned in the case of :
+                        // 1. Pid 1 dies
+                        // 2. Timewarp: pid 2 dies
+                        // 3. Timewarp: pid 1 dies (original situation was correct after all)
+                        // Two animations might better, but this issue is probably a rare occurance
+                        
+                        if (spawnID == this.mySpawnID && event.hasOccurred(0))
+                        {
+                                this.setAlphaVelocity(TIMEWARP_ALPHA_VELOCITY);
+                        }
+                        else
+                        {
+                                this.setAlphaVelocity(-TIMEWARP_ALPHA_VELOCITY);
+                        }
                 }
         }
 }

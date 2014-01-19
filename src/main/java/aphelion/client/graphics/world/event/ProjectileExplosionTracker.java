@@ -43,6 +43,7 @@ import aphelion.client.graphics.world.MapEntities;
 import aphelion.client.graphics.world.Projectile;
 import aphelion.shared.gameconfig.GCImage;
 import aphelion.shared.physics.PhysicsEnvironment;
+import aphelion.shared.physics.PhysicsMap;
 import aphelion.shared.physics.entities.ProjectilePublic;
 import aphelion.shared.physics.events.pub.ProjectileExplosionPublic;
 import aphelion.shared.physics.events.pub.ProjectileExplosionPublic.EXPLODE_REASON;
@@ -61,9 +62,9 @@ import java.util.ArrayList;
  */
 public class ProjectileExplosionTracker implements EventTracker
 {
-        private ResourceDB resourceDB;
-        private PhysicsEnvironment physicsEnv;
-        private MapEntities mapEntities;
+        private final ResourceDB resourceDB;
+        private final PhysicsEnvironment physicsEnv;
+        private final MapEntities mapEntities;
         
         private boolean firstRun = true;
         private ProjectileExplosionPublic event;
@@ -72,6 +73,13 @@ public class ProjectileExplosionTracker implements EventTracker
         private int renderingAt_state;
         
         private ArrayList<GCImageAnimation> projectileAnimations;
+        private final PhysicsPoint lastEventPosition = new PhysicsPoint();
+        /** Used to track old animations incase a new animation is spawned somewhere else. */
+        private int spawnID = 0;
+        
+        // Todo: setting?:
+        private static final long TIMEWARP_RESPAWN_DISTSQ = 8 * PhysicsMap.TILE_PIXELS;
+        private static final float TIMEWARP_ALPHA_VELOCITY = 0.025f;
 
         public ProjectileExplosionTracker(ResourceDB resourceDB, PhysicsEnvironment physicsEnv, MapEntities mapEntities)
         {
@@ -113,45 +121,38 @@ public class ProjectileExplosionTracker implements EventTracker
                 
                 firstRun = false;
                 
-                
-                
-                // using the render delay of the projectile
-                
-                if (physicsProjectile_state0 != null &&
-                    event.hasOccurred(renderingAt_state) && 
-                    event.getOccurredAt(renderingAt_state) <= physicsEnv.getTick() - renderDelay)
+                if (projectileAnimations != null && lastEventPosition.set)
                 {
-                        if (projectileAnimations == null)
+                        PhysicsPoint pos = new PhysicsPoint();
+                        event.getPosition(0, pos);
+                        
+                        if (lastEventPosition.distanceSquared(pos) >= TIMEWARP_RESPAWN_DISTSQ)
                         {
-                                spawnAnimations();
+                                // Spawn new animations, but do not remove the old ones (they are fade out)
+                                projectileAnimations = null;
                         }
                 }
-                else
+                
+                if (projectileAnimations == null)
                 {
-                        // the event no longer occurred (timewarp), 
-                        // remove the animations
-                        removeAnimations();
-                }
-        }
-        
-        private void removeAnimations()
-        {
-                if (projectileAnimations != null)
-                {
-                        for (GCImageAnimation anim : projectileAnimations)
+                        // using the render delay of the projectile
+                
+                        if (physicsProjectile_state0 != null &&
+                            event.hasOccurred(renderingAt_state) && 
+                            event.getOccurredAt(renderingAt_state) <= physicsEnv.getTick() - renderDelay)
                         {
-                                anim.setDone();
+                                spawnAnimations();       
                         }
-                        projectileAnimations = null;
                 }
         }
-        
+
         private void spawnAnimations()
         {
                 final PhysicsPoint pos = new PhysicsPoint();
                 
-                ProjectilePublic physicsProjectile_state0 = event.getProjectile(0);
+                ++spawnID;
                 
+                ProjectilePublic physicsProjectile_state0 = event.getProjectile(0);
                 long occurredAt_tick = event.getOccurredAt(renderingAt_state);
                 
                 projectileAnimations = new ArrayList<>(1 + event.getCoupledProjectilesSize(renderingAt_state));
@@ -202,9 +203,10 @@ public class ProjectileExplosionTracker implements EventTracker
                 if (hitImage != null)
                 {
                         event.getPosition(renderingAt_state, pos);
+                        lastEventPosition.set(pos);
                         if (pos.set)
                         {
-                                GCImageAnimation anim = new MyAnimation(resourceDB, hitImage);
+                                GCImageAnimation anim = new MyAnimation(spawnID, resourceDB, hitImage);
 
                                 anim.setPositionFromPhysics(pos);
                                 mapEntities.addAnimation(RENDER_LAYER.AFTER_LOCAL_SHIP, anim, null);
@@ -215,7 +217,7 @@ public class ProjectileExplosionTracker implements EventTracker
                         {
                                 coupledProjectile.getHistoricPosition(pos, occurredAt_tick, false);
 
-                                GCImageAnimation anim = new MyAnimation(resourceDB, hitImage);
+                                GCImageAnimation anim = new MyAnimation(spawnID, resourceDB, hitImage);
 
                                 anim.setPositionFromPhysics(pos);
                                 mapEntities.addAnimation(RENDER_LAYER.AFTER_LOCAL_SHIP, anim, null);
@@ -227,18 +229,27 @@ public class ProjectileExplosionTracker implements EventTracker
         
         private class MyAnimation extends GCImageAnimation
         {
-                MyAnimation(ResourceDB db, GCImage image)
+                private final int mySpawnID;
+                MyAnimation(int spawnID, ResourceDB db, GCImage image)
                 {
                         super(db, image);
+                        this.mySpawnID = spawnID;
                 }
 
                 @Override
                 public void tick(long tick)
                 {
                         super.tick(tick);
-                        
-                        // fade out if the event was timewarped (or: fade it back in)
-                        this.setAlphaVelocity(event.hasOccurred(0) ? 0.025f : -0.025f); // TODO: 0.025f to a setting?
+
+                        if (spawnID == this.mySpawnID && event.hasOccurred(0))
+                        {
+                                this.setAlphaVelocity(TIMEWARP_ALPHA_VELOCITY);
+                        }
+                        else
+                        {
+                                // fade out if the event was timewarped (or: fade it back in)
+                                this.setAlphaVelocity(-TIMEWARP_ALPHA_VELOCITY);
+                        }
                 }
         }
 }
