@@ -47,7 +47,7 @@ import aphelion.shared.physics.valueobjects.PhysicsMovement;
  *
  * @author Joris
  */
-public class SmoothedFastShips500msLag extends Scenario
+public class HighSpeedTurning500msLag extends Scenario
 {
 
         @Override
