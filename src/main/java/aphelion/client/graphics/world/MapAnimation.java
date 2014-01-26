@@ -39,13 +39,11 @@
 package aphelion.client.graphics.world;
 
 import aphelion.client.graphics.screen.Camera;
-import aphelion.shared.event.TickEvent;
 import aphelion.shared.physics.Collision;
 import aphelion.shared.physics.PhysicsMap;
 import aphelion.shared.physics.valueobjects.PhysicsPoint;
 import aphelion.shared.resource.ResourceDB;
 import aphelion.shared.swissarmyknife.LinkedListEntry;
-import aphelion.shared.swissarmyknife.SwissArmyKnife;
 
 
 /**

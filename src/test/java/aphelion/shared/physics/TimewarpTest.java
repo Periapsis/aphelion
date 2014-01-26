@@ -471,6 +471,9 @@ public class TimewarpTest extends PhysicsTest
                                 PhysicsPoint pos = new PhysicsPoint();
                                 ev.getPosition(state, pos);
                                 assertPointEquals(45664, 90, pos);
+                                
+                                ev.getProjectile(state).getHistoricPosition(pos, ev.getOccurredAt(state), true);
+                                assertPointEquals(45664, 90, pos);
                         }
                         else if (e instanceof ActorDiedPublic)
                         {
@@ -560,6 +563,9 @@ public class TimewarpTest extends PhysicsTest
                                 
                                 PhysicsPoint pos = new PhysicsPoint();
                                 ev.getPosition(state, pos);
+                                assertPointEquals(385664, 90, pos);
+                                
+                                ev.getProjectile(state).getHistoricPosition(pos, ev.getOccurredAt(state), true);
                                 assertPointEquals(385664, 90, pos);
                         }
                         else if (e instanceof ActorDiedPublic)

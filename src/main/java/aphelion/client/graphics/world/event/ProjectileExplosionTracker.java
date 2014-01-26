@@ -78,7 +78,8 @@ public class ProjectileExplosionTracker implements EventTracker
         private int spawnID = 0;
         
         // Todo: setting?:
-        private static final long TIMEWARP_RESPAWN_DISTSQ = 8 * PhysicsMap.TILE_PIXELS;
+        private static final long TIMEWARP_RESPAWN_ANIM_DISTSQ = 5 * PhysicsMap.TILE_PIXELS;
+        private static final long TIMEWARP_EXTRA_ANIM_DISTSQ = 5 * PhysicsMap.TILE_PIXELS;
         private static final float TIMEWARP_ALPHA_VELOCITY = 0.025f;
 
         public ProjectileExplosionTracker(ResourceDB resourceDB, PhysicsEnvironment physicsEnv, MapEntities mapEntities)
@@ -126,7 +127,7 @@ public class ProjectileExplosionTracker implements EventTracker
                         PhysicsPoint pos = new PhysicsPoint();
                         event.getPosition(0, pos);
                         
-                        if (lastEventPosition.distanceSquared(pos) >= TIMEWARP_RESPAWN_DISTSQ)
+                        if (lastEventPosition.distanceSquared(pos) >= TIMEWARP_RESPAWN_ANIM_DISTSQ)
                         {
                                 // Spawn new animations, but do not remove the old ones (they are fade out)
                                 projectileAnimations = null;
@@ -200,35 +201,51 @@ public class ProjectileExplosionTracker implements EventTracker
                 }
 
 
-                if (hitImage != null)
+                if (hitImage == null)
                 {
-                        event.getPosition(renderingAt_state, pos);
-                        lastEventPosition.set(pos);
-                        if (pos.set)
-                        {
-                                GCImageAnimation anim = new MyAnimation(spawnID, resourceDB, hitImage);
-                                
-                                Projectile proj = mapEntities.physicsProjectileToGraphics(physicsProjectile_state0);
-                                if (proj != null) { anim.setAlpha(proj.getAlpha()); }
-                                
-                                anim.setPositionFromPhysics(pos);
-                                mapEntities.addAnimation(RENDER_LAYER.AFTER_LOCAL_SHIP, anim, null);
-                                projectileAnimations.add(anim);
-                        }
+                        return;
+                }
+                
+                spawnAnimation(hitImage, physicsProjectile_state0);
+                
+                for (ProjectilePublic coupledProjectile : event.getCoupledProjectiles(renderingAt_state))
+                {
+                        spawnAnimation(hitImage, coupledProjectile);
+                }
+        }
+        
+        private void spawnAnimation(GCImage hitImage, ProjectilePublic physicsProj)
+        {
+                Projectile proj = mapEntities.physicsProjectileToGraphics(physicsProj);
+                long occurredAt_tick = event.getOccurredAt(renderingAt_state);
+                
+                PhysicsPoint pos = new PhysicsPoint();
+                physicsProj.getHistoricPosition(pos, occurredAt_tick, true);
+                
+                if (pos.set)
+                {
+                        GCImageAnimation anim = new MyAnimation(spawnID, resourceDB, hitImage);
+                        // inherit the alpha of the projectile
+                        anim.setAlpha(proj.getAlpha());
 
-                        for (ProjectilePublic coupledProjectile : event.getCoupledProjectiles(renderingAt_state))
-                        {
-                                coupledProjectile.getHistoricPosition(pos, occurredAt_tick, false);
-
-                                GCImageAnimation anim = new MyAnimation(spawnID, resourceDB, hitImage);
-                                
-                                Projectile proj = mapEntities.physicsProjectileToGraphics(coupledProjectile);
-                                if (proj != null) { anim.setAlpha(proj.getAlpha()); }
-
-                                anim.setPositionFromPhysics(pos);
-                                mapEntities.addAnimation(RENDER_LAYER.AFTER_LOCAL_SHIP, anim, null);
-                                projectileAnimations.add(anim);
-                        }
+                        anim.setPositionFromPhysics(pos);
+                        mapEntities.addAnimation(RENDER_LAYER.AFTER_LOCAL_SHIP, anim, null);
+                        projectileAnimations.add(anim);
+                }
+                
+                
+                // If the last rendered position of the projectile is very different,
+                // display 2 animations.
+                if (proj.physicsPos.set && 
+                    (!pos.set || pos.distanceSquared(proj.physicsPos) > TIMEWARP_EXTRA_ANIM_DISTSQ)
+                   )
+                {
+                        GCImageAnimation anim = new MyAnimation(spawnID, resourceDB, hitImage);
+                        anim.setAlpha(proj.getAlpha());
+                        
+                        anim.setPositionFromPhysics(proj.physicsPos);
+                        mapEntities.addAnimation(RENDER_LAYER.AFTER_LOCAL_SHIP, anim, null);
+                        projectileAnimations.add(anim);
                 }
         }
         

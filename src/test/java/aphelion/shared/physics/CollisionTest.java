@@ -37,7 +37,6 @@
  */
 package aphelion.shared.physics;
 
-import aphelion.shared.physics.Collision;
 import aphelion.shared.physics.valueobjects.PhysicsPoint;
 import java.util.ArrayList;
 import org.junit.Test;
