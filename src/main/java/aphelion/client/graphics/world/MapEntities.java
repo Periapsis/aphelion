@@ -66,6 +66,8 @@ import aphelion.shared.swissarmyknife.LinkedListHead;
 import aphelion.shared.swissarmyknife.Point;
 import java.util.HashMap;
 import java.util.Iterator;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 /**
  * Takes care of tracking graphics state for entities (ships, projetiles).
@@ -89,7 +91,7 @@ public class MapEntities implements TickEvent, LoopEvent, Animator, ActorListene
         
         public final Collision collision = new Collision(); // used for animations
 
-        public MapEntities(ResourceDB db)
+        public MapEntities(@Nonnull ResourceDB db)
         {
                 this.resourceDB = db;
                 
@@ -100,7 +102,7 @@ public class MapEntities implements TickEvent, LoopEvent, Animator, ActorListene
         }
 
         
-        public void addShip(ActorShip en)
+        public void addShip(@Nonnull ActorShip en)
         {
                 actorShips.put(en.pid, en);
                 if (en.isLocalPlayer())
@@ -110,7 +112,7 @@ public class MapEntities implements TickEvent, LoopEvent, Animator, ActorListene
                 }
         }
         
-        public void removeShip(ActorShip en)
+        public void removeShip(@Nullable ActorShip en)
         {
                 if (en == null) { return; }
                 actorShips.remove(en.pid);
@@ -120,17 +122,17 @@ public class MapEntities implements TickEvent, LoopEvent, Animator, ActorListene
                 }
         }
         
-        public ActorShip getLocalShip()
+        public @Nullable ActorShip getLocalShip()
         {
                 return localShip; // may be null
         }
         
-        public Iterator<ActorShip> shipIterator()
+        public @Nonnull Iterator<ActorShip> shipIterator()
         {
                 return actorShips.values().iterator();
         }
         
-        public Iterable<ActorShip> ships()
+        public @Nonnull Iterable<ActorShip> ships()
         {
                 return new Iterable<ActorShip>()
                 {
@@ -142,7 +144,7 @@ public class MapEntities implements TickEvent, LoopEvent, Animator, ActorListene
                 };
         }
         
-        public Iterator<ActorShip> shipNoLocalIterator()
+        public @Nonnull Iterator<ActorShip> shipNoLocalIterator()
         {
                 Iterator<ActorShip> it = new Iterator<ActorShip>() 
                 {
@@ -191,7 +193,7 @@ public class MapEntities implements TickEvent, LoopEvent, Animator, ActorListene
                 return it;
         }
         
-        public Iterable<ActorShip> shipsNoLocal()
+        public @Nonnull Iterable<ActorShip> shipsNoLocal()
         {
                 return new Iterable<ActorShip>()
                 {
@@ -203,12 +205,12 @@ public class MapEntities implements TickEvent, LoopEvent, Animator, ActorListene
                 };
         }
         
-        public ActorShip getActorShip(int pid)
+        public @Nullable ActorShip getActorShip(int pid)
         {
                 return actorShips.get(pid);
         }
         
-        public Iterator<Projectile> projectileIterator(final boolean includeNonExist)
+        public @Nonnull Iterator<Projectile> projectileIterator(final boolean includeNonExist)
         {
                 if (physicsEnv == null)
                 {
@@ -234,7 +236,7 @@ public class MapEntities implements TickEvent, LoopEvent, Animator, ActorListene
                 return it;
         }
         
-        public Iterable<Projectile> projectiles(final boolean includeNonExist)
+        public @Nonnull Iterable<Projectile> projectiles(final boolean includeNonExist)
         {
                 return new Iterable<Projectile>()
                 {
@@ -246,9 +248,9 @@ public class MapEntities implements TickEvent, LoopEvent, Animator, ActorListene
                 };
         }
         
-        public Projectile physicsProjectileToGraphics(ProjectilePublic proj)
+        public @Nonnull Projectile physicsProjectileToGraphics(@Nonnull ProjectilePublic proj)
         {
-                if (proj == null) { return null; }
+                if (proj == null) { throw new NullPointerException(); }
                 Projectile projectile = projectileAttachment.get(proj);
                 if (projectile == null)
                 {
@@ -261,7 +263,7 @@ public class MapEntities implements TickEvent, LoopEvent, Animator, ActorListene
                 return projectile;
         }
         
-        public ActorShip findNearestActor(Point pos, boolean includeLocal)
+        public @Nullable ActorShip findNearestActor(Point pos, boolean includeLocal)
         {
                 Iterator<ActorShip> it = actorShips.values().iterator();
                 
@@ -299,14 +301,14 @@ public class MapEntities implements TickEvent, LoopEvent, Animator, ActorListene
         }
         
         @Override
-        public void addAnimation(RENDER_LAYER layer, MapAnimation animation, Camera camera)
+        public void addAnimation(@Nonnull RENDER_LAYER layer, @Nonnull MapAnimation animation, @Nullable Camera camera)
         {
                 animation.animating = true;
                 animations[layer.id].append(animation.link);
                 animation.camera = camera;
         }
         
-        public Iterator<MapAnimation> animationIterator(final RENDER_LAYER layer, final Camera camera)
+        public @Nonnull Iterator<MapAnimation> animationIterator(@Nonnull final RENDER_LAYER layer, @Nullable final Camera camera)
         {
                 return new FilteredIterator<MapAnimation, MapAnimation>(animations[layer.id].iterator())
                 {
@@ -323,7 +325,7 @@ public class MapEntities implements TickEvent, LoopEvent, Animator, ActorListene
                 };
         }
         
-        public Iterable<MapAnimation> animations(final RENDER_LAYER layer, final Camera camera)
+        public @Nonnull Iterable<MapAnimation> animations(@Nonnull final RENDER_LAYER layer, @Nullable final Camera camera)
         {
                 return new Iterable<MapAnimation>()
                 {
@@ -386,25 +388,25 @@ public class MapEntities implements TickEvent, LoopEvent, Animator, ActorListene
         }
 
         @Override
-        public void newActor(NetworkedActor actor)
+        public void newActor(@Nonnull NetworkedActor actor)
         {
                 this.addShip(new ActorShip(this.resourceDB, actor, physicsEnv.getActor(actor.pid, 0, true), this));
         }
 
         @Override
-        public void actorModified(NetworkedActor actor)
+        public void actorModified(@Nonnull NetworkedActor actor)
         {
         }
 
         @Override
-        public void removedActor(NetworkedActor actor)
+        public void removedActor(@Nonnull NetworkedActor actor)
         {
                 ActorShip ship = this.getActorShip(actor.pid);
                 assert ship != null;
                 this.removeShip(ship);
         }
         
-        public void tryInitialize(PhysicsEnvironment physicsEnv_, SingleGameConnection connection_)
+        public void tryInitialize(@Nullable PhysicsEnvironment physicsEnv_, @Nullable SingleGameConnection connection_)
         {
                 if (physicsEnv_ != null)
                 {
@@ -438,7 +440,7 @@ public class MapEntities implements TickEvent, LoopEvent, Animator, ActorListene
                 }
         }
 
-        public RenderDelay getRenderDelay()
+        public @Nullable RenderDelay getRenderDelay()
         {
                 return renderDelay;
         }
@@ -491,7 +493,7 @@ public class MapEntities implements TickEvent, LoopEvent, Animator, ActorListene
                 }
         }
         
-        private void updateShipFromPhysics(ActorShip actorShip)
+        private void updateShipFromPhysics(@Nonnull ActorShip actorShip)
         {
                 PhysicsShipPosition actorPos = new PhysicsShipPosition();
                 Point localActorPos = new Point();
@@ -556,7 +558,7 @@ public class MapEntities implements TickEvent, LoopEvent, Animator, ActorListene
                 }
         }
         
-        private void updateProjectileFromPhysics(Projectile projectile)
+        private void updateProjectileFromPhysics(@Nonnull Projectile projectile)
         {
                 ProjectilePublic.Position projectilePos = new ProjectilePublic.Position();
                 PhysicsPoint historicProjectilePos = new PhysicsPoint();

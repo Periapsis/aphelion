@@ -50,6 +50,7 @@ import aphelion.shared.net.protobuf.GameS2C;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.annotation.Nonnull;
 
 /**
  *
@@ -61,20 +62,20 @@ public class GameEvents implements ActorListener, GameS2CListener
         private final NetworkedGame netGame;
         private final List<GameEventsDisplay> displays;
 
-        public GameEvents(NetworkedGame netGame, List<GameEventsDisplay> displays)
+        public GameEvents(@Nonnull NetworkedGame netGame, @Nonnull List<GameEventsDisplay> displays)
         {
                 this.netGame = netGame;
                 this.displays = displays;
         }
         
-        public void subscribeListeners(SingleGameConnection connection)
+        public void subscribeListeners(@Nonnull SingleGameConnection connection)
         {
                 connection.addListener(this);
                 netGame.addActorListener(this, false);
         }
 
         @Override
-        public void gameS2CMessage(GameProtocolConnection game, GameS2C.S2C s2c, long receivedAt)
+        public void gameS2CMessage(@Nonnull GameProtocolConnection game, @Nonnull GameS2C.S2C s2c, long receivedAt)
         {
                 for (GameS2C.ActorDied msg : s2c.getActorDiedList())
                 {
@@ -122,7 +123,7 @@ public class GameEvents implements ActorListener, GameS2CListener
                 }
         }
 
-        private void addLine(String line)
+        private void addLine(@Nonnull String line)
         {
                 for (GameEventsDisplay display : displays)
                 {
@@ -131,18 +132,18 @@ public class GameEvents implements ActorListener, GameS2CListener
         }
         
         @Override
-        public void newActor(NetworkedActor actor)
+        public void newActor(@Nonnull NetworkedActor actor)
         {
                 addLine("\\#c6c6f7#" + actor.name + " entered arena");
         }
 
         @Override
-        public void actorModified(NetworkedActor actor)
+        public void actorModified(@Nonnull NetworkedActor actor)
         {
         }
 
         @Override
-        public void removedActor(NetworkedActor actor)
+        public void removedActor(@Nonnull NetworkedActor actor)
         {
                 addLine("\\#c6c6f7#" + actor.name + " left arena");
         }

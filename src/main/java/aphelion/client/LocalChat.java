@@ -56,6 +56,8 @@ import aphelion.shared.net.game.NetworkedActor;
 import de.lessvoid.nifty.screen.Screen;
 import java.util.Arrays;
 import java.util.List;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import org.bushe.swing.event.EventTopicSubscriber;
 
 /**
@@ -70,7 +72,7 @@ public class LocalChat implements EventTopicSubscriber<AphelionChatTextSendEvent
         private final long WARNING_DROPPED_OPERATION_INTERVAL = 30_000_000_000L; // 30s
         private long lastDroppedWarning_nanos;
 
-        public LocalChat(TickedEventLoop loop, NetworkedGame netGame, List<AphelionChatControl> chatLocals)
+        public LocalChat(@Nonnull TickedEventLoop loop, @Nonnull NetworkedGame netGame, @Nonnull List<AphelionChatControl> chatLocals)
         {
                 if (netGame == null)
                 {
@@ -82,7 +84,7 @@ public class LocalChat implements EventTopicSubscriber<AphelionChatTextSendEvent
                 this.chatLocals = chatLocals;
         }
         
-        public void subscribeListeners(Screen screen)
+        public void subscribeListeners(@Nonnull Screen screen)
         {
                 netGame.addActorListener(this, true);
                 netGame.getGameConn().addListener(this);
@@ -93,7 +95,7 @@ public class LocalChat implements EventTopicSubscriber<AphelionChatTextSendEvent
                 }
         }
         
-        public void addLine(String sender, String line)
+        public void addLine(@Nullable String sender, @Nonnull String line)
         {
                 for (AphelionChatControl control : chatLocals)
                 {
@@ -109,7 +111,7 @@ public class LocalChat implements EventTopicSubscriber<AphelionChatTextSendEvent
         }
         
         @Override
-        public void onEvent(String topic, AphelionChatTextSendEvent data)
+        public void onEvent(@Nonnull String topic, @Nonnull AphelionChatTextSendEvent data)
         {
                 String text = data.getText();
                 if (text == null || text.isEmpty())
@@ -138,7 +140,7 @@ public class LocalChat implements EventTopicSubscriber<AphelionChatTextSendEvent
         }
 
         @Override
-        public void gameS2CMessage(GameProtocolConnection game, GameS2C.S2C s2c, long receivedAt)
+        public void gameS2CMessage(@Nonnull GameProtocolConnection game, @Nonnull GameS2C.S2C s2c, long receivedAt)
         {
                 for (GameS2C.LocalChatMessage message : s2c.getLocalChatMessageList())
                 {
@@ -147,7 +149,7 @@ public class LocalChat implements EventTopicSubscriber<AphelionChatTextSendEvent
         }
 
         @Override
-        public void newActor(NetworkedActor actor)
+        public void newActor(@Nonnull NetworkedActor actor)
         {
                 for (AphelionChatControl control : chatLocals)
                 {
@@ -156,7 +158,7 @@ public class LocalChat implements EventTopicSubscriber<AphelionChatTextSendEvent
         }
 
         @Override
-        public void actorModified(NetworkedActor actor)
+        public void actorModified(@Nonnull NetworkedActor actor)
         {
                 for (AphelionChatControl control : chatLocals)
                 {
@@ -165,7 +167,7 @@ public class LocalChat implements EventTopicSubscriber<AphelionChatTextSendEvent
         }
 
         @Override
-        public void removedActor(NetworkedActor actor)
+        public void removedActor(@Nonnull NetworkedActor actor)
         {
                 for (AphelionChatControl control : chatLocals)
                 {
@@ -174,7 +176,7 @@ public class LocalChat implements EventTopicSubscriber<AphelionChatTextSendEvent
         }
 
         @Override
-        public void operationDropped(long tick, int pid, Object messsage)
+        public void operationDropped(long tick, int pid, @Nonnull Object messsage)
         {
                 long now = loop.getLoopSystemNanoTime();
                 

@@ -38,6 +38,7 @@
 package aphelion.client.graphics;
 
 import java.util.ArrayList;
+import javax.annotation.Nullable;
 import org.newdawn.slick.Color;
 
 /**
@@ -68,7 +69,7 @@ public class AnimatedColour
                 frames.add(new Frame(color, dur));
         }
         
-        public Color get()
+        public @Nullable Color get()
         {
                 if (frames.isEmpty())
                 {

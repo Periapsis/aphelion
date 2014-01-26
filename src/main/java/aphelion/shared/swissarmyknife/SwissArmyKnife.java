@@ -51,6 +51,8 @@ import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import org.newdawn.slick.Animation;
 import org.newdawn.slick.Image;
 import org.newdawn.slick.SpriteSheet;
@@ -99,7 +101,7 @@ public final class SwissArmyKnife
         }
         
         @ThreadSafe
-        public static boolean isValidNickname(CharSequence nick)
+        public static boolean isValidNickname(@Nullable CharSequence nick)
         {
                 if (nick == null) { return false; }
                 // Pattern is safe to be shared by threads (Matcher is not)
@@ -111,7 +113,7 @@ public final class SwissArmyKnife
          * @param y 
          * @return Same kind of value as left.compareTo(right)
          */
-        public static int nicknameCompare(String x, String y)
+        public static int nicknameCompare(@Nullable String x, @Nullable String y)
         {
                 if (x == null)
                 {
@@ -773,7 +775,7 @@ public final class SwissArmyKnife
         }
         
         @ThreadSafe
-        public static String bytesToHex(byte[] arr)
+        public static @Nonnull String bytesToHex(@Nonnull byte[] arr)
         {
                 if (arr == null) { return null; }
                 
@@ -792,7 +794,7 @@ public final class SwissArmyKnife
                 return ret.toString();
         }
 
-        public static byte[] inputStreamToBytes(InputStream input) throws IOException
+        public static @Nonnull byte[] inputStreamToBytes(@Nonnull InputStream input) throws IOException
         {
                 ByteArrayOutputStream output = new ByteArrayOutputStream();
                 byte buffer[] = new byte[1024 * 4];
@@ -845,7 +847,7 @@ public final class SwissArmyKnife
                 return unsignedRes;
         }
         
-        public static Animation spriteToAnimation(Image img, int horizontalTiles, int verticalTiles, int frameDuration)
+        public static @Nonnull Animation spriteToAnimation(@Nonnull Image img, int horizontalTiles, int verticalTiles, int frameDuration)
         {
                 SpriteSheet sheet = new SpriteSheet(img, img.getWidth() / horizontalTiles, img.getHeight() / verticalTiles);
                 Animation anim = new Animation();
@@ -953,12 +955,12 @@ public final class SwissArmyKnife
                 return r;
         }
         
-        public static boolean isPointInsideRectangle(Point low, Point high, Point point)
+        public static boolean isPointInsideRectangle(@Nonnull Point low, @Nonnull Point high, @Nonnull Point point)
         {
                 return point.x >= low.x && point.x <= high.x &&
                        point.y >= low.y && point.y <= high.y ;
         }
-        public static boolean rectangleIntersectsRectangle(Point low1, Point high1, Point low2, Point high2)
+        public static boolean rectangleIntersectsRectangle(@Nonnull Point low1, @Nonnull Point high1, @Nonnull Point low2, @Nonnull Point high2)
         {
                 if (low1.x > high2.x || high1.x < low2.x)
                 {
@@ -972,7 +974,7 @@ public final class SwissArmyKnife
                 return true;
         }
         
-        public static int stringCompare(String x, String y)
+        public static int stringCompare(@Nullable String x, @Nullable String y)
         {
                 // with null values
                 if (x == null)
@@ -993,7 +995,7 @@ public final class SwissArmyKnife
                 return x.compareTo(y);
         }
         
-        public static void logTraceOfAllThreads(Logger log)
+        public static void logTraceOfAllThreads(@Nonnull Logger log)
         {
                 if (!log.isLoggable(Level.SEVERE))
                 {
@@ -1035,7 +1037,7 @@ public final class SwissArmyKnife
          * @throws java.io.IOException File not found or unreadable
          * @throws RuntimeException if no Provider supports a MessageDigestSpi implementation for the specified algorithm.
          */
-        public static byte[] fileHash(String algorithm, File file) throws IOException
+        public static @Nonnull byte[] fileHash(@Nonnull String algorithm, @Nonnull File file) throws IOException
         {
                 MessageDigest md;
                 try
@@ -1067,7 +1069,7 @@ public final class SwissArmyKnife
                 return md.digest();
         }
         
-        public static URL websocketURItoHTTP(URI uri) throws MalformedURLException
+        public static @Nonnull URL websocketURItoHTTP(@Nonnull URI uri) throws MalformedURLException
         {
                 String scheme;
                 switch (uri.getScheme())
@@ -1094,7 +1096,7 @@ public final class SwissArmyKnife
                         uri.getRawPath());
         }
         
-        public static Element[] findNiftyElementsByIdPrefix(Screen screen, String elementNamePrefix)
+        public static @Nonnull Element[] findNiftyElementsByIdPrefix(@Nonnull Screen screen, @Nonnull String elementNamePrefix)
         {
                 LinkedList<Element> ret = new LinkedList<>();
                 
@@ -1122,7 +1124,7 @@ public final class SwissArmyKnife
                 return ret.toArray(new Element[]{});
         }
         
-        public static Element[] findNiftyElementsByIdPrefix(Element parent, String elementNamePrefix)
+        public static @Nonnull Element[] findNiftyElementsByIdPrefix(@Nonnull Element parent, @Nonnull String elementNamePrefix)
         {
                 LinkedList<Element> ret = new LinkedList<>();
                 

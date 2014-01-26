@@ -37,6 +37,8 @@
  */
 package aphelion.client.net;
 
+import javax.annotation.Nonnull;
+
 /**
  *
  * @author Joris
@@ -48,5 +50,5 @@ public interface OperationDroppedListener
          * @param pid Which player does the operation belong to? (might be 0)
          * @param messsage The protobuf message that describes the operation.
          */
-        void operationDropped(long tick, int pid, Object messsage);
+        void operationDropped(long tick, int pid, @Nonnull Object messsage);
 }

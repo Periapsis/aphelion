@@ -43,6 +43,8 @@ import aphelion.client.resource.AsyncTexture;
 import aphelion.shared.resource.ResourceDB;
 import aphelion.shared.swissarmyknife.Point;
 import aphelion.shared.swissarmyknife.SwissArmyKnife;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 import org.newdawn.slick.Color;
 import org.newdawn.slick.Image;
@@ -56,19 +58,22 @@ public class StarField
 {
         private final int seed;
         private static final int STAR_TILE_SIZE = 512;
-        private Color layer1Color;
-        private Color layer2Color;
-        private Color layer3Color;
-        private Color layer4Color;
-        private Color layer5Color;
-        private ResourceDB db;
+        private final Color layer1Color;
+        private final Color layer2Color;
+        private final Color layer3Color;
+        private final Color layer4Color;
+        private final Color layer5Color;
+        private final ResourceDB db;
         
         //Background objects
-        private AsyncTexture[] bg = new AsyncTexture[14];
+        private final AsyncTexture[] bg = new AsyncTexture[14];
         //Star objects
-        private AsyncTexture[] star = new AsyncTexture[7];
+        private final AsyncTexture[] star = new AsyncTexture[7];
+        
+        private boolean lineEffect = false;
+        private Point last_position;
 
-        public StarField(int seed, ResourceDB db)
+        public StarField(int seed, @Nonnull ResourceDB db)
         {
                 this.db = db;
                 loadBackgroundObjects();
@@ -78,7 +83,11 @@ public class StarField
                 layer3Color = new Color(.3f, .3f, .3f);
                 layer4Color = new Color(.2f, .2f, .2f);
                 layer5Color = new Color(.15f, .15f, .15f);
+        }
 
+        public void setLineEffect(boolean lineEffect)
+        {
+                this.lineEffect = lineEffect;
         }
 
         private void loadBackgroundObjects()
@@ -105,7 +114,7 @@ public class StarField
 
         }
 
-        public Color colorWithZoom(Color color, float cameraZoomFactor)
+        private static Color colorWithZoom(Color color, float cameraZoomFactor)
         {
                 float subInt;
                 
@@ -120,7 +129,7 @@ public class StarField
                 return new Color(color.r - 2 * subInt, color.g - 2 * subInt, color.b - 2 * subInt);
         }
 
-        public void render(Camera camera)
+        public void render(@Nonnull Camera camera)
         {
                 Color layer1Color_modified,
                         layer2Color_modified,
@@ -180,10 +189,8 @@ public class StarField
                 Graph.g.setAntiAlias(false);
                 last_position = camera.pos;
         }
-        public boolean enable_line_effect = false;
-        Point last_position;
 
-        private void drawStars(Camera camera, Color color, float depthFactor, int starscale, int seedOffset)
+        private void drawStars(@Nonnull Camera camera, @Nullable Color color, float depthFactor, int starscale, int seedOffset)
         {
                 if (last_position == null)
                 {
@@ -231,7 +238,7 @@ public class StarField
                                         float pyi = SwissArmyKnife.floor(pyf);
                                         if (backgroundObjectType == 0)
                                         {
-                                                if (enable_line_effect)
+                                                if (lineEffect)
                                                 {
                                                         Graph.g.drawLine(pxf, pyf, SwissArmyKnife.floor(pxf + dx), SwissArmyKnife.floor(pyf + dy));
                                                 }

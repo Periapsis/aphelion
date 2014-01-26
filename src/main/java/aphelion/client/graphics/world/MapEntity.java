@@ -43,6 +43,7 @@ import aphelion.shared.event.TickEvent;
 import aphelion.shared.physics.valueobjects.PhysicsPoint;
 import aphelion.shared.swissarmyknife.Point;
 import aphelion.shared.swissarmyknife.SwissArmyKnife;
+import javax.annotation.Nonnull;
 import org.newdawn.slick.Color;
 
 /**
@@ -61,7 +62,7 @@ public abstract class MapEntity implements TickEvent
         protected float alphaVelocity;
         protected final org.newdawn.slick.Color alphaFilter = new Color(1f, 1f, 1f, 1f);
         
-        public MapEntity(ResourceDB db)
+        public MapEntity(@Nonnull ResourceDB db)
 	{
 		this.db = db;
 	}
@@ -73,7 +74,7 @@ public abstract class MapEntity implements TickEvent
          *        Do not render if the index is too high for your entity.
          * @return true, if this entity needs another render iteration 
          */
-        public abstract boolean render(Camera camera, int iteration);
+        public abstract boolean render(@Nonnull Camera camera, int iteration);
         
         /** Called if the entity is outside of the visible screen area. */
         public void noRender()
@@ -86,7 +87,7 @@ public abstract class MapEntity implements TickEvent
          * @param high
          * @return 
          */
-        public boolean isWithinCameraRange(Point low, Point high)
+        public boolean isWithinCameraRange(@Nonnull Point low, @Nonnull Point high)
         {
                 return SwissArmyKnife.isPointInsideRectangle(low, high, pos);
         }
@@ -97,7 +98,7 @@ public abstract class MapEntity implements TickEvent
                 setPositionFromPhysics();
         }
         
-        public final void setPositionFromPhysics(PhysicsPoint pos)
+        public final void setPositionFromPhysics(@Nonnull PhysicsPoint pos)
         {
                 physicsPos.set(pos);
                 setPositionFromPhysics();
@@ -109,7 +110,7 @@ public abstract class MapEntity implements TickEvent
                 pos.y = physicsPos.y / 1024f;
         }
         
-        public void setPosition(MapEntity other)
+        public void setPosition(@Nonnull MapEntity other)
         {
                 this.pos.set(other.pos);
                 this.physicsPos.set(other.physicsPos);

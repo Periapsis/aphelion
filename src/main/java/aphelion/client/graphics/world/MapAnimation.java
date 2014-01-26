@@ -44,6 +44,7 @@ import aphelion.shared.physics.PhysicsMap;
 import aphelion.shared.physics.valueobjects.PhysicsPoint;
 import aphelion.shared.resource.ResourceDB;
 import aphelion.shared.swissarmyknife.LinkedListEntry;
+import javax.annotation.Nonnull;
 
 
 /**
@@ -66,7 +67,7 @@ public abstract class MapAnimation extends MapEntity
         protected int collision_bounceOtherAxisFriction;
         protected boolean collision_stopOnHit;
         
-        public MapAnimation(ResourceDB db)
+        public MapAnimation(@Nonnull ResourceDB db)
         {
                 super(db);
         }
@@ -99,12 +100,12 @@ public abstract class MapAnimation extends MapEntity
                 this.physicsVel.set(x, y);
         }
         
-        public void setVelocityFromPhysics(PhysicsPoint vel)
+        public void setVelocityFromPhysics(@Nonnull PhysicsPoint vel)
         {
                 this.physicsVel.set(vel);
         }
         
-        public void setMapCollision(Collision collision, PhysicsMap collision_map, 
+        public void setMapCollision(@Nonnull Collision collision, @Nonnull PhysicsMap collision_map, 
                                     int collision_radius, 
                                     int collision_bounceFriction, int collision_bounceOtherAxisFriction)
         {
@@ -121,7 +122,7 @@ public abstract class MapAnimation extends MapEntity
         }
 
         @Override
-        public void setPosition(MapEntity other)
+        public void setPosition(@Nonnull MapEntity other)
         {
                 super.setPosition(other);
                 if (other instanceof MapAnimation)

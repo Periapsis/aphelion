@@ -39,7 +39,6 @@ package aphelion.client.graphics.world;
 
 import aphelion.client.Client;
 import aphelion.client.graphics.AnimatedColour;
-import aphelion.client.graphics.Graph;
 import aphelion.client.graphics.screen.Camera;
 import aphelion.shared.event.TickEvent;
 import aphelion.shared.gameconfig.GCBoolean;
@@ -54,6 +53,7 @@ import aphelion.shared.swissarmyknife.Point;
 import aphelion.shared.swissarmyknife.SwissArmyKnife;
 import de.lessvoid.nifty.tools.Color;
 import java.lang.ref.WeakReference;
+import javax.annotation.Nonnull;
 import org.lwjgl.opengl.GL11;
 import org.newdawn.slick.Animation;
 import org.newdawn.slick.Image;
@@ -77,19 +77,19 @@ public class Projectile extends MapEntity implements WrappedValueAbstract.Change
         public WeakReference<ActorShip> renderDelay_basedOn;
         public long renderingAt_tick;
         
-        private GCImage imageNoBounce;
-        private GCImage imageBounces;
-        private GCImage imageInactive;
-        private GCImage imageTrail;
-        private GCBoolean imageTrailRandomized;
-        private GCColour colourRadar;
+        private final GCImage imageNoBounce;
+        private final GCImage imageBounces;
+        private final GCImage imageInactive;
+        private final GCImage imageTrail;
+        private final GCBoolean imageTrailRandomized;
+        private final GCColour colourRadar;
         
         private Animation animNoBounce;
         private Animation animBounces;
         private Animation animInactive;
         private AnimatedColour animRadar;
 
-        public Projectile(ResourceDB db, ProjectilePublic physicsProjectile)
+        public Projectile(@Nonnull ResourceDB db, @Nonnull ProjectilePublic physicsProjectile)
         {
                 super(db);
                 this.physicsProjectile = physicsProjectile;
@@ -101,12 +101,12 @@ public class Projectile extends MapEntity implements WrappedValueAbstract.Change
                 colourRadar = physicsProjectile.getWeaponConfigColour("projectile-radar-colour");
         }
         
-        public ProjectilePublic getPhysicsProjectile()
+        public @Nonnull ProjectilePublic getPhysicsProjectile()
         {
                 return physicsProjectile;
         }
         
-        public void calculateRenderAtTick(PhysicsEnvironment physicsEnv)
+        public void calculateRenderAtTick(@Nonnull PhysicsEnvironment physicsEnv)
         {
                 renderDelay_current = SwissArmyKnife.clip(
                         renderDelay_value.get(),
@@ -165,7 +165,7 @@ public class Projectile extends MapEntity implements WrappedValueAbstract.Change
         }
         
         @Override
-        public void gameConfigValueChanged(WrappedValueAbstract val)
+        public void gameConfigValueChanged(@Nonnull WrappedValueAbstract val)
         {
                 if (val == this.imageNoBounce)
                 {
@@ -189,7 +189,7 @@ public class Projectile extends MapEntity implements WrappedValueAbstract.Change
         }
         
         @Override
-        public boolean render(Camera camera, int iteration)
+        public boolean render(@Nonnull Camera camera, int iteration)
         {
                 if (!exists)
                 {

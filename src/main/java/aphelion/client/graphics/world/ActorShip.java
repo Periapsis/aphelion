@@ -54,6 +54,7 @@ import aphelion.shared.physics.valueobjects.PhysicsMovement;
 import aphelion.shared.swissarmyknife.Point;
 
 import de.lessvoid.nifty.tools.Color;
+import javax.annotation.Nonnull;
 import org.newdawn.slick.Image;
 import org.newdawn.slick.SpriteSheetCounted;
 
@@ -108,7 +109,7 @@ public class ActorShip extends MapEntity implements TickEvent, WrappedValueAbstr
         private Color playerColor = new Color(1f, 1f, 0f, 1f);
         private Color lowEnergyColor = new Color(1f, 0f, 0f, 1f);
 
-        public ActorShip(ResourceDB db, NetworkedActor netActor, ActorPublic actor, Animator animator)
+        public ActorShip(@Nonnull ResourceDB db, @Nonnull NetworkedActor netActor, @Nonnull ActorPublic actor, @Nonnull Animator animator)
         {
     		super(db);
                 assert netActor != null;
@@ -162,7 +163,7 @@ public class ActorShip extends MapEntity implements TickEvent, WrappedValueAbstr
         }
         
         private final Point lastCameraPosition = new Point();
-        public void getCameraPosition(Point pos)
+        public void getCameraPosition(@Nonnull Point pos)
         {
                 if (this.actor.isDead())
                 {
@@ -197,7 +198,7 @@ public class ActorShip extends MapEntity implements TickEvent, WrappedValueAbstr
                 realPosition.y = y / 1024f;
         }
         
-        public void updateDistanceToLocal(Point localPos)
+        public void updateDistanceToLocal(@Nonnull Point localPos)
         {
                 Point dist = new Point(pos);
                 dist.sub(localPos);
@@ -272,7 +273,7 @@ public class ActorShip extends MapEntity implements TickEvent, WrappedValueAbstr
         }
         
         @Override
-        public boolean render(Camera camera, int iteration)
+        public boolean render(@Nonnull Camera camera, int iteration)
         {
                 if (!exists)
                 {
@@ -451,7 +452,7 @@ public class ActorShip extends MapEntity implements TickEvent, WrappedValueAbstr
         }
 
         @Override
-        public void gameConfigValueChanged(WrappedValueAbstract val)
+        public void gameConfigValueChanged(@Nonnull WrappedValueAbstract val)
         {
                 if (val == this.radarColour)
                 {

@@ -49,6 +49,7 @@ import aphelion.shared.physics.entities.ActorPublic;
 import aphelion.shared.physics.events.pub.ActorDiedPublic;
 import aphelion.shared.physics.valueobjects.PhysicsShipPosition;
 import aphelion.shared.resource.ResourceDB;
+import javax.annotation.Nonnull;
 
 /**
  *
@@ -78,14 +79,14 @@ public class ActorDiedTracker implements EventTracker
         // Todo: setting?:
         private static final float TIMEWARP_ALPHA_VELOCITY = 0.025f;
 
-        public ActorDiedTracker(ResourceDB resourceDB, PhysicsEnvironment physicsEnv, MapEntities mapEntities)
+        public ActorDiedTracker(@Nonnull ResourceDB resourceDB, @Nonnull PhysicsEnvironment physicsEnv, @Nonnull MapEntities mapEntities)
         {
                 this.resourceDB = resourceDB;
                 this.physicsEnv = physicsEnv;
                 this.mapEntities = mapEntities;
         }
         
-        public void update(ActorDiedPublic event)
+        public void update(@Nonnull ActorDiedPublic event)
         {
                 if (this.event == null)
                 {
@@ -183,7 +184,7 @@ public class ActorDiedTracker implements EventTracker
         private class MyAnimation extends GCImageAnimation
         {
                 private final int mySpawnID;
-                MyAnimation(int spawnID, ResourceDB db, GCImage image)
+                MyAnimation(int spawnID, @Nonnull ResourceDB db, @Nonnull GCImage image)
                 {
                         super(db, image);
                         this.mySpawnID = spawnID;

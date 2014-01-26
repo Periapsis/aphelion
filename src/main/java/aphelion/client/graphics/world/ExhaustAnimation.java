@@ -43,6 +43,7 @@ import aphelion.shared.gameconfig.GCImage;
 import aphelion.shared.resource.ResourceDB;
 import aphelion.shared.swissarmyknife.Point;
 import java.util.logging.Logger;
+import javax.annotation.Nonnull;
 
 /**
  *
@@ -58,8 +59,8 @@ public class ExhaustAnimation extends GCImageAnimation
         }
 
         @Override
-        protected void applyOffset(Point drawPosition, int frame, int frameCount)
+        protected void applyOffset(@Nonnull Point drawPosition, int frame, int frameCount)
         {
-                
+                // todo?
         }
 }

@@ -52,6 +52,7 @@ import de.lessvoid.nifty.input.keyboard.KeyboardInputEvent;
 import de.lessvoid.nifty.renderer.lwjgl.input.LwjglInputSystem;
 import de.lessvoid.nifty.screen.Screen;
 import java.util.logging.Logger;
+import javax.annotation.Nonnull;
 import org.lwjgl.input.Keyboard;
 
 /**
@@ -69,7 +70,7 @@ public class MyKeyboard implements TickEvent
         /** The actor this keyboard input is for */
         private final ActorPublic controllingActor;
         private final GCStringList ships;
-        private Element gameMenuPopup;
+        private final Element gameMenuPopup;
         
         private final Element bigRadar;
         private final Element smallRadar;
@@ -90,15 +91,13 @@ public class MyKeyboard implements TickEvent
         private boolean fireRocket;
         private boolean fireBrick;
 
-        private long lastShipChangeRequest;
-
-        public MyKeyboard(LwjglInputSystem input, 
-                          Screen mainScreen, 
-                          NetworkedGame networkedGame,
-                          PhysicsEnvironment physicsEnv,
-                          ActorPublic controllingActor, 
-                          GCStringList ships,
-                          Element gameMenuPopup)
+        public MyKeyboard(@Nonnull LwjglInputSystem input, 
+                          @Nonnull Screen mainScreen, 
+                          @Nonnull NetworkedGame networkedGame,
+                          @Nonnull PhysicsEnvironment physicsEnv,
+                          @Nonnull ActorPublic controllingActor, 
+                          @Nonnull GCStringList ships,
+                          @Nonnull Element gameMenuPopup)
         {
                 this.input = input;
                 this.mainScreen = mainScreen;
@@ -250,7 +249,7 @@ public class MyKeyboard implements TickEvent
 
         }
 
-        private void tryWeapon(WEAPON_SLOT weapon)
+        private void tryWeapon(@Nonnull WEAPON_SLOT weapon)
         {
                 if (!controllingActor.canFireWeapon(weapon))
                 {

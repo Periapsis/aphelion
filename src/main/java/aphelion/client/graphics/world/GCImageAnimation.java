@@ -42,6 +42,7 @@ import aphelion.client.graphics.screen.Camera;
 import aphelion.shared.gameconfig.GCImage;
 import aphelion.shared.resource.ResourceDB;
 import aphelion.shared.swissarmyknife.Point;
+import javax.annotation.Nonnull;
 import org.newdawn.slick.Animation;
 
 
@@ -55,7 +56,7 @@ public class GCImageAnimation extends MapAnimation
         protected GCImage image;
         protected Animation anim;
         
-        public GCImageAnimation(ResourceDB db, GCImage image)
+        public GCImageAnimation(@Nonnull ResourceDB db, @Nonnull GCImage image)
         {
                 super(db);
                 this.image = image;
@@ -83,7 +84,7 @@ public class GCImageAnimation extends MapAnimation
         }
 
         @Override
-        public boolean render(Camera camera, int iteration)
+        public boolean render(@Nonnull Camera camera, int iteration)
         {
                 if (iteration > 0)
                 {
@@ -156,7 +157,7 @@ public class GCImageAnimation extends MapAnimation
                 anim = null;
         }
         
-        protected void applyOffset(Point drawPosition, int frame, int frameCount)
+        protected void applyOffset(@Nonnull Point drawPosition, int frame, int frameCount)
         {
         }
 }

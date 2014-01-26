@@ -60,6 +60,8 @@ import java.util.Comparator;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import javax.swing.JOptionPane;
 import javax.swing.UIManager;
 import org.lwjgl.LWJGLException;
@@ -101,7 +103,7 @@ public class Client
          * @throws IOException
          * @throws aphelion.server.ServerConfigException
          */
-        public void run(URI uri, final String nickname) throws LWJGLException, IOException, ServerConfigException
+        public void run(@Nullable URI uri, @Nonnull final String nickname) throws LWJGLException, IOException, ServerConfigException
         {
                 if (uri == null)
                 {

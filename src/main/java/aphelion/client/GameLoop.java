@@ -63,6 +63,7 @@ import de.lessvoid.nifty.screen.Screen;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.annotation.Nonnull;
 
 import org.lwjgl.opengl.Display;
 
@@ -116,7 +117,7 @@ public class GameLoop
         private long lastFrameReset;
         private long lastFps;
 
-        public GameLoop(InitializeLoop initializeLoop)
+        public GameLoop(@Nonnull InitializeLoop initializeLoop)
         {
                 this.resourceDB = initializeLoop.resourceDB;
                 this.loop = initializeLoop.loop;
@@ -145,7 +146,7 @@ public class GameLoop
          * bla2
          * bla3
          */
-        private <T extends Controller> T[] findControls(String elementNamePrefix, Class<T> requestedControlClass, T[] emptyArray)
+        private @Nonnull <T extends Controller> T[] findControls(@Nonnull String elementNamePrefix, @Nonnull Class<T> requestedControlClass, @Nonnull T[] emptyArray)
         {
                 LinkedList<Controller> ret = new LinkedList<>();
                 
@@ -172,7 +173,7 @@ public class GameLoop
                 return ret.toArray(emptyArray);
         }
         
-        private Element[] findElements(String elementNamePrefix)
+        private @Nonnull Element[] findElements(@Nonnull String elementNamePrefix)
         {
                 return SwissArmyKnife.findNiftyElementsByIdPrefix(mainScreen, elementNamePrefix);
         }

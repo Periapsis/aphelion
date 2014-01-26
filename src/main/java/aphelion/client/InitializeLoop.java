@@ -39,7 +39,6 @@ package aphelion.client;
 
 
 import aphelion.client.graphics.Graph;
-import aphelion.client.graphics.RenderDelay;
 import aphelion.client.graphics.nifty.*;
 import aphelion.client.graphics.screen.Camera;
 import aphelion.client.graphics.screen.CameraNiftyController;
@@ -76,6 +75,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.annotation.Nonnull;
 import javax.swing.JOptionPane;
 import org.lwjgl.opengl.Display;
 import org.newdawn.slick.Color;
@@ -121,7 +121,7 @@ public class InitializeLoop implements TickEvent
         NiftyCameraImpl niftyCameraImpl;
         
 
-        public InitializeLoop(ConnectLoop connectLoop)
+        public InitializeLoop(@Nonnull ConnectLoop connectLoop)
         {
                 this.resourceDB = connectLoop.resourceDB;
                 this.loop =  connectLoop.loop;

@@ -42,6 +42,8 @@ import aphelion.client.RENDER_LAYER;
 import aphelion.shared.resource.ResourceDB;
 import aphelion.shared.swissarmyknife.LinkedListEntry;
 import aphelion.shared.swissarmyknife.LinkedListHead;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 /**
  * Reusable list of animations. 
@@ -52,19 +54,19 @@ import aphelion.shared.swissarmyknife.LinkedListHead;
  */
 public class ReusableAnimationList<T extends MapAnimation>
 {
-        private LinkedListHead<T> animations = new LinkedListHead<>();
+        private final LinkedListHead<T> animations = new LinkedListHead<>();
         private final ResourceDB db;
         private final Animator animator;
         private final Factory<T> factory;
 
-        public ReusableAnimationList(ResourceDB db, Animator animator, Factory<T> factory)
+        public ReusableAnimationList(@Nonnull ResourceDB db, @Nonnull Animator animator, @Nonnull Factory<T> factory)
         {
                 this.db = db;
                 this.animator = animator;
                 this.factory = factory;
         }
         
-        public T register(RENDER_LAYER layer, Camera camera)
+        public T register(@Nonnull RENDER_LAYER layer, @Nullable Camera camera)
         {
                 for (LinkedListEntry<T> entry = animations.first; entry != null; entry = entry.next)
                 {

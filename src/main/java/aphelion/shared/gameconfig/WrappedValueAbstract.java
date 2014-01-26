@@ -39,6 +39,8 @@
 package aphelion.shared.gameconfig;
 
 import aphelion.shared.swissarmyknife.WeakList;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 /**
  *
@@ -52,7 +54,7 @@ public abstract class WrappedValueAbstract
         protected boolean set;
         private final WeakList<ChangeListener> listeners = new WeakList<>();
 
-        WrappedValueAbstract(ConfigSelection selection, String key)
+        WrappedValueAbstract(@Nonnull ConfigSelection selection, @Nonnull String key)
         {
                 this.selection = selection;
                 this.key = key;
@@ -71,19 +73,19 @@ public abstract class WrappedValueAbstract
                 }
         }
         
-        public void addWeakChangeListener(ChangeListener listener)
+        public void addWeakChangeListener(@Nonnull ChangeListener listener)
         {
                 listeners.cleanup();
                 listeners.add(listener);
         }
         
-        public void addWeakChangeListenerAndFire(ChangeListener listener)
+        public void addWeakChangeListenerAndFire(@Nonnull ChangeListener listener)
         {
                 addWeakChangeListener(listener);
                 listener.gameConfigValueChanged(this);
         }
         
-        public void removeWeakChangeListener(ChangeListener listener)
+        public void removeWeakChangeListener(@Nullable ChangeListener listener)
         {
                 listeners.remove(listener);
                 listeners.cleanup();
@@ -92,15 +94,15 @@ public abstract class WrappedValueAbstract
         /** A new value is coming from yaml.
          * @return true if the new value is different from the old one
          */
-        abstract boolean newValue(Object value);
+        abstract boolean newValue(@Nullable Object value);
         
         public static interface ChangeListener
         {
-                void gameConfigValueChanged(WrappedValueAbstract val);
+                void gameConfigValueChanged(@Nonnull WrappedValueAbstract val);
         }
         
         public static interface Factory
         {
-                WrappedValueAbstract create(ConfigSelection selection, String key);
+                WrappedValueAbstract create(@Nonnull ConfigSelection selection, @Nonnull String key);
         }
 }

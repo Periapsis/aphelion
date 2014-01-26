@@ -54,6 +54,7 @@ import java.net.URI;
 import java.net.URL;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.annotation.Nonnull;
 import org.lwjgl.opengl.Display;
 import org.newdawn.slick.Color;
 
@@ -79,7 +80,7 @@ public class ConnectLoop implements TickEvent
         int loadingCameraY = 16777216;
         
 
-        public ConnectLoop(URI wsUri, ResourceDB resourceDB, TickedEventLoop loop, String nickname) throws MalformedURLException
+        public ConnectLoop(@Nonnull URI wsUri, @Nonnull ResourceDB resourceDB, @Nonnull TickedEventLoop loop, @Nonnull String nickname) throws MalformedURLException
         {
                 this.wsUri = wsUri;
                 this.resourceDB = resourceDB;

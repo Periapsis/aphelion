@@ -55,6 +55,7 @@ import aphelion.shared.swissarmyknife.Point;
 import aphelion.shared.swissarmyknife.SwissArmyKnife;
 import java.lang.ref.WeakReference;
 import java.util.logging.Logger;
+import javax.annotation.Nonnull;
 
 /**
  *
@@ -76,13 +77,13 @@ public class RenderDelay implements GameS2CListener, TickEvent
         private GCInteger updateShipEvery = GCIntegerFixed.ZERO;
         private GCInteger updateProjectileEvery = GCIntegerFixed.ZERO;
 
-        public RenderDelay(PhysicsEnvironment physicsEnv, MapEntities mapEntities)
+        public RenderDelay(@Nonnull PhysicsEnvironment physicsEnv, @Nonnull MapEntities mapEntities)
         {
                 this.physicsEnv = physicsEnv;
                 this.mapEntities = mapEntities;
         }
         
-        public void subscribeListeners(SingleGameConnection connection)
+        public void subscribeListeners(@Nonnull SingleGameConnection connection)
         {
                 connection.addListener(this);
                 subscribed = true;
@@ -141,7 +142,7 @@ public class RenderDelay implements GameS2CListener, TickEvent
                         "If this setting is set too high, projectiles might appear to pass through remote ships.");
         }
         
-        public void init(ActorPublic localActor)
+        public void init(@Nonnull ActorPublic localActor)
         {
                 if (localActor == null)
                 {
@@ -157,7 +158,7 @@ public class RenderDelay implements GameS2CListener, TickEvent
                 updateProjectileEvery = localActor.getActorConfigInteger("render-delay-update-projectile-delay-every-ticks");
         }
         
-        public void calculateRenderAtTick(ActorShip ship)
+        public void calculateRenderAtTick(@Nonnull ActorShip ship)
         {
                 ActorPublic actor = ship.getActor();
                 
@@ -187,7 +188,7 @@ public class RenderDelay implements GameS2CListener, TickEvent
                 ship.renderingAt_tick = physicsEnv.getTick() - ship.renderDelay_current;
         }
         
-        public void calculateRenderAtTick(Projectile projectile)
+        public void calculateRenderAtTick(@Nonnull Projectile projectile)
         {
                 projectile.renderDelay_value.setUpdateDelay(updateProjectileEvery.get());
                 ActorShip localShip = mapEntities.getLocalShip();
@@ -318,7 +319,7 @@ public class RenderDelay implements GameS2CListener, TickEvent
                 }
         }
         
-        private void calculateDesiredDelay(ActorShip ship)
+        private void calculateDesiredDelay(@Nonnull ActorShip ship)
         {
                 if (ship.isLocalPlayer())
                 {
@@ -334,7 +335,7 @@ public class RenderDelay implements GameS2CListener, TickEvent
         }
         
         @Override
-        public void gameS2CMessage(GameProtocolConnection game, GameS2C.S2C s2c, long receivedAt)
+        public void gameS2CMessage(@Nonnull GameProtocolConnection game, @Nonnull GameS2C.S2C s2c, long receivedAt)
         {
                 // Calculate the render delay for ships
 

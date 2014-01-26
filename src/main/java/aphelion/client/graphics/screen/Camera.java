@@ -48,6 +48,8 @@ import aphelion.shared.swissarmyknife.SwissArmyKnife;
 import de.lessvoid.nifty.Nifty;
 import de.lessvoid.nifty.spi.render.RenderFont;
 import de.lessvoid.nifty.tools.Color;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import org.lwjgl.opengl.Display;
 import org.newdawn.slick.Image;
 import org.newdawn.slick.opengl.TextureImpl;
@@ -93,7 +95,7 @@ public final class Camera
 
         public boolean radarRendering;
         
-        public Camera(ResourceDB resourceDB)
+        public Camera(@Nonnull ResourceDB resourceDB)
         {
                 this.resourceDB = resourceDB;
                 setDimension(Display.getWidth(), Display.getHeight());
@@ -126,7 +128,7 @@ public final class Camera
                 updateCornerValues();
         }
         
-        public void setPosition(Point pos)
+        public void setPosition(@Nonnull Point pos)
         {
                 setPosition(pos.x, pos.y);
         }
@@ -154,7 +156,7 @@ public final class Camera
                 screenPosY = (int) screenPos.y;
         }
         
-        public void setScreenPosition(Point screenPos)
+        public void setScreenPosition(@Nonnull Point screenPos)
         {
                 setScreenPosition(screenPos.x, screenPos.y);
         }
@@ -191,7 +193,7 @@ public final class Camera
                 updateCornerValues();
         }
         
-        public void setDimension(Point dimension)
+        public void setDimension(@Nonnull Point dimension)
         {
                 setDimension(dimension.x, dimension.y);
         }
@@ -205,12 +207,12 @@ public final class Camera
         }
         
         
-        public void mapToScreenPosition(Point objectPos, Point result)
+        public void mapToScreenPosition(@Nonnull Point objectPos, @Nonnull Point result)
         {
                 mapToScreenPosition(objectPos.x, objectPos.y, result);
         }
         
-        public void mapToScreenPosition(float x, float y, Point result)
+        public void mapToScreenPosition(float x, float y, @Nonnull Point result)
         {
                 result.x = -(this.pos.x - x);
                 result.y = -(this.pos.y - y);
@@ -223,7 +225,7 @@ public final class Camera
                 result.round(); 
         }
         
-        public boolean isOnScreen(Point objectPos)
+        public boolean isOnScreen(@Nonnull Point objectPos)
         {
                 return isOnScreen(objectPos.x, objectPos.y);
         }
@@ -268,7 +270,7 @@ public final class Camera
                 Graph.g.setClip((int)screenPos.x, (int)screenPos.y, (int)dimension.x, (int)dimension.y);
         }
         
-        public void renderTiles(MapClassic map, TileType.TILE_LAYER layer)
+        public void renderTiles(@Nonnull MapClassic map, @Nonnull TileType.TILE_LAYER layer)
         {
                 int xStart, xEnd, yStart, yEnd;
                 int x, y;
@@ -347,7 +349,7 @@ public final class Camera
                 Graph.g.clearClip();
         }
         
-        public <T extends MapEntity> void renderEntities(Iterable<T> entities)
+        public <T extends MapEntity> void renderEntities(@Nonnull Iterable<T> entities)
         {
                 this.radarRendering = zoom <= RADAR_RENDERING;
                 
@@ -378,7 +380,7 @@ public final class Camera
                 Graph.g.clearClip();
         }
         
-        public void renderEntity(MapEntity en)
+        public void renderEntity(@Nullable MapEntity en)
         {
                 if (en == null)
                 {
@@ -411,7 +413,7 @@ public final class Camera
                 return 0; // todo teams
         }
         
-        public void renderPlayerText(String text, int x, int y, Color color)
+        public void renderPlayerText(@Nonnull String text, int x, int y, @Nonnull Color color)
         {
                 if (playerFont == null || nifty == null)
                 {
@@ -431,7 +433,7 @@ public final class Camera
                 }
         }
         
-        public void renderPlayerText(String text, float x, float y, Color color)
+        public void renderPlayerText(@Nonnull String text, float x, float y, @Nonnull Color color)
         {
                 renderPlayerText(text, (int) x, (int) y, color);
         }

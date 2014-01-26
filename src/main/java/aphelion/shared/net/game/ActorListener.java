@@ -37,13 +37,15 @@
  */
 package aphelion.shared.net.game;
 
+import javax.annotation.Nonnull;
+
 /**
  *
  * @author Joris
  */
 public interface ActorListener
 {
-        void newActor(NetworkedActor actor);
-        void actorModified(NetworkedActor actor);
-        void removedActor(NetworkedActor actor);
+        void newActor(@Nonnull NetworkedActor actor);
+        void actorModified(@Nonnull NetworkedActor actor);
+        void removedActor(@Nonnull NetworkedActor actor);
 }

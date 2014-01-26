@@ -55,6 +55,7 @@ import static aphelion.shared.physics.events.pub.ProjectileExplosionPublic.EXPLO
 import aphelion.shared.physics.valueobjects.PhysicsPoint;
 import aphelion.shared.resource.ResourceDB;
 import java.util.ArrayList;
+import javax.annotation.Nonnull;
 
 /**
  *
@@ -82,14 +83,14 @@ public class ProjectileExplosionTracker implements EventTracker
         private static final long TIMEWARP_EXTRA_ANIM_DISTSQ = 5 * PhysicsMap.TILE_PIXELS;
         private static final float TIMEWARP_ALPHA_VELOCITY = 0.025f;
 
-        public ProjectileExplosionTracker(ResourceDB resourceDB, PhysicsEnvironment physicsEnv, MapEntities mapEntities)
+        public ProjectileExplosionTracker(@Nonnull ResourceDB resourceDB, @Nonnull PhysicsEnvironment physicsEnv, @Nonnull MapEntities mapEntities)
         {
                 this.resourceDB = resourceDB;
                 this.physicsEnv = physicsEnv;
                 this.mapEntities = mapEntities;
         }
         
-        public void update(ProjectileExplosionPublic event)
+        public void update(@Nonnull ProjectileExplosionPublic event)
         {
                 if (this.event == null)
                 {
@@ -154,7 +155,6 @@ public class ProjectileExplosionTracker implements EventTracker
                 ++spawnID;
                 
                 ProjectilePublic physicsProjectile_state0 = event.getProjectile(0);
-                long occurredAt_tick = event.getOccurredAt(renderingAt_state);
                 
                 projectileAnimations = new ArrayList<>(1 + event.getCoupledProjectilesSize(renderingAt_state));
 
@@ -214,13 +214,12 @@ public class ProjectileExplosionTracker implements EventTracker
                 }
         }
         
-        private void spawnAnimation(GCImage hitImage, ProjectilePublic physicsProj)
+        private void spawnAnimation(@Nonnull GCImage hitImage, @Nonnull ProjectilePublic physicsProj)
         {
                 Projectile proj = mapEntities.physicsProjectileToGraphics(physicsProj);
-                long occurredAt_tick = event.getOccurredAt(renderingAt_state);
                 
                 PhysicsPoint pos = new PhysicsPoint();
-                physicsProj.getHistoricPosition(pos, occurredAt_tick, true);
+                physicsProj.getHistoricPosition(pos, event.getOccurredAt(renderingAt_state), true);
                 
                 if (pos.set)
                 {

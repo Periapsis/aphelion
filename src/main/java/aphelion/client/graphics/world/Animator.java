@@ -39,6 +39,8 @@ package aphelion.client.graphics.world;
 
 import aphelion.client.graphics.screen.Camera;
 import aphelion.client.RENDER_LAYER;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 /**
  *
@@ -52,5 +54,5 @@ public interface Animator
          * @param animation
          * @param camera null if the animation should apply to all cameras
          */
-        void addAnimation(RENDER_LAYER layer, MapAnimation animation, Camera camera);
+        void addAnimation(@Nonnull RENDER_LAYER layer, @Nonnull MapAnimation animation, @Nullable Camera camera);
 }

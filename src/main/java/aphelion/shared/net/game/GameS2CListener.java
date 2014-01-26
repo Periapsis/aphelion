@@ -39,6 +39,7 @@
 package aphelion.shared.net.game;
 
 import aphelion.shared.net.protobuf.GameS2C;
+import javax.annotation.Nonnull;
 
 /**
  *
@@ -52,5 +53,5 @@ public interface GameS2CListener
          * @param s2c The parsed protobuf message.
          * @param receivedAt The nano time at which this message was received
          */
-        public void gameS2CMessage(GameProtocolConnection game, GameS2C.S2C s2c, long receivedAt);
+        public void gameS2CMessage(@Nonnull GameProtocolConnection game, @Nonnull GameS2C.S2C s2c, long receivedAt);
 }

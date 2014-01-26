@@ -43,8 +43,7 @@ import java.awt.TextArea;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import javax.annotation.Nonnull;
 import javax.swing.JFrame;
 
 /**
@@ -53,7 +52,7 @@ import javax.swing.JFrame;
  */
 public class ErrorDialog extends JFrame
 {
-        private TextArea textArea;
+        private final TextArea textArea;
         public ErrorDialog() throws HeadlessException
         {
                 setTitle("Error");
@@ -66,11 +65,11 @@ public class ErrorDialog extends JFrame
                 setVisible(true);
         }
         
-        public void setErrorText(String text)
+        public void setErrorText(@Nonnull String text)
         {
                 textArea.setText(text);
         }
-        public void setErrorText(Throwable t)
+        public void setErrorText(@Nonnull Throwable t)
         {
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
                 PrintStream ps = new PrintStream(baos);

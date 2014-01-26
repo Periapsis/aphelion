@@ -45,6 +45,7 @@ import aphelion.shared.map.MapClassic;
 import aphelion.shared.map.tile.TileType;
 import aphelion.shared.resource.ResourceDB;
 import aphelion.shared.swissarmyknife.Point;
+import javax.annotation.Nonnull;
 import org.lwjgl.opengl.GL11;
 
 /**
@@ -59,7 +60,7 @@ public class NiftyCameraImpl implements CameraNiftyController.CameraForNifty
         private final StarField stars;
         private final Point defaultCameraPosition = new Point(8192, 8192);
 
-        public NiftyCameraImpl(ResourceDB resourceDB, MapEntities mapEntities, MapClassic mapClassic, StarField stars)
+        public NiftyCameraImpl(@Nonnull ResourceDB resourceDB, @Nonnull MapEntities mapEntities, @Nonnull MapClassic mapClassic, @Nonnull StarField stars)
         {
                 this.resourceDB = resourceDB;
                 this.mapEntities = mapEntities;
@@ -73,7 +74,7 @@ public class NiftyCameraImpl implements CameraNiftyController.CameraForNifty
                 return resourceDB;
         }
         
-        public void setDefaultCameraPosition(Point point)
+        public void setDefaultCameraPosition(@Nonnull Point point)
         {
                 defaultCameraPosition.set(point);
         }
@@ -84,7 +85,7 @@ public class NiftyCameraImpl implements CameraNiftyController.CameraForNifty
         }
 
         @Override
-        public void renderCamera(Camera camera, boolean renderStars)
+        public void renderCamera(@Nonnull Camera camera, boolean renderStars)
         {
                 GL11.glColor3f(1, 1, 1);
 
