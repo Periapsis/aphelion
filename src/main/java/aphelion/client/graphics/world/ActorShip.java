@@ -108,6 +108,8 @@ public class ActorShip extends MapEntity implements TickEvent, WrappedValueAbstr
         
         private Color playerColor = new Color(1f, 1f, 0f, 1f);
         private Color lowEnergyColor = new Color(1f, 0f, 0f, 1f);
+        
+        public static final float SPAWN_ALPHA_VELOCITY = 0.025f;
 
         public ActorShip(@Nonnull ResourceDB db, @Nonnull NetworkedActor netActor, @Nonnull ActorPublic actor, @Nonnull Animator animator)
         {
@@ -433,6 +435,8 @@ public class ActorShip extends MapEntity implements TickEvent, WrappedValueAbstr
         @Override
         public void tick(long tick)
         {
+                super.tick(tick);
+                
                 tryInitPhysics();
         	renderDelay_value.tick(tick);
                 

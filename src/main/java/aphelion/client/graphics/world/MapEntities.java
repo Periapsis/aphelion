@@ -515,6 +515,8 @@ public class MapEntities implements TickEvent, LoopEvent, Animator, ActorListene
                         renderDelay.calculateRenderAtTick(actorShip);
                 }
                 
+                boolean existed = actorShip.exists;
+                
                 actorShip.exists = true;
 
                 if (physicsActor.isRemoved(actorShip.renderingAt_tick))
@@ -525,7 +527,7 @@ public class MapEntities implements TickEvent, LoopEvent, Animator, ActorListene
                 if (physicsActor.isDead(actorShip.renderingAt_tick))
                 {
                         actorShip.exists = false;
-                }  
+                }
 
                 if (physicsActor.getHistoricPosition(actorPos, actorShip.renderingAt_tick, true))
                 {
@@ -555,6 +557,11 @@ public class MapEntities implements TickEvent, LoopEvent, Animator, ActorListene
                 if (actorShip != localShip)
                 {
                         actorShip.updateDistanceToLocal(localActorPos);
+                }
+                
+                if (!actorShip.isLocalPlayer() && actorShip.exists && !existed)
+                {
+                        actorShip.setAlpha(0, ActorShip.SPAWN_ALPHA_VELOCITY);
                 }
         }
         

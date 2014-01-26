@@ -126,6 +126,7 @@ public class Projectile extends MapEntity implements WrappedValueAbstract.Change
         @Override
         public void tick(long tick)
         {
+                super.tick(tick);
                 renderDelay_value.tick(tick);
         }
         
