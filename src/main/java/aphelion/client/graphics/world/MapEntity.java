@@ -52,9 +52,11 @@ import org.newdawn.slick.Color;
  */
 public abstract class MapEntity implements TickEvent
 {
-	protected ResourceDB db;
+	protected final ResourceDB db;
         
-        public boolean exists = false;
+        private boolean exists = false;
+        private boolean hasExisted = false;
+        
         final public Point pos = new Point(0,0);
         final public PhysicsPoint physicsPos = new PhysicsPoint(0, 0);
         
@@ -144,5 +146,30 @@ public abstract class MapEntity implements TickEvent
         {
                 this.alpha = SwissArmyKnife.clip(this.alpha + this.alphaVelocity, 0f, 1f);
                 alphaFilter.a = this.alpha;
+        }
+
+        /**
+         * @return the exists
+         */
+        public boolean isExists()
+        {
+                return exists;
+        }
+
+        /**
+         * @param exists the exists to set
+         */
+        public void setExists(boolean exists)
+        {
+                this.exists = exists;
+                if (exists)
+                {
+                        this.hasExisted = true;
+                }
+        }
+
+        public boolean hasExistedAnyTime()
+        {
+                return hasExisted;
         }
 }

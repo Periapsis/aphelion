@@ -235,11 +235,11 @@ public class RenderDelay implements GameS2CListener, TickEvent
                                 Point diff = new Point();
                                 diff.set(closest.shadowPosition);
                                 diff.sub(projectile.shadowPosition);
-                                float distSq_rShadow_e = diff.distanceSquared();
+                                float distSq_rShadow_e = diff.lengthSquared();
 
                                 diff.set(localShip.pos);
                                 diff.sub(closest.pos);
-                                float distSq_p_r = diff.distanceSquared();
+                                float distSq_p_r = diff.lengthSquared();
 
                                 double renderDelay = 
                                         closest.renderDelay_value.get() * 
@@ -264,7 +264,7 @@ public class RenderDelay implements GameS2CListener, TickEvent
                                         Point nextPos = new Point(projectile.shadowPosition);
                                         nextPos.sub(localShip.pos);
                                         
-                                        boolean movingAway = nextPos.distanceSquared() > prevPos.distanceSquared();
+                                        boolean movingAway = nextPos.lengthSquared() > prevPos.lengthSquared();
                                         
                                         if (movingAway)
                                         {

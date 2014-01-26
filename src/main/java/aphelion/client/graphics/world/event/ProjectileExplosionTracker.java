@@ -38,6 +38,7 @@
 package aphelion.client.graphics.world.event;
 
 import aphelion.client.RENDER_LAYER;
+import aphelion.client.graphics.world.ActorShip;
 import aphelion.client.graphics.world.GCImageAnimation;
 import aphelion.client.graphics.world.MapEntities;
 import aphelion.client.graphics.world.Projectile;
@@ -77,6 +78,8 @@ public class ProjectileExplosionTracker implements EventTracker
         private final PhysicsPoint lastEventPosition = new PhysicsPoint();
         /** Used to track old animations incase a new animation is spawned somewhere else. */
         private int spawnID = 0;
+        
+        private ActorShip hitActor;
         
         // Todo: setting?:
         private static final long TIMEWARP_RESPAWN_ANIM_DISTSQ = 5 * PhysicsMap.TILE_PIXELS;
@@ -121,12 +124,14 @@ public class ProjectileExplosionTracker implements EventTracker
                         }
                 }
                 
+                hitActor = mapEntities.getActorShip(event.getHitActor(renderingAt_state));
+                
                 firstRun = false;
                 
                 if (projectileAnimations != null && lastEventPosition.set)
                 {
                         PhysicsPoint pos = new PhysicsPoint();
-                        event.getPosition(0, pos);
+                        event.getPosition(renderingAt_state, pos);
                         
                         if (lastEventPosition.distanceSquared(pos) >= TIMEWARP_RESPAWN_ANIM_DISTSQ)
                         {
@@ -138,6 +143,9 @@ public class ProjectileExplosionTracker implements EventTracker
                 if (projectileAnimations == null)
                 {
                         // using the render delay of the projectile
+                        
+                        PhysicsPoint pos = new PhysicsPoint();
+                        event.getPosition(renderingAt_state, lastEventPosition);
                 
                         if (physicsProjectile_state0 != null &&
                             event.hasOccurred(renderingAt_state) && 
@@ -150,8 +158,6 @@ public class ProjectileExplosionTracker implements EventTracker
 
         private void spawnAnimations()
         {
-                final PhysicsPoint pos = new PhysicsPoint();
-                
                 ++spawnID;
                 
                 ProjectilePublic physicsProjectile_state0 = event.getProjectile(0);
@@ -221,17 +227,21 @@ public class ProjectileExplosionTracker implements EventTracker
                 PhysicsPoint pos = new PhysicsPoint();
                 physicsProj.getHistoricPosition(pos, event.getOccurredAt(renderingAt_state), true);
                 
+                boolean hitLocal = hitActor == null ? false : hitActor.isLocalPlayer();
+                
                 if (pos.set)
                 {
                         GCImageAnimation anim = new MyAnimation(spawnID, resourceDB, hitImage);
-                        // inherit the alpha of the projectile
-                        anim.setAlpha(proj.getAlpha());
+                        
+                        if (!hitLocal) // inherit the alpha of the projectile, unless it hit the local player
+                        {
+                                anim.setAlpha(proj.getAlpha());
+                        }
 
                         anim.setPositionFromPhysics(pos);
                         mapEntities.addAnimation(RENDER_LAYER.AFTER_LOCAL_SHIP, anim, null);
                         projectileAnimations.add(anim);
                 }
-                
                 
                 // If the last rendered position of the projectile is very different,
                 // display 2 animations.
@@ -240,7 +250,10 @@ public class ProjectileExplosionTracker implements EventTracker
                    )
                 {
                         GCImageAnimation anim = new MyAnimation(spawnID, resourceDB, hitImage);
-                        anim.setAlpha(proj.getAlpha());
+                        if (!hitLocal) // inherit the alpha of the projectile
+                        {
+                                anim.setAlpha(proj.getAlpha());
+                        }
                         
                         anim.setPositionFromPhysics(proj.physicsPos);
                         mapEntities.addAnimation(RENDER_LAYER.AFTER_LOCAL_SHIP, anim, null);

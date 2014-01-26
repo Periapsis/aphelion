@@ -204,7 +204,7 @@ public class ActorShip extends MapEntity implements TickEvent, WrappedValueAbstr
         {
                 Point dist = new Point(pos);
                 dist.sub(localPos);
-                this.distSqToLocal = dist.distanceSquared();
+                this.distSqToLocal = dist.lengthSquared();
         }
         
         public ActorPublic getActor()
@@ -277,7 +277,7 @@ public class ActorShip extends MapEntity implements TickEvent, WrappedValueAbstr
         @Override
         public boolean render(@Nonnull Camera camera, int iteration)
         {
-                if (!exists)
+                if (!isExists())
                 {
                         return false;
                 }

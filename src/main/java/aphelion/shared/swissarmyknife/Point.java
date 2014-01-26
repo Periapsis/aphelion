@@ -133,9 +133,32 @@ public class Point
                 this.y -= number;
         }
 
-        public float distanceSquared()
+        public float lengthSquared()
         {
                 return (this.x * this.x) + (this.y * this.y);
+        }
+        
+        public float length()
+        {
+                return (float) Math.hypot(this.x, this.y);
+        }
+        
+        public float distanceSquared(Point other)
+        {
+                return distanceSquared(other.x, other.y);
+        }
+
+        public float distanceSquared(float otherX, float otherY)
+        {
+                otherX -= this.x;
+                otherY -= this.y;
+                
+                return (otherX * otherX) + (otherY * otherY);
+        }
+        
+        public float distance(Point other)
+        {
+                return (float) Math.hypot(other.x - this.x, other.y - this.y);
         }
 
         public void divide(float number)

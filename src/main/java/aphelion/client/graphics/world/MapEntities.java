@@ -82,7 +82,7 @@ public class MapEntities implements TickEvent, LoopEvent, Animator, ActorListene
         private final HashMap<Integer,ActorShip> actorShips = new HashMap<>(64);
         private PhysicsEnvironment physicsEnv;
         private final ResourceDB resourceDB;
-        private ActorShip localShip;
+        private @Nullable ActorShip localShip;
         private final LinkedListHead<MapAnimation> animations[] = new LinkedListHead[RENDER_LAYER.values().length];
         private RenderDelay renderDelay;
         private static final AttachmentConsumer<EventPublic, EventTracker> eventTrackers 
@@ -224,7 +224,7 @@ public class MapEntities implements TickEvent, LoopEvent, Animator, ActorListene
                         {
                                 Projectile projectile = physicsProjectileToGraphics(next);
                                 
-                                if (!includeNonExist && !projectile.exists)
+                                if (!includeNonExist && !projectile.isExists())
                                 {
                                         return null;
                                 }
@@ -281,14 +281,14 @@ public class MapEntities implements TickEvent, LoopEvent, Animator, ActorListene
                                 continue;
                         }
                         
-                        if (!ship.exists)
+                        if (!ship.isExists())
                         {
                                 continue;
                         }
                         
                         diff.set(ship.pos);
                         diff.sub(pos);
-                        float dist = diff.distanceSquared();
+                        float dist = diff.lengthSquared();
                         
                         if (nearest == null || dist < nearest_dist)
                         {
@@ -515,18 +515,18 @@ public class MapEntities implements TickEvent, LoopEvent, Animator, ActorListene
                         renderDelay.calculateRenderAtTick(actorShip);
                 }
                 
-                boolean existed = actorShip.exists;
+                boolean existed = actorShip.isExists();
                 
-                actorShip.exists = true;
+                actorShip.setExists(true);
 
                 if (physicsActor.isRemoved(actorShip.renderingAt_tick))
                 {
-                        actorShip.exists = false;
+                        actorShip.setExists(false);
                 }
 
                 if (physicsActor.isDead(actorShip.renderingAt_tick))
                 {
-                        actorShip.exists = false;
+                        actorShip.setExists(false);
                 }
 
                 if (physicsActor.getHistoricPosition(actorPos, actorShip.renderingAt_tick, true))
@@ -545,7 +545,7 @@ public class MapEntities implements TickEvent, LoopEvent, Animator, ActorListene
                 }
                 else
                 {
-                        actorShip.exists = false;
+                        actorShip.setExists(false);
                 }
 
 
@@ -559,7 +559,7 @@ public class MapEntities implements TickEvent, LoopEvent, Animator, ActorListene
                         actorShip.updateDistanceToLocal(localActorPos);
                 }
                 
-                if (!actorShip.isLocalPlayer() && actorShip.exists && !existed)
+                if (!actorShip.isLocalPlayer() && actorShip.isExists() && !existed)
                 {
                         actorShip.setAlpha(0, ActorShip.SPAWN_ALPHA_VELOCITY);
                 }
@@ -585,11 +585,15 @@ public class MapEntities implements TickEvent, LoopEvent, Animator, ActorListene
                 {
                         renderDelay.calculateRenderAtTick(projectile);
                 }
-                projectile.exists = true;
+                
+                boolean existedAnyTime = projectile.hasExistedAnyTime();
+                boolean existedPreviousFrame = projectile.isExists();
+                
+                projectile.setExists(true);
 
                 if (physicsProjectile.isRemoved(projectile.renderingAt_tick))
                 {
-                        projectile.exists = false;
+                        projectile.setExists(false);
                 }
 
                 if (physicsProjectile.getHistoricPosition(
@@ -601,7 +605,37 @@ public class MapEntities implements TickEvent, LoopEvent, Animator, ActorListene
                 }
                 else
                 {
-                        projectile.exists = false;
+                        projectile.setExists(false);
+                }
+                
+                if (!existedPreviousFrame && projectile.isExists() && existedAnyTime)
+                {
+                        // projectile is back because of a timewarp
+                        
+                        projectile.setAlpha(0);
+                }
+                
+                if (projectile.isExists() && projectile.getAlpha() < 1)
+                {
+                        float vel = Projectile.TIMEWARP_ALPHA_VELOCITY_MIN;
+                        
+                        // if the projectile is closer to the local player
+                        // fade it in faster
+                        if (localShip != null)
+                        {
+                                float dist = localShip.pos.distanceSquared(projectile.pos);
+                                
+                                float smooth_dist = Projectile.TIMEWARP_ALPHA_VELOCITY_LOCAL_DIST_SMOOTHING;
+                                if (dist < smooth_dist)
+                                {
+                                        float max = Projectile.TIMEWARP_ALPHA_VELOCITY_MAX;
+                                        float min = Projectile.TIMEWARP_ALPHA_VELOCITY_MIN;
+                                        
+                                        vel = (max - min) * (1 - dist / smooth_dist) + min;
+                                }
+                        }
+                        
+                        projectile.setAlphaVelocity(vel);
                 }
         }
 }

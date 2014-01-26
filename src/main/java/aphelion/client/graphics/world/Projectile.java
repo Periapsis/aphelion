@@ -88,6 +88,10 @@ public class Projectile extends MapEntity implements WrappedValueAbstract.Change
         private Animation animBounces;
         private Animation animInactive;
         private AnimatedColour animRadar;
+        
+        public static final float TIMEWARP_ALPHA_VELOCITY_MIN = 0.003f; // 10 seconds to fully fade back in
+        public static final float TIMEWARP_ALPHA_VELOCITY_MAX = 0.1f;
+        public static final float TIMEWARP_ALPHA_VELOCITY_LOCAL_DIST_SMOOTHING = 500; // in pixels
 
         public Projectile(@Nonnull ResourceDB db, @Nonnull ProjectilePublic physicsProjectile)
         {
@@ -192,7 +196,7 @@ public class Projectile extends MapEntity implements WrappedValueAbstract.Change
         @Override
         public boolean render(@Nonnull Camera camera, int iteration)
         {
-                if (!exists)
+                if (!isExists())
                 {
                         return false;
                 }
