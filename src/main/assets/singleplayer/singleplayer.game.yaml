@@ -91,7 +91,7 @@
         frame-duration: 50
         
 - ship-rotation-points: 40
-  ships: [warbird, javelin, spider, leviathan, terrier, weasel, lancaster, shark]
+  ships: [warbird, javelin, spider, leviathan, terrier, weasel, lancaster, shark, superspider]
   ship-speed: 1000
   ship-thrust: 10
   ship-rotation-speed: 3000000
@@ -315,7 +315,7 @@
 - {selector: {weapon: [classic-gun-lvl2, classic-mgun-lvl2]}, projectile-damage: 1040}
 - {selector: {weapon: [classic-gun-lvl3, classic-mgun-lvl3]}, projectile-damage: 1560}
 - {selector: {weapon: [classic-gun-lvl4, classic-mgun-lvl4]}, projectile-damage: 2080}
-- {selector: {weapon: *BOMBSMINES}, projectile-damage:  2650}  
+- {selector: {weapon: *BOMBSMINES}, projectile-damage:  2650}
   
   
 - {selector: {weapon: [classic-bomb-lvl1, classic-ebomb-lvl1, classic-mine-lvl1, classic-emine-lvl1]}, projectile-damage-splash: 150}
@@ -707,4 +707,66 @@
   #projectile-angle: [LINEAR, 14702688] # 735134400 / 50
   weapon-projectiles: 8
   projectile-angle: [RAND, 0, 735134400]
+  
+  
+  
+  
+  
+  
+- selector: {ship: superspider}
+  ship-image:
+        resource: classic.ships
+        offset: [0, 384, 480, 192]
+        tiles: [10, 4]
+
+  ship-speed: 4000
+  ship-thrust: 50
+  ship-energy: 5000
+  ship-recharge: 4000
+  ship-rotation-speed: 6616210
+  ship-boost-speed: 6000
+  ship-boost-thrust: 24
+  ship-boost-energy: 6200
+  weapon-slot-gun: classic-gun-lvl1
+  weapon-slot-gun-multi: classic-mgun-lvl1
+  weapon-slot-bomb: classic-bomb-lvl1
+  projectile-damage-self-kill: true
+  
+- selector: {ship: superspider, weapon: *GUNS}
+  weapon-fire-energy: 50
+  weapon-fire-delay: 5
+  weapon-switch-delay: 5
+  projectile-speed: 5000
+  
+
+- selector: {ship: superspider, weapon: *BOMBS}
+  projectile-speed: 5000
+  weapon-fire-energy: 200
+  weapon-fire-delay: 20
+  weapon-switch-delay: 20
+  weapon-projectiles: 2
+  projectile-offset-x: [-9000, 9000]
+  projectile-hit-ship-coupled: false
+  
+- selector: {ship: superspider, weapon: *GUNS_SINGLE}
+  weapon-projectiles: 2
+  projectile-offset-x: [-9000, 9000]
+  
+- selector: {ship: superspider, weapon: *GUNS_MULTI}
+  weapon-projectiles: 4
+  projectile-offset-x: [-9000, -9000, 9000, 9000]
+  projectile-angle: [-18378360, 0, 0, 18378360]
+
+# has multi
+- {selector: {ship: superspider, weapon: [classic-gun-lvl1]}, weapon-nifty-show: gauge-gun-singlem-1}
+- {selector: {ship: superspider, weapon: [classic-gun-lvl2]}, weapon-nifty-show: gauge-gun-singlem-2}
+- {selector: {ship: superspider, weapon: [classic-gun-lvl3]}, weapon-nifty-show: gauge-gun-singlem-3}
+- {selector: {ship: superspider, weapon: [classic-gun-lvl4]}, weapon-nifty-show: gauge-gun-singlem-4}
+
+- {selector: {weapon: [classic-gun-lvl1, classic-mgun-lvl1]}, projectile-damage:  50}
+- {selector: {weapon: [classic-gun-lvl2, classic-mgun-lvl2]}, projectile-damage:  100}
+- {selector: {weapon: [classic-gun-lvl3, classic-mgun-lvl3]}, projectile-damage:  200}
+- {selector: {weapon: [classic-gun-lvl4, classic-mgun-lvl4]}, projectile-damage:  400}
+- {selector: {weapon: *BOMBSMINES}, projectile-damage:  200}
+
 ...

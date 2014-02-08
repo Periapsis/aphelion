@@ -274,10 +274,10 @@
         </controlDefinition>
         
         <popup id="gameMenuPopup" childLayout="center" focusable="true" controller="aphelion.client.graphics.nifty.GameMenuController">
-                <panel valign="top" align="center" width="296" height="181" childLayout="center">
-                        <image filename="classic.window-border" imageMode="resize:3,2,3,3,3,2,3,2,3,2,3,3" width="296" height="181"/>
-                        <panel width="290" height="175" backgroundColor="#000000b0"/>
-                        <panel width="290" height="175" childLayout="vertical" padding="1">
+                <panel valign="top" align="center" width="296" height="196" childLayout="center">
+                        <image filename="classic.window-border" imageMode="resize:3,2,3,3,3,2,3,2,3,2,3,3" width="296" height="196"/>
+                        <panel width="290" height="190" backgroundColor="#000000b0"/>
+                        <panel width="290" height="190" childLayout="vertical" padding="1">
                                 <text text="-= Menu =-" width="100%" height="16"  textLineHeight="9" font="font.ubuntu-mono-bold-16" color="#73ff63ff" textHAlign="center" textVAlign="top"/>
                                 <panel width="100%" height="1" backgroundColor="#848484ff"/>
                                 <panel width="100%" height="*" childLayout="horizontal">
@@ -289,7 +289,7 @@
                                                 <control name="gameMenuButton" char="d" command="toggleDebug()" 
                                                          text="D = Debug" width="100%"/>
                                         </panel>
-                                        <panel width="100" height="100%" childLayout="vertical">
+                                        <panel width="120" height="100%" childLayout="vertical">
                                                 <text text="  Ships" color="#de3108ff" font="font.ubuntu-mono-bold-16"/>
                                                 <control name="gameMenuButton" char="1" command="sendCommand2(ship, warbird)" 
                                                          text="1 = Warbird"    textLineHeight="15"/>
@@ -307,6 +307,8 @@
                                                          text="7 = Lancaster"  textLineHeight="15"/>
                                                 <control name="gameMenuButton" char="8" command="sendCommand2(ship, shark)" 
                                                          text="8 = Shark"      textLineHeight="15"/>
+                                                <control name="gameMenuButton" char="9" command="sendCommand2(ship, superspider)" 
+                                                         text="9 = Super Spider" textLineHeight="15"/>
                                         </panel>
                                 </panel>
                                 <text text="Any other key to resume game" width="100%" font="font.ubuntu-mono-bold-16" color="#efad21ff" textHAlign="center"/>
