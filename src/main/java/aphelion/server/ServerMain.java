@@ -38,6 +38,7 @@
 
 package aphelion.server;
 
+import aphelion.server.game.Dummies;
 import aphelion.shared.resource.Asset;
 import aphelion.server.game.ServerGame;
 import aphelion.server.http.HttpServer;
@@ -89,14 +90,13 @@ public class ServerMain implements LoopEvent, TickEvent
         private ServerGame serverGame;
         private PhysicsEnvironment physicsEnv;
         
+        private Dummies dummies;
+        
         private AssetCache assetCache;
         private List<Asset> assets;
         private String mapResource;
         private List<String> gameConfigResources;
         private List<String> niftyGuiResources;
-        
-        private static final int DUMMY_1_PID = -1;
-        private static final int DUMMY_2_PID = -2;
         
         public ServerMain(ServerSocketChannel listen, Map<String, Object> config)
         {                
@@ -222,17 +222,13 @@ public class ServerMain implements LoopEvent, TickEvent
                 loop.addTickEvent(serverGame);
                 server.setGameClientListener(serverGame);
                 
-                // dummy for testing
-                physicsEnv.actorNew(0, DUMMY_1_PID, 1, "javelin");
-                physicsEnv.actorWarp(0, DUMMY_1_PID, false, 512 * 16 * 1024, 448 * 16 * 1024, 0, 10000, 0);
-                serverGame.addActor(new NetworkedActor(DUMMY_1_PID, true, "Dummy 1"));
+                dummies = new Dummies(50, physicsEnv, serverGame);
+                dummies.setup();
                 
-                physicsEnv.actorNew(0, DUMMY_2_PID, 1, "terrier");
-                physicsEnv.actorWarp(0, DUMMY_2_PID, false, 512 * 16 * 1024, 448 * 16 * 1024, 0, -10000, 0); 
-                serverGame.addActor(new NetworkedActor(DUMMY_2_PID, true, "Dummy 2"));
                 
                 loop.addLoopEvent(this);
                 loop.addTickEvent(this);
+                loop.addTickEvent(dummies);
                 server.setup();
         }
         
@@ -270,57 +266,6 @@ public class ServerMain implements LoopEvent, TickEvent
         @Override
         public void tick(long tick)
         {
-                if (tick % 20 == 0) // dummy
-                {
-                        GameS2C.S2C.Builder s2c = GameS2C.S2C.newBuilder();
-                        
-                        {
-                                GameOperation.ActorMove.Builder moveBuilder = s2c.addActorMoveBuilder();
-
-                                moveBuilder.setTick(physicsEnv.getTick()-20);
-                                moveBuilder.setPid(DUMMY_1_PID);
-                                moveBuilder.setDirect(true);
-
-                                PhysicsMovement move = PhysicsMovement.get(SwissArmyKnife.random.nextInt(16));
-                                for (int i = 20; i > 0; --i)
-                                {
-                                        physicsEnv.actorMove(physicsEnv.getTick()-i, DUMMY_1_PID, move);
-                                }
-                                
-                                moveBuilder.setMove(ByteString.copyFrom(PhysicsMovement.serializeListLE(Collections.nCopies(20, move))));
-                                
-                                
-                                if (tick % 1000 == 0 && SwissArmyKnife.random.nextInt(3) == 0)
-                                {
-                                        physicsEnv.actorWeapon(physicsEnv.getTick(), DUMMY_1_PID, WEAPON_SLOT.BOMB, false, 0, 0, 0, 0, 0);
-                                        GameOperation.ActorWeapon.Builder weaponBuilder = s2c.addActorWeaponBuilder();
-                                        weaponBuilder.setTick(physicsEnv.getTick());
-                                        weaponBuilder.setPid(DUMMY_1_PID);
-                                        weaponBuilder.setSlot(WEAPON_SLOT.BOMB.id);
-                                }
-                        }
-                        
-                        {
-                                GameOperation.ActorMove.Builder moveBuilder = s2c.addActorMoveBuilder();
-
-                                moveBuilder.setTick(physicsEnv.getTick()-20);
-                                moveBuilder.setPid(DUMMY_2_PID);
-                                moveBuilder.setDirect(true);
-
-                                PhysicsMovement move = tick % 1000 < 500 
-                                                       ? PhysicsMovement.get(false, false, false, true, false) 
-                                                       : PhysicsMovement.get(false, false, true, false, false);
-                                
-                                for (int i = 20; i > 0; --i)
-                                {
-                                        physicsEnv.actorMove(physicsEnv.getTick()-i, DUMMY_2_PID, move);
-                                }
-                                
-                                moveBuilder.setMove(ByteString.copyFrom(PhysicsMovement.serializeListLE(Collections.nCopies(20, move))));
-                        }
-                        
-                        serverGame.broadcast(s2c);
-                }
         }
         
         public static void main(String[] args) throws IOException, ServerConfigException
