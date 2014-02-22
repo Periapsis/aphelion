@@ -222,7 +222,7 @@ public class ServerMain implements LoopEvent, TickEvent
                 loop.addTickEvent(serverGame);
                 server.setGameClientListener(serverGame);
                 
-                dummies = new Dummies(50, physicsEnv, serverGame);
+                dummies = new Dummies(10, physicsEnv, serverGame);
                 dummies.setup();
                 
                 
