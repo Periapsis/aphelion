@@ -48,6 +48,14 @@ import aphelion.shared.event.promise.PromiseException;
  */
 public abstract class WorkerTask<ARGUMENT, RETURN>
 {
+        /** Execute your expensive work here.
+         * Note: A worker task should not add more tasks on its own (Workable.addWorkerTask),
+         * Use Workable.runOnMain first!
+         * @param argument Same as the "argument" argument in Workable.addWorkerTask
+         * @return Passed to AbstractPromise.resolve as argument "ret"
+         * @throws aphelion.shared.event.promise.PromiseException 
+         *         Passed to AbstractPromise.reject as argument "ex"
+         */
         public abstract RETURN work(ARGUMENT argument) throws PromiseException;
         
         // Set by event loop

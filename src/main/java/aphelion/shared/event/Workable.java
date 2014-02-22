@@ -38,7 +38,6 @@
 package aphelion.shared.event;
 
 import aphelion.shared.event.promise.AbstractPromise;
-import aphelion.shared.event.promise.Promise;
 import aphelion.shared.swissarmyknife.ThreadSafe;
 
 /**

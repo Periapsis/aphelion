@@ -43,6 +43,7 @@ import aphelion.shared.swissarmyknife.LinkedListEntry;
 import aphelion.shared.swissarmyknife.LinkedListHead;
 import aphelion.shared.swissarmyknife.ThreadSafe;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
@@ -62,11 +63,14 @@ public class TickedEventLoop implements Workable, Timerable
         private boolean breakdown = false;
         private volatile boolean interrupted = false;
         
+        private static final int TASK_QUEUE_SIZE = 32; // per thread
+        private static final int COMPLETED_TASK_QUEUE_SIZE = 32;
+        
         private long loop_nanoTime;
         private long loop_systemNanoTime;
         
-        // used by deadlock
         Thread myThread;
+        
         volatile long deadlock_tick = 0; // can be updated as often as desired
         volatile long deadlock_tick_lastseen = -1;
         
@@ -80,8 +84,14 @@ public class TickedEventLoop implements Workable, Timerable
         // Tasks that have not yet been started
         private ArrayBlockingQueue<WorkerTask> tasks;
         
-        // Tasks that have been completed, will be fired as callbacks next tick
+        
+        /** Tasks that have been completed, will be fired as callbacks the next tick. */
         private ArrayBlockingQueue<TaskCompleteEntry> completedTasks;
+        
+        /** Same as the completedTasks, however this list is intended to be used by the consumer thread.
+          * This is to prevent dead locks
+          */
+        private LinkedList<TaskCompleteEntry> completedTasks_local; // stuff added by the same thread that is consuming
         
         private WorkerThread[] workerThreads;
         
@@ -102,8 +112,9 @@ public class TickedEventLoop implements Workable, Timerable
                 
                 if (workerThreads > 0)
                 {
-                        this.tasks = new ArrayBlockingQueue<>(workerThreads * 64); // with 4 threads, queue a maximum of 256 tasks
-                        this.completedTasks = new ArrayBlockingQueue<>(64); // Fire a maximum of 64 callbacks a time
+                        this.tasks = new ArrayBlockingQueue<>(workerThreads * TASK_QUEUE_SIZE); // with 4 threads, queue a maximum of 128 tasks
+                        this.completedTasks = new ArrayBlockingQueue<>(COMPLETED_TASK_QUEUE_SIZE); // Fire a maximum of 32 callbacks a time
+                        this.completedTasks_local = new LinkedList<>(); // Fire a maximum of 32 callbacks a time
                         this.workerThreads = new WorkerThread[workerThreads];
                 }
                 
@@ -217,10 +228,11 @@ public class TickedEventLoop implements Workable, Timerable
         
         /** When this EventLoop is part of another loop, 
          *  call this method on every iteration. 
-         *  As often as you want, but preferably atleast once per TICK.
+         *  As often as you want, but preferably at least once per TICK.
          */
         public void loop()
         {
+                assert isLoopThreadCurrent();
                 loop(false);
         }
         
@@ -238,7 +250,14 @@ public class TickedEventLoop implements Workable, Timerable
                         while (true)
                         {
                                 TaskCompleteEntry t;
-                                t = completedTasks.poll();
+                                
+                                t = completedTasks_local.poll();
+                                
+                                if (t == null)
+                                {
+                                        t = completedTasks.poll();
+                                }
+                                
                                 if (t == null)
                                 {
                                         break;
@@ -335,14 +354,22 @@ public class TickedEventLoop implements Workable, Timerable
                                 while (true)
                                 {
                                         TaskCompleteEntry t;
-                                        if (first)
+                                        
+                                        t = completedTasks_local.poll();
+                                
+                                        if (t == null)
                                         {
-                                                t = completedTasks.poll(1, TimeUnit.MILLISECONDS);
-                                                first = false;
-                                        }
-                                        else
-                                        {
-                                                t = completedTasks.poll();
+                                                if (first)
+                                                {
+                                                        t = completedTasks.poll();
+                                                        first = false;
+                                                }
+                                                else
+                                                {
+                                                        // Sleep for 1ms to avoid trashing the cpu
+                                                        // This is the only place where we sleep
+                                                        t = completedTasks.poll(1, TimeUnit.MILLISECONDS);
+                                                }
                                         }
                                         
                                         if (t == null)
@@ -621,6 +648,12 @@ public class TickedEventLoop implements Workable, Timerable
                 return false;
         }
         
+        @ThreadSafe
+        public boolean isLoopThreadCurrent()
+        {
+                return myThread.equals(Thread.currentThread());
+        }
+        
         private static class TimerData
         {
                 TimerEvent event;
@@ -647,29 +680,36 @@ public class TickedEventLoop implements Workable, Timerable
         @Override
         public void runOnMain(Runnable runnable)
         {
-                TaskCompleteEntry t = new TaskCompleteEntry(runnable);
-                
-                try
-                {
-                        while (!completedTasks.offer(t, 1, TimeUnit.MILLISECONDS));
-                }
-                catch (InterruptedException ex)
-                {
-                        Thread.currentThread().interrupt();
-                }
+                addCompletedTask(new TaskCompleteEntry(runnable));
         }
         
         @ThreadSafe
         @Override
         public void taskCompleted(WorkerTask task)
         {
-                try
+                addCompletedTask(new TaskCompleteEntry(task));
+        }
+        
+        @ThreadSafe
+        private void addCompletedTask(TaskCompleteEntry t)
+        {
+                // myThread is the one consuming.
+                // So do not using a blocking queue, this would cause a dead lock
+                
+                if (isLoopThreadCurrent())
                 {
-                        while (!completedTasks.offer(new TaskCompleteEntry(task), 1, TimeUnit.MILLISECONDS));
+                        completedTasks_local.add(t);
                 }
-                catch (InterruptedException ex)
+                else
                 {
-                        Thread.currentThread().interrupt();
+                        try
+                        {
+                                while (!completedTasks.offer(t, 1, TimeUnit.MILLISECONDS));
+                        }
+                        catch (InterruptedException ex)
+                        {
+                                Thread.currentThread().interrupt();
+                        }
                 }
         }
         
