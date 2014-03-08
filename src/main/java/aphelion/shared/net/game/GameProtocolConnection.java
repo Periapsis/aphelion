@@ -276,10 +276,10 @@ public class GameProtocolConnection implements Attachable
         private static Map<GameS2C.S2COrBuilder, byte[]> s2cCache = Collections.synchronizedMap(new WeakHashMap<GameS2C.S2COrBuilder, byte[]>());
         private static Map<GameC2S.C2SOrBuilder, byte[]> c2sCache = Collections.synchronizedMap(new WeakHashMap<GameC2S.C2SOrBuilder, byte[]>());
         
-        private class EncodeS2CWork extends WorkerTask<GameS2C.S2COrBuilder, None>
+        private class EncodeS2CWork extends WorkerTask<GameS2C.S2COrBuilder, Void>
         {
                 @Override
-                public None work(GameS2C.S2COrBuilder s2cOrBuilder) throws PromiseException
+                public Void work(GameS2C.S2COrBuilder s2cOrBuilder) throws PromiseException
                 {
                         byte[] result;
                         
@@ -346,10 +346,10 @@ public class GameProtocolConnection implements Attachable
                 }
         }
         
-        private class EncodeC2SWork extends WorkerTask<GameC2S.C2SOrBuilder, None>
+        private class EncodeC2SWork extends WorkerTask<GameC2S.C2SOrBuilder, Void>
         {
                 @Override
-                public None work(GameC2S.C2SOrBuilder c2sOrBuilder) throws PromiseException
+                public Void work(GameC2S.C2SOrBuilder c2sOrBuilder) throws PromiseException
                 {
                         byte[] result;
                         
