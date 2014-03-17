@@ -149,14 +149,20 @@ public abstract class MapAnimation extends MapEntity
                 {
                         if (!this.physicsVel.isZero())
                         {
-                                boolean lastHit = collision.deadReckonTick(
-                                        this.physicsPos, this.physicsVel, 
-                                        collision_map, 
-                                        collision_radius, 
-                                        collision_bounceFriction, collision_bounceOtherAxisFriction, 
-                                        collision_stopOnHit ? 0 : -1);
+                                collision.reset();
+                                collision.setPreviousPosition(this.physicsPos);
+                                collision.setVelocity(this.physicsVel);
+                                collision.setMap(collision_map);
+                                collision.setRadius(collision_radius);
+                                collision.setBounceFriction(collision_bounceFriction);
+                                collision.setOtherAxisFriction(collision_bounceOtherAxisFriction);
+                                collision.setBouncesLeft(collision_stopOnHit ? 0 : -1);
+                                collision.tickMap(0);
+                                
+                                collision.getNewPosition(this.physicsPos);
+                                collision.getVelocity(this.physicsVel);
 
-                                if (lastHit)
+                                if (collision.hasExhaustedBounces())
                                 {
                                         this.physicsVel.set(0, 0);
                                 }

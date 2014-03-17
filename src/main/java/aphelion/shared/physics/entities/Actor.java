@@ -39,10 +39,7 @@ package aphelion.shared.physics.entities;
 
 import aphelion.shared.gameconfig.*;
 import aphelion.shared.net.protobuf.GameOperation;
-import aphelion.shared.physics.PhysicsEnvironment;
-import aphelion.shared.physics.PhysicsMap;
-import aphelion.shared.physics.PhysicsMath;
-import aphelion.shared.physics.State;
+import aphelion.shared.physics.*;
 import aphelion.shared.physics.valueobjects.PhysicsMoveable;
 import aphelion.shared.physics.valueobjects.PhysicsMovement;
 import aphelion.shared.physics.valueobjects.PhysicsPoint;
@@ -51,15 +48,11 @@ import aphelion.shared.physics.valueobjects.PhysicsPointHistoryDetailed;
 import aphelion.shared.physics.valueobjects.PhysicsRotation;
 import aphelion.shared.physics.valueobjects.PhysicsShipPosition;
 import aphelion.shared.physics.valueobjects.PhysicsWarp;
-import aphelion.shared.physics.WEAPON_SLOT;
 import aphelion.shared.physics.valueobjects.*;
 import aphelion.shared.physics.valueobjects.PhysicsPointHistorySmooth.SMOOTHING_ALGORITHM;
-import aphelion.shared.swissarmyknife.LinkedListEntry;
-import aphelion.shared.swissarmyknife.LinkedListHead;
-import aphelion.shared.swissarmyknife.RollingHistory;
-import aphelion.shared.swissarmyknife.RollingHistorySerialInteger;
-import aphelion.shared.swissarmyknife.SwissArmyKnife;
+import aphelion.shared.swissarmyknife.*;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
 import java.util.logging.Level;
@@ -504,7 +497,7 @@ public class Actor extends MapEntity
                         
                         this.moveHistory.setHistory(operation_tick, warp);
                         this.applyMoveable(warp, operation_tick); // sets the current position
-                        this.updatePositionHistory(operation_tick);
+                        this.updatedPosition(operation_tick);
                         
                         // dead reckon current position so that it is no longer late
                         // the position at the tick of this operation should not be dead reckoned, therefor +1
@@ -586,7 +579,16 @@ public class Actor extends MapEntity
          * @param reckon_ticks
          */
         public void performDeadReckoning(PhysicsMap map, long tick_now, long reckon_ticks)
-        {        
+        {
+                Collision collision = state.collision;
+                collision.reset();
+                collision.setMap(map);
+                collision.setRadius(this.radius.get());
+                collision.setCollideGrid(state.entityGrid);
+                collision.setCollideFilter(collideFilter);
+                collision.setBounceFriction(this.bounceFriction.get());
+                collision.setOtherAxisFriction(this.bounceOtherAxisFriction.get());
+                
                 for (long t = 0; t < reckon_ticks; ++t)
                 {
                         long tick = tick_now + t;
@@ -607,25 +609,75 @@ public class Actor extends MapEntity
                         
                         this.pos.vel.enforceOverflowLimit();
                         
-                        state.collision.deadReckonTick(
-                                tick, 
-                                posHistory,
-                                pos.pos, pos.vel, 
-                                map, true,
-                                null, null,
-                                radius.get(), 
-                                bounceFriction.get(), 
-                                bounceOtherAxisFriction.get(),
-                                -1, 0);
+                        collision.setPreviousPosition(pos.pos);
+                        collision.setPosHistoryDetails(this.posHistoryDetailed);
+                        collision.setVelocity(pos.vel);
+                        collision.tickMap(tick);
+                        collision.getNewPosition(pos.pos);
+                        collision.getVelocity(pos.vel);
+                        
+                        updatedPosition(tick); // updates the smoothed position
+                        
+                        
+                        if (this.useSmoothForCollision(tick))
+                        {
+                                final PhysicsPoint point = new PhysicsPoint();
+                                
+                                this.getHistoricSmoothPosition(point, tick - 1, false);
+                                collision.setPreviousPosition(point);
+                                
+                                collision.setPosHistoryDetails(null); // this would not work properly when smoothed
+                                
+                                this.getHistoricSmoothPosition(point, tick, false);
+                                collision.setNewPosition(point);
+                        }
+                        else
+                        {
+                                // the prevPos, newPos and posHistoryDetails are still set correctly on Collision,
+                                // in order to properly execute tickEntityCollision
+                        }
+                        collision.tickEntityCollision(tick);
+                        
+                        Iterator<Collision.HitData> it = collision.getHitEntities();
+                        while (it.hasNext())
+                        {
+                                Collision.HitData hit = it.next();
+                                
+                                if (hit.entity instanceof Projectile)
+                                {
+                                        Projectile proj = (Projectile)hit.entity;
+                                        proj.hitByActor(tick, this, hit.location);
+                                }
+                                else
+                                {
+                                        log.log(Level.WARNING, "Hit something unexpected");
+                                }
+                        }
                         
                         // Any speed increase applied during this tick is not used until the next tick
-                        
-                        
                         applyMoveable(moveHistory.get(tick), tick);
                         
-                        updatePositionHistory(tick);
+                        updatedPosition(tick);
                 }
         }
+        
+        private final LoopFilter<MapEntity, Long> collideFilter = new LoopFilter<MapEntity, Long>()
+        {
+                @Override
+                public boolean loopFilter(MapEntity en, Long tick)
+                {
+                        if (!(en instanceof Projectile))
+                        {
+                                return true; // skip
+                        }
+                        
+                        Projectile proj = (Projectile) en;
+                        
+                        return !proj.collideShip 
+                            || proj.owner == Actor.this
+                            || proj.activate_bounces_left > 0;
+                }
+        };
         
         public void setShip(String ship)
         {
@@ -769,11 +821,11 @@ public class Actor extends MapEntity
         }
 
         @Override
-        public void updatePositionHistory(long tick)
+        public void updatedPosition(long tick)
         {
                 try
                 {
-                        super.updatePositionHistory(tick);
+                        super.updatedPosition(tick);
                 }
                 catch(IllegalStateException ex)
                 {
@@ -992,9 +1044,7 @@ public class Actor extends MapEntity
                 return pos.set;
         }
         
-        /** {@inheritDoc} */
-        @Override
-        public boolean useSmoothForCollision(long tick)
+        private boolean useSmoothForCollision(long tick)
         {
                 if (state.isLast)
                 {

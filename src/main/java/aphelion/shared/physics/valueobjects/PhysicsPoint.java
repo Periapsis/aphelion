@@ -39,7 +39,7 @@ package aphelion.shared.physics.valueobjects;
 
 import aphelion.shared.physics.PhysicsEnvironment;
 import aphelion.shared.swissarmyknife.SwissArmyKnife;
-import static aphelion.shared.swissarmyknife.SwissArmyKnife.clip;
+import javax.annotation.Nonnull;
 
 /**
  *
@@ -67,7 +67,7 @@ public final class PhysicsPoint
                 set = true;
         }
 
-        public PhysicsPoint(PhysicsPoint other)
+        public PhysicsPoint(@Nonnull PhysicsPoint other)
         {
                 set(other);
         }
@@ -138,7 +138,7 @@ public final class PhysicsPoint
                 }
         }
 
-        public void set(PhysicsPoint other)
+        public void set(@Nonnull PhysicsPoint other)
         {
                 this.x = other.x;
                 this.y = other.y;
@@ -162,7 +162,7 @@ public final class PhysicsPoint
                 return this.y;
         }
 
-        public void add(PhysicsPoint other)
+        public void add(@Nonnull PhysicsPoint other)
         {
                 addX(other.x);
                 addY(other.y);
@@ -186,7 +186,7 @@ public final class PhysicsPoint
                 set = true;
         }
 
-        public void sub(PhysicsPoint other)
+        public void sub(@Nonnull PhysicsPoint other)
         {
                 subX(other.x);
                 subY(other.y);
@@ -223,7 +223,7 @@ public final class PhysicsPoint
                        (long) this.y * (long) this.y;
         }
 
-        public long distanceSquared(PhysicsPoint other)
+        public long distanceSquared(@Nonnull PhysicsPoint other)
         {
                 return distanceSquared(other.x, other.y);
         }
@@ -247,12 +247,12 @@ public final class PhysicsPoint
                 return SwissArmyKnife.hypot(this.x, this.y, lengthSq);
         }
         
-        public long distance(PhysicsPoint other)
+        public long distance(@Nonnull PhysicsPoint other)
         {
                 return SwissArmyKnife.hypot(other.x - this.x, other.y - this.y);
         }
         
-        public long distance(PhysicsPoint other, long distSq)
+        public long distance(@Nonnull PhysicsPoint other, long distSq)
         {
                 return SwissArmyKnife.hypot(other.x - this.x, other.y - this.y, distSq);
         }
@@ -331,12 +331,12 @@ public final class PhysicsPoint
                 return !this.set || (this.x == 0 && this.y == 0);
         }
         
-        public long dotProduct(PhysicsPoint other)
+        public long dotProduct(@Nonnull PhysicsPoint other)
         {
                 return (long)x * other.x + (long)y * other.y;
         }
         
-        public long crossProduct(PhysicsPoint other)
+        public long crossProduct(@Nonnull PhysicsPoint other)
         {
                 return (long)x * other.y - (long)y * other.x;
         }
@@ -424,5 +424,20 @@ public final class PhysicsPoint
         {
                 this.x = (int) (this.x * (long) fraction / consequent);
                 this.y = (int) (this.y * (long) fraction / consequent);
+        }
+        
+        public void clip(PhysicsPoint min, PhysicsPoint max)
+        {
+                if (min != null)
+                {
+                        if (this.x < min.x) { this.x = min.x; }
+                        if (this.y < min.y) { this.y = min.y; }
+                }
+                
+                if (max != null)
+                {
+                        if (this.x > max.x) { this.x = max.x; }
+                        if (this.y > max.y) { this.y = max.y; }
+                }
         }
 }

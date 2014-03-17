@@ -131,7 +131,7 @@ public class ActorMove extends Operation implements ActorMovePublic
                 
                 actor.moveHistory.setHistory(this.tick, move);
                 actor.applyMoveable(move, this.tick);
-                actor.updatePositionHistory(this.tick);
+                actor.updatedPosition(this.tick);
                 
                 // Note: this tick the new velocity is set, but this new velocity is not used yet.
                 // It will be used in the next tick

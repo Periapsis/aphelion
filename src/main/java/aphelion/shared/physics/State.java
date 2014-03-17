@@ -44,6 +44,7 @@ import aphelion.shared.physics.entities.Actor;
 import aphelion.shared.physics.events.Event;
 import aphelion.shared.physics.events.pub.ProjectileExplosionPublic.EXPLODE_REASON;
 import aphelion.shared.physics.operations.Operation;
+import aphelion.shared.physics.valueobjects.EntityGrid;
 import aphelion.shared.physics.valueobjects.PhysicsPoint;
 import aphelion.shared.swissarmyknife.LinkedListEntry;
 import aphelion.shared.swissarmyknife.LinkedListHead;
@@ -83,6 +84,11 @@ public class State
         public final LinkedListHead<Operation> history = new LinkedListHead<>(); // ordered by tick ascending
         public final LinkedListHead<Operation> todo = new LinkedListHead<>(); // ordered by tick ascending
         
+        /** This grid is a quick way to find out what entities are at what position.
+         * It is only valid for "tick_now"
+         */
+        public final EntityGrid entityGrid = new EntityGrid(32768);
+        
         public final GameConfig config = new GameConfig();
         public final ConfigSelection globalConfig = config.newSelection();
         public long config_lastModification = 0; // edge case: 0 is used as a "not set" value here. however 0 is also a valid tick
@@ -114,7 +120,7 @@ public class State
                 {
                         Actor actor = itActor.next();
                         
-                        actor.updatePositionHistory(tick_now);
+                        actor.updatedPosition(tick_now);
                         if (actor.moveHistory.getMostRecentTick() < this.tick_now)
                         {
                                 // make sure old moves can be cleaned up (and that getRelative always matches)
@@ -191,7 +197,7 @@ public class State
                                         
                                         actor.energy.addAbsoluteValue(Actor.ENERGY_SETTER.OTHER.id, this.tick_now, actor.getMaxEnergy());
                                         
-                                        actor.updatePositionHistory(tick_now);
+                                        actor.updatedPosition(tick_now);
                                 }
                                 
                                 // Keep updating the position even if the actor is dead
@@ -210,7 +216,7 @@ public class State
                         Projectile projectile = linkProjectile.data;
                         linkProjectile_next = linkProjectile.next;
 
-                        projectile.updatePositionHistory(tick_now);
+                        projectile.updatedPosition(tick_now);
                         
                         // do not bother if the projectile index is not 0
                         // in this case, it has already been checked (thanks to combined)
@@ -289,6 +295,14 @@ public class State
                 }
         }
         
+        private void tickProjectilesAfterActor()
+        {
+                for (Projectile projectile : this.projectiles)
+                {
+                        projectile.tickProjectileAfterActor(tick_now);
+                }
+        }
+        
         private void tickOperations(boolean lateSync)
         {
                 LinkedListEntry<Operation> linkOp = this.todo.first;
@@ -341,6 +355,12 @@ public class State
                 this.tick_now = tick_now;
 
                 setActorSmoothPositionBaseline();
+                
+                // Update the position of projectiles first,
+                // this is needed because the collision between actor and tiles is done
+                // while updating the actor position, not while update the projectile position
+                tickProjectiles();
+                
                 // 1. Dead reckoning
                 // 2. Actor cleanup
                 // 3. Respawning (executed before any operations so 
@@ -349,7 +369,8 @@ public class State
                 tickActors();
                 
                 
-                tickProjectiles();
+                tickProjectilesAfterActor();
+                
                 tickOperations(false);
                 tickActorsLate();
                 config.tick(tick_now); // used for cleanup

@@ -68,6 +68,7 @@ public class ScenarioSelector extends JFrame
                 JPanel buttons = new JPanel();
                 buttons.setLayout(new GridLayout(0, 3));
                 buttons.add(new ScenarioButton(FlyHorizontalLine.class));
+                buttons.add(new ScenarioButton(SimpleHit.class));
                 buttons.add(new ScenarioButton(DeadLocalHitWall.class));
                 buttons.add(new ScenarioButton(HighSpeedTurning500msLag.class));
                 buttons.add(new ScenarioButton(UnhitRemote.class));

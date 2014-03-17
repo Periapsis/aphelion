@@ -113,7 +113,7 @@ public class ActorWarp extends Operation implements ActorWarpPublic
                 
                 actor.moveHistory.setHistory(this.tick, warp);
                 actor.applyMoveable(warp, this.tick); // sets the current position
-                actor.updatePositionHistory(this.tick);
+                actor.updatedPosition(this.tick);
                 
                 // Note: this tick the new velocity is set, but this new velocity is not used yet.
                 // It will be used in the next tick

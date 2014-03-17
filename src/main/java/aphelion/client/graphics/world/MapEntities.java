@@ -70,7 +70,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 /**
- * Takes care of tracking graphics state for entities (ships, projetiles).
+ * Takes care of tracking graphics state for entities (ships, projectiles).
  * @author Joris
  */
 public class MapEntities implements TickEvent, LoopEvent, Animator, ActorListener

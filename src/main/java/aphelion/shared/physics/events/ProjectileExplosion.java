@@ -284,7 +284,7 @@ public class ProjectileExplosion extends Event implements ProjectileExplosionPub
                                 projectile.owner.projectiles.append(projectile.projectileListLink_actor);
 
 
-                                projectile.updatePositionHistory(tick);
+                                projectile.updatedPosition(tick);
 
                                 // dead reckon current position so that it is no longer late
                                 // the position at the tick of this operation should not be dead reckoned, therefor +1

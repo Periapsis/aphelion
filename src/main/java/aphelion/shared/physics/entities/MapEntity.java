@@ -43,6 +43,8 @@ import aphelion.shared.physics.State;
 import aphelion.shared.physics.valueobjects.PhysicsPoint;
 import aphelion.shared.physics.valueobjects.PhysicsPointHistoryDetailed;
 import aphelion.shared.physics.valueobjects.PhysicsPositionVector;
+import aphelion.shared.swissarmyknife.LinkedListEntry;
+import aphelion.shared.swissarmyknife.LinkedListHead;
 
 /**
  *
@@ -63,6 +65,8 @@ public abstract class MapEntity
         
         public final State state;
         public final MapEntity[] crossStateList;
+        /** This attribute only be accessed by EntityGrid. */
+        public final LinkedListEntry<MapEntity> entityGridEntry = new LinkedListEntry<>(null, this);
         
         public final int HISTORY_LENGTH;
         public final PhysicsPositionVector pos = new PhysicsPositionVector();
@@ -102,6 +106,8 @@ public abstract class MapEntity
                         removedAt_tick = tick;
                 }
                 
+                // remove it from the grid
+                state.entityGrid.updateLocation(this, null);
                 removed = true;
         }
         
@@ -203,23 +209,25 @@ public abstract class MapEntity
                 return false;
         }
         
-        /** If true, Collision will use getHistoricSmoothPosition to attempt collisions.
-         * 
-         * @param tick The tick the collision is being attempted at
-         * @return Use smooth positiosn for collision
-         */
-        public boolean useSmoothForCollision(long tick)
-        {
-                return false;
-        }
-        
         /** Add (or update) the current position to the history
          *
          * @param tick The tick the current position (this.pos) belongs to
          */
-        public void updatePositionHistory(long tick)
+        public void updatedPosition(long tick)
         {
-                posHistory.setHistory(tick, pos.pos);       
+                posHistory.setHistory(tick, pos.pos);
+                
+                if (tick == state.tick_now)
+                {
+                        if (this.removed)
+                        {
+                                state.entityGrid.updateLocation(this, null);
+                        }
+                        else
+                        {
+                                state.entityGrid.updateLocation(this, pos.pos);
+                        }
+                }
         }
         
         public PhysicsPointHistoryDetailed getAndSeekHistoryDetail(long tick, boolean lookAtOtherStates)

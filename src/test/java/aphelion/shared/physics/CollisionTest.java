@@ -67,8 +67,6 @@ public class CollisionTest
         
         private void testLineSegmentIntersectsConvexPolygon_offset(int offsetX, int offsetY)
         {
-                Collision collision = new Collision();
-                
                 ArrayList<PhysicsPoint> vertices = new ArrayList<>();
                 
                 vertices.add(new PhysicsPoint(10 + offsetX, 10 + offsetY));
@@ -80,7 +78,7 @@ public class CollisionTest
                 PhysicsPoint far = new PhysicsPoint();
                 
                 // horizontal
-                assertTrue(collision.lineSegmentIntersectsConvexPolygon(
+                assertTrue(Collision.lineSegmentIntersectsConvexPolygon(
                         -32768 + offsetX, 15 + offsetY, 
                          32768 + offsetX, 15 + offsetY,
                         vertices,
@@ -100,7 +98,7 @@ public class CollisionTest
                 
                 
                 // vertical
-                assertTrue(collision.lineSegmentIntersectsConvexPolygon(
+                assertTrue(Collision.lineSegmentIntersectsConvexPolygon(
                         15 + offsetX, -32768 + offsetY, 
                         15 + offsetX,  32768 + offsetY,
                         vertices,
@@ -119,7 +117,7 @@ public class CollisionTest
                 
                 
                 // diagonal going south east
-                assertTrue(collision.lineSegmentIntersectsConvexPolygon(
+                assertTrue(Collision.lineSegmentIntersectsConvexPolygon(
                         -32768 + offsetX, -32768 + offsetY, 
                          32768 + offsetX,  32768 + offsetY,
                         vertices,
@@ -138,7 +136,7 @@ public class CollisionTest
                 
                 
                 // diagonal going south east
-                assertTrue(collision.lineSegmentIntersectsConvexPolygon(
+                assertTrue(Collision.lineSegmentIntersectsConvexPolygon(
                         -32768 + offsetX, -32768 + offsetY, 
                          32768 + offsetX,  32768 + offsetY,
                         vertices,
@@ -157,7 +155,7 @@ public class CollisionTest
                 
                 
                 // vertical, starting inside the polygon
-                assertTrue(collision.lineSegmentIntersectsConvexPolygon(
+                assertTrue(Collision.lineSegmentIntersectsConvexPolygon(
                         15 + offsetX, 12 + offsetY, 
                         15 + offsetX, 32768 + offsetY,
                         vertices,
@@ -175,7 +173,7 @@ public class CollisionTest
                 assertEquals(20, far.y);
                 
                 // vertical, ending inside the polygon
-                assertTrue(collision.lineSegmentIntersectsConvexPolygon(
+                assertTrue(Collision.lineSegmentIntersectsConvexPolygon(
                         15 + offsetX, -32768 + offsetY, 
                         15 + offsetX, 19 + offsetY,
                         vertices,
@@ -193,7 +191,7 @@ public class CollisionTest
                 assertEquals(19, far.y);
                 
                 // vertical, start and end in the polygon
-                assertTrue(collision.lineSegmentIntersectsConvexPolygon(
+                assertTrue(Collision.lineSegmentIntersectsConvexPolygon(
                         15 + offsetX, 12 + offsetY, 
                         15 + offsetX, 19 + offsetY,
                         vertices,
@@ -211,7 +209,7 @@ public class CollisionTest
                 assertEquals(19, far.y);
                 
                 // single point inside
-                assertTrue(collision.lineSegmentIntersectsConvexPolygon(
+                assertTrue(Collision.lineSegmentIntersectsConvexPolygon(
                         15 + offsetX, 17 + offsetY, 
                         15 + offsetX, 17 + offsetY,
                         vertices,
@@ -229,7 +227,7 @@ public class CollisionTest
                 assertEquals(17, far.y);
                 
                 // single point outside
-                assertFalse(collision.lineSegmentIntersectsConvexPolygon(
+                assertFalse(Collision.lineSegmentIntersectsConvexPolygon(
                         2 + offsetX, 3 + offsetY, 
                         2 + offsetX, 3 + offsetY,
                         vertices,

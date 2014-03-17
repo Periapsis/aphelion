@@ -1,6 +1,6 @@
 /*
  * Aphelion
- * Copyright (c) 2013  Joris van der Wel
+ * Copyright (c) 2014  Joris van der Wel
  * 
  * This file is part of Aphelion
  * 
@@ -21,7 +21,7 @@
  * a) Preservation of all legal notices and author attributions
  * b) Prohibition of misrepresentation of the origin of this material, and
  * modified versions are required to be marked in reasonable ways as
- * different from the original version (for example by appending a copyright notice).
+ * different from the original version
  * 
  * Linking this library statically or dynamically with other modules is making a
  * combined work based on this library. Thus, the terms and conditions of the
@@ -34,35 +34,81 @@
  * choice, provided that you also meet, for each linked independent module,
  * the terms and conditions of the license of that module. An independent
  * module is a module which is not derived from or based on this library.
+ * If you modify this library, you may extend this exception to your version
+ * of the library, but you are not obliged to do so. If you do not wish to do
+ * so, delete this exception statement from your version.
  */
 
 package aphelion.shared.physics;
 
-
 import aphelion.shared.gameconfig.GCInteger;
-import aphelion.shared.physics.entities.MapEntity;
-import static aphelion.shared.swissarmyknife.SwissArmyKnife.abs;
-import static aphelion.shared.swissarmyknife.SwissArmyKnife.clip;
 import static aphelion.shared.physics.PhysicsMap.TILE_PIXELS;
+import aphelion.shared.physics.entities.MapEntity;
+import aphelion.shared.physics.valueobjects.EntityGrid;
 import aphelion.shared.physics.valueobjects.PhysicsPoint;
 import aphelion.shared.physics.valueobjects.PhysicsPointHistoryDetailed;
 import aphelion.shared.swissarmyknife.ComparableIntegerDivision;
 import aphelion.shared.swissarmyknife.LoopFilter;
 import aphelion.shared.swissarmyknife.SwissArmyKnife;
+import static aphelion.shared.swissarmyknife.SwissArmyKnife.abs;
+import static aphelion.shared.swissarmyknife.SwissArmyKnife.clip;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Logger;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
-/** A helper class to perform collisions with the use of floating points.
+
+
+/**
+ * A helper class to perform (cross machine) deterministic collisions.
  * @author Joris
  */
-public class Collision
+public final class Collision
 {
         private static final Logger log = Logger.getLogger("aphelion.shared.physics");
-
-        public Collision()
+        
+        private PhysicsMap map;
+        
+        private int radius;
+        
+        /** The position for the previous tick. */
+        private final PhysicsPoint prevPos = new PhysicsPoint();
+        
+        /** The position for the previous tick. */
+        private final PhysicsPoint newPos = new PhysicsPoint();
+        private final PhysicsPoint vel = new PhysicsPoint(0, 0);
+        private PhysicsPointHistoryDetailed posHistoryDetails;
+        
+        private EntityGrid collideGrid;
+        private LoopFilter<MapEntity, Long> collideFilter = LoopFilter.NO_FILTER;
+        
+        private int bounceFriction;
+        private int otherAxisFriction;
+        
+        private int bounces; // how many times did the object bounce of a tile?
+        private int bounces_left;
+        private boolean exhaustedBounces;
+        
+        private final ArrayList<HitData> hitEntities = new ArrayList<>(128);
+        private final PhysicsPoint hitTile = new PhysicsPoint();
+        
+        
+        public static final class HitData
         {
+                /** What did we hit?. */
+                public MapEntity entity;
+                
+                /** At what location did the hit occur?. */
+                public final PhysicsPoint location = new PhysicsPoint();
+
+                public HitData(MapEntity entity, PhysicsPoint location)
+                {
+                        this.entity = entity;
+                        this.location.set(location);
+                }
         }
         
         public static enum TILE_SIDE
@@ -74,200 +120,223 @@ public class Collision
                 LEFT;
         }
         
-        // arguments
-        private long tick;
-        private PhysicsPoint oldPos;
-        private PhysicsPoint vel;
-        private PhysicsMap map;
-        private final PhysicsPoint newPos = new PhysicsPoint();
-        private int radius;
-        private int bounceFriction;
-        private int otherAxisFriction;
-        private int bounces_left;
-        private int activate_bounces_left;
-        
-        // return values
-        public MapEntity hitEntity;
-        public final PhysicsPoint hitTile = new PhysicsPoint();
-        public int bounces; // how many times did the object bounce of a tile?
-
-        /** Perform a dead reckon tick with only tile collision.
-         * @param oldPos The position to update
-         * @param vel The velocity to update
-         * @param map The map to use for collision
-         * @param radius The radius in pixels * 1024 (not diameter) of the object. The radius may be 0 if it has no
-         * diameter, like a bullet.
-         * @param bounceFriction The velocity should decrease by this factor when bouncing (1024 = no slow down, 0 = stop)
-         * @param otherAxisFriction The velocity of the axis that did not bounce should decrease by this factor when 
-         *                     bouncing (1024 = no slow down, 0 = stop)
-         * @param bounces_left Number of bounces on a tile the simulates object has left. Use -1 for infinite.
-         *        if this value is 0 and hits a tile, the object has collided
-         * @return True if a final collision for this object was made (projectile hitting an actor, hitting a tile).
-         * use collision.hitEntity and hitTile to find out what was hit.
-         * the argument oldPos will be set at the point of collision
-         */
-        public boolean deadReckonTick(PhysicsPoint oldPos, PhysicsPoint vel, 
-                PhysicsMap map, 
-                int radius, int bounceFriction, int otherAxisFriction, 
-                int bounces_left)
+        public Collision()
         {
-                return deadReckonTick(0, 
-                                      null, 
-                                      oldPos, vel, 
-                                      map, true, 
-                                      null, LoopFilter.NO_FILTER, 
-                                      radius, bounceFriction, otherAxisFriction, 
-                                      bounces_left, 0);
+                reset();
         }
         
-        /** Perform a dead reckon tick with tile and entity-entity collision.
-         * @param tick 
-         * @param posHistoryDetails If not null, every bounce or any other change in direction is added here as a history detail.
-         * @param oldPos The position to update
-         * @param vel The velocity to update
-         * @param map The map to use for collision
-         * @param tileCollide 
-         * @param collidesWith All the entities that this entity may collide with
-         * @param collidesWithFilter A filter to apply on collidesWith. ARG is the current tick
-         * @param radius The radius in pixels * 1024 (not diameter) of the object. The radius may be 0 if it has no
-         * diameter, like a bullet.
-         * @param bounceFriction The velocity should decrease by this factor when bouncing (1024 = no slow down, 0 = stop)
-         * @param otherAxisFriction The velocity of the axis that did not bounce should decrease by this factor when 
-         *                     bouncing (1024 = no slow down, 0 = stop)
-         * @param bounces_left Number of bounces on a tile the simulates object has left. Use -1 for infinite.
-         *        if this value is 0 and hits a tile, the object has collided
-         * @param activate_bounces_left Number of bounces on a tile this object has left before it may collide with 
-         *        "collidesWith"
-         * @return True if a final collision for this object was made (projectile hitting an actor, hitting a tile).
-         * use collision.hitEntity and hitTile to find out what was hit.
-         * the argument oldPos will be set at the point of collision
-         */
-        public boolean deadReckonTick(
-                long tick,
-                PhysicsPointHistoryDetailed posHistoryDetails,
-                PhysicsPoint oldPos, PhysicsPoint vel,
-                PhysicsMap map, boolean tileCollide,
-                List<MapEntity> collidesWith, LoopFilter<MapEntity, Long> collidesWithFilter,
-                int radius, int bounceFriction, int otherAxisFriction, 
-                int bounces_left, int activate_bounces_left)
+        public void reset()
         {
-                this.tick = tick;
-                this.oldPos = oldPos;
-                this.vel = vel;
-                this.map = map;
-                this.radius = radius;
-                this.bounceFriction = bounceFriction;
-                this.otherAxisFriction = otherAxisFriction;
+                this.map = null;
+                this.radius = 0;
+                this.prevPos.unset();
                 this.newPos.unset();
+                this.vel.unset();
+                this.posHistoryDetails = null;
+                this.collideGrid = null;
+                this.collideFilter = LoopFilter.NO_FILTER;
+                this.bounceFriction = GCInteger.RATIO;
+                this.otherAxisFriction = GCInteger.RATIO;
+                this.bounces_left = -1;
+        }
+
+        public void getPreviousPosition(@Nonnull PhysicsPoint pos)
+        {
+                pos.set(this.prevPos);
+        }
+        
+        public void getNewPosition(@Nonnull PhysicsPoint pos)
+        {
+                pos.set(this.newPos);
+        }
+
+        public void getVelocity(@Nonnull PhysicsPoint vel)
+        {
+                vel.set(this.vel);
+        }
+
+        public void setMap(@Nullable PhysicsMap map)
+        {
+                this.map = map;
+        }
+
+        public void setRadius(int radius)
+        {
+                this.radius = radius;
+        }
+
+        public void setPreviousPosition(@Nonnull PhysicsPoint pos)
+        {
+                this.prevPos.set(pos);
+        }
+        
+        public void setNewPosition(@Nonnull PhysicsPoint pos)
+        {
+                this.newPos.set(pos);
+        }
+
+        public void setVelocity(@Nonnull PhysicsPoint vel)
+        {
+                this.vel.set(vel);
+        }
+
+        /** If set, the location of multiple collisions within the same tick will be recorded into "posHistoryDetails".
+         * @param posHistoryDetails 
+         */
+        public void setPosHistoryDetails(PhysicsPointHistoryDetailed posHistoryDetails)
+        {
+                this.posHistoryDetails = posHistoryDetails;
+        }
+
+        public void setCollideGrid(@Nullable EntityGrid collideGrid)
+        {
+                this.collideGrid = collideGrid;
+        }
+
+        public void setCollideFilter(@Nonnull LoopFilter<MapEntity, Long> collideFilter)
+        {
+                this.collideFilter = collideFilter;
+        }
+
+        public void setBounceFriction(int bounceFriction)
+        {
+                this.bounceFriction = bounceFriction;
+        }
+
+        public void setOtherAxisFriction(int otherAxisFriction)
+        {
+                this.otherAxisFriction = otherAxisFriction;
+        }
+
+        /** Number of bounces on a tile the simulated object has left. Use -1 for infinite.
+         * if this value is 0 and hits a tile, the object has collided 
+         * @param bounces_left
+         */
+        public void setBouncesLeft(int bounces_left)
+        {
                 this.bounces_left = bounces_left;
-                this.activate_bounces_left = activate_bounces_left;
+        }
+
+        /** Which entities did we hit during the previous tick()?.
+         * @return 
+         */
+        public @Nonnull Iterator<HitData> getHitEntities()
+        {
+                return hitEntities.iterator();
+        }
+
+        /** If the entity has exhausted all its bounces in the previous tick(), 
+         * this is the final tile it collided on.
+         * @param tilePos The return value
+         */
+        public void getHitTile(PhysicsPoint tilePos)
+        {
+                tilePos.set(this.hitTile);
+        }
+
+        /** How many times has this entity bounced of a tile in the previous tick()?.
+         * @return  
+         */
+        public int getBounces()
+        {
+                return bounces;
+        }
+
+        /** Did tick() stop because the entity made its final bounce?.
+         * @return 
+         */
+        public boolean hasExhaustedBounces()
+        {
+                return exhaustedBounces;
+        }
+        
+        
+        /** Update the given position using the given velocity and attempt collision with the map.
+         * Use setPreviousPosition() and setVelocity() to set the position to begin the simulation with.
+         * The result will end up in getNewPosition() and getVelocity().
+         * Use setPosHistoryDetails() if you would like to store the positions of any intermediate bounces.
+         * @param tick For which tick is this collision?
+         */
+        public void tickMap(long tick)
+        {
+                this.hitTile.unset();
+                this.bounces = 0;
+                this.exhaustedBounces = false;
                 
-                if (!oldPos.set)
+                if (!prevPos.set)
                 {
-                        throw new IllegalArgumentException();
+                        throw new IllegalStateException();
                 }
                 
                 if (!vel.set)
                 {
-                        throw new IllegalArgumentException();
+                        throw new IllegalStateException();
                 }
                 
-                hitEntity = null;
-                hitTile.unset();
-                bounces = 0;
-                
-                final PhysicsPoint previousPosHistoryDetail = new PhysicsPoint();
-                final PhysicsPoint remaining = new PhysicsPoint();
-                final PhysicsPoint prevRemaining = new PhysicsPoint();
-                
-                if (posHistoryDetails != null)
+                if (radius < 0)
                 {
-                        posHistoryDetails.clearDetails(tick);
+                        throw new IllegalStateException();
                 }
+                
+                // How much velocity still needs to be added?
+                // This is used to properly calculate multiple tile bounces within a single tick
+                // Each iteration of the loop below will take care of one bounce, until there is no more
+                // velocity left.
+                // This value is always >= 0
+                final PhysicsPoint remaining = new PhysicsPoint();
+                
+                final PhysicsPoint previousPosHistoryDetail = new PhysicsPoint(prevPos);
                 
                 remaining.set(vel);
                 remaining.abs();
-                assert radius >= 0;
                 
-                previousPosHistoryDetail.set(oldPos);
+                newPos.set(prevPos);
                 
-                while(true)
+                while (true)
                 {
-                        newPos.set(oldPos);
-                        newPos.set = true;
-                        
+                        final PhysicsPoint pos = new PhysicsPoint(newPos);
                         newPos.x += vel.x >= 0 ? remaining.x : -remaining.x ;
-                        newPos.y += vel.y >= 0 ? remaining.y : -remaining.y ;
+                        newPos.y += vel.y >= 0 ? remaining.y : -remaining.y ;                        
                         
-                        boolean tileCollided = false;
-                        if (tileCollide && !oldPos.equals(newPos))  // no need to match tiles if we are stationairy
+                        
+                        // If map is set, we are doing tile collision
+                        // No need to match tiles if we are stationairy
+                        if (this.map != null && !pos.equals(newPos))
                         {
-                                tileCollided = tileCollisionRay(oldPos, newPos, radius);
-                                // todo stuff with radius
-                        }
-                        // at this point tile collision has set a new value for newPos if there was a hit
-                        // in a straight line. 
-                        // If not, the newPos is not modified.
-                        // Use this line to try actor collision
-                        
-                        
-                        // projectile -> actor collision
-                        
-                        // NOTE: This algorithm assumes time between ticks does not exist.
-                        // Aka there is no tick 8.2, only tick 8 and 9. The whole movevement of the 
-                        // colliding entities within a single tick is considered for collision.
-                        // This may cause a ship to hit a projectile even though their paths really 
-                        // should not have crossed when they are both have a high velocity.
-
-                        
-                        for (int a = 0; 
-                                collidesWith != null && hasActivated() && a < collidesWith.size(); 
-                                ++a)
-                        {
-                                MapEntity en = collidesWith.get(a);
-                                if (collidesWithFilter.loopFilter(en, tick))
-                                {
-                                        continue;
-                                }
+                                final PhysicsPoint intersect = new PhysicsPoint();
+                                boolean tileCollided = tileCollisionRay(pos, newPos, radius, intersect);
+                                // at this point tileCollisionRay has set a value for newPos if there was a hit
+                                // (its value is the earliest collision point in a straight line (adjusted for radius)).
+                                // If not, the newPos is not modified.
+                                // Use this line to try further collision
                                 
-                                if (mayCollide(en) && entityCollision(en))
+                                if (tileCollided)
                                 {
-                                        oldPos.set(newPos);
-                
-                                        //enforce map limits to be safe
-                                        oldPos.x = clip(oldPos.x, radius, 1024 * TILE_PIXELS - radius);
-                                        oldPos.y = clip(oldPos.y, radius, 1024 * TILE_PIXELS - radius);
-
-                                        oldPos.enforceOverflowLimit();
-                                        vel.enforceOverflowLimit();
-                                        this.hitEntity = en;
-                                        return true;
+                                        assert intersect.set;
+                                        newPos.set(intersect);
+                                        ++bounces;
+                                        
+                                        if (!hasBouncesLeft())
+                                        {
+                                                // This entity can no longer bounce
+                                                this.hitTile.set(pos);
+                                                this.hitTile.divide(TILE_PIXELS);
+                                                this.exhaustedBounces = true;
+                                                return;
+                                        }
                                 }
                         }
                         
-                        // did not collide with an actor
-                        if (tileCollided && !hasBouncesLeft())
-                        {
-                                //we can no longer bounce
-                                this.hitTile.set(newPos);
-                                this.hitTile.divide(TILE_PIXELS);
-                                return true;
-                        }
                         
                         
-                        prevRemaining.set(remaining);
-                        remaining.x -= abs(newPos.x - oldPos.x);
-                        remaining.y -= abs(newPos.y - oldPos.y);
-
-                        if (remaining.x > prevRemaining.x)
-                        {
-                                remaining.x = prevRemaining.x;
-                        }
-
-                        if (remaining.y > prevRemaining.y)
-                        {
-                                remaining.y = prevRemaining.y;
-                        }
+                        
+                        
+                        // No final collision, there are more steps to make
+                        final PhysicsPoint prevRemaining = new PhysicsPoint(remaining);
+                        remaining.x -= abs(newPos.x - pos.x);
+                        remaining.y -= abs(newPos.y - pos.y);
+                        
+                        remaining.clip(null, prevRemaining);
 
                         if (remaining.equals(prevRemaining))
                         {
@@ -285,48 +354,149 @@ public class Collision
                                 break;
                         }
                         
-                        
-                        // At this point there are more steps to make
+                        // Remaining has a value > 0, so there are more steps to make
                         
                         if (posHistoryDetails != null)
                         {
                                 // do we need to add a detail? (have we not moved in a straight line during this iteration?)
-                                // note tha the very first step and the very last step are not a detail!
+                                // note that the very first step and the very last step are not a detail!
                                 // the very first step is the end result of the previous tick, 
                                 // the very last step is the end result of the current tick.
                                 
-                                // if previousPosHistoryDetail == oldPos there is no detail to add yet
-                                if (!previousPosHistoryDetail.equals(oldPos)) 
+                                // if previousPosHistoryDetail == prevPos there is no detail to add yet
+                                if (!previousPosHistoryDetail.equals(this.prevPos)) 
                                 {
                                         // have we moved in a straight line?
-                                        if (findYOnLine(previousPosHistoryDetail, oldPos, newPos.x) != newPos.y)
+                                        if (findYOnLine(previousPosHistoryDetail, pos, newPos.x) != newPos.y)
                                         {
-                                                previousPosHistoryDetail.set(oldPos);
-                                                posHistoryDetails.appendDetail(tick, oldPos);
+                                                previousPosHistoryDetail.set(pos);
+                                                posHistoryDetails.appendDetail(tick, pos);
                                         }
+                                }
+                        }
+                }
+                
+                // At this point, no "final" collision was made
+
+                if (map != null)
+                {
+                        //enforce map limits to be safe
+                        newPos.x = clip(
+                                newPos.x, 
+                                map.physicsGetMapLimitMinimum() * TILE_PIXELS + radius, 
+                                map.physicsGetMapLimitMaximum() * TILE_PIXELS - radius);
+
+                        newPos.y = clip(
+                                newPos.y, 
+                                map.physicsGetMapLimitMinimum() * TILE_PIXELS + radius, 
+                                map.physicsGetMapLimitMaximum() * TILE_PIXELS - radius);
+                }
+                
+                newPos.enforceOverflowLimit();
+                vel.enforceOverflowLimit();
+        }
+        
+        
+        /** Attempt collision with other entities using the positions between tick-1 and tick.
+         * This should usually be called using the results of tickMap().
+         * Use setPreviousPosition() to set the position of the previous tick (tick-1). 
+         * Use setNewPosition() to set the position of the current tick (tick+0).
+         * Use setPosHistoryDetails() (optionally) to set the intermediate positions (tick-1 =&gt; tick).
+         * You can retrieve the results using getHitEntities().
+         * @param tick
+         */
+        public void tickEntityCollision(long tick)
+        {
+                this.hitEntities.clear();
+                
+                if (collideGrid == null)
+                {
+                        return;
+                }
+                
+                if (this.posHistoryDetails != null)
+                {
+                        this.posHistoryDetails.seekDetail(tick);
+                }
+                
+                final PhysicsPoint prev = new PhysicsPoint();
+                final PhysicsPoint next = new PhysicsPoint();
+                
+                prev.set(this.prevPos);
+                
+                while (true)
+                {
+                        boolean lastIteration = false;
+                        if (this.posHistoryDetails != null && this.posHistoryDetails.hasNextDetail())
+                        {
+                                this.posHistoryDetails.nextDetail(next);
+                        }
+                        else
+                        {
+                                // ran out of details..
+                                // the final line to match is the last detail ->  the final position for this tick.
+                                next.set(newPos);
+
+                                lastIteration = true;
+                        }
+                        
+                        // NOTE: This algorithm assumes ticks are quantum.
+                        // Aka there is no tick 8.2, only tick 8 and 9. The whole movevement of the 
+                        // colliding entities (including multiple bounces) within a single tick is 
+                        // considered for collision.
+                        // This may cause a ship to hit a projectile even though their paths really 
+                        // should not have crossed when they both have a high velocity.
+                        
+                        
+                        // First, find collision candidates quickly using a grid (2d array).
+                        final PhysicsPoint diff = new PhysicsPoint();
+                        diff.set(next);
+                        diff.sub(prev);
+                        diff.abs();
+                        diff.add(radius);
+                        
+                        final PhysicsPoint low = new PhysicsPoint(prev);
+                        low.sub(radius);
+                        low.divideFloor(collideGrid.CELL_SIZE);
+
+                        final PhysicsPoint high = new PhysicsPoint(prev);
+                        high.add(radius);
+                        high.divideCeil(collideGrid.CELL_SIZE);
+                        
+                        // Note: the collidGrid is based on non-smoothed positions.
+                        // This does not matter at the moment because collisions are performed
+                        // only with projectiles (which do not have smoothed positions).
+                        // In case we ARE colliding with smoothed positions, a secondary grid is needed.
+                        // Or perhaps simply use a wider area to look for collision candidates
+                        
+                        Iterator<MapEntity> it = collideGrid.iterator(low, high);
+
+                        while (it.hasNext())
+                        {
+                                MapEntity collider = it.next();
+                                
+                                if (collideFilter.loopFilter(collider, tick))
+                                {
+                                        continue;
+                                }
+
+                                final PhysicsPoint hitLocation = new PhysicsPoint();
+                                if (entityCollision(tick, prev, next, collider, hitLocation))
+                                {
+                                        this.hitEntities.add(new HitData(collider, hitLocation));
                                 }
                         }
                         
                         
-                        oldPos.set(newPos);
+                        // Prepare for the next position detail step...
+                        prev.set(next);
+
+                        if (lastIteration)
+                        {
+                                break;
+                        }
                 }
-                
-                oldPos.set(newPos);
-                
-                //enforce map limits to be safe
-                oldPos.x = clip(
-                        oldPos.x, 
-                        map.physicsGetMapLimitMinimum() * TILE_PIXELS + radius, 
-                        map.physicsGetMapLimitMaximum() * TILE_PIXELS - radius);
-                
-                oldPos.y = clip(
-                        oldPos.y, 
-                        map.physicsGetMapLimitMinimum() * TILE_PIXELS + radius, 
-                        map.physicsGetMapLimitMaximum() * TILE_PIXELS - radius);
-                
-                oldPos.enforceOverflowLimit();
-                vel.enforceOverflowLimit();
-                return false;
+   
         }
         
         private boolean hasBouncesLeft()
@@ -335,110 +505,17 @@ public class Collision
                 return this.bounces_left < 0 || bounces <= this.bounces_left;
         }
         
-        private boolean hasActivated()
-        {
-                // call me after incrementing bounces
-                return this.activate_bounces_left <= 0 || bounces > this.activate_bounces_left;
-        }
-        
-        /** A quick check to see if an entity may collide with a point. 
-         * Returning true does not mean it will collide (often it does not)
-         */
-        private boolean mayCollide(MapEntity en)
-        {
-                final PhysicsPoint prev = new PhysicsPoint();
-                final PhysicsPoint next = new PhysicsPoint();
-                
-                PhysicsPointHistoryDetailed posHistory;
-                
-                if (en.useSmoothForCollision(tick))
-                {
-                        if (!en.getHistoricSmoothPosition(prev, tick - 1, false))
-                        {
-                                return false;
-                        }
-                        
-                        posHistory = null;
-                }
-                else
-                {
-                        if (!en.getHistoricPosition(prev, tick - 1, false))
-                        {
-                                return false;
-                        }
-                        
-                        posHistory = en.getAndSeekHistoryDetail(tick, true);
-                }
-
-                int posDiffX = Math.abs(newPos.x - oldPos.x);
-                int posDiffY = Math.abs(newPos.y - oldPos.y);
-                
-                int enRadius = en.radius.get();
-                
-                while (true)
-                {
-                        boolean lastIteration = false;
-                        if (posHistory != null && posHistory.hasNextDetail())
-                        {
-                                posHistory.nextDetail(next);
-                        }
-                        else
-                        {
-                                // run out of details
-                                // the final line to match is the last detail + 
-                                // the final position for this tick.
-                                if (en.useSmoothForCollision(tick))
-                                {
-                                        if (!en.getHistoricSmoothPosition(next, tick, false))
-                                        {
-                                                break;
-                                        }
-                                }
-                                else
-                                {
-                                        if (!en.getHistoricPosition(next, tick, false))
-                                        {
-                                                break;
-                                        }
-                                }
-                                
-                                lastIteration = true;
-                        }
-                        
-                        int diffX = Math.abs(next.x - prev.x);
-                        int diffY = Math.abs(next.y - prev.y);
-                        
-                        if ((oldPos.x + this.radius + posDiffX >= prev.x - diffX - enRadius) &&
-                            (oldPos.y + this.radius + posDiffY >= prev.y - diffY - enRadius) && 
-                            (oldPos.x - this.radius - posDiffX <= prev.x + diffX + enRadius) &&
-                            (oldPos.y - this.radius - posDiffY <= prev.y + diffY + enRadius))
-                        {
-                                return true;
-                        }
-                        
-                        prev.set(next);
-                        if (lastIteration)
-                        {
-                                break;
-                        }
-                }
-                
-                return false;
-        }
-        
-        private boolean tileCollisionRay(PhysicsPoint from, PhysicsPoint to, int radius)
+        private boolean tileCollisionRay(PhysicsPoint rayFrom, PhysicsPoint rayTo, int radius, PhysicsPoint intersect)
         {
                 // bresenham line algorithm
                 // http://tech-algorithm.com/articles/drawing-line-using-bresenham-algorithm/
                 // http://stackoverflow.com/questions/15295195/can-i-easily-skip-pixels-in-bresenhams-line-algorithm
                 
-                int x = to.x;
-                int y = to.y;
+                int x = rayTo.x;
+                int y = rayTo.y;
                 
-                // todo test from == to
-                
-                int w = from.x - x;
-                int h = from.y - y;
+                int w = rayFrom.x - x;
+                int h = rayFrom.y - y;
                 int dx1 = 0, dy1 = 0, dx2 = 0, dy2 = 0;
                 
                 if (w < 0)
@@ -468,8 +545,8 @@ public class Collision
                         dx2 = 1;
                 }
                 
-                int biggest = Math.abs(w); // biggest
-                int smallest = Math.abs(h); // smallest
+                int biggest = Math.abs(w);
+                int smallest = Math.abs(h);
                 
                 if (!(biggest > smallest))
                 {
@@ -499,14 +576,16 @@ public class Collision
                         tilePos.y = y / TILE_PIXELS;
                         
                         if (map.physicsIsSolid(tilePos.x, tilePos.y) 
-                                && tileCollision(tilePos.x, tilePos.y))
+                                && tileCollision(rayFrom, rayTo, tilePos.x, tilePos.y, intersect))
                         {
+                                assert intersect.set;
+                                
                                 return true;
                         }
                         
                         if (radius > 0)
                         {
-                                // todo more efficient
+                                // todo: efficiency?
                                 int radiusTiles = (radius / TILE_PIXELS) + 1;
                                 
                                 for (int tileX = tilePos.x - radiusTiles; tileX <= tilePos.x + radiusTiles; ++tileX)
@@ -514,7 +593,7 @@ public class Collision
                                         for (int tileY = tilePos.y - radiusTiles; tileY <= tilePos.y + radiusTiles; ++tileY)
                                         {
                                                 if (map.physicsIsSolid(tileX, tileY) 
-                                                        && tileCollision(tileX, tileY))
+                                                        && tileCollision(rayFrom, rayTo, tileX, tileY, intersect))
                                                 {
                                                         return true;
                                                 }
@@ -546,7 +625,7 @@ public class Collision
                 return false;
         }
         
-        private boolean tileCollision(int tileX, int tileY)
+        private boolean tileCollision(PhysicsPoint rayFrom, PhysicsPoint rayTo, int tileX, int tileY, PhysicsPoint intersect)
         {
                 final PhysicsPoint tilePixelsTL = new PhysicsPoint();
                 final PhysicsPoint tilePixelsBR = new PhysicsPoint();
@@ -585,7 +664,7 @@ public class Collision
                 
                 sortTileSidesByDist(
                         sides,
-                        tilePixelsTL, oldPos, 
+                        tilePixelsTL, rayFrom, 
                         matchTopSide, matchRightSide, matchBottomSide, matchLeftSide,
                         top, right, bottom, left);
                 
@@ -597,144 +676,106 @@ public class Collision
                                 break;
                         }
                         
+                        boolean collide;
+                        
                         if (side.side == TILE_SIDE.LEFT)
                         {
-                                if (tileCollisionLineSegment(
+                                collide = tileCollisionLineSegment(
+                                        rayFrom, rayTo,
                                         tilePixelsTL.x, tilePixelsTL.y, 
                                         tilePixelsTL.x, tilePixelsTL.y + TILE_PIXELS,
-                                        TILE_SIDE.LEFT
-                                )) return true;
+                                        TILE_SIDE.LEFT,
+                                        intersect);
                         }
                         else if (side.side == TILE_SIDE.RIGHT)
                         {
-                                if (tileCollisionLineSegment(
+                                collide = tileCollisionLineSegment(
+                                        rayFrom, rayTo,
                                         tilePixelsTL.x + TILE_PIXELS, tilePixelsTL.y, 
                                         tilePixelsTL.x + TILE_PIXELS, tilePixelsTL.y + TILE_PIXELS,
-                                        TILE_SIDE.RIGHT
-                                 )) return true;
+                                        TILE_SIDE.RIGHT,
+                                        intersect);
                         }
                         else if (side.side == TILE_SIDE.TOP)
                         {
-                                if (tileCollisionLineSegment(
-                                        tilePixelsTL.x, tilePixelsTL.y, tilePixelsTL.x + TILE_PIXELS, tilePixelsTL.y,
-                                        TILE_SIDE.TOP
-                                )) return true;
+                                collide = tileCollisionLineSegment(
+                                        rayFrom, rayTo,
+                                        tilePixelsTL.x, tilePixelsTL.y, 
+                                        tilePixelsTL.x + TILE_PIXELS, tilePixelsTL.y,
+                                        TILE_SIDE.TOP,
+                                        intersect);
                         }
                         else if (side.side == TILE_SIDE.BOTTOM)
                         {
-                                if (tileCollisionLineSegment(
+                                collide = tileCollisionLineSegment(
+                                        rayFrom, rayTo,
                                         tilePixelsTL.x, tilePixelsTL.y + TILE_PIXELS, 
                                         tilePixelsTL.x + TILE_PIXELS, tilePixelsTL.y + TILE_PIXELS,
-                                        TILE_SIDE.BOTTOM
-                                )) return true;
+                                        TILE_SIDE.BOTTOM,
+                                        intersect
+                                );
                         }
                         else
                         {
                                 assert false;
-                        }
-                }
-                
-                return false;
-        }
-        
-        private boolean entityCollision(MapEntity en)
-        {
-                // note: "en" may be stationairy
-                if (this.radius != 0)
-                {
-                        throw new IllegalArgumentException("Collision between two objects, both with radius is not implemented yet.");
-                }
-                
-                final PhysicsPoint prev = new PhysicsPoint();
-                final PhysicsPoint next = new PhysicsPoint();
-                final PhysicsPoint nearIntersection = new PhysicsPoint();
-                
-                prev.unset();
-                next.unset();
-                
-                PhysicsPointHistoryDetailed posHistory;
-                
-                if (en.useSmoothForCollision(tick))
-                {
-                        if (!en.getHistoricSmoothPosition(prev, tick - 1, false))
-                        {
-                                return false;
+                                continue;
                         }
                         
-                        // Smooth position does not have details
-                        posHistory = null;
-                }
-                else
-                {
-                        if (!en.getHistoricPosition(prev, tick - 1, false))
+                        if (collide)
                         {
-                                return false;
-                        }
-                        
-                        posHistory = en.getAndSeekHistoryDetail(tick, false);
-                }
-                
-                while (true)
-                {
-                        boolean lastIteration = false;
-                        if (posHistory != null && posHistory.hasNextDetail())
-                        {
-                                posHistory.nextDetail(next);
-                        }
-                        else
-                        {
-                                // run out of details
-                                // the final line to match is the last detail + 
-                                // the final position for this tick.
-                                if (en.useSmoothForCollision(tick))
-                                {
-                                        if (!en.getHistoricSmoothPosition(next, tick, false))
-                                        {
-                                                break;
-                                        }
-                                }
-                                else
-                                {
-                                        if (!en.getHistoricPosition(next, tick, false))
-                                        {
-                                                break;
-                                        }
-                                }
-
-                                lastIteration = true;
-                        }
-                        
-                        if (lineSegmentIntersectsConvexPolygon(
-                                oldPos.x, oldPos.y, newPos.x, newPos.y, // the line
-                                buildPositionDeltaPolygon(prev, next, en.radius.get()),
-                                nearIntersection, null))
-                        {
-                                if (nearIntersection.set)
-                                {
-                                        newPos.set(nearIntersection);
-                                }
-                                else
-                                {
-                                        newPos.set(oldPos);
-                                        newPos.set = true;
-                                }
-                                
+                                assert intersect.set;
                                 return true;
                         }
-                        
-
-                        prev.set(next);
-
-                        if (lastIteration)
-                        {
-                                break;
-                        }
                 }
                 
                 return false;
         }
         
-        private List<PhysicsPoint> buildPositionDeltaPolygon(PhysicsPoint from, PhysicsPoint to, int radius)
+        
+        /** Try a single entity on entity collision.
+         * 
+         * @param tick Current tick
+         * @param posFrom The previous position of the entity that this Collision belongs to (not argument en)
+         * @param posTo The next position of the entity that this Collision belongs to (not argument en)
+         * @param en The entity to collide with
+         * @param hitLocation The hit location is set here (nearest intersection)
+         * @return 
+         */
+        private boolean entityCollision(long tick, PhysicsPoint posFrom, PhysicsPoint posTo, MapEntity en, PhysicsPoint hitLocation)
+        {
+                hitLocation.unset();
+                if (en.radius.get() != 0)
+                {
+                        throw new IllegalStateException("Collision between two entities, both with radius is not implemented yet.");
+                }
+                
+                final PhysicsPoint entityFrom = new PhysicsPoint();
+                final PhysicsPoint entityTo = new PhysicsPoint();
+                
+                if (!en.getHistoricPosition(entityFrom, tick - 1, false) ||
+                    !en.getHistoricPosition(entityTo, tick, false))
+                {
+                        return false;
+                }
+                
+                if (lineSegmentIntersectsConvexPolygon(
+                        entityFrom.x, entityFrom.y, entityTo.x, entityTo.y, // The line segment (0 radius)
+                        buildPositionDeltaPolygon(posFrom, posTo, this.radius),
+                        hitLocation, null))
+                {
+                        if (!hitLocation.set)
+                        {
+                                hitLocation.set(entityFrom);
+                                hitLocation.set = true;
+                        }
+
+                        return true;
+                }
+                
+                return false;
+        }
+        
+        private static List<PhysicsPoint> buildPositionDeltaPolygon(PhysicsPoint from, PhysicsPoint to, int radius)
         {
                 final PhysicsPoint v1 = new PhysicsPoint();
                 final PhysicsPoint v2 = new PhysicsPoint();
@@ -894,16 +935,20 @@ public class Collision
                 return vertices; // clockwise
         }
         
-        
-       
-        private boolean tileCollisionLineSegment(int x1, int y1, int x2, int y2, TILE_SIDE tileSide)
+        private boolean tileCollisionLineSegment(
+                PhysicsPoint rayFrom, PhysicsPoint rayTo,
+                int x1, int y1, int x2, int y2, 
+                TILE_SIDE tileSide,
+                PhysicsPoint intersection)
         {
+                intersection.unset();
+                
                 if (this.radius == 0)
                 {
                         // fast case for 0 radius
                         
                         if (!lineSegmentsIntersect(
-                                oldPos.x, oldPos.y, newPos.x, newPos.y, 
+                                rayFrom.x, rayFrom.y, rayTo.x, rayTo.y, 
                                 x1, y1, x2, y2, 
                                 false))
                         {
@@ -914,7 +959,7 @@ public class Collision
                 {
                         if (!lineSegmentIntersectsConvexPolygon(
                                 x1, y1, x2, y2,
-                                buildPositionDeltaPolygon(oldPos, newPos, radius),
+                                buildPositionDeltaPolygon(rayFrom, rayTo, radius),
                                 null, null))
                         {
                                 return false;
@@ -922,13 +967,11 @@ public class Collision
                         
                 }
                 
-                ++bounces;
-                
                 // yay we hit something!
                 if (tileSide == TILE_SIDE.LEFT || tileSide == TILE_SIDE.RIGHT)
                 {
                         int newX;
-                        if (oldPos.x <= x1)
+                        if (rayFrom.x <= x1)
                         {
                                 newX = x1 - radius - 1;
                         }
@@ -937,8 +980,9 @@ public class Collision
                                 newX = x1 + radius + 1;
                         }
                         
-                        newPos.y = findYOnLine(oldPos, newPos, newX);
-                        newPos.x = newX;
+                        intersection.set = true;
+                        intersection.y = findYOnLine(rayFrom, rayTo, newX);
+                        intersection.x = newX;
 
                         if (hasBouncesLeft())
                         {
@@ -951,7 +995,7 @@ public class Collision
                 else if (tileSide == TILE_SIDE.TOP || tileSide == TILE_SIDE.BOTTOM)
                 {
                         int newY;
-                        if (oldPos.y <= y1)
+                        if (rayFrom.y <= y1)
                         {
                                 newY = y1 - radius - 1;
                         }
@@ -960,8 +1004,9 @@ public class Collision
                                 newY = y1 + radius + 1;
                         }
                         
-                        newPos.x = findXOnLine(oldPos, newPos, newY);
-                        newPos.y = newY;
+                        intersection.set = true;
+                        intersection.x = findXOnLine(rayFrom, rayTo, newY);
+                        intersection.y = newY;
                         
                         if (hasBouncesLeft())
                         {
@@ -975,6 +1020,8 @@ public class Collision
                 {
                         assert false;
                 }
+                
+                assert intersection.set;
                 
                 return true;
         }
@@ -996,9 +1043,7 @@ public class Collision
                 }
         }
         
-        
-        
-        private void sortTileSidesByDist(
+        private static void sortTileSidesByDist(
                 TileSideDist[] ret,
                 PhysicsPoint tilePixels, PhysicsPoint point, 
                 boolean matchTopSide, boolean matchRightSide, boolean matchBottomSide, boolean matchLeftSide,
@@ -1057,7 +1102,19 @@ public class Collision
                 }
         }
         
-        private boolean lineSegmentsIntersect(
+        public static boolean lineSegmentsIntersect(
+                PhysicsPoint start1, PhysicsPoint end1, 
+                PhysicsPoint start2, PhysicsPoint end2, 
+                boolean checkCollinear)
+        {
+                return lineSegmentsIntersect(
+                        start1.x, start1.y, end1.x, end1.y,
+                        start2.x, start2.y, end2.x, end2.y,
+                        checkCollinear
+                );
+        }
+        
+        public static boolean lineSegmentsIntersect(
                 int x1, int y1, int x2, int y2, 
                 int x3, int y3, int x4, int y4,
                 boolean checkCollinear)
@@ -1074,7 +1131,8 @@ public class Collision
                         return false;
                 }
                 
-                // Fastest method, based on Franklin Antonio's "Faster Line Segment Intersection" topic "in Graphics Gems III" book (http://www.graphicsgems.org/)
+                // Fastest method, based on Franklin Antonio's "Faster Line Segment Intersection" 
+                // topic "in Graphics Gems III" book (http://www.graphicsgems.org/)
                 long ax = x2 - (long) x1;
                 long ay = y2 - (long) y1;
                 long bx = x3 - (long) x4;
@@ -1166,7 +1224,7 @@ public class Collision
          * @param farIntersection If not null, the intersection point furthest from the start of the line is set here.
          * @return true if the line intersects
          */
-        public boolean lineSegmentIntersectsConvexPolygon(
+        public static boolean lineSegmentIntersectsConvexPolygon(
                 int startX, int startY,
                 int endX, int endY,
                 List<PhysicsPoint> vertices,
@@ -1323,7 +1381,7 @@ public class Collision
 		return true;
         }
      
-        private int findXOnLine(PhysicsPoint a, PhysicsPoint b, int y)
+        public static int findXOnLine(PhysicsPoint a, PhysicsPoint b, int y)
         {
                 //y = y1 + (y2 - y1) / (x2 - x1) * (x - x1), 
                 long d = ((long) b.y - a.y);
@@ -1334,7 +1392,7 @@ public class Collision
                 return (int) (a.x + ((long) b.x - a.x) * ((long) y - a.y) / d);
         }
         
-        private int findYOnLine(PhysicsPoint a, PhysicsPoint b, int x)
+        public static int findYOnLine(PhysicsPoint a, PhysicsPoint b, int x)
         {
                 //y = y1 + (y2 - y1) / (x2 - x1) * (x - x1), 
                 long d = ((long) b.x - a.x);
@@ -1346,12 +1404,17 @@ public class Collision
         }
         
         /** Find the intersection point between 2 infinite lines.
+         * @param result
+         * @param line1Start
+         * @param line1End
+         * @param line2Start
+         * @param line2End
          * @return true if an intersection is found; false if the lines 
          *         are parallel or if the intersection point is outside
          *         the gameplay area.
          * 
          */
-        private boolean findLineLineIntersection(
+        public static boolean findLineLineIntersection(
                 PhysicsPoint result, 
                 PhysicsPoint line1Start, PhysicsPoint line1End,
                 PhysicsPoint line2Start, PhysicsPoint line2End
@@ -1455,7 +1518,7 @@ public class Collision
          * @param vertices Vertices sorted clockwise or counter clockwise; at least 3
          * @deprecated currently not in use, convert to integer before use
          */
-        private strictfp boolean pointInsideConvexPolygon(int px, int py, PhysicsPoint ... vertices)
+        private static strictfp boolean pointInsideConvexPolygon(int px, int py, PhysicsPoint ... vertices)
         {
                 assert vertices.length >= 3;
                 
@@ -1479,143 +1542,8 @@ public class Collision
         }
         
         /** @deprecated currently not in use, convert to integer before use */
-        private boolean pointInsideConvexPolygon(PhysicsPoint point, PhysicsPoint ... vertices)
+        private static boolean pointInsideConvexPolygon(PhysicsPoint point, PhysicsPoint ... vertices)
         {
                 return pointInsideConvexPolygon(point.x, point.y, vertices);
         }
-        
-        
-        
-        /*private static void bresenham_line(int x, int y, int x2, int y2, final int step)
-        {
-                // bresenham line algorithm
-                // http://tech-algorithm.com/articles/drawing-line-using-bresenham-algorithm/
-                // http://stackoverflow.com/questions/15295195/can-i-easily-skip-pixels-in-bresenhams-line-algorithm
-                
-                int w = x2 - x;
-                int h = y2 - y;
-                int dx1 = 0, dy1 = 0, dx2 = 0, dy2 = 0;
-                
-                assert step > 0;
-                
-                if (w < 0)
-                {
-                        dx1 = -1;
-                }
-                else if (w > 0)
-                {
-                        dx1 = 1;
-                }
-                
-                if (h < 0)
-                {
-                        dy1 = -1;
-                }
-                else if (h > 0)
-                {
-                        dy1 = 1;
-                }
-                
-                if (w < 0)
-                {
-                        dx2 = -1;
-                }
-                else if (w > 0)
-                {
-                        dx2 = 1;
-                }
-                
-                int biggest = Math.abs(w); // biggest
-                int smallest = Math.abs(h); // smallest
-                
-                if (!(biggest > smallest))
-                {
-                        int tmp = biggest;
-                        biggest = smallest;
-                        smallest = tmp;
-                        
-                        if (h < 0)
-                        {
-                                dy2 = -1;
-                        }
-                        else if (h > 0)
-                        {
-                                dy2 = 1;
-                        }
-                        
-                        dx2 = 0;
-                }
-                
-                int numerator = biggest >> 1;
-                
-                for (int i = 0; i <= biggest; i += step)
-                {
-                        Graph.g.drawLine(x, y, x, y);
-                        
-                        if (biggest == 0)
-                        {
-                                break;
-                        }
-                        
-                        int k_old = numerator;
-                        
-                        numerator = (numerator + smallest * step) % biggest;
-                        
-                        if (!(numerator < biggest))
-                        {
-                                numerator -= biggest;
-                        }
-                        
-                        x += ((k_old + smallest * step) / biggest) * dx1 + (step - ((k_old + smallest * step) / biggest)) * dx2;
-                        y += ((k_old + smallest * step) / biggest) * dy1 + (step - ((k_old + smallest * step) / biggest)) * dy2;
-                }
-        }
-        
-        public static void main(String[] args)  throws Exception
-        {
-                Display.setTitle("Aphelion");
-                Display.setFullscreen(false);
-                Display.setVSyncEnabled(false);
-                Display.setInitialBackground(0f, 0f, 0f);
-                Display.setDisplayMode(new DisplayMode(1024, 768));
-                Display.create();
-                
-                while(true)
-                {
-                        Display.update();
-                        
-                        if (Display.isCloseRequested())
-                        {
-                                break;
-                        }
-                        GL11.glViewport(0, 0, 1024, 768);
-
-                        GL11.glMatrixMode(GL11.GL_PROJECTION);
-                        GL11.glLoadIdentity();
-                        GL11.glOrtho(0, 1024, 768, 0, -1, 1);
-
-                        GL11.glMatrixMode(GL11.GL_TEXTURE);
-                        GL11.glLoadIdentity();
-
-                        GL11.glMatrixMode(GL11.GL_MODELVIEW);
-                        GL11.glLoadIdentity();
-                        
-                        Graph.g.setColor(Color.red);
-                        bresenham_line(100, 100, 400, 130, 1);
-                        
-                        Graph.g.setColor(Color.green);
-                        bresenham_line(100, 100, 400, 130, 4);
-                        
-                        
-                        Graph.g.setColor(Color.red);
-                        bresenham_line(100, 90, 100, 90, 1);
-                        
-                        
-                        
-                        
-                        Display.sync(60);
-                }
-                
-                Display.destroy();
-        }*/
 }

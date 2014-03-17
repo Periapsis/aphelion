@@ -103,7 +103,8 @@ public final class Projectile extends MapEntity implements ProjectilePublic
         public int proxExplodeDelay;
         
         
-        
+        /** If set, we hit a tile during during performDeadReckoning() and an event should be fired soon. */
+        private final PhysicsPoint hitTile = new PhysicsPoint();
         public Actor proxActivatedBy;
         public long proxLastSeenDist;
         public long proxLastSeenDist_tick;
@@ -227,20 +228,23 @@ public final class Projectile extends MapEntity implements ProjectilePublic
                         rot,
                         offsetY);
                 
-                // make sure the projectile does not spawn inside of a tile
-                state.collision.deadReckonTick(
-                        tick, 
-                        null, // do not record position details
-                        pos.pos, 
-                        offset, // use the offset for the vel amount, note that Collision might modify this value
-                        state.env.getMap(), 
-                        cfg(config.projectile_hitTile, tick),
-                        null, null,
-                        radius.get(),
-                        1024, 
-                        1024,
-                        0, // 0 bounces, the resulting position will be set at the collide position
-                        0);
+                Collision collision = state.collision;
+                collision.reset();
+                collision.setPreviousPosition(pos.pos);
+                if (cfg(config.projectile_hitTile, tick))
+                {
+                        collision.setMap(state.env.getMap());
+                }
+                collision.setVelocity(offset);
+                collision.setRadius(radius.get());
+                collision.setBouncesLeft(0); // 0 bounces, the resulting position will be set at the collide position
+                
+                collision.tickMap(tick);
+                collision.getNewPosition(pos.pos);
+                
+                
+                // make sure the projectile does not spawn inside of a tile (unless the ship is inside a tile too)
+
 
                 if (cfg(config.projectile_speedRelative, tick))
                 {
@@ -271,185 +275,199 @@ public final class Projectile extends MapEntity implements ProjectilePublic
         public void performDeadReckoning(PhysicsMap map, long tick_now, long reckon_ticks)
         {
                 Collision collision = state.collision;
+                collision.reset();
+                collision.setMap(this.collideTile ? map : null);
+                collision.setRadius(this.radius.get());
+                
                 for (long t = 0; t < reckon_ticks; ++t)
                 {
                         long tick = tick_now + t;
                         
                         if (this.isRemoved(tick))
                         {
-                                updatePositionHistory(tick);
+                                updatedPosition(tick);
                                 continue;
                         }
                         
-                        List<MapEntity> collidesWith = null;
-                        if (this.collideShip)
-                        {
-                                collidesWith = (List<MapEntity>) (Object)state.actorsList;
-                        }
-                        
-                        
-                        
-                        boolean hit = collision.deadReckonTick(
-                                tick, 
-                                null, // do not record position details
-                                pos.pos, 
-                                pos.vel, 
-                                map, 
-                                this.collideTile,
-                                collidesWith, this.collidesWithFilter,
-                                radius.get(), 
-                                bounceFriction, 
-                                bounceOtherAxisFriction,
-                                bounces_left,
-                                activate_bounces_left);
+                        collision.setPreviousPosition(pos.pos);
+                        collision.setVelocity(pos.vel);
+                        collision.setBouncesLeft(bounces_left);
+                        collision.tickMap(tick);
+                        collision.getNewPosition(pos.pos);
+                        collision.getVelocity(pos.vel);
                         
                         if (bounces_left >= 0)
                         {
-                                bounces_left -= collision.bounces;
+                                bounces_left -= collision.getBounces();
                                 if (bounces_left < 0) bounces_left = 0;
                         }
                         
                         if (activate_bounces_left > 0)
                         {
-                                activate_bounces_left -= collision.bounces;
+                                activate_bounces_left -= collision.getBounces();
                                 if (activate_bounces_left < 0) activate_bounces_left = 0;
                         }
                         
-                        updatePositionHistory(tick);
-                        
-                        // hit an actor?
-                        if (hit && collision.hitEntity != null)
-                        {
-                                // note: we may execute the event multiple times on the same state
-                                // This is valid. (it happens when a timewarp occurs)
-                                // The event should discard the previous consistency information.
-                                
-                                for (int s = 0; s < this.crossStateList.length; ++s)
-                                {
-                                        Projectile other = (Projectile) this.crossStateList[s];
-                                        if (other != null && other.explosionEvent != null)
-                                        {
-                                                this.explosionEvent = other.explosionEvent;
-                                                break;
-                                        }
-                                }
-                                
-                                ProjectileExplosion event = explosionEvent == null ? null : explosionEvent.get();
-                                if (event == null)
-                                {
-                                        event = new ProjectileExplosion(state.econfig);
-                                        explosionEvent = new WeakReference<>(event);
-                                }
-                                
-                                Actor actorHit = (Actor) collision.hitEntity;
-                                state.env.addEvent(event);
-                                event.execute(tick, this.state, this, ProjectileExplosionPublic.EXPLODE_REASON.HIT_SHIP, actorHit, null);
-                                continue;
-                        }
+                        updatedPosition(tick);
                         
                         // hit a tile?
-                        if (hit && collision.hitTile.set)
+
+                        if (collision.hasExhaustedBounces())
                         {
-                                // note: we may execute the event multiple times on the same state
-                                // This is valid. (it happens when a timewarp occurs)
-                                // The event should discard the previous consistency information.
+                                collision.getHitTile(hitTile);
+                                hitTile.set = true;
                                 
-                                for (int s = 0; s < this.crossStateList.length; ++s)
-                                {
-                                        Projectile other = (Projectile) this.crossStateList[s];
-                                        if (other != null && other.explosionEvent != null)
-                                        {
-                                                this.explosionEvent = other.explosionEvent;
-                                                break;
-                                        }
-                                }
-                                
-                                ProjectileExplosion event = explosionEvent == null ? null : explosionEvent.get();
-                                if (event == null)
-                                {
-                                        event = new ProjectileExplosion(state.econfig);
-                                        explosionEvent = new WeakReference<>(event);
-                                }
-                                
-                                state.env.addEvent(event);
-                                event.execute(tick, this.state, this, ProjectileExplosionPublic.EXPLODE_REASON.HIT_TILE, null, collision.hitTile);
-                                
-                                continue;
+                                // The event is not really executed until actors have ticked (see tickProjectileAfterActor)
+                                // This is so that hitting an actor is prioritized over hitting a tile.
+                        }        
+                }
+        }
+        
+        public void hitByActor(long tick, Actor actor, PhysicsPoint location)
+        {
+                // note: we may execute the event multiple times on the same state
+                // This is valid. (it happens when a timewarp occurs)
+                // The event should discard the previous consistency information.
+                
+                if (location.set)
+                {
+                        this.pos.pos.set(location);
+                        updatedPosition(tick);
+                }
+
+                for (int s = 0; s < this.crossStateList.length; ++s)
+                {
+                        Projectile other = (Projectile) this.crossStateList[s];
+                        if (other != null && other.explosionEvent != null)
+                        {
+                                this.explosionEvent = other.explosionEvent;
+                                break;
                         }
-                        
-                        // Proximity bombs 
-                        // (unlike continuum prox bombs still take part in regular collision unless 
-                        //  disabled by config)
-                        if (proxDist > 0 && (this.proxActivatedBy == null || this.proxActivatedBy.isRemoved(tick)))
+                }
+                
+                // Do not execute the hit tile event if it was planned.
+                hitTile.set = false;
+
+                ProjectileExplosion event = explosionEvent == null ? null : explosionEvent.get();
+                if (event == null)
+                {
+                        event = new ProjectileExplosion(state.econfig);
+                        explosionEvent = new WeakReference<>(event);
+                }
+                
+                state.env.addEvent(event);
+                event.execute(tick, this.state, this, ProjectileExplosionPublic.EXPLODE_REASON.HIT_SHIP, actor, null);
+        }
+        
+        public void tickProjectileAfterActor(long tick)
+        {
+                if (this.isRemoved(tick))
+                {
+                        return;
+                }
+                
+                if (this.hitTile.set)
+                {
+                        // note: we may execute the event multiple times on the same state
+                        // This is valid. (it happens when a timewarp occurs)
+                        // The event should discard the previous consistency information.
+
+                        for (int s = 0; s < this.crossStateList.length; ++s)
                         {
-                                long proxDistSq = proxDist * (long) proxDist;
-
-                                for (Actor actor : state.actorsList)
+                                Projectile other = (Projectile) this.crossStateList[s];
+                                if (other != null && other.explosionEvent != null)
                                 {
-                                        if (this.collidesWithFilter.loopFilter(actor, tick))
-                                        {
-                                                continue;
-                                        }
-
-                                        // easy case
-                                        long distSq = this.pos.pos.distanceSquared(actor.pos.pos);
-                                        if (distSq > proxDistSq)
-                                        {
-                                                continue;
-                                        }
-                                        
-                                        
-                                        long dist = this.pos.pos.distance(actor.pos.pos, distSq);
-                                        if (dist > proxDist)
-                                        {
-                                                continue;
-                                        }
-                                        
-                                        this.proxActivatedBy = actor;
-                                        this.proxActivatedAt_tick = tick;
-                                        this.proxLastSeenDist = dist;
-                                        this.proxLastSeenDist_tick = tick;
+                                        this.explosionEvent = other.explosionEvent;
                                         break;
                                 }
                         }
-                        
-                        if (this.proxActivatedBy != null)
+
+                        ProjectileExplosion event = explosionEvent == null ? null : explosionEvent.get();
+                        if (event == null)
                         {
-                                long dist = this.pos.pos.distance(this.proxActivatedBy.pos.pos);
-                                
-                                if (tick <= this.proxLastSeenDist_tick)
+                                event = new ProjectileExplosion(state.econfig);
+                                explosionEvent = new WeakReference<>(event);
+                        }
+
+                        state.env.addEvent(event);
+                        event.execute(tick, this.state, this, ProjectileExplosionPublic.EXPLODE_REASON.HIT_TILE, null, hitTile);
+                        assert this.isRemoved(tick); // Otherwise this event fires over and over and over
+                        return;
+                }
+                
+                // TODO: Use state.entityGrid if it is much faster?
+                // Proximity bombs 
+                // (unlike continuum prox bombs still take part in regular collision unless 
+                //  disabled by config)
+                if (proxDist > 0 && (this.proxActivatedBy == null || this.proxActivatedBy.isRemoved(tick)))
+                {
+                        long proxDistSq = proxDist * (long) proxDist;
+
+                        for (Actor actor : state.actorsList)
+                        {
+                                if (this.collidesWithFilter.loopFilter(actor, tick))
                                 {
-                                        // Reexecuting moves, reset the last seen distance
-                                }
-                                else
-                                {
-                                        if (dist > this.proxLastSeenDist)
-                                        {
-                                                // moving away! detonate
-                                                
-                                                explodeWithoutHit(tick, EXPLODE_REASON.PROX_DIST);
-                                                continue;
-                                        }
-                                }
-                                
-                                this.proxLastSeenDist = dist;
-                                this.proxLastSeenDist_tick = tick;
-                                
-                                if (proxExplodeDelay >= 0 && tick - this.proxActivatedAt_tick >= proxExplodeDelay)
-                                {
-                                        explodeWithoutHit(tick, EXPLODE_REASON.PROX_DELAY);
                                         continue;
                                 }
+
+                                // easy case
+                                long distSq = this.pos.pos.distanceSquared(actor.pos.pos);
+                                if (distSq > proxDistSq)
+                                {
+                                        continue;
+                                }
+
+
+                                long dist = this.pos.pos.distance(actor.pos.pos, distSq);
+                                if (dist > proxDist)
+                                {
+                                        continue;
+                                }
+
+                                this.proxActivatedBy = actor;
+                                this.proxActivatedAt_tick = tick;
+                                this.proxLastSeenDist = dist;
+                                this.proxLastSeenDist_tick = tick;
+                                break;
+                        }
+                }
+
+                if (this.proxActivatedBy != null)
+                {
+                        long dist = this.pos.pos.distance(this.proxActivatedBy.pos.pos);
+
+                        if (tick <= this.proxLastSeenDist_tick)
+                        {
+                                // Reexecuting moves, reset the last seen distance
+                        }
+                        else
+                        {
+                                if (dist > this.proxLastSeenDist)
+                                {
+                                        // moving away! detonate
+
+                                        explodeWithoutHit(tick, EXPLODE_REASON.PROX_DIST);
+                                        assert this.isRemoved(tick); // Otherwise this event fires over and over and over
+                                        return;
+                                }
+                        }
+
+                        this.proxLastSeenDist = dist;
+                        this.proxLastSeenDist_tick = tick;
+
+                        if (proxExplodeDelay >= 0 && tick - this.proxActivatedAt_tick >= proxExplodeDelay)
+                        {
+                                explodeWithoutHit(tick, EXPLODE_REASON.PROX_DELAY);
+                                assert this.isRemoved(tick); // Otherwise this event fires over and over and over
+                                return;
                         }
                 }
         }
         
         public void explodeWithoutHit(long tick, ProjectileExplosionPublic.EXPLODE_REASON reason)
         {
-                if (this.isRemoved(tick))
-                {
-                        assert false;
-                }
+                assert !this.isRemoved(tick);
+                
                 
                 for (int s = 0; s < this.crossStateList.length; ++s)
                 {

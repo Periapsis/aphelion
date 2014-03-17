@@ -137,7 +137,7 @@ public class ActorNew extends Operation implements ActorNewPublic
                         actor.applyMoveable(spawnWarp, this.tick); // sets the current position
                 }
                 
-                actor.updatePositionHistory(this.tick);
+                actor.updatedPosition(this.tick);
                 
                 // dead reckon current position so that it is no longer late
                 // the position at the tick of this operation should not be dead reckoned, therefor +1
