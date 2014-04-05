@@ -38,6 +38,7 @@
 package aphelion.client.net;
 
 import aphelion.shared.event.ClockSource;
+import aphelion.shared.swissarmyknife.ThreadSafe;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -70,9 +71,10 @@ import java.util.List;
 
 public class ClockSync implements ClockSource
 {
-        private int entryLimit;
-        private List<Entry> entries = new ArrayList<>(); // sorted
-        private long offset;
+        private final int entryLimit;
+        private final List<Entry> entries = new ArrayList<>(); // sorted
+        private volatile boolean hasResponse = false;
+        private volatile long offset;
         
         public ClockSync(int entryLimit)
         {
@@ -85,7 +87,8 @@ public class ClockSync implements ClockSource
          * @param clientRequestTime When was the request sent?
          * @param serverNanoTime What (nano) time value did the server send us
          */
-        public void addResponse(long receivedAt, long clientRequestTime, long serverNanoTime)
+        @ThreadSafe
+        public synchronized void addResponse(long receivedAt, long clientRequestTime, long serverNanoTime)
         {
                 long latency = (receivedAt - clientRequestTime) / 2;
                 long timeOffset = serverNanoTime - receivedAt + latency;
@@ -103,7 +106,8 @@ public class ClockSync implements ClockSource
                         removeOldest();
                 }
                 
-                offset = calculateOffset();
+                offset = calculateOffset(); // ofset is only set so that the getters do not need to lock
+                hasResponse = true; // set me AFTER setting offset to gaurantee thread safety
         }
         
         private void removeOldest()
@@ -217,14 +221,16 @@ public class ClockSync implements ClockSource
                 }
         }
         
+        @ThreadSafe
         public boolean hasResponse()
         {
-                return !entries.isEmpty();
+                return hasResponse;
         }
         
+        @ThreadSafe
         public long getOffset()
         {
-                if (entries.isEmpty())
+                if (!hasResponse())
                 {
                         throw new IllegalStateException("Atleast one response must have been collected");
                 }
@@ -232,6 +238,7 @@ public class ClockSync implements ClockSource
         }
 
         @Override
+        @ThreadSafe
         public long nanoTime()
         {
                 return System.nanoTime() + getOffset();

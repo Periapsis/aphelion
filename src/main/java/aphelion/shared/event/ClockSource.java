@@ -37,6 +37,8 @@
  */
 package aphelion.shared.event;
 
+import aphelion.shared.swissarmyknife.ThreadSafe;
+
 /**
  *
  * @author Joris
@@ -47,8 +49,9 @@ public interface ClockSource
          * This value may wrap/overflow. (MAX_VALUE -> MIN_VALUE).
          * This value should be immune to system clock changes.
          * Subsequent calls are not guaranteed to be larger or equal to the previous call,
-         * the clock source might be a result of a synchronisation with a server.
+         * the clock source might be a result of a synchronization with a server.
          * @return Relative time in nano seconds (10^-9 seconds)
          */
+        @ThreadSafe
         public long nanoTime();
 }

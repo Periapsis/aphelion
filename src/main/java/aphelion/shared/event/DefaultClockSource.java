@@ -38,6 +38,8 @@
 
 package aphelion.shared.event;
 
+import aphelion.shared.swissarmyknife.ThreadSafe;
+
 /**
  * The clock source that is used by default. This simply returns the local nanoTime()
  * @author Joris
@@ -46,8 +48,22 @@ public class DefaultClockSource implements ClockSource
 {
 
         @Override
+        @ThreadSafe
         public long nanoTime()
         {
                 return System.nanoTime();
+                /* https://blogs.oracle.com/dholmes/entry/inside_the_hotspot_vm_clocks
+                The default mechanism used by QPC is determined by the Hardware 
+                Abstraction layer(HAL), but some systems allow you to 
+                explicitly control it using options in boot.ini, such as /usepmtimer 
+                that explicitly requests use of the power management timer. 
+                This default changes not only across hardware but also across OS versions. 
+                For example Windows XP Service Pack 2 changed things to use the power 
+                management timer (PMTimer) rather than the processor timestamp-counter 
+                (TSC) due to problems with the TSC not being synchronized on different 
+                processors in SMP systems, and due the fact its frequency can vary 
+                (and hence its relationship to elapsed time) based on power-management 
+                settings
+                */
         }
 }

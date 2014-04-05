@@ -50,7 +50,7 @@ import java.util.concurrent.TimeUnit;
 /** A simple event loop that runs on a fixed interval (ticks). 
  * If a tick suddenly takes too much time to run or if the clock changes, the loop 
  * will catch up to the proper number of iterations.
- * Methods are not safe to call from different threads (unless noted otherwise)
+ * Methods are not safe to call from different threads (unless noted otherwise).
  * @author Joris
  */
 public class TickedEventLoop implements Workable, Timerable
@@ -102,28 +102,60 @@ public class TickedEventLoop implements Workable, Timerable
          */
         public TickedEventLoop(long tickLength, int workerThreads, ClockSource clockSource)
         {
-                int a;
-                
                 this.clockSource = clockSource;
                 if (this.clockSource == null)
                 {
                         this.clockSource = new DefaultClockSource();
                 }
                 
+                this.TICK = tickLength * 1000 * 1000;
+                this.tick = 0;
+                
                 if (workerThreads > 0)
                 {
                         this.tasks = new ArrayBlockingQueue<>(workerThreads * TASK_QUEUE_SIZE); // with 4 threads, queue a maximum of 128 tasks
-                        this.completedTasks = new ArrayBlockingQueue<>(COMPLETED_TASK_QUEUE_SIZE); // Fire a maximum of 32 callbacks a time
-                        this.completedTasks_local = new LinkedList<>(); // Fire a maximum of 32 callbacks a time
-                        this.workerThreads = new WorkerThread[workerThreads];
                 }
+                this.completedTasks = new ArrayBlockingQueue<>(COMPLETED_TASK_QUEUE_SIZE); // Fire a maximum of 32 callbacks a time
+                this.completedTasks_local = new LinkedList<>(); // Fire a maximum of 32 callbacks a time
+                this.workerThreads = new WorkerThread[workerThreads];
                 
-                this.TICK = tickLength * 1000 * 1000;
-                
-                for (a = 0; a < workerThreads; ++a)
+                for (int i = 0; i < workerThreads; ++i)
                 {
-                        this.workerThreads[a] = new WorkerThread(this, tasks, completedTasks);
-                        this.workerThreads[a].setDaemon(true);
+                        this.workerThreads[i] = new WorkerThread(this, tasks, completedTasks);
+                        this.workerThreads[i].setDaemon(true);
+                }
+        }
+        
+        /** Construct and synchronize with an other event loop.
+         * This loop will have the same clock source and tick length.
+         * This loop will begin with the same tick cound and will tick at the same time.
+         * 
+         * When you use this constructor to synchronize loops across threads, make sure
+         * that the clock source returns the same value on all threads! (this is a known issue
+         * with System.nanoTime on old windows systems.
+         * @param other
+         * @param workerThreads How many worker threads to spawn (used by addWorkerTask). 0 to not spawn any threads
+         */
+        public TickedEventLoop(TickedEventLoop other, int workerThreads)
+        {
+                this.clockSource = other.clockSource;
+                this.TICK = other.TICK;
+                this.nano = other.nano;
+                this.tick = other.tick;
+                
+                if (workerThreads > 0)
+                {
+                        this.tasks = new ArrayBlockingQueue<>(workerThreads * TASK_QUEUE_SIZE); // with 4 threads, queue a maximum of 128 tasks
+                }
+                this.completedTasks = new ArrayBlockingQueue<>(COMPLETED_TASK_QUEUE_SIZE); // Fire a maximum of 32 callbacks a time
+                this.completedTasks_local = new LinkedList<>(); // Fire a maximum of 32 callbacks a time
+                this.workerThreads = new WorkerThread[workerThreads];
+
+                
+                for (int i = 0; i < workerThreads; ++i)
+                {
+                        this.workerThreads[i] = new WorkerThread(this, tasks, completedTasks);
+                        this.workerThreads[i].setDaemon(true);
                 }
         }
 
@@ -163,25 +195,31 @@ public class TickedEventLoop implements Workable, Timerable
         /** When this EventLoop is part of another loop, use this method before starting the loop */
         public void setup()
         {
-                int a;
-                assert !setup;
+                if (setup)
+                {
+                        throw new IllegalStateException();
+                }
                 
                 myThread = Thread.currentThread();
                 
                 Deadlock.add(this);
                 
-                if (workerThreads != null)
+                
+                for (int i = 0; i < workerThreads.length; ++i)
                 {
-                        for (a = 0; a < workerThreads.length; ++a)
-                        {
-                                workerThreads[a].start();
-                        }
+                        workerThreads[i].start();
                 }
+
                 
                 setup = true;
                 interrupted = false;
-                nano = nanoTime();
-                tick = 0;
+                
+                // If not 0, the "TickedEventLoop other" constructor was used.
+                if (this.tick == 0 && nano == 0)
+                {
+                        nano = nanoTime();
+                        tick = 0;
+                }
                 
                 breakdown = false;
         }
@@ -189,9 +227,14 @@ public class TickedEventLoop implements Workable, Timerable
         /** When this EventLoop is part of another loop, use this method after ending the loop */
         public void breakdown()
         {
-                int a;
-                assert setup;
-                assert !breakdown;
+                if (!setup)
+                {
+                        throw new IllegalStateException();
+                }
+                if (breakdown)
+                {
+                        throw new IllegalStateException();
+                }
                 
                 Deadlock.remove(this);
                 
@@ -199,31 +242,27 @@ public class TickedEventLoop implements Workable, Timerable
                 setup = false;
                 interrupted = true;
                 
-                if (workerThreads != null)
+                for (int i = 0; i < workerThreads.length; ++i)
                 {
-                        for (a = 0; a < workerThreads.length; ++a)
+                        workerThreads[i].interrupt();
+                }
+
+
+                for (int i = 0; i < workerThreads.length; ++i)
+                {
+                        while (true)
                         {
-                                workerThreads[a].interrupt();
-                        }
-                
-                
-                        for (a = 0; a < workerThreads.length; ++a)
-                        {
-                                while (true)
+                                try
                                 {
-                                        try
-                                        {
-                                                workerThreads[a].join();
-                                                break;
-                                        }
-                                        catch (InterruptedException ex)
-                                        {
-                                        }
+                                        workerThreads[i].join();
+                                        break;
+                                }
+                                catch (InterruptedException ex)
+                                {
                                 }
                         }
                 }
-                
-                myThread = null;
+
         }
         
         /** When this EventLoop is part of another loop, 
@@ -333,8 +372,7 @@ public class TickedEventLoop implements Workable, Timerable
                 // synchronize(40'050, 20) is called:
                 // currentTickTime = 40'020 - (22 - 20) * 10 = 40'000
                 // this.nanos = 40'020 - (40'000 - 40'050) = 40070
-                // tick 22 is now at 40'070ms
-                
+                // tick 22 is now at 40'070ms       
         }
         
         /** Blocks until stop() is called */
@@ -665,7 +703,7 @@ public class TickedEventLoop implements Workable, Timerable
         @SuppressWarnings("unchecked")
         public AbstractPromise addWorkerTask(WorkerTask task, Object argument) throws IllegalArgumentException, IllegalStateException
         {
-                if (workerThreads == null || workerThreads.length <= 0)
+                if (workerThreads.length <= 0)
                 {
                         throw new IllegalArgumentException("There are no worker threads present");
                 }
