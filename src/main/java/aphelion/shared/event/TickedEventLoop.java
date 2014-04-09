@@ -59,6 +59,7 @@ public class TickedEventLoop implements Workable, Timerable
         public ClockSource clockSource;
         private long nano = 0;
         private long tick = 0;
+        private final boolean syncedByOtherLoop;
         private boolean setup = false;
         private boolean breakdown = false;
         private volatile boolean interrupted = false;
@@ -109,7 +110,7 @@ public class TickedEventLoop implements Workable, Timerable
                 }
                 
                 this.TICK = tickLength * 1000 * 1000;
-                this.tick = 0;
+                syncedByOtherLoop = false;
                 
                 if (workerThreads > 0)
                 {
@@ -138,10 +139,16 @@ public class TickedEventLoop implements Workable, Timerable
          */
         public TickedEventLoop(TickedEventLoop other, int workerThreads)
         {
+                if (!other.setup)
+                {
+                        throw new IllegalArgumentException("Given loop has not been setup");
+                }
+                
                 this.clockSource = other.clockSource;
                 this.TICK = other.TICK;
                 this.nano = other.nano;
                 this.tick = other.tick;
+                syncedByOtherLoop = true;
                 
                 if (workerThreads > 0)
                 {
@@ -215,7 +222,7 @@ public class TickedEventLoop implements Workable, Timerable
                 interrupted = false;
                 
                 // If not 0, the "TickedEventLoop other" constructor was used.
-                if (this.tick == 0 && nano == 0)
+                if (!syncedByOtherLoop)
                 {
                         nano = nanoTime();
                         tick = 0;
