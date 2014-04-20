@@ -44,7 +44,7 @@ import aphelion.shared.physics.valueobjects.PhysicsPoint;
 import aphelion.shared.physics.valueobjects.PhysicsPointHistoryDetailed;
 import aphelion.shared.physics.valueobjects.PhysicsPositionVector;
 import aphelion.shared.swissarmyknife.LinkedListEntry;
-import aphelion.shared.swissarmyknife.LinkedListHead;
+import javax.annotation.Nullable;
 
 /**
  *
@@ -77,12 +77,12 @@ public abstract class MapEntity
          */
         public GCInteger radius;
 
-        public long debug_id;
-        public long debug_id_with_reset;
+        //public long debug_id;
+        //public long debug_id_with_reset;
         MapEntity(State state, MapEntity[] crossStateList, long createdAt_tick, int historyLength)
         {
-                this.debug_id = ++state.env.debug_entities;
-                this.debug_id_with_reset = debug_id;
+                //this.debug_id = ++state.env.debug_entities;
+                //this.debug_id_with_reset = debug_id;
                 this.state = state;
                 this.crossStateList = crossStateList;
                 crossStateList[state.id] = this;
@@ -245,19 +245,24 @@ public abstract class MapEntity
         
         public void resetTo(State myState, MapEntity other)
         {
-                assert other.crossStateList == this.crossStateList;
+                assert myState == this.state;
                 
-                if (other.crossStateList[myState.id] != null)
+                if (!this.state.isForeign(other.state))
                 {
-                        assert other.crossStateList[myState.id] == this;
+                        assert other.crossStateList == this.crossStateList;
+
+                        if (other.crossStateList[myState.id] != null)
+                        {
+                                assert other.crossStateList[myState.id] == this;
+                        }
+
+                        if (this.crossStateList[other.state.id] != null)
+                        {
+                                assert this.crossStateList[other.state.id] == other;
+                        }
                 }
                 
-                if (this.crossStateList[other.state.id] != null)
-                {
-                        assert this.crossStateList[other.state.id] == other;
-                }
-                
-                this.debug_id_with_reset = other.debug_id_with_reset;
+                //this.debug_id_with_reset = other.debug_id_with_reset;
                 createdAt_tick = other.createdAt_tick;
                 this.removed = other.removed;
                 removedAt_tick = other.removedAt_tick;

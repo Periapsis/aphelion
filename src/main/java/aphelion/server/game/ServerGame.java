@@ -58,6 +58,7 @@ import aphelion.shared.physics.operations.pub.ActorWarpPublic;
 import aphelion.shared.physics.operations.pub.ActorWeaponFirePublic;
 import aphelion.shared.physics.operations.pub.OperationPublic;
 import aphelion.shared.physics.PhysicsEnvironment;
+import aphelion.shared.physics.SimpleEnvironment;
 import aphelion.shared.physics.valueobjects.PhysicsMovement;
 import aphelion.shared.physics.WEAPON_SLOT;
 import aphelion.shared.physics.events.Event;
@@ -85,7 +86,7 @@ public class ServerGame implements LoopEvent, TickEvent, GameProtoListener
         private final static long SYNC_ACTOR_EVERY_NANOS = 15 * 1_000_000_000L; // 15 sec
         private final static int SYNC_SOME_ACTOR_EVERY_TICKS = 25; // 0.25 sec
         
-        public final PhysicsEnvironment physicsEnv;
+        public final SimpleEnvironment physicsEnv;
         public final TickedEventLoop loop;
         public final List<Asset> assets;
         public final String mapResource;
@@ -103,7 +104,7 @@ public class ServerGame implements LoopEvent, TickEvent, GameProtoListener
         private static final AttachmentConsumer<EventPublic, Boolean> hasHandledEventConsumer 
                 = new AttachmentConsumer<>(Event.attachmentManager);
         
-        public ServerGame(PhysicsEnvironment physicsEnv, 
+        public ServerGame(SimpleEnvironment physicsEnv, 
                           TickedEventLoop loop, 
                           List<Asset> assets, 
                           String mapResource, 

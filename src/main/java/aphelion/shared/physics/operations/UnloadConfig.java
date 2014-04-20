@@ -39,7 +39,7 @@
 package aphelion.shared.physics.operations;
 
 
-import aphelion.shared.physics.EnvironmentConfiguration;
+import aphelion.shared.physics.EnvironmentConf;
 import aphelion.shared.physics.State;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -54,9 +54,9 @@ public class UnloadConfig extends Operation
 
         public String fileIdentifier;
         
-        public UnloadConfig(EnvironmentConfiguration econfig)
+        public UnloadConfig(EnvironmentConf econfig, OperationKey key)
         {
-                super(econfig, false, PRIORITY.UNLOAD_CONFIG);
+                super(econfig, false, PRIORITY.UNLOAD_CONFIG, key);
         }
         
         @Override
@@ -95,8 +95,12 @@ public class UnloadConfig extends Operation
         }
 
         @Override
-        public void resetExecutionHistory(State state, State resetTo)
+        public void resetExecutionHistory(State state, State resetTo, Operation resetToOperation)
         {
         }
-        
+
+        @Override
+        public void placedBackOnTodo(State state)
+        {
+        }
 }

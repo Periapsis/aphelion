@@ -49,6 +49,7 @@ import aphelion.shared.net.game.GameProtocolConnection;
 import aphelion.shared.net.game.GameS2CListener;
 import aphelion.shared.net.protobuf.GameOperation;
 import aphelion.shared.net.protobuf.GameS2C;
+import aphelion.shared.physics.EnvironmentConf;
 import aphelion.shared.physics.PhysicsEnvironment;
 import aphelion.shared.physics.entities.ActorPublic;
 import aphelion.shared.swissarmyknife.Point;
@@ -174,7 +175,7 @@ public class RenderDelay implements GameS2CListener, TickEvent
                 ship.renderDelay_current = SwissArmyKnife.clip(
                         ship.renderDelay_value.get(),
                         0, 
-                        physicsEnv.econfig.HIGHEST_DELAY);
+                        EnvironmentConf.HIGHEST_DELAY);
                 
                 if (ship.renderDelay_current > createdAgo)
                 {
@@ -288,7 +289,7 @@ public class RenderDelay implements GameS2CListener, TickEvent
                 projectile.renderDelay_current = SwissArmyKnife.clip(
                         projectile.renderDelay_value.get(),
                         0, 
-                        physicsEnv.econfig.HIGHEST_DELAY);
+                        EnvironmentConf.HIGHEST_DELAY);
                         
                 projectile.renderingAt_tick = physicsEnv.getTick() - projectile.renderDelay_current;
         }

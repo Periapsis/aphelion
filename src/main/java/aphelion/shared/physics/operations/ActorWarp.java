@@ -38,10 +38,11 @@
 
 package aphelion.shared.physics.operations;
 
-import aphelion.shared.physics.EnvironmentConfiguration;
+import aphelion.shared.physics.EnvironmentConf;
 import aphelion.shared.physics.operations.pub.ActorWarpPublic;
 import aphelion.shared.physics.entities.Actor;
 import aphelion.shared.physics.State;
+import aphelion.shared.physics.entities.ActorKey;
 import aphelion.shared.physics.valueobjects.PhysicsShipPosition;
 import aphelion.shared.physics.valueobjects.PhysicsWarp;
 import java.util.logging.Level;
@@ -57,9 +58,9 @@ public class ActorWarp extends Operation implements ActorWarpPublic
         public PhysicsWarp warp;
         public boolean hint; // optional execution, used to correct inconsistencies caused by super high latency
 
-        public ActorWarp(EnvironmentConfiguration econfig)
+        public ActorWarp(EnvironmentConf econfig, OperationKey key)
         {
-                super(econfig, true, PRIORITY.ACTOR_WARP);
+                super(econfig, true, PRIORITY.ACTOR_WARP, key);
         }
         
         @Override
@@ -82,7 +83,7 @@ public class ActorWarp extends Operation implements ActorWarpPublic
         {
                 Actor actor;
 
-                actor = state.actors.get(pid);
+                actor = state.actors.get(new ActorKey(pid));
                 
                 if (actor == null) // ignore operation
                 {
@@ -138,7 +139,12 @@ public class ActorWarp extends Operation implements ActorWarpPublic
         }
 
         @Override
-        public void resetExecutionHistory(State state, State resetTo)
+        public void resetExecutionHistory(State state, State resetTo, Operation resetToOperation)
+        {
+        }
+
+        @Override
+        public void placedBackOnTodo(State state)
         {
         }
 

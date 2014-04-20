@@ -45,12 +45,10 @@ import aphelion.shared.net.game.NetworkedActor;
 import aphelion.shared.net.protobuf.GameOperation;
 import aphelion.shared.net.protobuf.GameS2C;
 import aphelion.shared.net.protobuf.GameS2C.ArenaLoad;
+import aphelion.shared.physics.*;
 import aphelion.shared.physics.entities.ActorPublic;
 import aphelion.shared.physics.entities.ProjectilePublic;
 import aphelion.shared.physics.operations.pub.OperationPublic;
-import aphelion.shared.physics.PhysicsEnvironment;
-import aphelion.shared.physics.PhysicsMap;
-import aphelion.shared.physics.WEAPON_SLOT;
 import aphelion.shared.physics.operations.pub.ActorNewPublic;
 import aphelion.shared.physics.valueobjects.PhysicsMovement;
 import aphelion.shared.physics.valueobjects.PhysicsPoint;
@@ -96,7 +94,7 @@ public class ClientState
         }
         
         private final ServerGame serverGame;
-        private final PhysicsEnvironment physicsEnv;
+        private final SimpleEnvironment physicsEnv;
         public final GameProtocolConnection gameConn;
         
         /** Used to track duplicate moves, and to prevent them from being forwarded if unequal.
@@ -124,6 +122,7 @@ public class ClientState
         public long lastActorSyncBroadcast_nanos;
         private final long WARNING_DROPPED_OPERATION_INTERVAL = 30_000_000_000L; // 30s
         private long lastDroppedWarning_nanos;
+        private long nextWeaponSyncKey = 0;
         
         public NetworkedActor myNetActor;
 
@@ -132,9 +131,9 @@ public class ClientState
                 this.serverGame = serverGame;
                 this.physicsEnv = serverGame.physicsEnv;
                 this.gameConn = gameConn;
-                this.ships = physicsEnv.getGlobalConfigStringList(0, "ships");
-                this.receivedMove = new RollingHistory<>(physicsEnv.getTick(), physicsEnv.econfig.HIGHEST_DELAY + MAX_FUTURE_TICKS + 1);
-                this.receivedWeapon = new RollingHistory<>(physicsEnv.getTick(), physicsEnv.econfig.HIGHEST_DELAY + MAX_FUTURE_TICKS + 1);
+                this.ships = physicsEnv.getGlobalConfigStringList("ships");
+                this.receivedMove = new RollingHistory<>(physicsEnv.getTick(), EnvironmentConf.HIGHEST_DELAY + MAX_FUTURE_TICKS + 1);
+                this.receivedWeapon = new RollingHistory<>(physicsEnv.getTick(), EnvironmentConf.HIGHEST_DELAY + MAX_FUTURE_TICKS + 1);
         }
         
         public void setNickname(String nickname)
@@ -360,6 +359,7 @@ public class ClientState
                                 weaponSync.setTick(oldestStateTick);
                                 weaponSync.setPid(projectile.getOwner());
                                 weaponSync.setWeaponKey(projectile.getWeaponKey());
+                                weaponSync.setKey(nextWeaponSyncKey++);
 
                                 Iterator<ProjectilePublic> projIt = projectile.getCoupledProjectiles();
                                 while (projIt.hasNext())

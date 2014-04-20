@@ -40,12 +40,13 @@
 package aphelion.shared.physics.events;
 
 
-import aphelion.shared.physics.EnvironmentConfiguration;
+import aphelion.shared.physics.EnvironmentConf;
 import aphelion.shared.physics.State;
 import aphelion.shared.physics.entities.Actor;
 import aphelion.shared.physics.events.pub.ActorDiedPublic;
 import aphelion.shared.physics.events.pub.EventPublic;
 import aphelion.shared.swissarmyknife.SwissArmyKnife;
+import java.util.Objects;
 import java.util.logging.Logger;
 
 /**
@@ -56,8 +57,9 @@ public class ActorDied extends Event implements ActorDiedPublic
         private static final Logger log = Logger.getLogger("aphelion.shared.physics");
         private final History[] history;
         
-        public ActorDied(EnvironmentConfiguration econfig)
+        public ActorDied(EnvironmentConf econfig, Key key)
         {
+                super(key);
                 history = new History[econfig.TRAILING_STATES];
                 
                 for (int a = 0; a < econfig.TRAILING_STATES; ++a)
@@ -106,9 +108,9 @@ public class ActorDied extends Event implements ActorDiedPublic
         }
         
         @Override
-        public void resetExecutionHistory(State state, State resetTo)
+        public void resetExecutionHistory(State state, State resetTo, Event resetToEvent)
         {
-                History histFrom = history[resetTo.id];
+                History histFrom = ((ActorDied) resetToEvent).history[resetTo.id];
                 History histTo = history[state.id];
                 
                 histTo.set(histFrom, state, resetTo);
@@ -167,23 +169,49 @@ public class ActorDied extends Event implements ActorDiedPublic
                         tick = other.tick;
                         cause = other.cause;
                         
-                        if (other.died == null)
-                        {
-                                died = null;
-                        }
-                        else
-                        {
-                                died = (Actor) other.died.crossStateList[myState.id];
-                        }
-                        
-                        if (other.killer == null)
-                        {
-                                killer = null;
-                        }
-                        else
-                        {
-                                killer = (Actor) other.killer.crossStateList[myState.id];
-                        }
+                        died = other.died == null ? null : other.died.findInOtherState(myState);
+                        killer = other.killer == null ? null : other.killer.findInOtherState(myState);
                 }
+        }
+        
+        public static final class Key implements EventKey
+        {
+                private final ProjectileExplosion.Key causedBy;
+
+                public Key(ProjectileExplosion.Key causedBy)
+                {
+                        if (causedBy == null)
+                        {
+                                throw new IllegalArgumentException();
+                        }
+                        this.causedBy = causedBy;
+                }
+
+                @Override
+                public int hashCode()
+                {
+                        int hash = 3;
+                        hash = 83 * hash + Objects.hashCode(this.causedBy);
+                        return hash;
+                }
+
+                @Override
+                public boolean equals(Object obj)
+                {
+                        if (obj == null)
+                        {
+                                return false;
+                        }
+                        if (!(obj instanceof Key))
+                        {
+                                return false;
+                        }
+                        final Key other = (Key) obj;
+                        if (!Objects.equals(this.causedBy, other.causedBy))
+                        {
+                                return false;
+                        }
+                        return true;
+                }   
         }
 }

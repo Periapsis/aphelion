@@ -43,6 +43,7 @@ import aphelion.client.graphics.world.GCImageAnimation;
 import aphelion.client.graphics.world.MapEntities;
 import aphelion.client.graphics.world.Projectile;
 import aphelion.shared.gameconfig.GCImage;
+import aphelion.shared.physics.EnvironmentConf;
 import aphelion.shared.physics.PhysicsEnvironment;
 import aphelion.shared.physics.PhysicsMap;
 import aphelion.shared.physics.entities.ProjectilePublic;
@@ -72,7 +73,6 @@ public class ProjectileExplosionTracker implements EventTracker
         private ProjectileExplosionPublic event;
         
         private long renderDelay;
-        private int renderingAt_state;
         
         private ArrayList<GCImageAnimation> projectileAnimations;
         private final PhysicsPoint lastEventPosition = new PhysicsPoint();
@@ -116,22 +116,20 @@ public class ProjectileExplosionTracker implements EventTracker
                         
                         // do not update the render delay after it has been set
                         renderDelay = projectile.renderDelay_current;
-                        renderingAt_state = physicsEnv.getState(physicsEnv.getTick() - renderDelay);
-                        
-                        if (renderingAt_state < 0)
+                        if (renderDelay >= EnvironmentConf.HIGHEST_DELAY)
                         {
-                                return;
+                                return; // too old
                         }
                 }
                 
-                hitActor = mapEntities.getActorShip(event.getHitActor(renderingAt_state));
+                hitActor = mapEntities.getActorShip(event.getHitActor(0));
                 
                 firstRun = false;
                 
                 if (projectileAnimations != null && lastEventPosition.set)
                 {
                         PhysicsPoint pos = new PhysicsPoint();
-                        event.getPosition(renderingAt_state, pos);
+                        event.getPosition(0, pos);
                         
                         if (lastEventPosition.distanceSquared(pos) >= TIMEWARP_RESPAWN_ANIM_DISTSQ)
                         {
@@ -145,11 +143,11 @@ public class ProjectileExplosionTracker implements EventTracker
                         // using the render delay of the projectile
                         
                         PhysicsPoint pos = new PhysicsPoint();
-                        event.getPosition(renderingAt_state, lastEventPosition);
+                        event.getPosition(0, lastEventPosition);
                 
                         if (physicsProjectile_state0 != null &&
-                            event.hasOccurred(renderingAt_state) && 
-                            event.getOccurredAt(renderingAt_state) <= physicsEnv.getTick() - renderDelay)
+                            event.hasOccurred(0) && 
+                            event.getOccurredAt(0) <= physicsEnv.getTick() - renderDelay)
                         {
                                 spawnAnimations();       
                         }
@@ -162,13 +160,13 @@ public class ProjectileExplosionTracker implements EventTracker
                 
                 ProjectilePublic physicsProjectile_state0 = event.getProjectile(0);
                 
-                projectileAnimations = new ArrayList<>(1 + event.getCoupledProjectilesSize(renderingAt_state));
+                projectileAnimations = new ArrayList<>(1 + event.getCoupledProjectilesSize(0));
 
                 PhysicsPoint tileHit = new PhysicsPoint();
-                event.getHitTile(renderingAt_state, tileHit);
+                event.getHitTile(0, tileHit);
 
                 GCImage hitImage;
-                EXPLODE_REASON reason = event.getReason(renderingAt_state);
+                EXPLODE_REASON reason = event.getReason(0);
                 switch (reason)
                 {
                         case EXPIRATION:
@@ -214,7 +212,7 @@ public class ProjectileExplosionTracker implements EventTracker
                 
                 spawnAnimation(hitImage, physicsProjectile_state0);
                 
-                for (ProjectilePublic coupledProjectile : event.getCoupledProjectiles(renderingAt_state))
+                for (ProjectilePublic coupledProjectile : event.getCoupledProjectiles(0))
                 {
                         spawnAnimation(hitImage, coupledProjectile);
                 }
@@ -225,7 +223,7 @@ public class ProjectileExplosionTracker implements EventTracker
                 Projectile proj = mapEntities.physicsProjectileToGraphics(physicsProj);
                 
                 PhysicsPoint pos = new PhysicsPoint();
-                physicsProj.getHistoricPosition(pos, event.getOccurredAt(renderingAt_state), true);
+                physicsProj.getHistoricPosition(pos, event.getOccurredAt(0), true);
                 
                 boolean hitLocal = hitActor == null ? false : hitActor.isLocalPlayer();
                 

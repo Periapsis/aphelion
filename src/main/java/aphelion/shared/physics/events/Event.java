@@ -55,6 +55,7 @@ public abstract class Event implements EventPublic
         private final AttachmentData attachments = attachmentManager.getNewDataContainer();
         
         public final LinkedListEntry<Event> link;
+        public final EventKey key;
         
         /** if true, this event has been added to PhysicsEnvironment.
          * This is to prevent duplicates. 
@@ -64,9 +65,10 @@ public abstract class Event implements EventPublic
         
         protected long highestExecutionTick = Long.MIN_VALUE;
         
-        protected Event()
+        protected Event(EventKey key)
         {
                 link = new LinkedListEntry<>(null, this);
+                this.key = key;
         }
         
         @Override
@@ -111,5 +113,13 @@ public abstract class Event implements EventPublic
                 return this.highestExecutionTick < removeOlderThan_tick;
         }
         
-        abstract public void resetExecutionHistory(State state, State resetTo);
+        /** Called during a timewarp to reset the history state of this event.
+         * 
+         * @param state
+         * @param resetTo The state to reset to
+         * @param resetToEvent The foreign event to reset to. 
+         *        If resetTo is a local state (as opposed to foreign), 
+         *        it is the same as "this".
+         */
+        abstract public void resetExecutionHistory(State state, State resetTo, Event resetToEvent);
 }

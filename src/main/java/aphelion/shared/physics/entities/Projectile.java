@@ -47,14 +47,10 @@ import aphelion.shared.gameconfig.GCIntegerList;
 import aphelion.shared.gameconfig.GCString;
 import aphelion.shared.gameconfig.GCStringList;
 import aphelion.shared.net.protobuf.GameOperation;
-import aphelion.shared.physics.Collision;
+import aphelion.shared.physics.*;
 import aphelion.shared.physics.events.ProjectileExplosion;
 import aphelion.shared.physics.events.pub.ProjectileExplosionPublic;
 import aphelion.shared.physics.events.pub.ProjectileExplosionPublic.EXPLODE_REASON;
-import aphelion.shared.physics.PhysicsEnvironment;
-import aphelion.shared.physics.PhysicsMap;
-import aphelion.shared.physics.PhysicsMath;
-import aphelion.shared.physics.State;
 import aphelion.shared.physics.valueobjects.PhysicsPoint;
 import aphelion.shared.physics.valueobjects.PhysicsShipPosition;
 import aphelion.shared.resource.ResourceDB;
@@ -66,6 +62,7 @@ import java.lang.ref.WeakReference;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import javax.annotation.Nullable;
 
 /**
  *
@@ -76,6 +73,8 @@ public final class Projectile extends MapEntity implements ProjectilePublic
         public static final AttachmentManager attachmentManager = new AttachmentManager();
         private final AttachmentData attachments = attachmentManager.getNewDataContainer();
         
+        public final ProjectileKey key;
+        
         public final LinkedListEntry<Projectile> projectileListLink_state = new LinkedListEntry<>(null, this);
         public final LinkedListEntry<Projectile> projectileListLink_actor = new LinkedListEntry<>(null, this);
         // circular headless linked list
@@ -83,14 +82,14 @@ public final class Projectile extends MapEntity implements ProjectilePublic
         
         public Actor owner;
         public Actor.WeaponConfig config;
-        public final int projectile_index; // the config index
+        public final int configIndex; // the config index
         
         // IF AN ATTRIBUTE IS ADDED, DO NOT FORGET TO UPDATE resetTo()
         // (except config, etc)
 
-        public long expires_at_tick;
-        public int bounces_left; // -1 for infinite
-        public int activate_bounces_left;
+        public long expiresAt_tick;
+        public int bouncesLeft; // -1 for infinite
+        public int activateBouncesLeft;
         
         // These values are used in deadReckon and collision
         // Initialize them when the projectile launches because otherwise these config
@@ -118,7 +117,9 @@ public final class Projectile extends MapEntity implements ProjectilePublic
          */
         public WeakReference<ProjectileExplosion> explosionEvent;
 
-        public Projectile(State state, 
+        public Projectile(
+                ProjectileKey key,
+                State state, 
                 MapEntity[] crossStateList, 
                 Actor owner, 
                 long createdAt_tick, 
@@ -130,23 +131,24 @@ public final class Projectile extends MapEntity implements ProjectilePublic
                       createdAt_tick, 
                       (state.isLast ? 0 : state.econfig.TRAILING_STATE_DELAY) + state.econfig.MINIMUM_HISTORY_TICKS);
                 
+                this.key = key;
                 this.owner = owner; // note may be null for now, will be resolved by resetTo
                 this.config = config; // note may be null for now, will be resolved by resetTo
-                this.projectile_index = projectile_index;
+                this.configIndex = projectile_index;
                 this.radius = GCIntegerFixed.ZERO;
         }
         
         @Override
         public void getSync(GameOperation.WeaponSync.Projectile.Builder p)
         {
-                p.setIndex(projectile_index);
+                p.setIndex(configIndex);
                 p.setX(pos.pos.x); 
                 p.setY(pos.pos.y);
                 p.setXVel(pos.vel.x); 
                 p.setYVel(pos.vel.y);
-                p.setExpiresAt(this.expires_at_tick);
-                p.setBouncesLeft(bounces_left); 
-                p.setActivateBouncesLeft(activate_bounces_left);
+                p.setExpiresAt(this.expiresAt_tick);
+                p.setBouncesLeft(bouncesLeft); 
+                p.setActivateBouncesLeft(activateBouncesLeft);
                 p.setCollideTile(collideTile); 
                 p.setCollideShip(collideShip); 
                 p.setBounceFriction(bounceFriction); 
@@ -161,21 +163,21 @@ public final class Projectile extends MapEntity implements ProjectilePublic
         
         public void initFromSync(GameOperation.WeaponSync.Projectile s, long tick_now)
         {
-                assert projectile_index == s.getIndex();
+                assert configIndex == s.getIndex();
                 pos.pos.x = s.getX(); 
                 pos.pos.y = s.getY();
                 pos.vel.x = s.getXVel(); 
                 pos.vel.y = s.getYVel();
-                expires_at_tick = s.getExpiresAt();
-                bounces_left = s.getBouncesLeft(); 
-                activate_bounces_left = s.getActivateBouncesLeft();
+                expiresAt_tick = s.getExpiresAt();
+                bouncesLeft = s.getBouncesLeft(); 
+                activateBouncesLeft = s.getActivateBouncesLeft();
                 collideTile = s.getCollideTile();
                 collideShip = s.getCollideShip();
                 bounceFriction = s.getBounceFriction();
                 bounceOtherAxisFriction = s.getBounceOtherAxisFriction();
                 proxDist = s.getProxDist();
                 proxExplodeDelay = s.getProxExplodeDelay(); 
-                proxActivatedBy = s.getProxActivatedBy() == 0 ? null : state.actors.get(s.getProxActivatedBy());
+                proxActivatedBy = s.getProxActivatedBy() == 0 ? null : state.actors.get(new ActorKey(s.getProxActivatedBy()));
                 proxLastSeenDist = s.getProxLastSeenDist();
                 proxLastSeenDist_tick = s.getProxLastSeenDistTick();
                 proxActivatedAt_tick = s.getProxActivatedAtTick();
@@ -192,6 +194,7 @@ public final class Projectile extends MapEntity implements ProjectilePublic
                 crossStateList[state.id] = null;
                 projectileListLink_actor.remove();
                 projectileListLink_state.remove();
+                state.projectiles.remove(this.key);
                 coupled.remove();
                 
                 // only modify the entry for _this_ projectile in the state list!
@@ -212,7 +215,7 @@ public final class Projectile extends MapEntity implements ProjectilePublic
                 // relative to rot 0
                 int offsetX = cfg(config.projectile_offsetX, tick);
 
-                int offsetY = config.projectile_offsetY.isIndexSet(projectile_index)? 
+                int offsetY = config.projectile_offsetY.isIndexSet(configIndex)? 
                         cfg(config.projectile_offsetY, tick) : 
                         owner.radius.get();
 
@@ -220,7 +223,7 @@ public final class Projectile extends MapEntity implements ProjectilePublic
                 
                 PhysicsMath.rotationToPoint(
                         offset,
-                        rot + PhysicsEnvironment.ROTATION_1_4TH,
+                        rot + EnvironmentConf.ROTATION_1_4TH,
                         offsetX);
                 
                 PhysicsMath.rotationToPoint(
@@ -260,9 +263,9 @@ public final class Projectile extends MapEntity implements ProjectilePublic
                 
                 collideTile = cfg(config.projectile_hitTile, tick);
                 collideShip = cfg(config.projectile_hitShip, tick);
-                expires_at_tick = tick + cfg(config.projectile_expirationTicks, tick);
-                bounces_left = cfg(config.projectile_bounces, tick);
-                activate_bounces_left = cfg(config.projectile_activateBounces, tick);
+                expiresAt_tick = tick + cfg(config.projectile_expirationTicks, tick);
+                bouncesLeft = cfg(config.projectile_bounces, tick);
+                activateBouncesLeft = cfg(config.projectile_activateBounces, tick);
                 bounceFriction = cfg(config.projectile_bounceFriction, tick);
                 bounceOtherAxisFriction = cfg(config.projectile_bounceOtherAxisFriction, tick);
                 proxDist = cfg(config.projectile_proxDistance, tick);
@@ -291,21 +294,21 @@ public final class Projectile extends MapEntity implements ProjectilePublic
                         
                         collision.setPreviousPosition(pos.pos);
                         collision.setVelocity(pos.vel);
-                        collision.setBouncesLeft(bounces_left);
+                        collision.setBouncesLeft(bouncesLeft);
                         collision.tickMap(tick);
                         collision.getNewPosition(pos.pos);
                         collision.getVelocity(pos.vel);
                         
-                        if (bounces_left >= 0)
+                        if (bouncesLeft >= 0)
                         {
-                                bounces_left -= collision.getBounces();
-                                if (bounces_left < 0) bounces_left = 0;
+                                bouncesLeft -= collision.getBounces();
+                                if (bouncesLeft < 0) bouncesLeft = 0;
                         }
                         
-                        if (activate_bounces_left > 0)
+                        if (activateBouncesLeft > 0)
                         {
-                                activate_bounces_left -= collision.getBounces();
-                                if (activate_bounces_left < 0) activate_bounces_left = 0;
+                                activateBouncesLeft -= collision.getBounces();
+                                if (activateBouncesLeft < 0) activateBouncesLeft = 0;
                         }
                         
                         updatedPosition(tick);
@@ -351,7 +354,7 @@ public final class Projectile extends MapEntity implements ProjectilePublic
                 ProjectileExplosion event = explosionEvent == null ? null : explosionEvent.get();
                 if (event == null)
                 {
-                        event = new ProjectileExplosion(state.econfig);
+                        event = new ProjectileExplosion(state.econfig, new ProjectileExplosion.Key(this.key));
                         explosionEvent = new WeakReference<>(event);
                 }
                 
@@ -385,7 +388,7 @@ public final class Projectile extends MapEntity implements ProjectilePublic
                         ProjectileExplosion event = explosionEvent == null ? null : explosionEvent.get();
                         if (event == null)
                         {
-                                event = new ProjectileExplosion(state.econfig);
+                                event = new ProjectileExplosion(state.econfig, new ProjectileExplosion.Key(this.key));
                                 explosionEvent = new WeakReference<>(event);
                         }
 
@@ -482,7 +485,7 @@ public final class Projectile extends MapEntity implements ProjectilePublic
                 ProjectileExplosion event = explosionEvent == null ? null : explosionEvent.get();
                 if (event == null)
                 {
-                        event = new ProjectileExplosion(state.econfig);
+                        event = new ProjectileExplosion(state.econfig, new ProjectileExplosion.Key(this.key));
                         explosionEvent = new WeakReference<>(event);
                 }
 
@@ -490,19 +493,31 @@ public final class Projectile extends MapEntity implements ProjectilePublic
                 event.execute(tick, this.state, this, reason, null, null);
         }
         
+        public @Nullable Projectile findInOtherState(State otherState)
+        {
+                if (this.state.isForeign(otherState))
+                {
+                        return otherState.projectiles.get(this.key);
+                }
+                else
+                {
+                        return (Projectile) this.crossStateList[otherState.id];
+                }
+        }
+        
         @Override
         public void resetTo(State myState, MapEntity other_)
         {
                 super.resetTo(myState, other_);
-                assert myState == this.state;
                 
                 Projectile other = (Projectile) other_;
+                assert this.key.equals(other.key);
                 
                 if (this.owner == null)
                 {
                         if (other.owner != null)
                         {
-                                this.owner = (Actor) other.owner.crossStateList[state.id];
+                                this.owner = (Actor) other.owner.findInOtherState(state);
                                 this.config = this.owner.getWeaponConfig(other.config.weaponKey);
                         }
                 }
@@ -521,8 +536,8 @@ public final class Projectile extends MapEntity implements ProjectilePublic
                 {
                         Projectile otherPrev = other.coupled.previous.data;
                         Projectile otherNext = other.coupled.next.data;
-                        Projectile prev = (Projectile) otherPrev.crossStateList[this.state.id];
-                        Projectile next = (Projectile) otherNext.crossStateList[this.state.id];
+                        Projectile prev = otherPrev.findInOtherState(this.state);
+                        Projectile next = otherNext.findInOtherState(this.state);
                         
                         // Note that the coupled projectile might not exist yet!
                         // it will be created at a different moment in the timewarp
@@ -547,9 +562,9 @@ public final class Projectile extends MapEntity implements ProjectilePublic
                         assert other.coupled.next == null;
                 }
                 
-                this.expires_at_tick = other.expires_at_tick;
-                this.bounces_left = other.bounces_left;
-                this.activate_bounces_left = other.activate_bounces_left;
+                this.expiresAt_tick = other.expiresAt_tick;
+                this.bouncesLeft = other.bouncesLeft;
+                this.activateBouncesLeft = other.activateBouncesLeft;
                 
                 if (other.proxActivatedBy  == null)
                 {
@@ -557,7 +572,7 @@ public final class Projectile extends MapEntity implements ProjectilePublic
                 }
                 else
                 {
-                        this.proxActivatedBy = (Actor) other.proxActivatedBy.crossStateList[state.id];
+                        this.proxActivatedBy = (Actor) other.proxActivatedBy.findInOtherState(state);
                 }
                 
                 this.proxLastSeenDist = other.proxLastSeenDist;
@@ -569,7 +584,7 @@ public final class Projectile extends MapEntity implements ProjectilePublic
         
         public void resetToEmpty(long tick)
         {
-                Projectile dummy = new Projectile(this.state, crossStateList, this.owner, tick, this.config, this.projectile_index);
+                Projectile dummy = new Projectile(this.key, this.state, crossStateList, this.owner, tick, this.config, this.configIndex);
                 
                 crossStateList[this.state.id] = null; // skip assertion in resetTo
                 this.resetTo(this.state, dummy);
@@ -653,7 +668,7 @@ public final class Projectile extends MapEntity implements ProjectilePublic
         
         public void doSplashEmp(Actor except, long tick)
         {
-                int p = this.projectile_index;
+                int p = this.configIndex;
                 int splash = cfg(config.projectile_empSplash, tick) * 1024;
                 if (splash == 0)
                 {
@@ -703,7 +718,7 @@ public final class Projectile extends MapEntity implements ProjectilePublic
         @Override
         public long getExpiry()
         {
-                return expires_at_tick;
+                return expiresAt_tick;
         }
 
         @Override
@@ -748,19 +763,19 @@ public final class Projectile extends MapEntity implements ProjectilePublic
         @Override
         public int getBouncesLeft()
         {
-                return this.bounces_left;
+                return this.bouncesLeft;
         }
         
         @Override
         public int getActivateBouncesLeft()
         {
-                return this.activate_bounces_left;
+                return this.activateBouncesLeft;
         }
         
         @Override
         public boolean isActive()
         {
-                if (this.activate_bounces_left > 0)
+                if (this.activateBouncesLeft > 0)
                 {
                         return false;
                 }
@@ -825,7 +840,7 @@ public final class Projectile extends MapEntity implements ProjectilePublic
         @Override
         public int getProjectileIndex()
         {
-                return this.projectile_index;
+                return this.configIndex;
         }
 
         @Override
@@ -843,17 +858,17 @@ public final class Projectile extends MapEntity implements ProjectilePublic
         // some short hands to save typing
         public int cfg(GCIntegerList configValue, long tick)
         {
-                return configValue.get(this.projectile_index, configSeed(tick));
+                return configValue.get(this.configIndex, configSeed(tick));
         }
         
         public boolean cfg(GCBooleanList configValue, long tick)
         {
-                return configValue.get(this.projectile_index, configSeed(tick));
+                return configValue.get(this.configIndex, configSeed(tick));
         }
         
         public String cfg(GCStringList configValue, long tick)
         {
-                return configValue.get(this.projectile_index, configSeed(tick));
+                return configValue.get(this.configIndex, configSeed(tick));
         }
 
         

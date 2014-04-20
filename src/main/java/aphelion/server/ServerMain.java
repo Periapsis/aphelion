@@ -47,17 +47,12 @@ import aphelion.shared.event.promise.PromiseException;
 import aphelion.shared.gameconfig.LoadYamlTask;
 import aphelion.shared.map.MapClassic;
 import aphelion.shared.map.MapClassic.LoadMapTask;
-import aphelion.shared.net.game.NetworkedActor;
-import aphelion.shared.net.protobuf.GameOperation;
-import aphelion.shared.net.protobuf.GameS2C;
+import aphelion.shared.physics.EnvironmentConf;
 import aphelion.shared.physics.PhysicsEnvironment;
-import aphelion.shared.physics.WEAPON_SLOT;
-import aphelion.shared.physics.valueobjects.PhysicsMovement;
+import aphelion.shared.physics.SimpleEnvironment;
 import aphelion.shared.resource.AssetCache;
 import aphelion.shared.resource.FileStorage;
 import aphelion.shared.resource.ResourceDB;
-import aphelion.shared.swissarmyknife.SwissArmyKnife;
-import com.google.protobuf.ByteString;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -65,8 +60,6 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.channels.ServerSocketChannel;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
@@ -88,7 +81,7 @@ public class ServerMain implements LoopEvent, TickEvent
         private TickedEventLoop loop;
         private AphelionServer server;
         private ServerGame serverGame;
-        private PhysicsEnvironment physicsEnv;
+        private SimpleEnvironment physicsEnv;
         
         private Dummies dummies;
         
@@ -209,11 +202,11 @@ public class ServerMain implements LoopEvent, TickEvent
                         throw (IOException) ex.getCause();
                 }
                 
-                physicsEnv = new PhysicsEnvironment(true, map);
+                physicsEnv = new SimpleEnvironment(true, map);
                 
                 for (LoadYamlTask.Return ret : gameConfig)
                 {
-                        physicsEnv.loadConfig(physicsEnv.getTick() - physicsEnv.econfig.HIGHEST_DELAY, ret.fileIdentifier, ret.yamlDocuments);
+                        physicsEnv.loadConfig(physicsEnv.getTick() - EnvironmentConf.HIGHEST_DELAY, ret.fileIdentifier, ret.yamlDocuments);
                 }
                 gameConfig = null;
                 

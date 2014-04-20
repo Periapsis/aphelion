@@ -38,11 +38,12 @@
 package aphelion.shared.physics.entities;
 
 
-import aphelion.shared.physics.PhysicsEnvironment;
 import aphelion.shared.physics.State;
 import aphelion.shared.swissarmyknife.LinkedListEntry;
 import java.util.ArrayList;
 import java.util.logging.Logger;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 /**
  * This object is used by operations and events to construct projectiles properly.
@@ -74,11 +75,13 @@ public class ProjectileFactory
         
         
         public Projectile[] constructProjectiles(
-                State state,
-                Actor owner,
+                @Nonnull State state,
+                @Nullable Actor owner,
                 long createdAt_tick,
-                Actor.WeaponConfig config,
-                int projectile_count
+                @Nonnull Actor.WeaponConfig config,
+                int projectile_count,
+                @Nullable Projectile chainedBy,
+                long syncKey
                 )
         {
                 MapEntity[] crossStateList;
@@ -125,7 +128,23 @@ public class ProjectileFactory
                         }
                         else
                         {
+                                ProjectileKey key;
+                                
+                                if (syncKey != 0)
+                                {
+                                        key = new ProjectileKey(syncKey, p);
+                                }
+                                else if (chainedBy == null)
+                                {
+                                        key = new ProjectileKey(createdAt_tick, p, owner == null ? 0 : owner.pid);
+                                }
+                                else
+                                {
+                                        key = new ProjectileKey(chainedBy.key, p, owner == null ? 0 : owner.pid);
+                                }
+                                
                                 projectile = new Projectile(
+                                        key,
                                         state, 
                                         crossStateList, 
                                         owner, 
@@ -151,7 +170,7 @@ public class ProjectileFactory
                         assert projectile.state == state;
                         assert projectile.owner == owner;
                         assert projectile.config == config;
-                        assert projectile.projectile_index == p;
+                        assert projectile.configIndex == p;
                         assert crossStateList[state.id] == projectile;
 
                         spawnedEntities[state.id] = projectile;

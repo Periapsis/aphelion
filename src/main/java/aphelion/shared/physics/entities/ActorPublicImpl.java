@@ -95,7 +95,7 @@ public class ActorPublicImpl implements ActorPublic
                 if (privateActor == null)
                 {
                         // might return null
-                        privateActor = state.actors.get(this.pid);
+                        privateActor = state.actors.get(new ActorKey(this.pid));
                 }
                 
                 if (privateActor != null)

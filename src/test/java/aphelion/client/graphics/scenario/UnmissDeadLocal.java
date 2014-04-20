@@ -44,6 +44,7 @@ package aphelion.client.graphics.scenario;
 import aphelion.client.graphics.Scenario;
 import static aphelion.client.graphics.Scenario.ACTOR_2;
 import static aphelion.client.graphics.Scenario.ACTOR_LOCAL;
+import aphelion.shared.physics.EnvironmentConf;
 import aphelion.shared.physics.PhysicsEnvironment;
 import aphelion.shared.physics.PhysicsMap;
 import aphelion.shared.physics.WEAPON_SLOT;
@@ -65,10 +66,10 @@ public class UnmissDeadLocal extends Scenario
         protected void setup()
         {
                 actorNew(0, ACTOR_2, 1234, "warbird");
-                actorWarp(0, 0, ACTOR_2, false, 508 * PhysicsMap.TILE_PIXELS, 512 * PhysicsMap.TILE_PIXELS, -1024, 0, PhysicsEnvironment.ROTATION_1_4TH + 18378360);
+                actorWarp(0, 0, ACTOR_2, false, 508 * PhysicsMap.TILE_PIXELS, 512 * PhysicsMap.TILE_PIXELS, -1024, 0, EnvironmentConf.ROTATION_1_4TH + 18378360);
                 
                 actorNew(0, ACTOR_LOCAL, 5678, "warbird");
-                actorWarp(0, 0, ACTOR_LOCAL, false, 517 * PhysicsMap.TILE_PIXELS, 512 * PhysicsMap.TILE_PIXELS, -1024, 0, PhysicsEnvironment.ROTATION_1_2TH);
+                actorWarp(0, 0, ACTOR_LOCAL, false, 517 * PhysicsMap.TILE_PIXELS, 512 * PhysicsMap.TILE_PIXELS, -1024, 0, EnvironmentConf.ROTATION_1_2TH);
                 
                 actorWeapon(0, 100, ACTOR_2, WEAPON_SLOT.GUN);
                 

@@ -44,6 +44,7 @@ import aphelion.client.graphics.world.GCImageAnimation;
 import aphelion.client.graphics.world.MapEntities;
 import aphelion.shared.gameconfig.GCImage;
 import aphelion.shared.gameconfig.GCInteger;
+import aphelion.shared.physics.EnvironmentConf;
 import aphelion.shared.physics.PhysicsEnvironment;
 import aphelion.shared.physics.entities.ActorPublic;
 import aphelion.shared.physics.events.pub.ActorDiedPublic;
@@ -74,7 +75,6 @@ public class ActorDiedTracker implements EventTracker
         private int spawnID = 0;
         
         private long renderDelay;
-        private int renderingAt_state;
         
         // Todo: setting?:
         private static final float TIMEWARP_ALPHA_VELOCITY = 0.025f;
@@ -112,12 +112,11 @@ public class ActorDiedTracker implements EventTracker
                         }
                         
                         // do not update the render delay after it has been set
-                        renderDelay = ship.renderDelay_current;
-                        renderingAt_state = physicsEnv.getState(physicsEnv.getTick() - renderDelay);
                         
-                        if (renderingAt_state < 0)
+                        renderDelay = ship.renderDelay_current;
+                        if (renderDelay >= EnvironmentConf.HIGHEST_DELAY)
                         {
-                                return;
+                                return; // too old
                         }
                 }
                 
@@ -133,8 +132,8 @@ public class ActorDiedTracker implements EventTracker
                 if (latestAnim == null)
                 {
                         if (pid_state0 != 0  &&
-                            event.hasOccurred(renderingAt_state) && 
-                            event.getOccurredAt(renderingAt_state) <= physicsEnv.getTick() - renderDelay)
+                            event.hasOccurred(0) && 
+                            event.getOccurredAt(0) <= physicsEnv.getTick() - renderDelay)
                         {
                                 spawnAnimations();
                         }

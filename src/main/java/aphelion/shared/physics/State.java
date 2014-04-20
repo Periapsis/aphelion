@@ -39,11 +39,11 @@ package aphelion.shared.physics;
 
 import aphelion.shared.gameconfig.ConfigSelection;
 import aphelion.shared.gameconfig.GameConfig;
-import aphelion.shared.physics.entities.Projectile;
-import aphelion.shared.physics.entities.Actor;
+import aphelion.shared.physics.entities.*;
 import aphelion.shared.physics.events.Event;
 import aphelion.shared.physics.events.pub.ProjectileExplosionPublic.EXPLODE_REASON;
 import aphelion.shared.physics.operations.Operation;
+import aphelion.shared.physics.operations.OperationKey;
 import aphelion.shared.physics.valueobjects.EntityGrid;
 import aphelion.shared.physics.valueobjects.PhysicsPoint;
 import aphelion.shared.swissarmyknife.LinkedListEntry;
@@ -61,10 +61,11 @@ public class State
 {
         private static final Logger log = Logger.getLogger("aphelion.shared.physics");
         private static final int ACTOR_INITIALCAPACITY = 64;
+        private static final int PROJECTILE_INITIALCAPACITY = ACTOR_INITIALCAPACITY * 1024;
         
-        public final EnvironmentConfiguration econfig;
+        public final EnvironmentConf econfig;
         public final int id;
-        public final PhysicsEnvironment env;
+        public final SimpleEnvironment env;
         public final Collision collision = new Collision();
         
         /** how far (ticks) in the past is this state? */
@@ -76,13 +77,16 @@ public class State
         public long tick_now;
         public boolean needTimewarpToThisState;
         
-        public final HashMap<Integer, Actor> actors = new HashMap<>(ACTOR_INITIALCAPACITY); // actor id -> entity
+        public final HashMap<ActorKey, Actor> actors = new HashMap<>(ACTOR_INITIALCAPACITY); // actor id -> entity
         public final ArrayList<Actor> actorsList = new ArrayList<>(ACTOR_INITIALCAPACITY);
         public final LinkedList<Actor> actorsRemovedDuringReset = new LinkedList<>();
         
-        public LinkedListHead<Projectile> projectiles = new LinkedListHead<>();
+        public final HashMap<ProjectileKey, Projectile> projectiles = new HashMap<>(PROJECTILE_INITIALCAPACITY);
+        public LinkedListHead<Projectile> projectilesList = new LinkedListHead<>();
+        
         public final LinkedListHead<Operation> history = new LinkedListHead<>(); // ordered by tick ascending
         public final LinkedListHead<Operation> todo = new LinkedListHead<>(); // ordered by tick ascending
+        public final HashMap<OperationKey, Operation> operations = new HashMap<>();
         
         /** This grid is a quick way to find out what entities are at what position.
          * It is only valid for "tick_now"
@@ -94,16 +98,27 @@ public class State
         public long config_lastModification = 0; // edge case: 0 is used as a "not set" value here. however 0 is also a valid tick
         public HashSet<Integer> unknownActorRemove = new HashSet<>(); // Assumes PIDs are unique. ActorNew is never called twice with the same PID.
         
-        State(PhysicsEnvironment env, int state_id, long delay, boolean allowHints, boolean isLast)
+        State(SimpleEnvironment env, int state_id, long delay, boolean allowHints, boolean isLast)
         {
                 this.env = env;
-                econfig = env.econfig;
+                this.econfig = env.econfig;
                 this.id = state_id;
                 this.delay = delay;
                 this.tick_now = -delay;
                 this.allowHints = allowHints;
                 this.isLast = isLast;
         }
+        
+        public boolean isForeign(State other)
+        {
+                return this.env != other.env;
+        }
+        
+        public boolean isForeign(MapEntity en)
+        {
+                return this.isForeign(en.state);
+        }
+        
         
         private void setActorSmoothPositionBaseline()
         {
@@ -151,13 +166,13 @@ public class State
 
                                                         if (state == this)
                                                         {
-                                                                Actor removed = state.actors.remove(actor.pid);
+                                                                Actor removed = state.actors.remove(actor.key);
                                                                 assert removed != null;
                                                                 itActor.remove(); // actorsList
                                                         }
                                                         else
                                                         {
-                                                                Actor stateActor = state.actors.remove(actor.pid);
+                                                                Actor stateActor = state.actors.remove(actor.key);
                                                                 if (stateActor != null)
                                                                 {
                                                                         boolean removed = state.actorsList.remove(stateActor);
@@ -211,7 +226,7 @@ public class State
         private void tickProjectiles()
         {
                 LinkedListEntry<Projectile> linkProjectile_next;
-                for (LinkedListEntry<Projectile> linkProjectile = this.projectiles.first; linkProjectile != null; linkProjectile = linkProjectile_next)
+                for (LinkedListEntry<Projectile> linkProjectile = this.projectilesList.first; linkProjectile != null; linkProjectile = linkProjectile_next)
                 {
                         Projectile projectile = linkProjectile.data;
                         linkProjectile_next = linkProjectile.next;
@@ -230,7 +245,7 @@ public class State
                                 // Can we really remove the projectile now?
                                 // do not bother if the projectile index is not 0, 
                                 // it has already been checked
-                                if (projectile.projectile_index == 0
+                                if (projectile.configIndex == 0
                                     && env.tick_now - projectile.removedAt_tick > econfig.HIGHEST_DELAY)
                                 {
                                         boolean activeSomewhere = false;
@@ -284,7 +299,7 @@ public class State
                         // keep the projectile stored everywhere until it has been removed in every state
                         // this way you can figure out when it was removed etc                                
 
-                        if (tick_now >= projectile.expires_at_tick)
+                        if (tick_now >= projectile.expiresAt_tick)
                         {
                                 projectile.explodeWithoutHit(tick_now, EXPLODE_REASON.EXPIRATION);
                                 projectile.softRemove(tick_now);
@@ -297,7 +312,7 @@ public class State
         
         private void tickProjectilesAfterActor()
         {
-                for (Projectile projectile : this.projectiles)
+                for (Projectile projectile : this.projectilesList)
                 {
                         projectile.tickProjectileAfterActor(tick_now);
                 }
@@ -411,6 +426,61 @@ public class State
                 return null;
         }
         
+        
+        private MapEntity[] findCrossStateListForActor(Actor foreignActor)
+        {
+                if (!this.isForeign(foreignActor))
+                {
+                        return foreignActor.crossStateList;
+                }
+                
+                for (int s = env.trailingStates.length-1; s >= 0; --s)
+                {
+                        State state = env.trailingStates[s];
+                        if (state == this)
+                        {
+                                continue;
+                        }
+                        
+                        Actor localActor = state.actors.get(foreignActor.key);
+                        if (localActor != null)
+                        {
+                                return localActor.crossStateList;
+                        }
+                }
+                
+                return new MapEntity[env.econfig.TRAILING_STATES];
+        }
+        
+        private MapEntity[] findCrossStateListForProjectile(Projectile foreignProjectile)
+        {
+                if (!this.isForeign(foreignProjectile))
+                {
+                        return foreignProjectile.crossStateList;
+                }
+                
+                for (int s = env.trailingStates.length-1; s >= 0; --s)
+                {
+                        State state = env.trailingStates[s];
+                        if (state == this)
+                        {
+                                continue;
+                        }
+                        
+                        Projectile localProjectile = state.projectiles.get(foreignProjectile.key);
+                        if (localProjectile != null)
+                        {
+                                return localProjectile.crossStateList;
+                        }
+                }
+                
+                return new MapEntity[env.econfig.TRAILING_STATES];
+        }
+
+        
+        /** Reset to the given state and simulate enough times so that we are current again.
+         * @param older The state to reset to, foreign states are allowed.
+         */
         public void timewarp(State older)
         {
                 long wasTick = this.tick_now;
@@ -428,16 +498,21 @@ public class State
 
                 assert this.tick_now == wasTick;
         }
-
+        
         /**
          * Copy everything from the other state (Actors, Projectiles, config, etc)
          * (but not operations) to this one.
+         * @param other The state to reset to, foreign states are allowed.
          */
         @SuppressWarnings("unchecked")
         private void resetTo(State older)
         {
-                long old_tick_now = this.tick_now;
-                assert older.tick_now <= this.tick_now;
+                if (older.tick_now > this.tick_now)
+                {
+                        throw new IllegalArgumentException();
+                }
+                
+                long old_tick_now = this.tick_now;               
                 this.tick_now = older.tick_now;
 
                 if (config_lastModification != older.config_lastModification)
@@ -454,14 +529,14 @@ public class State
                         while (actorIt.hasNext())
                         {
                                 Actor actorMine = actorIt.next();
-                                Actor actorOther = older.actors.get(actorMine.pid);
+                                Actor actorOther = older.actors.get(actorMine.key);
 
                                 // actor in my state does not exist in the other state, so remove it
                                 if (actorOther == null)
                                 {
                                         actorMine.softRemove(old_tick_now);
                                         
-                                        this.actors.remove(actorMine.pid);
+                                        this.actors.remove(actorMine.key);
                                         actorIt.remove(); // actorsList
                                         
                                         actorMine.crossStateList[this.id] = null;
@@ -492,19 +567,17 @@ public class State
                         
                         for (Actor actorOther : older.actorsList)
                         {
-                                Actor actorMine = this.actors.get(actorOther.pid);
+                                Actor actorMine = this.actors.get(actorOther.key);
 
                                 // actor that is in the other state, does not exist in mine
                                 if (actorMine == null)
                                 {
                                         actorMine = this.getActorRemovedDuringReset(actorOther.pid, tick_now);
-                
+                                        
                                         if (actorMine == null)
                                         {
-                                                actorMine = new Actor(this, actorOther.crossStateList, actorOther.pid, actorOther.createdAt_tick);
+                                                actorMine = new Actor(this, findCrossStateListForActor(actorOther), actorOther.pid, actorOther.createdAt_tick);
                                         }
-                                        
-                                        assert actorMine.crossStateList == actorOther.crossStateList;
                                         
                                         actorMine.resetTo(this, actorOther);
                                 }
@@ -513,30 +586,38 @@ public class State
                 
                 // Reset projectiles
                 {
-                        LinkedListHead<Projectile> oldProjectiles = this.projectiles;
-                        this.projectiles = new LinkedListHead<>();
+                        LinkedListHead<Projectile> oldProjectiles = this.projectilesList;
+                        this.projectilesList = new LinkedListHead<>();
 
                         // loop over all the projectiles in the state we are resetting to
-                        LinkedListEntry<Projectile> entry = older.projectiles.first;
+                        LinkedListEntry<Projectile> entry = older.projectilesList.first;
                         while (entry != null)
                         {
                                 Projectile projectileOther = entry.data;
-                                Projectile projectileMine = (Projectile) projectileOther.crossStateList[this.id];
+                                Projectile projectileMine = projectileOther.findInOtherState(this);
+                                
                                 if (projectileMine == null)
                                 {
                                         // pretend that the owner is null for now, resetTo() will resolve this
-                                        projectileMine = new Projectile(this, projectileOther.crossStateList, null, projectileOther.createdAt_tick, null, projectileOther.projectile_index);
-                                        // A previous object probably did not exist,
-                                        // so it is not possible to reuse it.
+                                        projectileMine = new Projectile(
+                                                projectileOther.key, // key is immutable
+                                                this, 
+                                                findCrossStateListForProjectile(projectileOther),
+                                                null, 
+                                                projectileOther.createdAt_tick, 
+                                                null, 
+                                                projectileOther.configIndex);
                                 }
                                 else
                                 {
                                         // remove from the old list (oldProjectiles) so that 
                                         // the old list contains all projectiles that are not in "other" when we are done looping
                                         projectileMine.projectileListLink_state.remove();
+                                        this.projectiles.remove(projectileMine.key);
                                 }
                                 
-                                this.projectiles.append(projectileMine.projectileListLink_state);
+                                this.projectilesList.append(projectileMine.projectileListLink_state);
+                                this.projectiles.put(projectileMine.key, projectileMine);
                                 projectileMine.resetTo(this, projectileOther);
                                 
                                 entry = entry.next;
@@ -555,7 +636,7 @@ public class State
                         
                         if (SwissArmyKnife.assertEnabled)
                         {
-                                for (Projectile p : this.projectiles)
+                                for (Projectile p : this.projectilesList)
                                 {
                                         p.coupled.assertCircularConsistency();
                                 }
@@ -573,16 +654,26 @@ public class State
                              linkOp = linkOp.next
                         )
                         {
-                                if (linkOp.data.tick > older.tick_now)
+                                Operation op = linkOp.data;
+                                if (op.tick > older.tick_now)
                                 {
                                         linkStart = linkOp;
                                         break;
                                 }
                                 else
                                 {
-                                        // reset the execution history for operations that are
-                                        // in the history for both states
-                                        linkOp.data.resetExecutionHistory(this, older);
+                                        Operation resetToOperation = op;
+                                        if (this.isForeign(older))
+                                        {
+                                                resetToOperation = older.operations.get(op.key);
+                                        }
+                                        
+                                        if (resetToOperation != null)
+                                        {
+                                                // reset the execution history for operations that are
+                                                // in the history for both states
+                                                op.resetExecutionHistory(this, older, resetToOperation);
+                                        }
                                 }
                         }
 
@@ -593,18 +684,20 @@ public class State
                                 
                                 // reset the execution history for operations that are now
                                 // in the todo list for the newer state
+
                                 for (LinkedListEntry<Operation> linkOp = linkStart; 
                                         true;
                                         linkOp = linkOp.next
                                    )
                                 {
-                                        linkOp.data.resetExecutionHistory(this, older);
-                                        
+                                        linkOp.data.placedBackOnTodo(this);
+
                                         if (linkOp == linkEnd)
                                         {
                                                 break;
                                         }
                                 }
+
                                 
                         }
 
@@ -613,7 +706,7 @@ public class State
                 }
                 
                 // reset the event history
-                for (LinkedListEntry<Event> linkEv = env.eventHistory.first, linkNext = null;
+                for (LinkedListEntry<Event> linkEv = env.eventHistoryList.first, linkNext = null;
                      linkEv != null; 
                      linkEv = linkNext)
                 {
@@ -621,7 +714,14 @@ public class State
                         
                         Event event = linkEv.data;
                         assert event.link == linkEv;
-                        event.resetExecutionHistory(this, older);
+                        
+                        Event resetToEvent = event;
+                        if (this.isForeign(older))
+                        {
+                                resetToEvent = older.env.eventHistory.get(event.key);
+                        }
+                        
+                        event.resetExecutionHistory(this, older, resetToEvent);
                         
                         boolean occurredSomewhere = false;
                         for (int s = 0; s < econfig.TRAILING_STATES; ++s)
@@ -642,7 +742,7 @@ public class State
                 
                 unknownActorRemove = (HashSet<Integer>) older.unknownActorRemove.clone();
         }
-
+        
         void addOperation(Operation op)
         {
                 LinkedListEntry<Operation> opLink, link;
@@ -651,6 +751,8 @@ public class State
                 assert opLink.head == null;
                 assert opLink.previous == null;
                 assert opLink.next == null;
+                
+                operations.put(op.key, op);
                 
                 if (op.tick <= this.tick_now) // late operation
                 {

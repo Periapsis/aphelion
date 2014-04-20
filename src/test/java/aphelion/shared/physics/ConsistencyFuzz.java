@@ -62,7 +62,7 @@ public class ConsistencyFuzz
                 void execute();
         }
         List<Object> yamlDocuments;
-        private PhysicsEnvironment env;
+        private SimpleEnvironment env;
         private ConfigSelection conf;
         private final Command tick = new Command()
         {
@@ -114,8 +114,8 @@ public class ConsistencyFuzz
 
         private ConfigSelection applyTestSettings(PhysicsEnvironment env)
         {
-                env.loadConfig(env.getTick() - env.econfig.HIGHEST_DELAY, "test", yamlDocuments);
-                return env.newConfigSelection(0);
+                env.loadConfig(env.getTick() - EnvironmentConf.HIGHEST_DELAY, "test", yamlDocuments);
+                return env.newConfigSelection();
         }
 
         @Test
@@ -127,7 +127,7 @@ public class ConsistencyFuzz
                 {
                         // tick 0
                         new Command(){public void execute(){ env.actorNew(1, 1, 357436389, "warbird"); }},
-                        new Command(){public void execute(){ env.actorWarp(2, 1, false, 200000, 150000, -1000, 0, PhysicsEnvironment.ROTATION_1_4TH); }},
+                        new Command(){public void execute(){ env.actorWarp(2, 1, false, 200000, 150000, -1000, 0, EnvironmentConf.ROTATION_1_4TH); }},
                         new Command(){public void execute(){ env.actorMove(3, 1, PhysicsMovement.get(false, true, false, true, true)); }},
                         new Command(){public void execute(){ env.actorMove(4, 1, PhysicsMovement.get(true, false, false, false, false)); }},
                         new Command(){public void execute(){ env.actorMove(10, 1, PhysicsMovement.get(true, true, false, false, true)); }},
@@ -153,7 +153,7 @@ public class ConsistencyFuzz
                 {
                         ++iteration;
                         
-                        env = new PhysicsEnvironment(false, new MapEmpty());
+                        env = new SimpleEnvironment(false, new MapEmpty());
                         conf = applyTestSettings(env);
                         
                         testWeapon_doTest(commands, it.next());

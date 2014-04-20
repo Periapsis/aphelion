@@ -50,8 +50,8 @@ import aphelion.client.graphics.screen.NiftyCameraImpl;
 import aphelion.client.graphics.world.*;
 import aphelion.shared.event.TickedEventLoop;
 import aphelion.shared.physics.entities.ActorPublic;
-import aphelion.shared.physics.PhysicsEnvironment;
 import aphelion.shared.map.MapClassic;
+import aphelion.shared.physics.DualRunnerEnvironment;
 import aphelion.shared.swissarmyknife.Point;
 import aphelion.shared.swissarmyknife.SwissArmyKnife;
 import de.lessvoid.nifty.Nifty;
@@ -90,7 +90,7 @@ public class GameLoop
         private MyKeyboard myKeyboard;
         
         // Physics:
-        private final PhysicsEnvironment physicsEnv;
+        private final DualRunnerEnvironment physicsEnv;
         private ActorPublic localActor;
         
         // Map:
@@ -243,7 +243,7 @@ public class GameLoop
                                                 networkedGame, 
                                                 physicsEnv,
                                                 localActor, 
-                                                physicsEnv.getGlobalConfigStringList(0, "ships"),
+                                                physicsEnv.getGlobalConfigStringList("ships"),
                                                 gameMenuPopup
                                         );
                                         loop.addTickEvent(myKeyboard);

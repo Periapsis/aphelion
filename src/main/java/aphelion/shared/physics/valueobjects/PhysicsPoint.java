@@ -37,7 +37,7 @@
  */
 package aphelion.shared.physics.valueobjects;
 
-import aphelion.shared.physics.PhysicsEnvironment;
+import aphelion.shared.physics.EnvironmentConf;
 import aphelion.shared.swissarmyknife.SwissArmyKnife;
 import javax.annotation.Nonnull;
 
@@ -74,8 +74,8 @@ public final class PhysicsPoint
         
         public void enforceOverflowLimit()
         {
-                x = SwissArmyKnife.clip(x, -PhysicsEnvironment.MAX_POSITION, PhysicsEnvironment.MAX_POSITION);
-                y = SwissArmyKnife.clip(y, -PhysicsEnvironment.MAX_POSITION, PhysicsEnvironment.MAX_POSITION);
+                x = SwissArmyKnife.clip(x, -EnvironmentConf.MAX_POSITION, EnvironmentConf.MAX_POSITION);
+                y = SwissArmyKnife.clip(y, -EnvironmentConf.MAX_POSITION, EnvironmentConf.MAX_POSITION);
         }
 
         public void unset()

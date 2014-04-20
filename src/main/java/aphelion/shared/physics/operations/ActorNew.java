@@ -38,12 +38,13 @@
 
 package aphelion.shared.physics.operations;
 
-import aphelion.shared.physics.EnvironmentConfiguration;
+import aphelion.shared.physics.EnvironmentConf;
 import aphelion.shared.physics.PhysicsMap;
 import aphelion.shared.physics.operations.pub.ActorNewPublic;
 import aphelion.shared.physics.entities.Actor;
 import aphelion.shared.physics.entities.MapEntity;
 import aphelion.shared.physics.State;
+import aphelion.shared.physics.entities.ActorKey;
 import aphelion.shared.physics.valueobjects.PhysicsPoint;
 import aphelion.shared.physics.valueobjects.PhysicsWarp;
 import java.util.logging.Level;
@@ -63,9 +64,9 @@ public class ActorNew extends Operation implements ActorNewPublic
         public long seed;
         public String ship;
         
-        public ActorNew(EnvironmentConfiguration econfig)
+        public ActorNew(EnvironmentConf econfig, OperationKey key)
         {
-                super(econfig, false, PRIORITY.ACTOR_NEW);
+                super(econfig, false, PRIORITY.ACTOR_NEW, key);
                 crossStateList = new MapEntity[econfig.TRAILING_STATES];
         }
         
@@ -80,7 +81,7 @@ public class ActorNew extends Operation implements ActorNewPublic
                         return true;
                 }
 
-                if (state.actors.containsKey(pid))
+                if (state.actors.containsKey(new ActorKey(pid)))
                 {
                         // pids should not be reused (or, only after a very long timeout)
                         log.log(Level.SEVERE, "Duplicate ActorNew for pid {0}, received at tick {1} (late {2}) in {3}", new Object[] {pid, tick, ticks_late, state});
@@ -119,7 +120,7 @@ public class ActorNew extends Operation implements ActorNewPublic
                 
                 actor.energy.setMaximum(this.tick, actor.getMaxEnergy());
                 
-                state.actors.put(actor.pid, actor);
+                state.actors.put(actor.key, actor);
                 state.actorsList.add(actor);
                 
                 PhysicsPoint spawn = new PhysicsPoint();
@@ -160,7 +161,12 @@ public class ActorNew extends Operation implements ActorNewPublic
         }
 
         @Override
-        public void resetExecutionHistory(State state, State resetTo)
+        public void resetExecutionHistory(State state, State resetTo, Operation resetToOperation)
+        {
+        }
+
+        @Override
+        public void placedBackOnTodo(State state)
         {
         }
 

@@ -50,6 +50,7 @@ import aphelion.shared.net.protobuf.GameOperation.ActorMove;
 import aphelion.shared.net.protobuf.GameS2C;
 import aphelion.shared.net.protobuf.GameS2C.ArenaSync;
 import aphelion.shared.net.protobuf.GameS2C.S2C;
+import aphelion.shared.physics.EnvironmentConf;
 import aphelion.shared.physics.valueobjects.PhysicsMovement;
 import com.google.protobuf.ByteString;
 import java.io.File;
@@ -113,7 +114,7 @@ public class WebSocketTest
         public void testSingleGameWebSocket() throws IOException, URISyntaxException
         {
                 // use the same loop for client and server
-                loop = new TickedEventLoop(10, 1, null);
+                loop = new TickedEventLoop(EnvironmentConf.TICK_LENGTH, 1, null);
                 
                 // Set up the server
                 // use an ephemeral port. aka a temporary port number
@@ -344,7 +345,7 @@ public class WebSocketTest
         public void testMultiGameWebSocket() throws IOException, URISyntaxException
         {
                 // use the same loop for client and server
-                loop = new TickedEventLoop(10, 1, null);
+                loop = new TickedEventLoop(EnvironmentConf.TICK_LENGTH, 1, null);
                 
                 // Set up the server
                 // use an ephemeral port. aka a temporary port number

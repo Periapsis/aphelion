@@ -1,6 +1,6 @@
 /*
  * Aphelion
- * Copyright (c) 2013  Joris van der Wel
+ * Copyright (c) 2014  Joris van der Wel
  * 
  * This file is part of Aphelion
  * 
@@ -57,6 +57,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.annotation.Nullable;
 
 /**
  *
@@ -68,7 +69,8 @@ public class Actor extends MapEntity
         public ActorPublicImpl publicWrapper;
         public final LinkedListHead<Projectile> projectiles = new LinkedListHead<>(); // fired by the actor
         
-        public int pid;
+        public final int pid;
+        public final ActorKey key;
         public long seed;
         public int seed_high;
         public int seed_low;
@@ -309,6 +311,7 @@ public class Actor extends MapEntity
                 this.nextSwitchedWeaponFire_tick = createdAt_tick;
                 
                 this.pid = pid;
+                key = new ActorKey(this.pid);
                 
                 moveHistory = new RollingHistory<>(createdAt_tick, HISTORY_LENGTH);
                 this.mostRecentMove_tick = this.createdAt_tick;
@@ -316,8 +319,17 @@ public class Actor extends MapEntity
                 rotHistory = new PhysicsPointHistory(createdAt_tick, HISTORY_LENGTH);
                 smoothHistory = new PhysicsPointHistorySmooth(createdAt_tick, posHistory, velHistory);
                 
-                // Do not smooth on the last state so that any inconsistencies will always be resolved
-                smoothHistory.setAlgorithm(state.isLast ? SMOOTHING_ALGORITHM.NONE : SMOOTHING_ALGORITHM.LINEAR);
+                // Never smooth on the last state (unless this is the only state that exists) 
+                // so that any inconsistencies will always be resolved
+                if (state.isLast && state.id > 0)
+                {
+                        smoothHistory.setAlgorithm(SMOOTHING_ALGORITHM.NONE);
+                }
+                else
+                {
+                        smoothHistory.setAlgorithm(state.econfig.POSITION_SMOOTHING ? SMOOTHING_ALGORITHM.LINEAR : SMOOTHING_ALGORITHM.NONE);
+                }
+                
                 
                 energy = new RollingHistorySerialInteger(createdAt_tick, HISTORY_LENGTH, ENERGY_SETTER.values().length);
                 energy.setMinimum(createdAt_tick, 0);
@@ -675,7 +687,7 @@ public class Actor extends MapEntity
                         
                         return !proj.collideShip 
                             || proj.owner == Actor.this
-                            || proj.activate_bounces_left > 0;
+                            || proj.activateBouncesLeft > 0;
                 }
         };
         
@@ -762,11 +774,11 @@ public class Actor extends MapEntity
                                         this.rot.points += this.rotationSpeed.get();
                                 }
 
-                                this.rot.points %= PhysicsEnvironment.ROTATION_POINTS;
+                                this.rot.points %= EnvironmentConf.ROTATION_POINTS;
 
                                 if (this.rot.points < 0)
                                 {
-                                        this.rot.points += PhysicsEnvironment.ROTATION_POINTS;
+                                        this.rot.points += EnvironmentConf.ROTATION_POINTS;
                                 }
 
                                 this.rot.snapped = PhysicsMath.snapRotation(this.rot.points, this.rotationPoints.get());
@@ -836,6 +848,18 @@ public class Actor extends MapEntity
                 rotHistory.setHistory(tick, rot.points, rot.snapped);
         }
 
+        public @Nullable Actor findInOtherState(State otherState)
+        {
+                if (this.state.isForeign(otherState))
+                {
+                        return otherState.actors.get(this.key);
+                }
+                else
+                {
+                        return (Actor) this.crossStateList[otherState.id];
+                }
+        }
+        
         @Override
         public void resetTo(State myState, MapEntity other_)
         {
@@ -1110,7 +1134,7 @@ public class Actor extends MapEntity
                 
                 int hash = SwissArmyKnife.jenkinMix(seed_high, seed_low, tick_low);
                 
-                return Math.abs(hash) % PhysicsEnvironment.ROTATION_POINTS;
+                return Math.abs(hash) % EnvironmentConf.ROTATION_POINTS;
         }
         
         public void findSpawnPoint(PhysicsPoint resultTile, long tick)

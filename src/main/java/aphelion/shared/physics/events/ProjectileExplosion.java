@@ -40,7 +40,7 @@ package aphelion.shared.physics.events;
 
 
 import aphelion.shared.gameconfig.GCStringList;
-import aphelion.shared.physics.EnvironmentConfiguration;
+import aphelion.shared.physics.EnvironmentConf;
 import aphelion.shared.physics.entities.Actor;
 import aphelion.shared.physics.entities.Actor.WeaponConfig;
 import aphelion.shared.physics.entities.Projectile;
@@ -51,14 +51,11 @@ import aphelion.shared.physics.entities.*;
 import aphelion.shared.physics.valueobjects.PhysicsPoint;
 import aphelion.shared.physics.valueobjects.PhysicsShipPosition;
 import aphelion.shared.swissarmyknife.SwissArmyKnife;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 import java.util.logging.Logger;
 
 /**
- *
+ *  A projectile exploded for the final time.
  * @author Joris
  */
 public class ProjectileExplosion extends Event implements ProjectileExplosionPublic
@@ -77,8 +74,10 @@ public class ProjectileExplosion extends Event implements ProjectileExplosionPub
           */
         final HashMap<Integer, ActorDied> diedEvents = new HashMap<>(4);
         
-        public ProjectileExplosion(EnvironmentConfiguration econfig)
+        public ProjectileExplosion(EnvironmentConf econfig, Key key)
         {
+                super(key);
+                
                 history = new History[econfig.TRAILING_STATES];
                 for (int a = 0; a < econfig.TRAILING_STATES; ++a)
                 {
@@ -248,12 +247,12 @@ public class ProjectileExplosion extends Event implements ProjectileExplosionPub
                         ActorDied diedEvent = diedEvents.get(killed_pid);
                         if (diedEvent == null)
                         {
-                                diedEvent = new ActorDied(state.econfig);
+                                diedEvent = new ActorDied(state.econfig, new ActorDied.Key((Key) this.key));
                                 diedEvents.put(killed_pid, diedEvent);
                         }
                         
                         state.env.addEvent(diedEvent);
-                        diedEvent.execute(tick, state, state.actors.get(killed_pid), this, explodedProjectile.owner);
+                        diedEvent.execute(tick, state, state.actors.get(new ActorKey(killed_pid)), this, explodedProjectile.owner);
                 }
                 
                 // Fire a chained weapon
@@ -271,7 +270,15 @@ public class ProjectileExplosion extends Event implements ProjectileExplosionPub
                         actorPos.rot = 0; // todo PhysicsTrig.atan2() based on velocity vector
                         actorPos.rot_snapped = 0;
                         
-                        Projectile[] projectiles = chained_factory.constructProjectiles(state, explodedProjectile.owner, tick, chainConfig, projectile_count);
+                        Projectile[] projectiles = chained_factory.constructProjectiles(
+                                state, 
+                                explodedProjectile.owner, 
+                                tick, 
+                                chainConfig, 
+                                projectile_count,
+                                explodedProjectile,
+                                0
+                        );
                         assert projectiles.length == projectile_count;
                         
                         
@@ -280,7 +287,8 @@ public class ProjectileExplosion extends Event implements ProjectileExplosionPub
                                 Projectile projectile = projectiles[p];
                                 projectile.initFire(tick, actorPos);
                                 
-                                state.projectiles.append(projectile.projectileListLink_state);
+                                state.projectilesList.append(projectile.projectileListLink_state);
+                                state.projectiles.put(projectile.key, projectile);
                                 projectile.owner.projectiles.append(projectile.projectileListLink_actor);
 
 
@@ -317,9 +325,9 @@ public class ProjectileExplosion extends Event implements ProjectileExplosionPub
         }
         
         @Override
-        public void resetExecutionHistory(State state, State resetTo)
+        public void resetExecutionHistory(State state, State resetTo, Event resetToEvent)
         {
-                History histFrom = history[resetTo.id];
+                History histFrom = ((ProjectileExplosion) resetToEvent).history[resetTo.id];
                 History histTo = history[state.id];
                 
                 histTo.set(histFrom, state, resetTo);
@@ -539,14 +547,48 @@ public class ProjectileExplosion extends Event implements ProjectileExplosionPub
                         killed_pids.clear();
                         killed_pids.addAll(other.killed_pids);
                         
-                        if (other.projectile == null)
-                        {
-                                projectile = null;
-                        }
-                        else
-                        {
-                                projectile = (Projectile) other.projectile.crossStateList[myState.id];
-                        }
+                        projectile = other.projectile == null ? null : other.projectile.findInOtherState(myState);
                 }
+        }
+        
+        public static final class Key implements EventKey
+        {
+                private final ProjectileKey causedBy;
+
+                public Key(ProjectileKey causedBy)
+                {
+                        if (causedBy == null)
+                        {
+                                throw new IllegalArgumentException();
+                        }
+                        this.causedBy = causedBy;
+                }
+
+                @Override
+                public int hashCode()
+                {
+                        int hash = 3;
+                        hash = 83 * hash + Objects.hashCode(this.causedBy);
+                        return hash;
+                }
+
+                @Override
+                public boolean equals(Object obj)
+                {
+                        if (obj == null)
+                        {
+                                return false;
+                        }
+                        if (!(obj instanceof Key))
+                        {
+                                return false;
+                        }
+                        final Key other = (Key) obj;
+                        if (!Objects.equals(this.causedBy, other.causedBy))
+                        {
+                                return false;
+                        }
+                        return true;
+                }   
         }
 }

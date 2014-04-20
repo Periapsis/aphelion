@@ -39,6 +39,7 @@ package aphelion.client.graphics.scenario;
 
 import aphelion.client.graphics.Scenario;
 import static aphelion.client.graphics.Scenario.ACTOR_LOCAL;
+import aphelion.shared.physics.EnvironmentConf;
 import aphelion.shared.physics.PhysicsEnvironment;
 import aphelion.shared.physics.PhysicsMap;
 import aphelion.shared.physics.valueobjects.PhysicsMovement;
@@ -64,10 +65,10 @@ public class HighSpeedTurning500msLag extends Scenario
         protected void setup()
         {
                 actorNew(0, ACTOR_LOCAL, 1234, "warbird");
-                actorWarp(0, 0, ACTOR_LOCAL, false, 512 * PhysicsMap.TILE_PIXELS, 512 * PhysicsMap.TILE_PIXELS, 0, 0, PhysicsEnvironment.ROTATION_1_4TH);
+                actorWarp(0, 0, ACTOR_LOCAL, false, 512 * PhysicsMap.TILE_PIXELS, 512 * PhysicsMap.TILE_PIXELS, 0, 0, EnvironmentConf.ROTATION_1_4TH);
                 
                 actorNew(0, ACTOR_2, 1234, "warbird");
-                actorWarp(0, 0, ACTOR_2, false, 512 * PhysicsMap.TILE_PIXELS, 512 * PhysicsMap.TILE_PIXELS, 0, 0, PhysicsEnvironment.ROTATION_1_4TH);
+                actorWarp(0, 0, ACTOR_2, false, 512 * PhysicsMap.TILE_PIXELS, 512 * PhysicsMap.TILE_PIXELS, 0, 0, EnvironmentConf.ROTATION_1_4TH);
                 
                 schedule(0);
                 schedule(100);

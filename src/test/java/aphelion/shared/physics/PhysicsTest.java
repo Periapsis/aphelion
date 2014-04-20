@@ -59,7 +59,7 @@ import org.junit.Before;
  */
 public abstract class PhysicsTest
 {
-        protected PhysicsEnvironment env;
+        protected SimpleEnvironment env;
         protected ConfigSelection conf;
         
         protected static final PhysicsMovement MOVE_UP = PhysicsMovement.get(true, false, false, false, false);
@@ -73,7 +73,7 @@ public abstract class PhysicsTest
         @Before
         public void setUp()
         {
-                env = new PhysicsEnvironment(false, new MapEmpty());
+                env = new SimpleEnvironment(false, new MapEmpty());
                 conf = applyTestSettings(env);
         }
 
@@ -114,8 +114,8 @@ public abstract class PhysicsTest
                         throw new Error(ex);
                 }
                 
-                env.loadConfig(env.getTick() - env.econfig.HIGHEST_DELAY, "test", yamlDocuments);
-                return env.newConfigSelection(0);
+                env.loadConfig(env.getTick() - EnvironmentConf.HIGHEST_DELAY, "test", yamlDocuments);
+                return env.newConfigSelection();
         }
         
         public static void assertContains(Iterator it, Object something)

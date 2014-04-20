@@ -75,7 +75,7 @@ public final class PhysicsMath
                         return rot;
                 }
                 
-                snap = PhysicsEnvironment.ROTATION_POINTS / rotation_points;
+                snap = EnvironmentConf.ROTATION_POINTS / rotation_points;
                 rem = rot % snap;
                 if (rem == 0)
                 {
@@ -87,7 +87,7 @@ public final class PhysicsMath
                 }
                 else
                 {
-                        return (rot + (snap - rem)) % PhysicsEnvironment.ROTATION_POINTS;
+                        return (rot + (snap - rem)) % EnvironmentConf.ROTATION_POINTS;
                 }
         }
 

@@ -39,8 +39,7 @@
 package aphelion.shared.physics.operations;
 
 
-import aphelion.shared.physics.EnvironmentConfiguration;
-import aphelion.shared.physics.PhysicsEnvironment;
+import aphelion.shared.physics.EnvironmentConf;
 import aphelion.shared.physics.State;
 import java.util.List;
 import java.util.logging.Level;
@@ -59,9 +58,9 @@ public class LoadConfig extends Operation
         
         private final boolean[] executed;
         
-        public LoadConfig(EnvironmentConfiguration econfig)
+        public LoadConfig(EnvironmentConf econfig, OperationKey key)
         {
-                super(econfig, false, PRIORITY.LOAD_CONFIG);
+                super(econfig, false, PRIORITY.LOAD_CONFIG, key);
                 executed = new boolean[econfig.TRAILING_STATES];
         }
         
@@ -119,8 +118,14 @@ public class LoadConfig extends Operation
         }
 
         @Override
-        public void resetExecutionHistory(State state, State resetTo)
+        public void resetExecutionHistory(State state, State resetTo, Operation resetToOperation)
         {
-                executed[state.id] = executed[resetTo.id];
+                executed[state.id] = ((LoadConfig) resetToOperation).executed[resetTo.id];
+        }
+
+        @Override
+        public void placedBackOnTodo(State state)
+        {
+                executed[state.id] = false;
         }
 }

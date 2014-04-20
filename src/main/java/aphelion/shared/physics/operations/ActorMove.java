@@ -37,10 +37,11 @@
  */
 package aphelion.shared.physics.operations;
 
-import aphelion.shared.physics.EnvironmentConfiguration;
+import aphelion.shared.physics.EnvironmentConf;
 import aphelion.shared.physics.operations.pub.ActorMovePublic;
 import aphelion.shared.physics.entities.Actor;
 import aphelion.shared.physics.State;
+import aphelion.shared.physics.entities.ActorKey;
 import aphelion.shared.physics.valueobjects.PhysicsMovement;
 import aphelion.shared.physics.valueobjects.PhysicsShipPosition;
 import aphelion.shared.physics.valueobjects.PhysicsWarp;
@@ -53,9 +54,9 @@ public class ActorMove extends Operation implements ActorMovePublic
 {
         public PhysicsMovement move;
 
-        public ActorMove(EnvironmentConfiguration econfig)
+        public ActorMove(EnvironmentConf econfig, OperationKey key)
         {
-                super(econfig, true, PRIORITY.ACTOR_MOVE);
+                super(econfig, true, PRIORITY.ACTOR_MOVE, key);
         }
         
         @Override
@@ -76,7 +77,7 @@ public class ActorMove extends Operation implements ActorMovePublic
         @Override
         public boolean execute(State state, long ticks_late)
         {
-                Actor actor = state.actors.get(pid);
+                Actor actor = state.actors.get(new ActorKey(pid));
 
                 if (actor == null) // ignore operation
                 {
@@ -150,7 +151,12 @@ public class ActorMove extends Operation implements ActorMovePublic
         }
 
         @Override
-        public void resetExecutionHistory(State state, State resetTo)
+        public void resetExecutionHistory(State state, State resetTo, Operation resetToOperation)
+        {
+        }
+
+        @Override
+        public void placedBackOnTodo(State state)
         {
         }
 

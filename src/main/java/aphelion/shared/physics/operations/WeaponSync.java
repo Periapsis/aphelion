@@ -40,11 +40,12 @@ package aphelion.shared.physics.operations;
 
 
 import aphelion.shared.net.protobuf.GameOperation;
-import aphelion.shared.physics.EnvironmentConfiguration;
+import aphelion.shared.physics.EnvironmentConf;
 import aphelion.shared.physics.operations.pub.WeaponSyncPublic;
 import aphelion.shared.physics.entities.Actor;
 import aphelion.shared.physics.entities.Projectile;
 import aphelion.shared.physics.State;
+import aphelion.shared.physics.entities.ActorKey;
 import aphelion.shared.physics.entities.ProjectileFactory;
 import java.util.logging.Logger;
 
@@ -61,22 +62,17 @@ public class WeaponSync extends Operation implements WeaponSyncPublic
         
         public String weaponKey;
         public GameOperation.WeaponSync.Projectile[] syncProjectiles;
+        public long syncKey;
         
-        public WeaponSync(EnvironmentConfiguration econfig)
+        public WeaponSync(EnvironmentConf econfig, OperationKey key)
         {
-                super(econfig, true, PRIORITY.ACTOR_WEAPON_SYNC);
-        }
-
-        @Override
-        public void resetExecutionHistory(State state, State resetTo)
-        {
-                
+                super(econfig, true, PRIORITY.ACTOR_WEAPON_SYNC, key);
         }
 
         @Override
         public boolean execute(State state, long ticks_late)
         {
-                Actor actor = state.actors.get(pid);
+                Actor actor = state.actors.get(new ActorKey(pid));
                 
                 if (actor == null) // ignore operation
                 {
@@ -87,7 +83,7 @@ public class WeaponSync extends Operation implements WeaponSyncPublic
                 factory.hintProjectileCount(projectile_count);
                 Actor.WeaponConfig config = actor.getWeaponConfig(weaponKey);
                 
-                Projectile[] projectiles = factory.constructProjectiles(state, actor, tick, config, projectile_count);
+                Projectile[] projectiles = factory.constructProjectiles(state, actor, tick, config, projectile_count, null, syncKey);
                 assert projectiles.length == projectile_count;
                 
                 
@@ -96,12 +92,13 @@ public class WeaponSync extends Operation implements WeaponSyncPublic
                         Projectile projectile = projectiles[p];
                         projectile.initFromSync(syncProjectiles[p], this.tick);
                         
-                        if (projectile.expires_at_tick <= state.tick_now)
+                        if (projectile.expiresAt_tick <= state.tick_now)
                         {
                                 projectile.softRemove(tick);
                         }
                         
-                        state.projectiles.append(projectile.projectileListLink_state);
+                        state.projectilesList.append(projectile.projectileListLink_state);
+                        state.projectiles.put(projectile.key, projectile);
                         actor.projectiles.append(projectile.projectileListLink_actor);
                         
                         projectile.updatedPosition(tick);
@@ -133,4 +130,16 @@ public class WeaponSync extends Operation implements WeaponSyncPublic
                 // this operation is only used in such a way a timewarp would not solve anything
                 return true;
         }
+        
+        @Override
+        public void resetExecutionHistory(State state, State resetTo, Operation resetToOperation)
+        {        
+        }
+        
+        @Override
+        public void placedBackOnTodo(State state)
+        {
+        }
+        
+        
 }

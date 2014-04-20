@@ -45,6 +45,7 @@ import aphelion.shared.gameconfig.GCBoolean;
 import aphelion.shared.gameconfig.GCColour;
 import aphelion.shared.gameconfig.GCImage;
 import aphelion.shared.gameconfig.WrappedValueAbstract;
+import aphelion.shared.physics.EnvironmentConf;
 import aphelion.shared.physics.PhysicsEnvironment;
 import aphelion.shared.physics.entities.ProjectilePublic;
 import aphelion.shared.physics.valueobjects.PhysicsPoint;
@@ -115,7 +116,7 @@ public class Projectile extends MapEntity implements WrappedValueAbstract.Change
                 renderDelay_current = SwissArmyKnife.clip(
                         renderDelay_value.get(),
                         0, 
-                        physicsEnv.econfig.HIGHEST_DELAY);
+                        EnvironmentConf.HIGHEST_DELAY);
                         
                 this.renderingAt_tick = physicsEnv.getTick() - renderDelay_current;
         }

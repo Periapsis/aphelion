@@ -1471,12 +1471,12 @@ public final class Collision
                 long y = SwissArmyKnife.safeSubClipped(divmulA, divmulB);
                 
                 // is the intersection outside of our possible range of gameplay?
-                if (x < -PhysicsEnvironment.MAX_POSITION || x > PhysicsEnvironment.MAX_POSITION)
+                if (x < -EnvironmentConf.MAX_POSITION || x > EnvironmentConf.MAX_POSITION)
                 {
                         return false;
                 }
                 
-                if (y < -PhysicsEnvironment.MAX_POSITION || y > PhysicsEnvironment.MAX_POSITION)
+                if (y < -EnvironmentConf.MAX_POSITION || y > EnvironmentConf.MAX_POSITION)
                 {
                         return false;
                 }

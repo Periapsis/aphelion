@@ -40,10 +40,11 @@ package aphelion.shared.physics.operations;
 
 
 import aphelion.shared.net.protobuf.GameOperation;
-import aphelion.shared.physics.EnvironmentConfiguration;
+import aphelion.shared.physics.EnvironmentConf;
 import aphelion.shared.physics.entities.Actor;
 import aphelion.shared.physics.operations.pub.ActorSyncPublic;
 import aphelion.shared.physics.State;
+import aphelion.shared.physics.entities.ActorKey;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -60,9 +61,9 @@ public class ActorSync extends Operation implements ActorSyncPublic
         
         private boolean logged = false;
         
-        public ActorSync(EnvironmentConfiguration econfig)
+        public ActorSync(EnvironmentConf econfig, OperationKey key)
         {
-                super(econfig, false, PRIORITY.ACTOR_SYNC);
+                super(econfig, false, PRIORITY.ACTOR_SYNC, key);
                 executionCount = new int[econfig.TRAILING_STATES];
         }
         
@@ -75,7 +76,7 @@ public class ActorSync extends Operation implements ActorSyncPublic
         @Override
         public boolean execute(State state, long ticks_late)
         {
-                Actor actor = state.actors.get(pid);
+                Actor actor = state.actors.get(new ActorKey(pid));
 
                 if (actor == null) // ignore operation
                 {
@@ -162,7 +163,12 @@ public class ActorSync extends Operation implements ActorSyncPublic
         }
 
         @Override
-        public void resetExecutionHistory(State state, State resetTo)
+        public void resetExecutionHistory(State state, State resetTo, Operation resetToOperation)
+        {
+        }
+
+        @Override
+        public void placedBackOnTodo(State state)
         {
         }
 }

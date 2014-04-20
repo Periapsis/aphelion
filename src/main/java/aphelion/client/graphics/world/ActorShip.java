@@ -46,8 +46,8 @@ import aphelion.client.graphics.AnimatedColour;
 import aphelion.shared.event.TickEvent;
 import aphelion.shared.gameconfig.*;
 import aphelion.shared.net.game.NetworkedActor;
+import aphelion.shared.physics.EnvironmentConf;
 import aphelion.shared.physics.entities.ActorPublic;
-import aphelion.shared.physics.PhysicsEnvironment;
 import aphelion.shared.physics.PhysicsMath;
 import aphelion.shared.physics.valueobjects.PhysicsMoveable;
 import aphelion.shared.physics.valueobjects.PhysicsMovement;
@@ -150,7 +150,7 @@ public class ActorShip extends MapEntity implements TickEvent, WrappedValueAbstr
                 
                 if (shipImage != null)
                 {
-                        int pointsPerTile = PhysicsEnvironment.ROTATION_POINTS / 
+                        int pointsPerTile = EnvironmentConf.ROTATION_POINTS / 
                                 (shipImage.getTilesHorizontal() * shipImage.getTilesVertical());
                         
                         if (pointsPerTile <= 0)
@@ -343,20 +343,20 @@ public class ActorShip extends MapEntity implements TickEvent, WrappedValueAbstr
 
                                         
                                         PhysicsMath.rotationToPoint(left.physicsPos,
-                                                this.physRotation + PhysicsEnvironment.ROTATION_1_2TH, 
+                                                this.physRotation + EnvironmentConf.ROTATION_1_2TH, 
                                                 this.shipRadius.get() + 1024 * 5);
                                         left.setPositionFromPhysics();
                                         
                                         right.setPosition(left);
                                         
                                         PhysicsMath.rotationToPoint(left.physicsPos,
-                                                this.physRotation - PhysicsEnvironment.ROTATION_1_4TH, 
+                                                this.physRotation - EnvironmentConf.ROTATION_1_4TH, 
                                                 1024 * 5);
                                         left.setPositionFromPhysics();
 
                                         
                                         PhysicsMath.rotationToPoint(right.physicsPos,
-                                                this.physRotation + PhysicsEnvironment.ROTATION_1_4TH, 
+                                                this.physRotation + EnvironmentConf.ROTATION_1_4TH, 
                                                 1024 * 5);
                                         right.setPositionFromPhysics();
 

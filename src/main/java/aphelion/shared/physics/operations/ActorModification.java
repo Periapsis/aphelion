@@ -39,10 +39,11 @@
 package aphelion.shared.physics.operations;
 
 
-import aphelion.shared.physics.EnvironmentConfiguration;
+import aphelion.shared.physics.EnvironmentConf;
 import aphelion.shared.physics.entities.Actor;
 import aphelion.shared.physics.operations.pub.ActorModificationPublic;
 import aphelion.shared.physics.State;
+import aphelion.shared.physics.entities.ActorKey;
 import aphelion.shared.swissarmyknife.SwissArmyKnife;
 import java.util.logging.Logger;
 
@@ -59,9 +60,9 @@ public class ActorModification extends Operation implements ActorModificationPub
         // all attributes are optional
         public String ship;
         
-        public ActorModification(EnvironmentConfiguration econfig)
+        public ActorModification(EnvironmentConf econfig, OperationKey key)
         {
-                super(econfig, false, PRIORITY.ACTOR_MODIFICATION);
+                super(econfig, false, PRIORITY.ACTOR_MODIFICATION, key);
                 executed = new boolean[econfig.TRAILING_STATES];
         }
         
@@ -87,7 +88,7 @@ public class ActorModification extends Operation implements ActorModificationPub
         @Override
         public boolean execute(State state, long ticks_late)
         {
-                Actor actor = state.actors.get(pid);
+                Actor actor = state.actors.get(new ActorKey(pid));
                 
                 if (actor == null)
                 {
@@ -138,12 +139,15 @@ public class ActorModification extends Operation implements ActorModificationPub
         }
         
         @Override
-        public void resetExecutionHistory(State state, State resetTo)
+        public void resetExecutionHistory(State state, State resetTo, Operation resetToOperation)
         {
-                if (state.tick_now <= this.tick)
-                {
-                        executed[state.id] = false;
-                }
+                executed[state.id] = ((ActorModification) resetToOperation).executed[resetTo.id];
+        }
+
+        @Override
+        public void placedBackOnTodo(State state)
+        {
+                executed[state.id] = false;
         }
 
         @Override

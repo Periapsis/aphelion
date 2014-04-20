@@ -37,6 +37,7 @@
  */
 package aphelion.shared.physics;
 
+import aphelion.shared.physics.valueobjects.PhysicsPointHistorySmooth;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -44,13 +45,26 @@ import java.util.logging.Logger;
  *
  * @author Joris
  */
-public final class EnvironmentConfiguration
+public final class EnvironmentConf
 {
         /** Running as a server or as a client?. 
          * This matters only for log messages, setting up the EnvironmentConfiguration, and some
          * assertions. Server or client specific code should be avoided!
          */
         public final boolean server;
+        
+        /** Tick length in milliseconds. */
+        public static final int TICK_LENGTH = 10;
+        
+        /** The maximum amount of rotation value. 
+         * This must be constant for every peer.
+         * This is a Highly Composite Number (it has 1344 divisors)
+         */
+        public static final int ROTATION_POINTS = (2*2*2*2*2*2) * (3*3*3) * (5*5) * 7 * 11 * 13 * 17;
+        public static final int ROTATION_1_2TH = ROTATION_POINTS / 2;
+        public static final int ROTATION_1_4TH = ROTATION_POINTS / 4;
+        public static final int ROTATION_3_4TH = ROTATION_1_2TH + ROTATION_1_4TH;
+        public static final int MAX_POSITION = 1073741823; // 2^30-1
         
         /** Each state trails this much time (tick) behind the next state. 
          * 16 is a power of 2 which gives a small speed benefit */
@@ -69,7 +83,7 @@ public final class EnvironmentConfiguration
         
         /** The highest delay we simulate for.
          * Do not accept operations that are older than this many ticks. (if Operation.ignorable) */
-        public final int HIGHEST_DELAY;
+        public static final int HIGHEST_DELAY = 224; // static because it must be consistent for all peers
         
         /** If two timewarps need to be executed in rapid succession, wait this many ticks. */
         public final int TIMEWARP_EVERY_TICKS;
@@ -86,8 +100,10 @@ public final class EnvironmentConfiguration
          * Events that are older than "env.tick_now - KEEP_EVENTS_FOR_TICKS" are discarded.
          */
         public final int KEEP_EVENTS_FOR_TICKS;
+        
+        public final boolean POSITION_SMOOTHING;
 
-        public EnvironmentConfiguration(boolean server)
+        public EnvironmentConf(boolean server, boolean enablePositionSmoothing)
         {
                 this.server = server;
                 
@@ -98,20 +114,67 @@ public final class EnvironmentConfiguration
                 {
                         FIRST_STATE_DELAY = 4 * TRAILING_STATE_DELAY;
                         TRAILING_STATES = 1;
+                        POSITION_SMOOTHING = enablePositionSmoothing;
                 }
                 else
                 {
                         FIRST_STATE_DELAY = 0;
                         TRAILING_STATES = 8;
+                        POSITION_SMOOTHING = enablePositionSmoothing;
                 }
                 
-                HIGHEST_DELAY = FIRST_STATE_DELAY + (TRAILING_STATES-1) * TRAILING_STATE_DELAY;
+                if (HIGHEST_DELAY != FIRST_STATE_DELAY + (TRAILING_STATES-1) * TRAILING_STATE_DELAY)
+                {
+                        throw new AssertionError();
+                }
                 
                 // +1 to ensure that an event that is generated in the state with the highest delay,
                 // will be readable before removal.
                 KEEP_EVENTS_FOR_TICKS = HIGHEST_DELAY + 1;
                 
-                assert MINIMUM_HISTORY_TICKS >= 1 : "Histories must overlap by atleast 1 tick!";
+                if (MINIMUM_HISTORY_TICKS < 1)
+                {
+                        throw new AssertionError("Histories must overlap by atleast 1 tick!");
+                }
+        }
+        
+        public EnvironmentConf(boolean server)
+        {
+                this(server, !server);
+        }
+        
+        /**
+         * @param server Only used for logging
+         * @param firstStateDelay
+         * @param states
+         * @param enablePositionSmoothing
+         */
+        public EnvironmentConf(boolean server, int firstStateDelay, int states, boolean enablePositionSmoothing)
+        {
+                this.server = server;
+                
+                TRAILING_STATE_DELAY = 32;
+                TIMEWARP_EVERY_TICKS = 10;
+                
+                
+                FIRST_STATE_DELAY = firstStateDelay;
+                TRAILING_STATES = states;
+                
+                if (HIGHEST_DELAY != FIRST_STATE_DELAY + (TRAILING_STATES-1) * TRAILING_STATE_DELAY)
+                {
+                        throw new AssertionError();
+                }
+                
+                // +1 to ensure that an event that is generated in the state with the highest delay,
+                // will be readable before removal.
+                KEEP_EVENTS_FOR_TICKS = HIGHEST_DELAY + 1;
+                
+                this.POSITION_SMOOTHING = enablePositionSmoothing;
+                
+                if (MINIMUM_HISTORY_TICKS < 1)
+                {
+                        throw new AssertionError("Histories must overlap by atleast 1 tick!");
+                }
         }
         
         public void log()

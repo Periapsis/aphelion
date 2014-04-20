@@ -41,7 +41,7 @@ import aphelion.shared.physics.valueobjects.PhysicsPoint;
 import java.util.ArrayList;
 import org.junit.Test;
 import static org.junit.Assert.*;
-import static aphelion.shared.physics.PhysicsEnvironment.MAX_POSITION;
+import static aphelion.shared.physics.EnvironmentConf.MAX_POSITION;
 
 /**
  *

@@ -57,7 +57,8 @@ import aphelion.shared.event.promise.PromiseRejected;
 import aphelion.shared.event.promise.PromiseResolved;
 import aphelion.shared.gameconfig.LoadYamlTask;
 import aphelion.shared.map.MapClassic;
-import aphelion.shared.physics.PhysicsEnvironment;
+import aphelion.shared.physics.DualRunnerEnvironment;
+import aphelion.shared.physics.EnvironmentConf;
 import aphelion.shared.resource.Asset;
 import aphelion.shared.resource.DownloadAssetsTask;
 import aphelion.shared.resource.ResourceDB;
@@ -106,7 +107,7 @@ public class InitializeLoop implements TickEvent
         MapClassic mapClassic;
         
         // Physics:
-        PhysicsEnvironment physicsEnv;
+        DualRunnerEnvironment physicsEnv;
         
         // Input: 
         LwjglInputSystem inputSystem;
@@ -201,13 +202,13 @@ public class InitializeLoop implements TickEvent
         
         private void initializePhysics(List<LoadYamlTask.Return> loadYamlResult)
         {
-                physicsEnv = new PhysicsEnvironment(false, mapClassic);
+                physicsEnv = new DualRunnerEnvironment(loop, mapClassic);
                 mapEntities.tryInitialize(physicsEnv, connection);
 
                 for (LoadYamlTask.Return yamlResult : loadYamlResult)
                 {
                         physicsEnv.loadConfig(
-                                physicsEnv.getTick()-physicsEnv.econfig.HIGHEST_DELAY,
+                                physicsEnv.getTick() - EnvironmentConf.HIGHEST_DELAY,
                                 yamlResult.fileIdentifier, 
                                 yamlResult.yamlDocuments);
                 }

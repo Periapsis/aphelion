@@ -47,6 +47,7 @@ import aphelion.shared.resource.ResourceDB;
 import aphelion.shared.event.TickedEventLoop;
 import aphelion.shared.net.WS_CLOSE_STATUS;
 import aphelion.shared.net.protobuf.GameS2C.AuthenticateResponse;
+import aphelion.shared.physics.EnvironmentConf;
 import aphelion.shared.resource.LocalUserStorage;
 import java.io.File;
 import java.io.FileInputStream;
@@ -158,7 +159,7 @@ public class Client
                 // availableProcessors is including HT (for example "8" on a quad core)
                 int processors = Runtime.getRuntime().availableProcessors();
                 if (processors < 2) { processors = 2; } // minimum of two workers
-                loop = new TickedEventLoop(10, processors, null);
+                loop = new TickedEventLoop(EnvironmentConf.TICK_LENGTH, processors, null);
 
                 resourceDB = new ResourceDB(loop);
                 loop.addLoopEvent(resourceDB);

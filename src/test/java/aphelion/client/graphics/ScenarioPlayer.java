@@ -48,7 +48,9 @@ import aphelion.shared.event.TickedEventLoop;
 import aphelion.shared.gameconfig.GameConfig;
 import aphelion.shared.map.MapClassic;
 import aphelion.shared.map.tile.TileType;
+import aphelion.shared.physics.EnvironmentConf;
 import aphelion.shared.physics.PhysicsEnvironment;
+import aphelion.shared.physics.SimpleEnvironment;
 import aphelion.shared.resource.ResourceDB;
 import aphelion.shared.swissarmyknife.Point;
 import aphelion.shared.swissarmyknife.SwissArmyKnife;
@@ -79,7 +81,7 @@ public class ScenarioPlayer
         
         // Recreated for each scenario:
         private MapEntities mapEntities;
-        private PhysicsEnvironment env;
+        private SimpleEnvironment env;
         
         public ScenarioPlayer(TickedEventLoop loop)
         {
@@ -213,7 +215,7 @@ public class ScenarioPlayer
                 
                 if (scene != null)
                 {
-                        env = new PhysicsEnvironment(false, mapClassic);
+                        env = new SimpleEnvironment(false, mapClassic);
                         mapEntities = new MapEntities(resourceDB);
                         mapEntities.tryInitialize(env, null);
                         
@@ -258,7 +260,7 @@ public class ScenarioPlayer
         
         public static void main(String[] args) throws Exception
         {
-                final TickedEventLoop loop = new TickedEventLoop(10, 2, null);
+                final TickedEventLoop loop = new TickedEventLoop(EnvironmentConf.TICK_LENGTH, 2, null);
                 final ScenarioPlayer player = new ScenarioPlayer(loop);
                 
                 ScenarioSelector frame = new ScenarioSelector(new ScenarioSelector.ScenarioSelectorListener()

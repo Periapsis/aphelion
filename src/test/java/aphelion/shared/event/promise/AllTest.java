@@ -39,6 +39,7 @@
 package aphelion.shared.event.promise;
 
 import aphelion.shared.event.TickedEventLoop;
+import aphelion.shared.physics.EnvironmentConf;
 import java.util.List;
 import org.junit.Test;
 import static org.junit.Assert.*;
@@ -56,7 +57,7 @@ public class AllTest
         {
                 called_A = false;
                 
-                TickedEventLoop loop = new TickedEventLoop(10, 1, null);
+                TickedEventLoop loop = new TickedEventLoop(EnvironmentConf.TICK_LENGTH, 1, null);
                 loop.setup();
                 
                 AbstractPromise p0 = new Promise(loop);
@@ -119,7 +120,7 @@ public class AllTest
         {
                 called_A = false;
                 
-                TickedEventLoop loop = new TickedEventLoop(10, 1, null);
+                TickedEventLoop loop = new TickedEventLoop(EnvironmentConf.TICK_LENGTH, 1, null);
                 loop.setup();
                 
                 AbstractPromise p0 = new Promise(loop);
@@ -178,7 +179,7 @@ public class AllTest
         {
                 called_A = false;
                 
-                TickedEventLoop loop = new TickedEventLoop(10, 1, null);
+                TickedEventLoop loop = new TickedEventLoop(EnvironmentConf.TICK_LENGTH, 1, null);
                 loop.setup();
                 
                 AbstractPromise p0 = new Promise(loop);

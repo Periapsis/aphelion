@@ -1,6 +1,6 @@
 /*
  * Aphelion
- * Copyright (c) 2013  Joris van der Wel
+ * Copyright (c) 2014  Joris van der Wel
  * 
  * This file is part of Aphelion
  * 
@@ -21,7 +21,7 @@
  * a) Preservation of all legal notices and author attributions
  * b) Prohibition of misrepresentation of the origin of this material, and
  * modified versions are required to be marked in reasonable ways as
- * different from the original version (for example by appending a copyright notice).
+ * different from the original version
  * 
  * Linking this library statically or dynamically with other modules is making a
  * combined work based on this library. Thus, the terms and conditions of the
@@ -34,37 +34,18 @@
  * choice, provided that you also meet, for each linked independent module,
  * the terms and conditions of the license of that module. An independent
  * module is a module which is not derived from or based on this library.
+ * If you modify this library, you may extend this exception to your version
+ * of the library, but you are not obliged to do so. If you do not wish to do
+ * so, delete this exception statement from your version.
  */
-package aphelion.client.graphics.scenario;
 
-import aphelion.client.graphics.Scenario;
-import aphelion.shared.physics.EnvironmentConf;
-import aphelion.shared.physics.PhysicsEnvironment;
-import aphelion.shared.physics.PhysicsMap;
+package aphelion.shared.physics.events;
 
 /**
- *
+ * Uniquely identifies a single event.
+ * The identifier is the same within every state and peer.
  * @author Joris
  */
-public class FlyHorizontalLine extends Scenario
+public interface EventKey
 {
-
-        @Override
-        protected String getConfig()
-        {
-                return null;
-        }
-
-        @Override
-        protected void setup()
-        {
-                actorNew(0, ACTOR_LOCAL, 1234, "warbird");
-                actorWarp(0, 0, ACTOR_LOCAL, false, 512 * PhysicsMap.TILE_PIXELS, 512 * PhysicsMap.TILE_PIXELS, 50000, 0, EnvironmentConf.ROTATION_1_4TH);
-                
-                actorNew(0, ACTOR_2, 5678, "warbird");
-                actorWarp(0, 0, ACTOR_2, false, 512 * PhysicsMap.TILE_PIXELS, 508 * PhysicsMap.TILE_PIXELS, 50000, 0, EnvironmentConf.ROTATION_1_4TH);
-                
-                actorNew(0, ACTOR_3, 5678, "warbird");
-                actorWarp(0, 0, ACTOR_3, false, 512 * PhysicsMap.TILE_PIXELS, 516 * PhysicsMap.TILE_PIXELS, -50000, 0, EnvironmentConf.ROTATION_1_4TH);
-        }
 }

@@ -39,7 +39,7 @@
 package aphelion.shared.physics.operations;
 
 
-import aphelion.shared.physics.EnvironmentConfiguration;
+import aphelion.shared.physics.EnvironmentConf;
 import aphelion.shared.physics.operations.pub.ActorWeaponFirePublic;
 import aphelion.shared.physics.entities.Actor;
 import aphelion.shared.physics.entities.Projectile;
@@ -47,6 +47,7 @@ import aphelion.shared.physics.State;
 import aphelion.shared.physics.valueobjects.PhysicsPositionVector;
 import aphelion.shared.physics.valueobjects.PhysicsShipPosition;
 import aphelion.shared.physics.WEAPON_SLOT;
+import aphelion.shared.physics.entities.ActorKey;
 import aphelion.shared.physics.entities.ProjectileFactory;
 import aphelion.shared.swissarmyknife.SwissArmyKnife;
 import java.util.ArrayList;
@@ -79,9 +80,9 @@ public class ActorWeaponFire extends Operation implements ActorWeaponFirePublic
         // projectile index -> state id -> map entity
         private ArrayList<PhysicsPositionVector[]> fireHistories;
         
-        public ActorWeaponFire(EnvironmentConfiguration econfig)
+        public ActorWeaponFire(EnvironmentConf econfig, OperationKey key)
         {
-                super(econfig, true, PRIORITY.ACTOR_WEAPON_FIRE);
+                super(econfig, true, PRIORITY.ACTOR_WEAPON_FIRE, key);
                 usedHint = new boolean[econfig.TRAILING_STATES];
         }
         
@@ -108,7 +109,7 @@ public class ActorWeaponFire extends Operation implements ActorWeaponFirePublic
         @Override
         public boolean execute(State state, long ticks_late)
         {
-                Actor actor = state.actors.get(pid);
+                Actor actor = state.actors.get(new ActorKey(pid));
                 
                 if (actor == null) // ignore operation
                 {
@@ -166,7 +167,15 @@ public class ActorWeaponFire extends Operation implements ActorWeaponFirePublic
                         }
                 }
                 
-                Projectile[] projectiles = factory.constructProjectiles(state, actor, tick, config, projectile_count);
+                Projectile[] projectiles = factory.constructProjectiles(
+                        state, 
+                        actor, 
+                        tick, 
+                        config,
+                        projectile_count,
+                        null,
+                        0
+                );
                 assert projectiles.length == projectile_count;
                 
                 for (int p = 0; p < projectile_count; ++p)
@@ -196,7 +205,8 @@ public class ActorWeaponFire extends Operation implements ActorWeaponFirePublic
                         
                         fireHistory[state.id].set(projectile.pos);
                         
-                        state.projectiles.append(projectile.projectileListLink_state);
+                        state.projectilesList.append(projectile.projectileListLink_state);
+                        state.projectiles.put(projectile.key, projectile);
                         projectile.owner.projectiles.append(projectile.projectileListLink_actor);
                         
                         
@@ -232,14 +242,39 @@ public class ActorWeaponFire extends Operation implements ActorWeaponFirePublic
         }
         
         @Override
-        public void resetExecutionHistory(State state, State resetTo)
+        public void resetExecutionHistory(State state, State resetTo, Operation resetToOperation)
+        {
+                ActorWeaponFire resetToWF = (ActorWeaponFire) resetToOperation;
+                
+                if (fireHistories == null)
+                {
+                        return;
+                }
+                
+                for (int p = 0; p < fireHistories.size(); ++p)
+                {
+                        PhysicsPositionVector[] fireHistory = fireHistories.get(p);
+                        if (p >= resetToWF.fireHistories.size())
+                        {
+                                fireHistory[state.id].unset();
+                                continue;
+                        }
+
+                        PhysicsPositionVector[] resetToFireHistory = resetToWF.fireHistories.get(p);
+                        fireHistory[state.id].set(resetToFireHistory[resetTo.id]);
+                }
+
+        }
+
+        @Override
+        public void placedBackOnTodo(State state)
         {
                 if (fireHistories != null)
                 {
                         for (int p = 0; p < fireHistories.size(); ++p)
                         {
                                 PhysicsPositionVector[] fireHistory = fireHistories.get(p);
-                                fireHistory[state.id].set(fireHistory[resetTo.id]);
+                                fireHistory[state.id].unset();
                         }
                 }
         }
@@ -273,8 +308,4 @@ public class ActorWeaponFire extends Operation implements ActorWeaponFirePublic
         {
                 return this.weapon_slot;
         }
-
-        
-        
-        
 }

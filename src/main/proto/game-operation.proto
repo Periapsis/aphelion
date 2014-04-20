@@ -145,6 +145,10 @@ message WeaponSync {
         required string  weaponKey = 3; // from config
         repeated Projectile projectiles = 4; 
         
+        // server should generate a unique value here that the client does not interpret
+        // except for testing equality. This is used to keep track of projectiles between state
+        required int64   key       = 5;
+        
         
         message Projectile {
                 required int32   index     = 1; // config index

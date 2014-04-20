@@ -38,11 +38,12 @@
 
 package aphelion.shared.physics.operations;
 
-import aphelion.shared.physics.EnvironmentConfiguration;
+import aphelion.shared.physics.EnvironmentConf;
 import aphelion.shared.physics.operations.pub.ActorRemovePublic;
 import aphelion.shared.physics.entities.Actor;
 import aphelion.shared.physics.entities.Projectile;
 import aphelion.shared.physics.State;
+import aphelion.shared.physics.entities.ActorKey;
 import java.util.Iterator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -55,9 +56,9 @@ public class ActorRemove extends Operation implements ActorRemovePublic
 {
         private static final Logger log = Logger.getLogger("aphelion.shared.physics");
         
-        public ActorRemove(EnvironmentConfiguration econfig)
+        public ActorRemove(EnvironmentConf econfig, OperationKey key)
         {
-                super(econfig, false, PRIORITY.ACTOR_REMOVE);
+                super(econfig, false, PRIORITY.ACTOR_REMOVE, key);
         }
 
         @Override
@@ -65,7 +66,7 @@ public class ActorRemove extends Operation implements ActorRemovePublic
         {
                 Actor actor;
 
-                actor = state.actors.get(pid);
+                actor = state.actors.get(new ActorKey(pid));
                 if (actor == null)
                 {
                         // this works because PIDs are unique.
@@ -75,7 +76,7 @@ public class ActorRemove extends Operation implements ActorRemovePublic
                 }
                 actor.softRemove(tick);
                 
-                Iterator<Projectile> itProjectile = state.projectiles.iterator();
+                Iterator<Projectile> itProjectile = state.projectilesList.iterator();
                 while(itProjectile.hasNext())
                 {
                         Projectile projectile = itProjectile.next();
@@ -101,7 +102,12 @@ public class ActorRemove extends Operation implements ActorRemovePublic
         }
 
         @Override
-        public void resetExecutionHistory(State state, State resetTo)
+        public void resetExecutionHistory(State state, State resetTo, Operation resetToOperation)
+        {
+        }
+
+        @Override
+        public void placedBackOnTodo(State state)
         {
         }
 }

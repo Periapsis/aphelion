@@ -718,7 +718,8 @@ public class NetworkedGame implements GameProtoListener, TickEvent
                                 tick, 
                                 msg.getPid(), 
                                 msg.getWeaponKey(),
-                                msg.getProjectilesList().toArray(new GameOperation.WeaponSync.Projectile[0]));
+                                msg.getProjectilesList().toArray(new GameOperation.WeaponSync.Projectile[0]),
+                                msg.getKey());
                         
                         if (!valid)
                         {

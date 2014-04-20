@@ -37,7 +37,7 @@
  */
 package aphelion.shared.physics.operations;
 
-import aphelion.shared.physics.EnvironmentConfiguration;
+import aphelion.shared.physics.EnvironmentConf;
 import aphelion.shared.physics.operations.pub.OperationPublic;
 import aphelion.shared.physics.State;
 import aphelion.shared.swissarmyknife.LinkedListEntry;
@@ -48,12 +48,14 @@ import aphelion.shared.swissarmyknife.LinkedListEntry;
  */
 public abstract class Operation implements OperationPublic
 {
-        public final EnvironmentConfiguration econfig;
+        public final OperationKey key;
+        public final EnvironmentConf econfig;
         public final LinkedListEntry<Operation>[] link; // key is state_id. This is used in the linkedlist for PhysicsState.todo and PhysicsState.history
         public long tick;
         public int pid = 0; // 0 means this operation does not belong to a player
         public final boolean ignorable; // if set, the operation may be dropped if too old
         protected final int priority; // If there are multiple operation within the same tick. 
+        
         // Operations with the lowest priority are executed first
         
         public static enum PRIORITY
@@ -84,10 +86,11 @@ public abstract class Operation implements OperationPublic
         }
         
         @SuppressWarnings("unchecked")
-        protected Operation(EnvironmentConfiguration econfig, boolean ignorable, PRIORITY priority)
+        protected Operation(EnvironmentConf econfig, boolean ignorable, PRIORITY priority, OperationKey key)
         {
                 int i;
-
+  
+                this.key = key;
                 this.econfig = econfig;
                 this.ignorable = ignorable;
                 this.priority = priority.priority;
@@ -161,7 +164,18 @@ public abstract class Operation implements OperationPublic
          */
         abstract public boolean isConsistent(State older, State newer);
 
-        abstract public void resetExecutionHistory(State state, State resetTo);
+        /** Called during a timewarp to reset the history state of this operation.
+         * 
+         * @param state
+         * @param resetTo The state to reset to
+         * @param resetToOperation The foreign operation to reset to. 
+         *        If resetTo is a local state (as opposed to foreign), 
+         *        it is the same as "this".
+         */
+        abstract public void resetExecutionHistory(State state, State resetTo, Operation resetToOperation);
+        
+        /** Called during a timewarp if this operation is placed back on the todo list for a state. */
+        abstract public void placedBackOnTodo(State state);
         
         @Override
         public long getTick()

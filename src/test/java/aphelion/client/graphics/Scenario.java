@@ -43,6 +43,7 @@ import aphelion.shared.event.TickEvent;
 import aphelion.shared.gameconfig.ConfigSelection;
 import aphelion.shared.gameconfig.GameConfig;
 import aphelion.shared.net.game.NetworkedActor;
+import aphelion.shared.physics.EnvironmentConf;
 import aphelion.shared.physics.PhysicsEnvironment;
 import aphelion.shared.physics.WEAPON_SLOT;
 import aphelion.shared.physics.valueobjects.PhysicsMovement;
@@ -95,7 +96,7 @@ public abstract class Scenario implements TickEvent
                         throw new Error(ex);
                 }
                 
-                env.loadConfig(env.getTick() - env.econfig.HIGHEST_DELAY, "scenario.game.yaml", yamlDocuments);
+                env.loadConfig(env.getTick() - EnvironmentConf.HIGHEST_DELAY, "scenario.game.yaml", yamlDocuments);
                 
                 String implConfig = this.getConfig();
                 if (implConfig != null)
@@ -109,10 +110,10 @@ public abstract class Scenario implements TickEvent
                                 throw new Error(ex);
                         }
                         
-                        env.loadConfig(env.getTick() - env.econfig.HIGHEST_DELAY, "impl", yamlDocuments);
+                        env.loadConfig(env.getTick() - EnvironmentConf.HIGHEST_DELAY, "impl", yamlDocuments);
                 }
                 
-                this.config = env.newConfigSelection(0);
+                this.config = env.newConfigSelection();
                 
                 setup();
         }

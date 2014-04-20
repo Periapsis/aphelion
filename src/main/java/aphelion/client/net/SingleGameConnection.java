@@ -72,7 +72,7 @@ public class SingleGameConnection implements LoopEvent, WebSocketTransportListen
 {
         private static final Logger log = Logger.getLogger("aphelion.net");
         
-        private final static int CLIENT_PROTO_VERSION = 4; // use 0 to disable checking
+        private final static int CLIENT_PROTO_VERSION = 5; // use 0 to disable checking
         
         private final URI uri;
         private final Workable workable;

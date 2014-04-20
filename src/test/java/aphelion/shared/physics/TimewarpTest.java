@@ -515,7 +515,7 @@ public class TimewarpTest extends PhysicsTest
                 
                 
                 env.actorNew(1, ACTOR_FIRST, 1234, "warbird");
-                env.actorWarp(1, ACTOR_FIRST, false, 1000, 90, 0, 0, PhysicsEnvironment.ROTATION_1_4TH);
+                env.actorWarp(1, ACTOR_FIRST, false, 1000, 90, 0, 0, EnvironmentConf.ROTATION_1_4TH);
                 env.actorNew(1, ACTOR_SECOND, 4321, "warbird");
                 env.actorWarp(1, ACTOR_SECOND, false, 60000, 90, 0, 0, 0);
                 
@@ -608,7 +608,7 @@ public class TimewarpTest extends PhysicsTest
                 
                 
                 env.actorNew(1, ACTOR_FIRST, 1234, "warbird");
-                env.actorWarp(1, ACTOR_FIRST, false, 1000, 90, 0, 0, PhysicsEnvironment.ROTATION_1_4TH);
+                env.actorWarp(1, ACTOR_FIRST, false, 1000, 90, 0, 0, EnvironmentConf.ROTATION_1_4TH);
                 env.actorNew(1, ACTOR_SECOND, 4321, "warbird");
                 env.actorWarp(1, ACTOR_SECOND, false, 400000, 90, 0, 0, 0);
                 

@@ -54,12 +54,12 @@ public class PhysicsEnvironmentTest extends PhysicsTest
         @Test
         public void testPhysicsPointConstant()
         {
-                assertTrue(PhysicsEnvironment.ROTATION_POINTS % 2 == 0);
-                assertTrue(PhysicsEnvironment.ROTATION_POINTS % 4 == 0);
-                assertTrue(Integer.MAX_VALUE / PhysicsEnvironment.ROTATION_POINTS >= 2);
+                assertTrue(EnvironmentConf.ROTATION_POINTS % 2 == 0);
+                assertTrue(EnvironmentConf.ROTATION_POINTS % 4 == 0);
+                assertTrue(Integer.MAX_VALUE / EnvironmentConf.ROTATION_POINTS >= 2);
                 
                 // Continuum compatibility (not absolutely necessary, however nice to have):
-                assertTrue(PhysicsEnvironment.ROTATION_POINTS % 40 == 0); // continuum rotation points
+                assertTrue(EnvironmentConf.ROTATION_POINTS % 40 == 0); // continuum rotation points
 
         }
 
@@ -69,11 +69,11 @@ public class PhysicsEnvironmentTest extends PhysicsTest
                 assertEquals(0,
                         PhysicsMath.snapRotation(100, 40));
 
-                assertEquals(PhysicsEnvironment.ROTATION_POINTS / 40,
-                        PhysicsMath.snapRotation(PhysicsEnvironment.ROTATION_POINTS / 40 - 1000, 40));
+                assertEquals(EnvironmentConf.ROTATION_POINTS / 40,
+                        PhysicsMath.snapRotation(EnvironmentConf.ROTATION_POINTS / 40 - 1000, 40));
 
                 assertEquals(0,
-                        PhysicsMath.snapRotation(PhysicsEnvironment.ROTATION_POINTS - 1000, 40));
+                        PhysicsMath.snapRotation(EnvironmentConf.ROTATION_POINTS - 1000, 40));
         }
 
         @Test
@@ -196,13 +196,13 @@ public class PhysicsEnvironmentTest extends PhysicsTest
 
 
 
-                env.actorWarp(16, 1, false, 0, 0, 0, 0, PhysicsEnvironment.ROTATION_1_2TH); // facing down
+                env.actorWarp(16, 1, false, 0, 0, 0, 0, EnvironmentConf.ROTATION_1_2TH); // facing down
                 env.actorMove(17, 1, MOVE_UP);
 
-                env.actorWarp(18, 1, false, 0, 0, 0, 0, PhysicsEnvironment.ROTATION_1_4TH); // facing right
+                env.actorWarp(18, 1, false, 0, 0, 0, 0, EnvironmentConf.ROTATION_1_4TH); // facing right
                 env.actorMove(19, 1, MOVE_UP);
 
-                env.actorWarp(20, 1, false, 0, 0, 0, 0, PhysicsEnvironment.ROTATION_3_4TH); // facing left
+                env.actorWarp(20, 1, false, 0, 0, 0, 0, EnvironmentConf.ROTATION_3_4TH); // facing left
                 env.actorMove(21, 1, MOVE_UP);
 
                 env.tick(); // 16
@@ -234,7 +234,7 @@ public class PhysicsEnvironmentTest extends PhysicsTest
 
                 env.actorMove(24, 1, MOVE_LEFT);
                 env.tick(); // 24
-                assertRotation(PhysicsEnvironment.ROTATION_POINTS - rotSpeed, actor);
+                assertRotation(EnvironmentConf.ROTATION_POINTS - rotSpeed, actor);
                 assertSnappedRotation(0, actor);
 
                 env.actorMove(25, 1, MOVE_LEFT);
@@ -243,15 +243,15 @@ public class PhysicsEnvironmentTest extends PhysicsTest
 
                 env.actorMove(26, 1, MOVE_LEFT);
                 env.tick(); // 26
-                assertSnappedRotation(PhysicsEnvironment.ROTATION_POINTS - PhysicsEnvironment.ROTATION_POINTS / 40, actor);
+                assertSnappedRotation(EnvironmentConf.ROTATION_POINTS - EnvironmentConf.ROTATION_POINTS / 40, actor);
 
                 env.actorMove(27, 1, MOVE_LEFT);
                 env.tick(); // 27
-                assertSnappedRotation(PhysicsEnvironment.ROTATION_POINTS - PhysicsEnvironment.ROTATION_POINTS / 40, actor);
+                assertSnappedRotation(EnvironmentConf.ROTATION_POINTS - EnvironmentConf.ROTATION_POINTS / 40, actor);
 
                 env.actorMove(28, 1, MOVE_LEFT);
                 env.tick(); // 28
-                assertSnappedRotation(PhysicsEnvironment.ROTATION_POINTS - PhysicsEnvironment.ROTATION_POINTS / 40, actor);
+                assertSnappedRotation(EnvironmentConf.ROTATION_POINTS - EnvironmentConf.ROTATION_POINTS / 40, actor);
 
 
                 env.actorWarp(30, 1, false, 0, 0, 10, 11, 0);
@@ -297,7 +297,7 @@ public class PhysicsEnvironmentTest extends PhysicsTest
                 // Test multiple move's received in the past (but still in order)
 
                 env.actorNew(0, 1, 1234, "Warbird");
-                env.actorWarp(0, 1, false, 0, 0, 1000, 1001, PhysicsEnvironment.ROTATION_1_2TH);
+                env.actorWarp(0, 1, false, 0, 0, 1000, 1001, EnvironmentConf.ROTATION_1_2TH);
                 ActorPublic actor = env.getActor(1);
 
                 while (env.tick_now < 20)
@@ -332,7 +332,7 @@ public class PhysicsEnvironmentTest extends PhysicsTest
 
                 env.actorNew(0, 1, 1234, "Warbird");
                 // facing down
-                env.actorWarp(0, 1, false, 0, 0, 1000, 1001, PhysicsEnvironment.ROTATION_1_2TH);
+                env.actorWarp(0, 1, false, 0, 0, 1000, 1001, EnvironmentConf.ROTATION_1_2TH);
                 ActorPublic actor = env.getActor(1);
 
                 while (env.tick_now < 20)
@@ -376,7 +376,7 @@ public class PhysicsEnvironmentTest extends PhysicsTest
                         throw new Error(ex);
                 }
                 
-                env.loadConfig(env.getTick() - env.econfig.HIGHEST_DELAY + 1, "testInvalidOperationOrder()", yamlDocuments);
+                env.loadConfig(env.getTick() - EnvironmentConf.HIGHEST_DELAY + 1, "testInvalidOperationOrder()", yamlDocuments);
                 
                 env.actorWarp(1, 1, false, 1000, 1000, 100, 100, 0);
                 env.actorNew(5, 1, 1234, "Warbird");
@@ -409,7 +409,7 @@ public class PhysicsEnvironmentTest extends PhysicsTest
         public void testWeaponFire()
         {
                 env.actorNew(0, 1, 1234, "Warbird");
-                env.actorWarp(0, 1, false, 1000, 2000, 0, 10, PhysicsEnvironment.ROTATION_1_2TH);
+                env.actorWarp(0, 1, false, 1000, 2000, 0, 10, EnvironmentConf.ROTATION_1_2TH);
                 env.actorWeapon(0, 1, WEAPON_SLOT.GUN, false, 0, 0, 0, 0, 0);
                 
                 int offsetY = conf.getInteger("projectile-offset-y").get();
@@ -449,7 +449,7 @@ public class PhysicsEnvironmentTest extends PhysicsTest
         public void testWeaponFireConsistency()
         {
                 env.actorNew(0, 1, 1234, "Warbird");
-                env.actorWarp(0, 1, false, 1000, 2000, 0, 0, PhysicsEnvironment.ROTATION_1_2TH);
+                env.actorWarp(0, 1, false, 1000, 2000, 0, 0, EnvironmentConf.ROTATION_1_2TH);
                 env.actorWeapon(2, 1, WEAPON_SLOT.GUN, false, 0, 0, 0, 0, 0);
                 
                 env.tick(); // 1 

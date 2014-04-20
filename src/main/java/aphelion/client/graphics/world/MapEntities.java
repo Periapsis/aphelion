@@ -217,7 +217,7 @@ public class MapEntities implements TickEvent, LoopEvent, Animator, ActorListene
                         return new EmptyIterator<>();
                 }
                 
-                Iterator<Projectile> it = new FilteredIterator<Projectile, ProjectilePublic>(physicsEnv.projectileIterator(0)) 
+                Iterator<Projectile> it = new FilteredIterator<Projectile, ProjectilePublic>(physicsEnv.projectileIterator()) 
                 {
                         @Override
                         public Projectile filter(ProjectilePublic next)
@@ -390,7 +390,7 @@ public class MapEntities implements TickEvent, LoopEvent, Animator, ActorListene
         @Override
         public void newActor(@Nonnull NetworkedActor actor)
         {
-                this.addShip(new ActorShip(this.resourceDB, actor, physicsEnv.getActor(actor.pid, 0, true), this));
+                this.addShip(new ActorShip(this.resourceDB, actor, physicsEnv.getActor(actor.pid, true), this));
         }
 
         @Override

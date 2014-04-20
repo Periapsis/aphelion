@@ -44,6 +44,7 @@ package aphelion.client.graphics.scenario;
 import aphelion.client.graphics.Scenario;
 import static aphelion.client.graphics.Scenario.ACTOR_2;
 import static aphelion.client.graphics.Scenario.ACTOR_LOCAL;
+import aphelion.shared.physics.EnvironmentConf;
 import aphelion.shared.physics.PhysicsEnvironment;
 import aphelion.shared.physics.PhysicsMap;
 import aphelion.shared.physics.WEAPON_SLOT;
@@ -67,10 +68,10 @@ public class UnhitRemote extends Scenario
         protected void setup()
         {
                 actorNew(0, ACTOR_LOCAL, 1234, "warbird");
-                actorWarp(0, 0, ACTOR_LOCAL, false, 508 * PhysicsMap.TILE_PIXELS, 512 * PhysicsMap.TILE_PIXELS, -1024, 0, PhysicsEnvironment.ROTATION_1_4TH);
+                actorWarp(0, 0, ACTOR_LOCAL, false, 508 * PhysicsMap.TILE_PIXELS, 512 * PhysicsMap.TILE_PIXELS, -1024, 0, EnvironmentConf.ROTATION_1_4TH);
                 
                 actorNew(0, ACTOR_2, 5678, "warbird");
-                actorWarp(0, 0, ACTOR_2, false, 517 * PhysicsMap.TILE_PIXELS, 512 * PhysicsMap.TILE_PIXELS + 8000, -1024, 0, PhysicsEnvironment.ROTATION_1_2TH);
+                actorWarp(0, 0, ACTOR_2, false, 517 * PhysicsMap.TILE_PIXELS, 512 * PhysicsMap.TILE_PIXELS + 8000, -1024, 0, EnvironmentConf.ROTATION_1_2TH);
                 
                 actorWeapon(0, 100, ACTOR_LOCAL, WEAPON_SLOT.GUN_MULTI);
                 

@@ -36,9 +36,9 @@
  * module is a module which is not derived from or based on this library.
  */
 package aphelion.shared.physics;
-import static aphelion.shared.physics.PhysicsEnvironment.ROTATION_POINTS;
-import static aphelion.shared.physics.PhysicsEnvironment.ROTATION_1_2TH;
-import static aphelion.shared.physics.PhysicsEnvironment.ROTATION_1_4TH;
+import static aphelion.shared.physics.EnvironmentConf.ROTATION_POINTS;
+import static aphelion.shared.physics.EnvironmentConf.ROTATION_1_2TH;
+import static aphelion.shared.physics.EnvironmentConf.ROTATION_1_4TH;
 import aphelion.shared.swissarmyknife.ThreadSafe;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;

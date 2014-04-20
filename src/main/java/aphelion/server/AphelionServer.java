@@ -70,7 +70,7 @@ public class AphelionServer implements LoopEvent, WebSocketTransportListener
         private static final AttachmentConsumer<SessionToken, GameProtocolConnection> gameAttachment = new AttachmentConsumer<>(SessionToken.attachmentManager);
         
         private final static int SERVER_PING_PROTO_VERSION = 1;
-        private final static int SERVER_GAME_PROTO_VERSION = 4;
+        private final static int SERVER_GAME_PROTO_VERSION = 5;
         
         private final HttpServer httpServer;
         private final Workable workable;
