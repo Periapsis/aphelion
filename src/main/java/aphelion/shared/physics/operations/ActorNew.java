@@ -77,14 +77,16 @@ public class ActorNew extends Operation implements ActorNewPublic
                 
                 if (pid == 0)
                 {
-                        log.log(Level.SEVERE, "A pid of 0 is not allowed");
+                        log.log(Level.SEVERE, "{0}: A pid of 0 is not allowed", econfig.logString);
                         return true;
                 }
 
                 if (state.actors.containsKey(new ActorKey(pid)))
                 {
                         // pids should not be reused (or, only after a very long timeout)
-                        log.log(Level.SEVERE, "Duplicate ActorNew for pid {0}, received at tick {1} (late {2}) in {3}", new Object[] {pid, tick, ticks_late, state});
+                        log.log(Level.SEVERE, "{0}: Duplicate ActorNew for pid {1}, received at tick {2} (late {3}) in {4}", new Object[] {
+                                econfig.logString, pid, tick, ticks_late, state
+                        });
                         return true;
                 }
 
@@ -146,7 +148,9 @@ public class ActorNew extends Operation implements ActorNewPublic
 
                 if (state.id == 0)
                 {
-                        log.log(Level.INFO, "Added actor {0} at tick {1} (late {2})", new Object[] {pid, tick, ticks_late});
+                        log.log(Level.INFO, "{0}: Added actor {1} at tick {2} (late {3})", new Object[] {
+                                econfig.logString, pid, tick, ticks_late
+                        });
                 }
                 
                 return true;

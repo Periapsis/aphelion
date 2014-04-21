@@ -41,6 +41,7 @@
 
 package aphelion.shared.physics;
 
+import aphelion.shared.event.LoopEvent;
 import aphelion.shared.event.TickEvent;
 import aphelion.shared.event.TickedEventLoop;
 import aphelion.shared.gameconfig.*;
@@ -82,13 +83,19 @@ public class DualRunnerEnvironment implements TickEvent, PhysicsEnvironment
         private volatile boolean needsStateReset = false;
         private volatile long env_tickCount = 0;
         private long nextOpSeq = 1;
+        
+        public final EnvironmentConf econfig_single;
+        public final EnvironmentConf econfig_thread;
 
         public DualRunnerEnvironment(TickedEventLoop loop, PhysicsMap map)
         {
                 this.mainLoop = loop;
-                environment = new SimpleEnvironment(new EnvironmentConf(false, 0, 1, true), map, false);
+                environment = new SimpleEnvironment(new EnvironmentConf(true, 1234), map, false);
                 thread = new MyThread(new SimpleEnvironment(new EnvironmentConf(false), map, true));
                 envs =  new SimpleEnvironment[] {environment, thread.environment};
+                
+                econfig_single = environment.econfig;
+                econfig_thread = thread.environment.econfig;
                 
                  // ^true = allow threads to call add operation methods
                 syncEnvsLock = new ReentrantLock();
@@ -145,6 +152,71 @@ public class DualRunnerEnvironment implements TickEvent, PhysicsEnvironment
                 
                 environment.tick();
                 env_tickCount = environment.getTick();
+                //System.out.printf("%d: %4d => %4d (M)\n", Objects.hashCode(mainLoop), (mainLoop.currentNano()/1_000_000L), env_tickCount);
+        }
+        
+        public void done()
+        {
+                syncEnvsLock.lock();
+                try
+                {
+                        thread.done();
+                }
+                finally
+                {
+                        syncEnvsLock.unlock();
+                }
+        }
+        
+        /** Wait until the internal thread has caught up with the loop on the main thread.
+         * This is usually used for test cases
+         * 
+         * @return The tick the internal thread is now at. 
+         *         This is never greater than the tick of the main thread (it should now be equal).
+         * @throws java.lang.InterruptedException
+         */
+        public long waitForThreadToCatchup() throws InterruptedException
+        {
+                while(true)
+                {
+                        syncEnvsLock.lock();
+                        try
+                        {
+                                if (thread.environment.getTick() >= this.environment.getTick())
+                                {
+                                        return thread.environment.getTick();
+                                }
+                        }
+                        finally
+                        {
+                                syncEnvsLock.unlock();
+                        }
+                        
+                        Thread.sleep(1);
+                }
+        }
+        
+        public long waitForThreadParsedOperations(long minCount) throws InterruptedException
+        {
+                while(true)
+                {
+                        syncEnvsLock.lock();
+                        try
+                        {
+                                long count = thread.environment.polledAddOperationsCount.get();
+                                System.out.printf("%d >= %d\n", count, minCount);
+                                if (count >= minCount)
+                                {
+                                        return count;
+                                }
+                        }
+                        finally
+                        {
+                                syncEnvsLock.unlock();
+                        }
+                        
+                        Thread.sleep(1);
+                }
         }
         
         private void resetState() // (call with lock held)
@@ -576,7 +648,7 @@ public class DualRunnerEnvironment implements TickEvent, PhysicsEnvironment
                 return okay;
         }
         
-        private final class MyThread extends Thread implements TickEvent
+        private final class MyThread extends Thread implements TickEvent, LoopEvent
         {
                 TickedEventLoop loop;
                 final SimpleEnvironment environment;
@@ -585,8 +657,6 @@ public class DualRunnerEnvironment implements TickEvent, PhysicsEnvironment
                 MyThread(SimpleEnvironment env)
                 {
                         this.environment = env;
-                        
-                        // todo: no position smoothing
                 }
                 
                 /** Set the loop and sync with it properly.
@@ -601,6 +671,7 @@ public class DualRunnerEnvironment implements TickEvent, PhysicsEnvironment
                         
                         loop = new TickedEventLoop(syncWith, 0);
                         loop.addTickEvent(this);
+                        loop.addLoopEvent(this);
                 }
                 
                 @ThreadSafe
@@ -609,7 +680,13 @@ public class DualRunnerEnvironment implements TickEvent, PhysicsEnvironment
                         syncEnvsLock.lock();
                         try
                         {
-                                this.loop.synchronize(syncWith.currentNano() + EnvironmentConf.TICK_LENGTH * 1_000_000L / 2, syncWith.currentTick());
+                                long syncNano = syncWith.currentNano();
+                                // This thread is spawned during the first physics tick.
+                                // This means we are 1 tick behind! So substract a full tick lenght.
+                                // But running at exactly the same time is not optimal for performance,
+                                // we are probably sleeping between ticks, so only substract half a tick.
+                                syncNano -= TimeUnit.MILLISECONDS.toNanos(EnvironmentConf.TICK_LENGTH) / 2;
+                                this.loop.synchronize(syncNano, syncWith.currentTick());
                         }
                         finally
                         {
@@ -638,22 +715,59 @@ public class DualRunnerEnvironment implements TickEvent, PhysicsEnvironment
                 }
 
                 @Override
+                public void loop(long systemNanoTime, long sourceNanoTime)
+                {
+                        if (environment.hasThreadedAddOperation())
+                        {
+                                syncEnvsLock.lock();
+                                try
+                                {
+                                        environment.pollThreadedAddOperation();
+                                }
+                                finally
+                                {
+                                        syncEnvsLock.unlock();
+                                }
+                        }
+                }
+                
+                @Override
                 public void tick(long tick)
                 {
                         syncEnvsLock.lock();
+                        boolean hasLock = true;
+                        
                         try
                         {
-                                if (environment.getTick() >= DualRunnerEnvironment.this.env_tickCount)
+                                while (environment.getTick() >= DualRunnerEnvironment.this.env_tickCount)
                                 {
                                         // We are ticking ahead of the environment in the main thread.
                                         // This is not okay because when the environment in the main thread
                                         // resets to this one, it will be a tick ahead of what it was previously!
                                         // The reverse situation is okay because we can catch up by calling tick() 
                                         // an extra time.
-                                        return;
+
+                                        environment.pollThreadedAddOperation();
+                                        
+                                        hasLock = false;
+                                        syncEnvsLock.unlock();
+                                        
+                                        try
+                                        {
+                                                Thread.sleep(1);
+                                        }
+                                        catch (InterruptedException ex)
+                                        {
+                                                Thread.currentThread().interrupt();
+                                                return;
+                                        }
+                                        
+                                        syncEnvsLock.lock();
+                                        hasLock = true;
                                 }
                                 
                                 environment.tick();
+                                //System.out.printf("%d: %4d => %4d (T)\n", Objects.hashCode(this.loop), (loop.currentNano()/1_000_000L), environment.getTick());
                                 if (timewarpCountLastSeen != environment.getTimewarpCount())
                                 {
                                         timewarpCountLastSeen = environment.getTimewarpCount();
@@ -662,7 +776,10 @@ public class DualRunnerEnvironment implements TickEvent, PhysicsEnvironment
                         }
                         finally
                         {
-                                syncEnvsLock.unlock();
+                                if (hasLock)
+                                {
+                                        syncEnvsLock.unlock();
+                                }
                         }
                 }
         }

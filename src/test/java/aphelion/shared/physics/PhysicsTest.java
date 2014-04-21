@@ -59,7 +59,7 @@ import org.junit.Before;
  */
 public abstract class PhysicsTest
 {
-        protected SimpleEnvironment env;
+        protected PhysicsEnvironment env;
         protected ConfigSelection conf;
         
         protected static final PhysicsMovement MOVE_UP = PhysicsMovement.get(true, false, false, false, false);
@@ -69,11 +69,16 @@ public abstract class PhysicsTest
         
         protected static final int ACTOR_FIRST = 1;
         protected static final int ACTOR_SECOND = 2;
+        
+        protected void createEnvironment()
+        {
+                env = new SimpleEnvironment(false, new MapEmpty());
+        }
 
         @Before
         public void setUp()
         {
-                env = new SimpleEnvironment(false, new MapEmpty());
+                createEnvironment();
                 conf = applyTestSettings(env);
         }
 
@@ -84,7 +89,7 @@ public abstract class PhysicsTest
         }
         
         
-        private ConfigSelection applyTestSettings(PhysicsEnvironment env)
+        public static ConfigSelection applyTestSettings(PhysicsEnvironment env)
         {
                 List<Object> yamlDocuments;
                 try
@@ -144,13 +149,13 @@ public abstract class PhysicsTest
                 assert false;
         }
         
-        protected static void assertActorExists(ActorPublic actor)
+        public static void assertActorExists(ActorPublic actor)
         {
                 assertNotNull(actor);
                 assertTrue(!actor.isRemoved());
         }
         
-        protected static void assertActorNotExists(ActorPublic actor)
+        public static void assertActorNotExists(ActorPublic actor)
         {
                 if (actor == null)
                 {
@@ -160,13 +165,13 @@ public abstract class PhysicsTest
                 assertTrue(actor.isRemoved());
         }
         
-        protected static void assertProjectileExists(ProjectilePublic actor)
+        public static void assertProjectileExists(ProjectilePublic actor)
         {
                 assertNotNull(actor);
                 assertTrue(!actor.isRemoved());
         }
         
-        protected static void assertProjectileNotExists(ProjectilePublic actor)
+        public static void assertProjectileNotExists(ProjectilePublic actor)
         {
                 if (actor == null)
                 {
@@ -176,7 +181,7 @@ public abstract class PhysicsTest
                 assertTrue(actor.isRemoved());
         }
         
-        protected static void assertPointEquals(int x, int y, PhysicsPoint point)
+        public static void assertPointEquals(int x, int y, PhysicsPoint point)
         {
                 if (x != point.x || y != point.y)
                 {
@@ -184,7 +189,7 @@ public abstract class PhysicsTest
                 }
         }
 
-        protected void assertPosition(int x, int y, ActorPublic actor)
+        public void assertPosition(int x, int y, ActorPublic actor)
         {
                 assertActorExists(actor);
                 PhysicsShipPosition pos = new PhysicsShipPosition();
@@ -195,14 +200,22 @@ public abstract class PhysicsTest
                         throw new AssertionError("expected position:<" + x + "," + y + "> but was:<" + pos.x + "," + pos.y + ">");
                 }
                 
-                assertTrue(actor.getHistoricPosition(pos, env.getTick(actor.getStateId()), false));
+                if (env instanceof SimpleEnvironment)
+                {
+                        assertTrue(actor.getHistoricPosition(pos, ((SimpleEnvironment) env).getTick(actor.getStateId()), false));
+                }
+                else
+                {
+                        assertTrue(actor.getHistoricPosition(pos, env.getTick(), false));
+                }
+                
                 if (x != pos.x || y != pos.y)
                 {
                         throw new AssertionError("getHistoricPosition(0) is not equal to the current position!");
                 }
         }
         
-        protected void assertPosition(int x, int y, ProjectilePublic projectile)
+        public void assertPosition(int x, int y, ProjectilePublic projectile)
         {
                 assertProjectileExists(projectile);
                 ProjectilePublic.Position pos = new ProjectilePublic.Position();
@@ -215,14 +228,24 @@ public abstract class PhysicsTest
                 }
                 
                 PhysicsPoint pos2 = new PhysicsPoint();
-                assertTrue(projectile.getHistoricPosition(pos2, env.getTick(projectile.getStateId()), false));
+                
+                if (env instanceof SimpleEnvironment)
+                {
+                        assertTrue(projectile.getHistoricPosition(pos2, ((SimpleEnvironment) env).getTick(projectile.getStateId()), false));
+                }
+                else
+                {
+                        assertTrue(projectile.getHistoricPosition(pos2, env.getTick(), false));
+                }
+                
+                
                 if (x != pos.x || y != pos.y)
                 {
                         throw new AssertionError("getHistoricPosition(0) is not equal to the current position!");
                 }
         }
         
-        protected void assertPosition(int x, int y, long tick, ActorPublic actor)
+        public void assertPosition(int x, int y, long tick, ActorPublic actor)
         {
                 assertActorExists(actor);
                 PhysicsShipPosition pos = new PhysicsShipPosition();
@@ -234,7 +257,7 @@ public abstract class PhysicsTest
                 }
         }
 
-        protected void assertVelocity(int x, int y, ActorPublic actor)
+        public void assertVelocity(int x, int y, ActorPublic actor)
         {
                 assertActorExists(actor);
                 PhysicsShipPosition pos = new PhysicsShipPosition();
@@ -245,7 +268,14 @@ public abstract class PhysicsTest
                         throw new AssertionError("expected velocity:<" + x + "," + y + "> but was:<" + pos.x_vel + "," + pos.y_vel + ">");
                 }
                 
-                assertTrue(actor.getHistoricPosition(pos, env.getTick(actor.getStateId()), false));
+                if (env instanceof SimpleEnvironment)
+                {
+                        assertTrue(actor.getHistoricPosition(pos, ((SimpleEnvironment) env).getTick(actor.getStateId()), false));
+                }
+                else
+                {
+                        assertTrue(actor.getHistoricPosition(pos, env.getTick(), false));
+                }
 
                 if (x != pos.x_vel || y != pos.y_vel)
                 {
@@ -253,7 +283,7 @@ public abstract class PhysicsTest
                 }
         }
 
-        protected void assertRotation(int rot, ActorPublic actor)
+        public void assertRotation(int rot, ActorPublic actor)
         {
                 assertActorExists(actor);
                 PhysicsShipPosition pos = new PhysicsShipPosition();
@@ -261,11 +291,19 @@ public abstract class PhysicsTest
                 assertTrue(actor.getPosition(pos));
                 assertEquals(rot, pos.rot);
                 
-                assertTrue(actor.getHistoricPosition(pos, env.getTick(actor.getStateId()), false));
+                if (env instanceof SimpleEnvironment)
+                {
+                        assertTrue(actor.getHistoricPosition(pos, ((SimpleEnvironment) env).getTick(actor.getStateId()), false));
+                }
+                else
+                {
+                        assertTrue(actor.getHistoricPosition(pos, env.getTick(), false));
+                }
+                
                 assertEquals(rot, pos.rot);
         }
 
-        protected void assertSnappedRotation(int rot, ActorPublic actor)
+        public void assertSnappedRotation(int rot, ActorPublic actor)
         {
                 assertActorExists(actor);
                 PhysicsShipPosition pos = new PhysicsShipPosition();
@@ -273,7 +311,15 @@ public abstract class PhysicsTest
                 assertTrue(actor.getPosition(pos));
                 assertEquals(rot, pos.rot_snapped);
                 
-                assertTrue(actor.getHistoricPosition(pos, env.getTick(actor.getStateId()), false));
+                if (env instanceof SimpleEnvironment)
+                {
+                        assertTrue(actor.getHistoricPosition(pos, ((SimpleEnvironment) env).getTick(actor.getStateId()), false));
+                }
+                else
+                {
+                        assertTrue(actor.getHistoricPosition(pos, env.getTick(), false));
+                }
+                
                 assertEquals(rot, pos.rot_snapped);
         }
 }

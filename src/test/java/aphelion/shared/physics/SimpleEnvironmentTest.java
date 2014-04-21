@@ -49,7 +49,7 @@ import static org.junit.Assert.*;
  *
  * @author Joris
  */
-public class PhysicsEnvironmentTest extends PhysicsTest
+public class SimpleEnvironmentTest extends PhysicsTest
 {
         @Test
         public void testPhysicsPointConstant()
@@ -79,7 +79,7 @@ public class PhysicsEnvironmentTest extends PhysicsTest
         @Test
         public void testActorCreation()
         {
-                
+                SimpleEnvironment env = (SimpleEnvironment) this.env;
                 env.tick();
                 assertTrue(env.tick_now == 1);
 
@@ -104,7 +104,8 @@ public class PhysicsEnvironmentTest extends PhysicsTest
                 env.actorRemove(1, 3);
                 assertTrue(env.getActor(3).isRemoved());
 
-                env.actorNew(3, 4, 1234, "Warbird");                 env.actorRemove(3, 4);
+                env.actorNew(3, 4, 1234, "Warbird");
+                env.actorRemove(3, 4);
                 env.tick(); // 3
                 assertTrue(env.getActor(4).isRemoved());
 
@@ -294,6 +295,7 @@ public class PhysicsEnvironmentTest extends PhysicsTest
         @Test
         public void testMoveConsistency1()
         {
+                SimpleEnvironment env = (SimpleEnvironment) this.env;
                 // Test multiple move's received in the past (but still in order)
 
                 env.actorNew(0, 1, 1234, "Warbird");
@@ -327,6 +329,7 @@ public class PhysicsEnvironmentTest extends PhysicsTest
         @Test
         public void testMoveConsistency2()
         {
+                SimpleEnvironment env = (SimpleEnvironment) this.env;
                 // Test multiple move's received in the past, out of order
                 // This is solved without a timewarp
 
@@ -363,6 +366,7 @@ public class PhysicsEnvironmentTest extends PhysicsTest
         @Test
         public void testInvalidOperationOrder()
         {
+                SimpleEnvironment env = (SimpleEnvironment) this.env;
                 List<Object> yamlDocuments;
                 try
                 {
@@ -408,6 +412,7 @@ public class PhysicsEnvironmentTest extends PhysicsTest
         @Test
         public void testWeaponFire()
         {
+                SimpleEnvironment env = (SimpleEnvironment) this.env;
                 env.actorNew(0, 1, 1234, "Warbird");
                 env.actorWarp(0, 1, false, 1000, 2000, 0, 10, EnvironmentConf.ROTATION_1_2TH);
                 env.actorWeapon(0, 1, WEAPON_SLOT.GUN, false, 0, 0, 0, 0, 0);
@@ -448,6 +453,7 @@ public class PhysicsEnvironmentTest extends PhysicsTest
         @Test
         public void testWeaponFireConsistency()
         {
+                SimpleEnvironment env = (SimpleEnvironment) this.env;
                 env.actorNew(0, 1, 1234, "Warbird");
                 env.actorWarp(0, 1, false, 1000, 2000, 0, 0, EnvironmentConf.ROTATION_1_2TH);
                 env.actorWeapon(2, 1, WEAPON_SLOT.GUN, false, 0, 0, 0, 0, 0);

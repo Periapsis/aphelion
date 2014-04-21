@@ -40,7 +40,7 @@ package aphelion.shared.physics;
 
 import aphelion.shared.gameconfig.GCInteger;
 import aphelion.shared.gameconfig.GameConfig;
-import static aphelion.shared.physics.PhysicsEnvironmentTest.MOVE_UP;
+import static aphelion.shared.physics.SimpleEnvironmentTest.MOVE_UP;
 import aphelion.shared.physics.entities.ProjectilePublic;
 import aphelion.shared.physics.events.pub.ActorDiedPublic;
 import aphelion.shared.physics.events.pub.EventPublic;
@@ -59,6 +59,7 @@ public class TimewarpTest extends PhysicsTest
         @Test
         public void testActorCreation()
         {
+                SimpleEnvironment env = (SimpleEnvironment) this.env;
                 try
                 {
                         List<Object> yamlDocuments = GameConfig.loadYaml(""
@@ -127,6 +128,7 @@ public class TimewarpTest extends PhysicsTest
         @Test
         public void testActorDestruction()
         {
+                SimpleEnvironment env = (SimpleEnvironment) this.env;
                 env.actorNew(1, ACTOR_FIRST, 1234, "warbird");
                 env.actorRemove(env.econfig.TRAILING_STATE_DELAY + 3, ACTOR_FIRST);
                 
@@ -172,6 +174,7 @@ public class TimewarpTest extends PhysicsTest
         @Test
         public void testConfigChange()
         {
+                SimpleEnvironment env = (SimpleEnvironment) this.env;
                 env.actorNew(1, ACTOR_FIRST, 1234, "warbird");
                 env.actorWarp(1, ACTOR_FIRST, false, 1000, 90, 0, 0, 0);
                 
@@ -218,6 +221,7 @@ public class TimewarpTest extends PhysicsTest
         
         private void testProjectileCreation_assertFirstProj(int state, int x, int y)
         {
+                SimpleEnvironment env = (SimpleEnvironment) this.env;
                 for (ProjectilePublic proj : env.projectileIterable(state))
                 {
                         assertPosition(x, y, proj);
@@ -228,6 +232,7 @@ public class TimewarpTest extends PhysicsTest
         @Test
         public void testProjectileCreation()
         {
+                SimpleEnvironment env = (SimpleEnvironment) this.env;
                 try
                 {
                         List<Object> yamlDocuments = GameConfig.loadYaml(""
@@ -351,6 +356,7 @@ public class TimewarpTest extends PhysicsTest
         @Test
         public void testProjectileCreationCoupled()
         {
+                SimpleEnvironment env = (SimpleEnvironment) this.env;
                 try
                 {
                         List<Object> yamlDocuments = GameConfig.loadYaml(""
@@ -456,6 +462,7 @@ public class TimewarpTest extends PhysicsTest
         
         private void testExplosionEventShort_assertEvent(int state)
         {
+                SimpleEnvironment env = (SimpleEnvironment) this.env;
                 int events = 0;
                 for (EventPublic e : env.eventIterable())
                 {
@@ -495,6 +502,7 @@ public class TimewarpTest extends PhysicsTest
         @Test
         public void testExplosionEventShort()
         {
+                SimpleEnvironment env = (SimpleEnvironment) this.env;
                 // Short time between fire and explosion (less than TRAILING_STATE_DELAY)
                 try
                 {
@@ -549,6 +557,7 @@ public class TimewarpTest extends PhysicsTest
         
         private void testExplosionEventLong_assertEvent(int state)
         {
+                SimpleEnvironment env = (SimpleEnvironment) this.env;
                 int events = 0;
                 for (EventPublic e : env.eventIterable())
                 {
@@ -588,6 +597,7 @@ public class TimewarpTest extends PhysicsTest
         @Test
         public void testExplosionEventLong()
         {
+                SimpleEnvironment env = (SimpleEnvironment) this.env;
                 // Long time between fire and explosion (more than TRAILING_STATE_DELAY)
                 try
                 {

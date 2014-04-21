@@ -37,7 +37,6 @@
  */
 package aphelion.shared.physics;
 
-import aphelion.shared.physics.valueobjects.PhysicsPointHistorySmooth;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -52,6 +51,8 @@ public final class EnvironmentConf
          * assertions. Server or client specific code should be avoided!
          */
         public final boolean server;
+        
+        public final String logString;
         
         /** Tick length in milliseconds. */
         public static final int TICK_LENGTH = 10;
@@ -93,7 +94,7 @@ public final class EnvironmentConf
          * This is needed because sometimes it is need to look a little into the past.
          * (for example dead reckoning needs the move of the previous tick)
          */
-        public final int MINIMUM_HISTORY_TICKS = 2;
+        public final int MINIMUM_HISTORY_TICKS;
         
         /** Discard events that are older than this many ticks.
          * Events are tracked per environment, not per state.
@@ -107,8 +108,11 @@ public final class EnvironmentConf
         {
                 this.server = server;
                 
+                logString = server ? "(server)" : "(client)";
+                
                 TRAILING_STATE_DELAY = 32;
                 TIMEWARP_EVERY_TICKS = 10;
+                MINIMUM_HISTORY_TICKS = 2;
                 
                 if (server)
                 {
@@ -123,18 +127,17 @@ public final class EnvironmentConf
                         POSITION_SMOOTHING = enablePositionSmoothing;
                 }
                 
-                if (HIGHEST_DELAY != FIRST_STATE_DELAY + (TRAILING_STATES-1) * TRAILING_STATE_DELAY)
-                {
-                        throw new AssertionError();
-                }
+                assert HIGHEST_DELAY == FIRST_STATE_DELAY + (TRAILING_STATES-1) * TRAILING_STATE_DELAY;
                 
                 // +1 to ensure that an event that is generated in the state with the highest delay,
                 // will be readable before removal.
                 KEEP_EVENTS_FOR_TICKS = HIGHEST_DELAY + 1;
                 
-                if (MINIMUM_HISTORY_TICKS < 1)
+                assert MINIMUM_HISTORY_TICKS >= 1 : "Histories must overlap by atleast 1 ticks!";
+                
+                if (!server)
                 {
-                        throw new AssertionError("Histories must overlap by atleast 1 tick!");
+                        assert (TRAILING_STATES - 1) * TRAILING_STATE_DELAY + MINIMUM_HISTORY_TICKS == HIGHEST_DELAY + 2;
                 }
         }
         
@@ -143,38 +146,34 @@ public final class EnvironmentConf
                 this(server, !server);
         }
         
-        /**
-         * @param server Only used for logging
-         * @param firstStateDelay
-         * @param states
-         * @param enablePositionSmoothing
+        /** Construct with only 1 state, used for dual runner.
+         * @param enablePositionSmoothing 
+         * @param singleState Always 1234 (hack)
          */
-        public EnvironmentConf(boolean server, int firstStateDelay, int states, boolean enablePositionSmoothing)
+        EnvironmentConf(boolean enablePositionSmoothing, int singleState)
         {
-                this.server = server;
-                
-                TRAILING_STATE_DELAY = 32;
-                TIMEWARP_EVERY_TICKS = 10;
-                
-                
-                FIRST_STATE_DELAY = firstStateDelay;
-                TRAILING_STATES = states;
-                
-                if (HIGHEST_DELAY != FIRST_STATE_DELAY + (TRAILING_STATES-1) * TRAILING_STATE_DELAY)
+                if (singleState != 1234)
                 {
-                        throw new AssertionError();
+                        throw new IllegalArgumentException();
                 }
                 
+                this.server = false;
+                logString = "(DualRunner thread)";
+                
+                TRAILING_STATE_DELAY = HIGHEST_DELAY;
+                TIMEWARP_EVERY_TICKS = 0;
+                FIRST_STATE_DELAY = 0;
+                TRAILING_STATES = 1;
+                MINIMUM_HISTORY_TICKS = HIGHEST_DELAY + 2;
+                
+   
                 // +1 to ensure that an event that is generated in the state with the highest delay,
                 // will be readable before removal.
                 KEEP_EVENTS_FOR_TICKS = HIGHEST_DELAY + 1;
                 
                 this.POSITION_SMOOTHING = enablePositionSmoothing;
                 
-                if (MINIMUM_HISTORY_TICKS < 1)
-                {
-                        throw new AssertionError("Histories must overlap by atleast 1 tick!");
-                }
+                assert (TRAILING_STATES - 1) * TRAILING_STATE_DELAY + MINIMUM_HISTORY_TICKS == HIGHEST_DELAY + 2;
         }
         
         public void log()

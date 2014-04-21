@@ -44,6 +44,7 @@ import aphelion.shared.swissarmyknife.LinkedListHead;
 import aphelion.shared.swissarmyknife.ThreadSafe;
 import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.Objects;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
@@ -354,6 +355,8 @@ public class TickedEventLoop implements Workable, Timerable
                         delta -= TICK;
                         nano += TICK;
                         ++tick;
+                        
+                        //System.out.printf("%d: %4d => %4d\n", Objects.hashCode(this), (nano/1_000_000L), tick);
                         tick();
                         ++deadlock_tick;
                 }

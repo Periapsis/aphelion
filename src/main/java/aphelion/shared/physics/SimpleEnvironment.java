@@ -134,6 +134,7 @@ public class SimpleEnvironment implements TickEvent, PhysicsEnvironment
         
         /** If set, addOperation will use this queue instead of handling the operation directly. */
         private final ConcurrentLinkedQueue<Operation> threadedAddOperation;
+        final AtomicLong polledAddOperationsCount = new AtomicLong(0); // used in test cases
         private long nextOpSeq = 1;
         private final AtomicLong nextOpSeqSafe = new AtomicLong(1);
         
@@ -228,21 +229,32 @@ public class SimpleEnvironment implements TickEvent, PhysicsEnvironment
                 tick();
         }
         public static int debug_current_state = -1;
-
-        @Override
-        public void tick()
+        
+        public boolean hasThreadedAddOperation()
+        {
+                return threadedAddOperation != null && !threadedAddOperation.isEmpty();
+        }
+        
+        public void pollThreadedAddOperation()
         {
                 if (threadedAddOperation != null)
                 {
                         Operation op;
                         while ((op = threadedAddOperation.poll()) != null)
                         {
+                                polledAddOperationsCount.getAndAdd(1);
                                 for (int s = 0; s < econfig.TRAILING_STATES; s++)
                                 {
                                         trailingStates[s].addOperation(op);
                                 }
                         }
                 }
+        }
+
+        @Override
+        public void tick()
+        {
+                pollThreadedAddOperation();
                 
                 ++tick_now;
                 ticked_at = System.nanoTime();
@@ -315,7 +327,7 @@ public class SimpleEnvironment implements TickEvent, PhysicsEnvironment
                 long end = System.nanoTime();
                 
                 log.log(Level.WARNING, "Time Warp {0}: to state {1} in {2}ms. Tick {3} to {4}.", new Object[] {
-                        econfig.server ? "(server)" : "(client)",
+                        econfig.logString,
                         stateid,
                         (end - start) / 1_000_000.0,
                         this.trailingStates[0].tick_now,
@@ -415,7 +427,7 @@ public class SimpleEnvironment implements TickEvent, PhysicsEnvironment
                                 if (!olderPosition.equals(newerPosition))
                                 {
                                         log.log(Level.WARNING, "{0}: Inconsistency in position/velocity/rotation, actor {1}", new Object[]{
-                                                econfig.server ? "Server" : "Client",
+                                                econfig.logString,
                                                 actorNewer.pid
                                         });
                                         return false;
@@ -425,7 +437,7 @@ public class SimpleEnvironment implements TickEvent, PhysicsEnvironment
                                     actorNewer.getHistoricEnergy(older.tick_now, true))
                                 {
                                         log.log(Level.WARNING, "{0}: Inconsistency in energy, actor {1}", new Object[]{
-                                                econfig.server ? "Server" : "Client",
+                                                econfig.logString,
                                                 actorNewer.pid
                                         });
                                         return false;
@@ -445,7 +457,7 @@ public class SimpleEnvironment implements TickEvent, PhysicsEnvironment
                         if (!linkOp.data.isConsistent(older, newer))
                         {
                                 log.log(Level.WARNING, "{0}: Inconsistency in operation {1}", new Object[]{
-                                        econfig.server ? "Server" : "Client",
+                                        econfig.logString,
                                         linkOp.data.getClass().getName()
                                 });
                                 return false;
@@ -458,7 +470,7 @@ public class SimpleEnvironment implements TickEvent, PhysicsEnvironment
                         if (!linkEv.data.isConsistent(older, newer))
                         {
                                 log.log(Level.WARNING, "{0}: Inconsistency in event {1}", new Object[]{
-                                        econfig.server ? "Server" : "Client",
+                                        econfig.logString,
                                         linkEv.data.getClass().getName()
                                 });
                                 return false;
@@ -480,7 +492,7 @@ public class SimpleEnvironment implements TickEvent, PhysicsEnvironment
                 if (operation.ignorable && operation.tick <= now - EnvironmentConf.HIGHEST_DELAY)
                 {
                         log.log(Level.WARNING, "Operation about actor {1} at {2} dropped, too old ({0}). now = {3}", new Object[] {
-                                econfig.server ? "server" : "client",
+                                econfig.logString,
                                 operation.getPid(),
                                 operation.getTick(),
                                 now

@@ -344,7 +344,7 @@ public class State
                                 needTimewarpToThisState = true;
                                 
                                 log.log(Level.WARNING, "{0}: Inconsistency in queued operation {1}. (lateSync {2})", new Object[]{
-                                        econfig.server ? "Server" : "Client",
+                                        econfig.logString,
                                         op.getClass().getName(),
                                         lateSync
                                 });
@@ -759,7 +759,7 @@ public class State
                         if (!op.execute(this, this.tick_now - op.tick))
                         {
                                 log.log(Level.WARNING, "{0}: Inconsistency in late operation {1}", new Object[]{
-                                        econfig.server ? "Server" : "Client",
+                                        econfig.logString,
                                         op.getClass().getName()
                                 });
                                 needTimewarpToThisState = true;
