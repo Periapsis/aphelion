@@ -133,10 +133,6 @@ public class DualRunnerEnvironment implements TickEvent, LoopEvent, PhysicsEnvir
                                                 syncEnvsLock.unlock();
                                         }
                                 }
-                                else
-                                {
-                                        System.out.println("Unable to acquire lock for state reset, try again later"); // remove me
-                                }
                         }
                         catch (InterruptedException ex)
                         {
