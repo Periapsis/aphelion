@@ -57,7 +57,10 @@ import aphelion.shared.swissarmyknife.ThreadSafe;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 
 
@@ -72,17 +75,20 @@ import java.util.concurrent.locks.ReentrantLock;
  * even during timewarps.
  * @author Joris
  */
-public class DualRunnerEnvironment implements TickEvent, PhysicsEnvironment
-{ 
+public class DualRunnerEnvironment implements TickEvent, LoopEvent, PhysicsEnvironment
+{
+        private static final Logger log = Logger.getLogger("aphelion.shared.physics");
         private final TickedEventLoop mainLoop;
+        private long lastLoopSync;
         private final MyThread thread;
         private final SimpleEnvironment environment;
         private final SimpleEnvironment[] envs;
         
         private final ReentrantLock syncEnvsLock;
-        private volatile boolean needsStateReset = false;
+        private final AtomicLong needsStateReset = new AtomicLong();
         private volatile long env_tickCount = 0;
         private long nextOpSeq = 1;
+        private long stateResets = 0;
         
         public final EnvironmentConf econfig_single;
         public final EnvironmentConf econfig_thread;
@@ -107,40 +113,29 @@ public class DualRunnerEnvironment implements TickEvent, PhysicsEnvironment
                 this.tick();
         }
         
-        @Override
-        public void tick()
+        private void tryStateReset()
         {
-                final boolean stateReset = this.needsStateReset;
-                
-                if (environment.getTick() == 0)
-                {
-                        thread.createLoop(mainLoop);
-                        thread.syncLoop(mainLoop);
-                        thread.start();
-                }
-                else if (stateReset || environment.getTick() % 100 == 0)
+                final long stateReset = this.needsStateReset.get();
+                if (stateReset > 0)
                 {
                         try
                         {
-                                if (syncEnvsLock.tryLock(EnvironmentConf.TICK_LENGTH + 2, TimeUnit.MILLISECONDS))
+                                if (syncEnvsLock.tryLock(EnvironmentConf.TICK_LENGTH / 2, TimeUnit.MILLISECONDS))
                                 {
                                         try
                                         {
-                                                // mainLoop might get synced because of clock sync
-                                                // so also synchronize the loop in the thread.
-                                                // add half a tick length so that the threads can be scheduled better
-                                                thread.loop.synchronize(mainLoop.currentNano() + EnvironmentConf.TICK_LENGTH * 1_000_000L / 2, mainLoop.currentTick());
-                                                
-                                                if (stateReset)
-                                                {
-                                                        resetState();
-                                                        this.needsStateReset = false;
-                                                }
+                                                resetState();
+                                                this.needsStateReset.addAndGet(-stateReset);
+                                                doLoopSync();
                                         }
                                         finally
                                         {
                                                 syncEnvsLock.unlock();
                                         }
+                                }
+                                else
+                                {
+                                        System.out.println("Unable to acquire lock for state reset, try again later"); // remove me
                                 }
                         }
                         catch (InterruptedException ex)
@@ -148,6 +143,63 @@ public class DualRunnerEnvironment implements TickEvent, PhysicsEnvironment
                                 Thread.currentThread().interrupt();
                                 return;
                         }
+                }
+        }
+        
+        private void doLoopSync() // call with lock
+        {
+                // mainLoop might get synced because of clock sync
+                // so also synchronize the loop in the thread.
+                // add half a tick length so that the threads can be scheduled better
+                thread.loop.synchronize(mainLoop.currentNano() + EnvironmentConf.TICK_LENGTH * 1_000_000L / 2, mainLoop.currentTick());
+                lastLoopSync = System.nanoTime();
+        }
+
+        @Override
+        public void loop(long systemNanoTime, long sourceNanoTime)
+        {
+                if (environment.getTick() > 0)
+                {
+                        tryStateReset();
+
+                        if (lastLoopSync == 0)
+                        {
+                                lastLoopSync = systemNanoTime;
+                        }
+
+                        if (systemNanoTime - lastLoopSync > 250_000_000L) // 250ms
+                        {
+                                try
+                                {
+                                        if (syncEnvsLock.tryLock(2, TimeUnit.MILLISECONDS))
+                                        {
+                                                try
+                                                {
+                                                        doLoopSync();
+                                                }
+                                                finally
+                                                {
+                                                        syncEnvsLock.unlock();
+                                                }
+                                        }
+                                }
+                                catch (InterruptedException ex)
+                                {
+                                        Thread.currentThread().interrupt();
+                                        return;
+                                }
+                        }
+                }
+        }
+        
+        @Override
+        public void tick()
+        {
+                if (environment.getTick() == 0)
+                {
+                        thread.createLoop(mainLoop);
+                        thread.syncLoop(mainLoop);
+                        thread.start();
                 }
                 
                 environment.tick();
@@ -169,13 +221,13 @@ public class DualRunnerEnvironment implements TickEvent, PhysicsEnvironment
         }
         
         /** Wait until the internal thread has caught up with the loop on the main thread.
-         * This is usually used for test cases
+         * This is used for test cases
          * 
          * @return The tick the internal thread is now at. 
          *         This is never greater than the tick of the main thread (it should now be equal).
          * @throws java.lang.InterruptedException
          */
-        public long waitForThreadToCatchup() throws InterruptedException
+        long waitForThreadToCatchup() throws InterruptedException
         {
                 while(true)
                 {
@@ -196,7 +248,14 @@ public class DualRunnerEnvironment implements TickEvent, PhysicsEnvironment
                 }
         }
         
-        public long waitForThreadParsedOperations(long minCount) throws InterruptedException
+        /** Wait until all pending operations have been polled.
+         * This is used for test cases
+         * 
+         * @param minCount Wait until this many operations have been polled
+         * @return The total amount of operations polled so far
+         * @throws java.lang.InterruptedException
+         */
+        long waitForThreadParsedOperations(long minCount) throws InterruptedException
         {
                 while(true)
                 {
@@ -204,7 +263,7 @@ public class DualRunnerEnvironment implements TickEvent, PhysicsEnvironment
                         try
                         {
                                 long count = thread.environment.polledAddOperationsCount.get();
-                                System.out.printf("%d >= %d\n", count, minCount);
+                                
                                 if (count >= minCount)
                                 {
                                         return count;
@@ -219,11 +278,33 @@ public class DualRunnerEnvironment implements TickEvent, PhysicsEnvironment
                 }
         }
         
+        long tryResetStateNow() throws InterruptedException
+        {
+                syncEnvsLock.lock();
+                try
+                {
+                        tryStateReset();
+                        return stateResets;
+                }
+                finally
+                {
+                        syncEnvsLock.unlock();
+                }
+        }
+        
         private void resetState() // (call with lock held)
         {
                 long tickBeforeReset = environment.getTick();
+
+                ++stateResets;
                 
+                long start = System.nanoTime();
                 environment.trailingStates[0].timewarp(thread.environment.trailingStates[0]);
+                long end = System.nanoTime();
+                
+                log.log(Level.WARNING, "Completed dual runner reset in {0}ms", new Object[]{
+                        (end - start) / 1_000_000.0,
+                });
                 
                 if (environment.getTick() != tickBeforeReset)
                 {
@@ -771,7 +852,9 @@ public class DualRunnerEnvironment implements TickEvent, PhysicsEnvironment
                                 if (timewarpCountLastSeen != environment.getTimewarpCount())
                                 {
                                         timewarpCountLastSeen = environment.getTimewarpCount();
-                                        DualRunnerEnvironment.this.needsStateReset = true;
+                                        DualRunnerEnvironment.this.needsStateReset.addAndGet(1);
+                                        
+                                        log.log(Level.WARNING, "Timewarp just occured: needsStateReset");
                                 }
                         }
                         finally

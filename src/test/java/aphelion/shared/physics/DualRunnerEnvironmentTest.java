@@ -186,6 +186,9 @@ public class DualRunnerEnvironmentTest extends PhysicsTest
                 loop.loop();
                 assertEquals(2 + env.econfig_thread.TRAILING_STATE_DELAY, env.waitForThreadToCatchup());
                 assertEquals(1, env.getTimewarpCount());
+                assertEquals(1, env.tryResetStateNow());
+                
+                
                 
                 assertPosition(1000, 2000 + ((int) env.getTick() - 1) * 28, env.getActor(1));
                 
@@ -197,7 +200,7 @@ public class DualRunnerEnvironmentTest extends PhysicsTest
                 
                 assertEquals(1000, pos.x);
                 assertEquals(2000 + offsetY + 28 // ship position
-                        + (fireSpeed + 28) * env.econfig_thread.TRAILING_STATE_DELAY, // the distance the projectile has traveled
+                        + (fireSpeed + 28) * ((int) env.getTick() - 2), // the distance the projectile has traveled
                         pos.y
                 );
                 
