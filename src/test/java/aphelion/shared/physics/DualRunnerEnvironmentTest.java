@@ -51,6 +51,7 @@ import java.util.Iterator;
 import java.util.concurrent.TimeUnit;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import org.junit.Test;
 
@@ -159,6 +160,9 @@ public class DualRunnerEnvironmentTest extends PhysicsTest
                 loop.loop();
                 assertEquals(2, env.waitForThreadToCatchup());
                 
+                ActorPublic actorA = env.getActor(1, false);
+                assertNotNull(actorA);
+                
                 int offsetY = conf.getInteger("projectile-offset-y").get();
                 int fireSpeed = conf.getInteger("projectile-speed").get();
                 
@@ -166,9 +170,10 @@ public class DualRunnerEnvironmentTest extends PhysicsTest
                 assertTrue(it.hasNext());
                 
                 ProjectilePublic.Position pos = new ProjectilePublic.Position();
-                ProjectilePublic proj = it.next();
+                assertTrue(it.hasNext());
+                ProjectilePublic projA = it.next();
                 assertFalse(it.hasNext());
-                proj.getPosition(pos);
+                projA.getPosition(pos);
                 
                 assertEquals(1000, pos.x);
                 assertEquals(2000 + offsetY, pos.y);
@@ -176,7 +181,7 @@ public class DualRunnerEnvironmentTest extends PhysicsTest
                 assertEquals(fireSpeed, pos.y_vel);
                 
                 it = null;
-                proj = null;
+                
                 
                 // weapon fire was at tick 2
                 env.actorMove(1, 1, MOVE_UP);
@@ -189,14 +194,18 @@ public class DualRunnerEnvironmentTest extends PhysicsTest
                 assertEquals(1, env.tryResetStateNow());
                 
                 
+                ActorPublic actorB = env.getActor(1, false);
+                assertNotNull(actorB);
+                assertEquals(actorA, actorB); // reference must not change (this is what ActorKey is for)
                 
-                assertPosition(1000, 2000 + ((int) env.getTick() - 1) * 28, env.getActor(1));
+                assertPosition(1000, 2000 + ((int) env.getTick() - 1) * 28, actorB);
                 
                 it = env.projectileIterator();
                 assertTrue(it.hasNext());
-                proj = it.next();
+                ProjectilePublic projB = it.next();
                 assertFalse(it.hasNext());
-                proj.getPosition(pos);
+                assertEquals(projA, projB); // reference must not change (this is what ProjectileKey is for)
+                projB.getPosition(pos);
                 
                 assertEquals(1000, pos.x);
                 assertEquals(2000 + offsetY + 28 // ship position
@@ -207,4 +216,9 @@ public class DualRunnerEnvironmentTest extends PhysicsTest
                 assertEquals(0, pos.x_vel);
                 assertEquals(fireSpeed + 28, pos.y_vel);
         }
+        
+        // TODO:
+        // - Test event resetting
+        // - test operation resetting
+        // - test references of chained projectiles, events, not changing
 }
