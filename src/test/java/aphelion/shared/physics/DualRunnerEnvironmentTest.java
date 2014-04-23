@@ -43,9 +43,13 @@ package aphelion.shared.physics;
 
 import aphelion.shared.event.ManualClockSource;
 import aphelion.shared.event.TickedEventLoop;
+import aphelion.shared.gameconfig.GameConfig;
 import static aphelion.shared.physics.PhysicsTest.MOVE_UP;
 import aphelion.shared.physics.entities.ActorPublic;
 import aphelion.shared.physics.entities.ProjectilePublic;
+import aphelion.shared.physics.events.pub.ActorDiedPublic;
+import aphelion.shared.physics.events.pub.EventPublic;
+import aphelion.shared.physics.events.pub.ProjectileExplosionPublic;
 import aphelion.shared.physics.operations.ActorWeaponFire;
 import aphelion.shared.physics.operations.Operation;
 import aphelion.shared.physics.valueobjects.PhysicsPoint;
@@ -54,6 +58,7 @@ import aphelion.shared.swissarmyknife.LinkedListEntry;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -260,8 +265,124 @@ public class DualRunnerEnvironmentTest extends PhysicsTest
                 assertPointEquals(0, fireSpeed + 28, opFireHistory.vel);
         }
         
-        // TODO:
-        // - Test event resetting
-        // - test references of events not changing
-        // - test references of chained projectiles, not changing
+        private ProjectileExplosionPublic testExplosionEventLong_explosion;
+        private ActorDiedPublic testExplosionEventLong_died;
+        private void testExplosionEventLong_assertEvent(boolean afterReset)
+        {
+                DualRunnerEnvironment env = (DualRunnerEnvironment) this.env;
+                int events = 0;
+                for (EventPublic e : env.eventIterable())
+                {
+                        ++events;
+                        if (e instanceof ProjectileExplosionPublic)
+                        {
+                                ProjectileExplosionPublic ev = (ProjectileExplosionPublic) e;
+                                
+                                // The reference should not change
+                                if (testExplosionEventLong_explosion != null)
+                                {
+                                        assert testExplosionEventLong_explosion == ev;
+                                }
+                                testExplosionEventLong_explosion = ev;
+                                
+                                assert ev.hasOccurred(0);
+                                assertEquals(ACTOR_FIRST, ev.getFireActor(0));
+                                assertEquals(ACTOR_SECOND, ev.getHitActor(0));
+                                assertEquals(afterReset ? 29 : 24, ev.getOccurredAt(0));
+                                
+                                PhysicsPoint pos = new PhysicsPoint();
+                                ev.getPosition(0, pos);
+                                assertPointEquals(afterReset ? 485664 : 385664, 90, pos);
+                                
+                                ev.getProjectile(0).getHistoricPosition(pos, ev.getOccurredAt(0), true);
+                                assertPointEquals(afterReset ? 485664 : 385664, 90, pos);
+                        }
+                        else if (e instanceof ActorDiedPublic)
+                        {
+                                ActorDiedPublic ev = (ActorDiedPublic) e;
+                                
+                                // The reference should not change
+                                if (testExplosionEventLong_died != null)
+                                {
+                                        assert testExplosionEventLong_died == ev;
+                                }
+                                testExplosionEventLong_died = ev;
+                                
+                                assert ev.hasOccurred(0);
+                                assertEquals(afterReset ? 29 : 24, ev.getOccurredAt(0));
+                                assertEquals(ACTOR_SECOND, ev.getDied(0));
+                                assert ev.getCause(0) == testExplosionEventLong_explosion;
+                        }
+                        else
+                        {
+                                assert false;
+                        }
+                }
+                
+                assertEquals(2, events);
+        }
+        
+        @Test
+        public void testExplosionEventLong() throws InterruptedException
+        {
+                DualRunnerEnvironment env = (DualRunnerEnvironment) this.env;
+                
+                testExplosionEventLong_explosion = null;
+                testExplosionEventLong_died = null;
+                
+                loopSetup();
+                
+                try
+                {
+                        List<Object> yamlDocuments = GameConfig.loadYaml(""
+                                + "- weapon-projectiles: 1\n"
+                                + "  projectile-hit-ship: true\n"
+                                + "  projectile-angle-relative: true\n"
+                                + "  projectile-speed: 20000\n"
+                                + "  projectile-damage: 2000\n"
+                                + "  ship-energy: 1500\n"
+                        );
+                        env.loadConfig(env.getTick() - EnvironmentConf.HIGHEST_DELAY, "test", yamlDocuments);
+                }
+                catch (Exception ex)
+                {
+                        throw new Error(ex);
+                }
+                
+                
+                env.actorNew(1, ACTOR_FIRST, 1234, "warbird");
+                env.actorWarp(1, ACTOR_FIRST, false, 1000, 90, 0, 0, EnvironmentConf.ROTATION_1_4TH);
+                env.actorNew(1, ACTOR_SECOND, 4321, "warbird");
+                env.actorWarp(1, ACTOR_SECOND, false, 400000, 90, 0, 0, 0);
+                
+                env.actorWeapon(5, ACTOR_FIRST, WEAPON_SLOT.GUN, false, 0, 0, 0 , 0, 0);
+                
+                clock.advanceTick(2);
+                loop.loop();
+                assertEquals(2, env.waitForThreadToCatchup());
+                assertEquals(7, env.waitForThreadParsedOperations(7));
+                
+                // modify this test case if TRAILING_STATE_DELAY changes
+                assert env.econfig_thread.TRAILING_STATE_DELAY == 32; 
+                
+                
+                clock.advanceTick(36);
+                loop.loop();
+                assertEquals(38, env.waitForThreadToCatchup());
+        
+                
+                testExplosionEventLong_assertEvent(false);
+                
+                // Should cause an inconsistency (event hits somewhere else now)
+                env.actorWarp(2, ACTOR_SECOND, false, 500000, 90, 0, 0, 0);
+                assertEquals(8, env.waitForThreadParsedOperations(8));
+                
+                clock.advanceTick(env.econfig_thread.TRAILING_STATE_DELAY);
+                loop.loop();
+                assertEquals(38 + env.econfig_thread.TRAILING_STATE_DELAY, env.waitForThreadToCatchup());
+                assertEquals(1, env.getTimewarpCount());
+                assertEquals(1, env.tryResetStateNow());
+                
+                testExplosionEventLong_assertEvent(true);
+        }
 }
