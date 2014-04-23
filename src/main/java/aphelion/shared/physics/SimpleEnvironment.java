@@ -343,7 +343,7 @@ public class SimpleEnvironment implements TickEvent, PhysicsEnvironment
         }
 
         private void removeOldHistory() // (or recycle)
-                {
+        {
                 LinkedListEntry<Operation> linkOp, linkOpNext;
                 LinkedListEntry<Event> linkEv, linkEvNext;
                 Operation op;
@@ -360,7 +360,7 @@ public class SimpleEnvironment implements TickEvent, PhysicsEnvironment
                         linkOpNext = linkOp.next;
                         op = linkOp.data;
                         
-                        if (op.tick < oldestState.tick_now - 1) // -1 to be sure
+                        if (op.tick < this.tick_now - econfig.KEEP_OPERATIONS_FOR_TICKS)
                         {
                                 // remove the operation everywhere
                                 for (int s = 0; s < econfig.TRAILING_STATES; ++s)

@@ -96,6 +96,11 @@ public final class EnvironmentConf
          */
         public final int MINIMUM_HISTORY_TICKS;
         
+        /** Discard operations that are older than this many ticks.
+         * Operations that are older than "env.tick_now - KEEP_OPERATIONS_FOR_TICKS" are discarded.
+         */
+        public final int KEEP_OPERATIONS_FOR_TICKS;
+        
         /** Discard events that are older than this many ticks.
          * Events are tracked per environment, not per state.
          * Events that are older than "env.tick_now - KEEP_EVENTS_FOR_TICKS" are discarded.
@@ -129,9 +134,12 @@ public final class EnvironmentConf
                 
                 assert HIGHEST_DELAY == FIRST_STATE_DELAY + (TRAILING_STATES-1) * TRAILING_STATE_DELAY;
                 
+                KEEP_OPERATIONS_FOR_TICKS = HIGHEST_DELAY + 2;
+                
                 // +1 to ensure that an event that is generated in the state with the highest delay,
                 // will be readable before removal.
                 KEEP_EVENTS_FOR_TICKS = HIGHEST_DELAY + 1;
+                
                 
                 assert MINIMUM_HISTORY_TICKS >= 1 : "Histories must overlap by atleast 1 ticks!";
                 
@@ -166,7 +174,7 @@ public final class EnvironmentConf
                 TRAILING_STATES = 1;
                 MINIMUM_HISTORY_TICKS = HIGHEST_DELAY + 2;
                 
-   
+                KEEP_OPERATIONS_FOR_TICKS = HIGHEST_DELAY + 1;
                 // +1 to ensure that an event that is generated in the state with the highest delay,
                 // will be readable before removal.
                 KEEP_EVENTS_FOR_TICKS = HIGHEST_DELAY + 1;

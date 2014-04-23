@@ -46,7 +46,13 @@ import aphelion.shared.event.TickedEventLoop;
 import static aphelion.shared.physics.PhysicsTest.MOVE_UP;
 import aphelion.shared.physics.entities.ActorPublic;
 import aphelion.shared.physics.entities.ProjectilePublic;
+import aphelion.shared.physics.operations.ActorWeaponFire;
+import aphelion.shared.physics.operations.Operation;
+import aphelion.shared.physics.valueobjects.PhysicsPoint;
+import aphelion.shared.physics.valueobjects.PhysicsPositionVector;
+import aphelion.shared.swissarmyknife.LinkedListEntry;
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.concurrent.TimeUnit;
 import static org.junit.Assert.assertEquals;
@@ -146,7 +152,7 @@ public class DualRunnerEnvironmentTest extends PhysicsTest
         }
         
         @Test(timeout=10000)
-        public void testWeaponFireConsistency() throws InterruptedException
+        public void testResetConsistency() throws InterruptedException, NoSuchFieldException, IllegalAccessException
         {
                 DualRunnerEnvironment env = (DualRunnerEnvironment) this.env;
                 
@@ -156,16 +162,35 @@ public class DualRunnerEnvironmentTest extends PhysicsTest
                 env.actorWarp(0, 1, false, 1000, 2000, 0, 0, EnvironmentConf.ROTATION_1_2TH);
                 env.actorWeapon(2, 1, WEAPON_SLOT.GUN, false, 0, 0, 0, 0, 0);
                 
+                // Execute the 3 operations in both threads
                 clock.advanceTick(2);
                 loop.loop();
                 assertEquals(2, env.waitForThreadToCatchup());
                 
-                ActorPublic actorA = env.getActor(1, false);
-                assertNotNull(actorA);
-                
                 int offsetY = conf.getInteger("projectile-offset-y").get();
                 int fireSpeed = conf.getInteger("projectile-speed").get();
                 
+                // Verify operation history
+                Field fireHistoryField = ActorWeaponFire.class.getDeclaredField("fireHistories");
+                PhysicsPositionVector opFireHistory = new PhysicsPositionVector();
+                fireHistoryField.setAccessible(true);
+                LinkedListEntry<Operation> opLink = env.environment.trailingStates[0].history.first; // actor new
+                opLink = opLink.next; // actor warp
+                opLink = opLink.next; // actor weapon
+                ActorWeaponFire opWeaponA = (ActorWeaponFire) opLink.data;
+                assertNotNull(opWeaponA);
+                opFireHistory.set(((ArrayList<PhysicsPositionVector[]>) fireHistoryField.get(opWeaponA)).get(0)[0]);
+                
+                // Position history before reset
+                assertPointEquals(1000, 2000 + offsetY, opFireHistory.pos);
+                assertPointEquals(0, fireSpeed, opFireHistory.vel);
+                
+                // Verify the actor reference does not changed (comparison follows after reset)
+                ActorPublic actorA = env.getActor(1, false);
+                assertNotNull(actorA);
+                
+                
+                // Verify the projectile reference does not changed (comparison follows after reset)
                 Iterator<ProjectilePublic> it = env.projectileIterator();
                 assertTrue(it.hasNext());
                 
@@ -175,6 +200,7 @@ public class DualRunnerEnvironmentTest extends PhysicsTest
                 assertFalse(it.hasNext());
                 projA.getPosition(pos);
                 
+                // Projectile location at tick 2, before reset
                 assertEquals(1000, pos.x);
                 assertEquals(2000 + offsetY, pos.y);
                 assertEquals(0, pos.x_vel);
@@ -183,7 +209,7 @@ public class DualRunnerEnvironmentTest extends PhysicsTest
                 it = null;
                 
                 
-                // weapon fire was at tick 2
+                // weapon fire was at tick 2, this should cause can inconsistency
                 env.actorMove(1, 1, MOVE_UP);
                 
                 // Ensure a timewarp can happen
@@ -193,32 +219,49 @@ public class DualRunnerEnvironmentTest extends PhysicsTest
                 assertEquals(1, env.getTimewarpCount());
                 assertEquals(1, env.tryResetStateNow());
                 
-                
+                // Verify the actor reference does not changed (this is what ActorKey is for)
                 ActorPublic actorB = env.getActor(1, false);
                 assertNotNull(actorB);
-                assertEquals(actorA, actorB); // reference must not change (this is what ActorKey is for)
+                assert actorA == actorB;
                 
+                // Verify actor position after reset
                 assertPosition(1000, 2000 + ((int) env.getTick() - 1) * 28, actorB);
                 
+                // Verify the projectile reference did not change (this is what ProjectileKey is for)
                 it = env.projectileIterator();
                 assertTrue(it.hasNext());
                 ProjectilePublic projB = it.next();
                 assertFalse(it.hasNext());
-                assertEquals(projA, projB); // reference must not change (this is what ProjectileKey is for)
+                assert projA == projB; 
                 projB.getPosition(pos);
                 
+                // Verify projectile position after the reset
                 assertEquals(1000, pos.x);
                 assertEquals(2000 + offsetY + 28 // ship position
-                        + (fireSpeed + 28) * ((int) env.getTick() - 2), // the distance the projectile has traveled
+                        + (fireSpeed + 28) * ((int) env.getTick() - 2),
                         pos.y
                 );
-                
                 assertEquals(0, pos.x_vel);
                 assertEquals(fireSpeed + 28, pos.y_vel);
+                
+                
+                // Verify the operation reference does not change, and
+                // Was the operation history changed properly?
+                opLink = env.environment.trailingStates[0].history.first; // actor new
+                opLink = opLink.next; // actor warp
+                opLink = opLink.next; // actor move
+                opLink = opLink.next; // actor weapon
+                ActorWeaponFire opWeaponB = (ActorWeaponFire) opLink.data;
+                assertNotNull(opWeaponB);
+                assert opWeaponA == opWeaponB;
+                
+                opFireHistory.set(((ArrayList<PhysicsPositionVector[]>) fireHistoryField.get(opWeaponB)).get(0)[0]);
+                assertPointEquals(1000, 2000 + offsetY + 28, opFireHistory.pos);
+                assertPointEquals(0, fireSpeed + 28, opFireHistory.vel);
         }
         
         // TODO:
         // - Test event resetting
-        // - test operation resetting
-        // - test references of chained projectiles, events, not changing
+        // - test references of events not changing
+        // - test references of chained projectiles, not changing
 }

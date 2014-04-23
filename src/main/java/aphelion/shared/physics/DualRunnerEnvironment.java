@@ -81,7 +81,7 @@ public class DualRunnerEnvironment implements TickEvent, LoopEvent, PhysicsEnvir
         private final TickedEventLoop mainLoop;
         private long lastLoopSync;
         private final MyThread thread;
-        private final SimpleEnvironment environment;
+        final SimpleEnvironment environment;
         private final SimpleEnvironment[] envs;
         
         private final ReentrantLock syncEnvsLock;

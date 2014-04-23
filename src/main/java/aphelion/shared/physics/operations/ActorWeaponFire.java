@@ -62,10 +62,8 @@ public class ActorWeaponFire extends Operation implements ActorWeaponFirePublic
 {
         private static final Logger log = Logger.getLogger("aphelion.shared.physics");
         
-        private final boolean[] usedHint;
-        
         private final ProjectileFactory factory = new ProjectileFactory();
-
+        private final boolean[] usedHint;
         public WEAPON_SLOT weapon_slot;
         
         
