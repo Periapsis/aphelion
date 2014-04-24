@@ -281,6 +281,9 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
                                                 <configuration>
                                                         <dataFile>target/jacoco/jacoco.exec</dataFile>
                                                         <outputDirectory>target/jacoco</outputDirectory>
+                                                        <excludes>
+                                                                <exclude>aphelion/shared/net/protobuf/**</exclude>
+                                                        </excludes>
                                                 </configuration>
                                         </execution>
                                 </executions>
