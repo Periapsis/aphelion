@@ -736,6 +736,35 @@ public final class SwissArmyKnife
                 return lowest;
         }
         
+        @ThreadSafe
+        public static long max(long... args)
+        {
+                long highest = Long.MIN_VALUE;
+                for (long n : args)
+                {
+                        if (n > highest)
+                        {
+                                highest = n;
+                        }
+                }
+
+                return highest;
+        }
+
+        @ThreadSafe
+        public static long min(long... args)
+        {
+                long lowest = Long.MAX_VALUE;
+                for (long n : args)
+                {
+                        if (n < lowest)
+                        {
+                                lowest = n;
+                        }
+                }
+
+                return lowest;
+        }
 
         /** Integer Hash Function.
          * Robert Jenkins' 96 bit Mix Function.

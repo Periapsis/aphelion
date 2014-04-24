@@ -39,12 +39,12 @@
 package aphelion.shared.physics.entities;
 
 import aphelion.shared.gameconfig.GCInteger;
+import aphelion.shared.physics.SimpleEnvironment;
 import aphelion.shared.physics.State;
 import aphelion.shared.physics.valueobjects.PhysicsPoint;
 import aphelion.shared.physics.valueobjects.PhysicsPointHistoryDetailed;
 import aphelion.shared.physics.valueobjects.PhysicsPositionVector;
 import aphelion.shared.swissarmyknife.LinkedListEntry;
-import javax.annotation.Nullable;
 
 /**
  *
@@ -247,7 +247,7 @@ public abstract class MapEntity
         {
                 assert myState == this.state;
                 
-                if (!this.state.isForeign(other.state))
+                if (!this.state.isForeign(other))
                 {
                         assert other.crossStateList == this.crossStateList;
 
@@ -269,5 +269,25 @@ public abstract class MapEntity
                 
                 pos.set(other.pos);
                 posHistory.set(other.posHistory);
+                
+                if (state.isForeign(other) && posHistory.HISTORY_LENGTH != other.posHistory.HISTORY_LENGTH)
+                {
+                        // history length might be different between foreign states.
+                        // projectile history within a single state is usually not complete.
+                        // (unlike actors, which store full (overlaping) histories up to in each state)
+                        // the posHistory.set above make sure the tick range is correct.
+                        // Using overwite the missing values will be filled in properly.
+                        
+                        for (int s = other.state.env.econfig.TRAILING_STATES - 1;
+                             s >= other.state.id;
+                             --s)
+                        {
+                                if (other.crossStateList[s] != null)
+                                {
+                                        posHistory.overwrite(other.crossStateList[s].posHistory);
+                                }
+                        }
+                }
+                
         }
 }

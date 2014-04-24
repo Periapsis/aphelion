@@ -294,6 +294,9 @@ public class DualRunnerEnvironmentTest extends PhysicsTest
                                 ev.getPosition(0, pos);
                                 assertPointEquals(afterReset ? 485664 : 385664, 90, pos);
                                 
+                                ev.getProjectile(0).getHistoricPosition(pos, ev.getOccurredAt(0), false);
+                                assertPointEquals(afterReset ? 485664 : 385664, 90, pos);
+                                
                                 ev.getProjectile(0).getHistoricPosition(pos, ev.getOccurredAt(0), true);
                                 assertPointEquals(afterReset ? 485664 : 385664, 90, pos);
                         }
@@ -308,10 +311,10 @@ public class DualRunnerEnvironmentTest extends PhysicsTest
                                 }
                                 testExplosionEventLong_died = ev;
                                 
-                                assert ev.hasOccurred(0);
+                                assertTrue(ev.hasOccurred(0));
                                 assertEquals(afterReset ? 29 : 24, ev.getOccurredAt(0));
                                 assertEquals(ACTOR_SECOND, ev.getDied(0));
-                                assert ev.getCause(0) == testExplosionEventLong_explosion;
+                                assertEquals(testExplosionEventLong_explosion, ev.getCause(0));
                         }
                         else
                         {

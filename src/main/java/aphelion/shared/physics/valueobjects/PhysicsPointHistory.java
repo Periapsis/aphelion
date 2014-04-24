@@ -38,6 +38,8 @@
 
 package aphelion.shared.physics.valueobjects;
 
+import aphelion.shared.swissarmyknife.SwissArmyKnife;
+
 /**
  * History for x and y.
  * Similar to RollingHistory, however instead a generic, you can use two integer values.
@@ -182,7 +184,7 @@ public class PhysicsPointHistory
                 return history_y[index];
         }
 
-        protected int getHistoryIndex()
+        protected final int getHistoryIndex()
         {
                 return history_index;
         }
@@ -191,7 +193,7 @@ public class PhysicsPointHistory
          * Calling setHistory with a value greater than this value will discard the oldest history.
          * @return tick
          */
-        public long getHighestTick()
+        public final long getHighestTick()
         {
                 return history_tick;
         }
@@ -200,11 +202,16 @@ public class PhysicsPointHistory
          * Calling setHistory with a value lower than this value will have no effect
          * @return tick
          */
-        public long getLowestTick()
+        public final long getLowestTick()
         {
                 return history_tick - HISTORY_LENGTH + 1;
         }
         
+        /** Efficiently set our content to match the content of an other PhysicsPointHistory.
+         * @param other A PhysicsPointHistory with an equal or lesser length to set this content to.
+         *        If the given PhysicsPointHistory has a lesser length, the oldest ticks are given 
+         *        a value of 0.
+         */
         public void set(PhysicsPointHistory other)
         {
                 if (other.HISTORY_LENGTH > this.HISTORY_LENGTH)
@@ -213,7 +220,6 @@ public class PhysicsPointHistory
                 }
                 
                 this.history_tick = other.history_tick;
-                
                 this.history_index = this.HISTORY_LENGTH - 1;
                 int myIndex = this.history_index;
                 int otherIndex = other.history_index;
@@ -251,6 +257,52 @@ public class PhysicsPointHistory
                 updatedAll();
         }
         
+        /** Efficiently set our content to match the content of an other PhysicsPointHistory 
+         *  for any tick that fits.
+         *  The highest or lowest tick is not modified. Any tick in "other" that falls outside 
+         *  of this range is ignored.
+         * @param other PhysicsPointHistory of any length
+         */
+        public void overwrite(PhysicsPointHistory other)
+        {
+                final long myHighestTick = getHighestTick();
+                final long myLowestTick = getLowestTick();
+                
+                final long otherHighestTick = other.getHighestTick();
+                final long otherLowestTick = other.getLowestTick();
+                
+                long tick = SwissArmyKnife.min(myHighestTick, otherHighestTick);
+                int otherIndex = other.getIndex(tick);
+                int myIndex = this.getIndex(tick);
+                
+                if (otherIndex == -1 || myIndex == -1)
+                {
+                        // History ranges do not overlap
+                        return;
+                }
+                
+                while (tick >= myLowestTick && tick >= otherLowestTick)
+                {
+                        this.history_x[myIndex] = other.history_x[otherIndex];
+                        this.history_y[myIndex] = other.history_y[otherIndex];
+                        
+                        --tick;
+                        
+                        --otherIndex;
+                        if (otherIndex == -1)
+                        {
+                                otherIndex = other.HISTORY_LENGTH - 1;
+                        }
+                        
+                        --myIndex;
+                        if (myIndex == -1)
+                        {
+                                myIndex = this.HISTORY_LENGTH - 1;
+                        }
+                }
+                
+                updatedAll();
+        }
 
         @Override
         public String toString()
