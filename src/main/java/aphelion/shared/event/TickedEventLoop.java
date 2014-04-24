@@ -44,9 +44,10 @@ import aphelion.shared.swissarmyknife.LinkedListHead;
 import aphelion.shared.swissarmyknife.ThreadSafe;
 import java.util.ArrayList;
 import java.util.LinkedList;
-import java.util.Objects;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /** A simple event loop that runs on a fixed interval (ticks). 
  * If a tick suddenly takes too much time to run or if the clock changes, the loop 
@@ -56,6 +57,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class TickedEventLoop implements Workable, Timerable
 {
+        private static final Logger log = Logger.getLogger("aphelion.eventloop");
         public final long TICK; // length of a tick in nanoseconds
         public ClockSource clockSource;
         private long nano = 0;
@@ -446,6 +448,7 @@ public class TickedEventLoop implements Workable, Timerable
                         catch (InterruptedException ex)
                         {
                                 interrupt();
+                                log.log(Level.WARNING, "Thread interrupted, stopping loop. ", ex);
                                 return;
                         }
                 }
