@@ -354,7 +354,7 @@ public final class Projectile extends MapEntity implements ProjectilePublic
                 ProjectileExplosion event = explosionEvent == null ? null : explosionEvent.get();
                 if (event == null)
                 {
-                        event = new ProjectileExplosion(state.econfig, new ProjectileExplosion.Key(this.key));
+                        event = new ProjectileExplosion(state.env, new ProjectileExplosion.Key(this.key));
                         explosionEvent = new WeakReference<>(event);
                 }
                 
@@ -388,7 +388,7 @@ public final class Projectile extends MapEntity implements ProjectilePublic
                         ProjectileExplosion event = explosionEvent == null ? null : explosionEvent.get();
                         if (event == null)
                         {
-                                event = new ProjectileExplosion(state.econfig, new ProjectileExplosion.Key(this.key));
+                                event = new ProjectileExplosion(state.env, new ProjectileExplosion.Key(this.key));
                                 explosionEvent = new WeakReference<>(event);
                         }
 
@@ -485,7 +485,7 @@ public final class Projectile extends MapEntity implements ProjectilePublic
                 ProjectileExplosion event = explosionEvent == null ? null : explosionEvent.get();
                 if (event == null)
                 {
-                        event = new ProjectileExplosion(state.econfig, new ProjectileExplosion.Key(this.key));
+                        event = new ProjectileExplosion(state.env, new ProjectileExplosion.Key(this.key));
                         explosionEvent = new WeakReference<>(event);
                 }
 

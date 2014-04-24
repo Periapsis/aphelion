@@ -39,11 +39,13 @@
 package aphelion.shared.physics.events;
 
 
+import aphelion.shared.physics.SimpleEnvironment;
 import aphelion.shared.physics.events.pub.EventPublic;
 import aphelion.shared.physics.State;
 import aphelion.shared.swissarmyknife.AttachmentData;
 import aphelion.shared.swissarmyknife.AttachmentManager;
 import aphelion.shared.swissarmyknife.LinkedListEntry;
+import javax.annotation.Nullable;
 
 /**
  *
@@ -54,6 +56,7 @@ public abstract class Event implements EventPublic
         public static final AttachmentManager attachmentManager = new AttachmentManager();
         private final AttachmentData attachments = attachmentManager.getNewDataContainer();
         
+        public final SimpleEnvironment env;
         public final LinkedListEntry<Event> link;
         public final EventKey key;
         
@@ -65,8 +68,9 @@ public abstract class Event implements EventPublic
         
         protected long highestExecutionTick = Long.MIN_VALUE;
         
-        protected Event(EventKey key)
+        protected Event(SimpleEnvironment env, EventKey key)
         {
+                this.env = env;
                 link = new LinkedListEntry<>(null, this);
                 this.key = key;
         }
@@ -122,4 +126,9 @@ public abstract class Event implements EventPublic
          *        it is the same as "this".
          */
         abstract public void resetExecutionHistory(State state, State resetTo, Event resetToEvent);
+        
+        public @Nullable Event findInOtherEnv(SimpleEnvironment env)
+        {
+                return env.findForeignEvent(this);
+        }
 }

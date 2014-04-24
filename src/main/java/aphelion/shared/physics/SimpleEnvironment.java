@@ -59,6 +59,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.annotation.Nullable;
 
 /**
  * Physics Engine based on TSS.
@@ -173,6 +174,18 @@ public class SimpleEnvironment implements TickEvent, PhysicsEnvironment
                 {
                         this.threadedAddOperation = null;
                 }
+        }
+        
+        public @Nullable Event findForeignEvent(Event event)
+        {
+                if (event.env == this)
+                {
+                        return event;
+                }
+                else
+                {
+                        return this.eventHistory.get(event.key);
+                }       
         }
         
         @Override

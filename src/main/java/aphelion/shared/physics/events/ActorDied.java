@@ -41,6 +41,7 @@ package aphelion.shared.physics.events;
 
 
 import aphelion.shared.physics.EnvironmentConf;
+import aphelion.shared.physics.SimpleEnvironment;
 import aphelion.shared.physics.State;
 import aphelion.shared.physics.entities.Actor;
 import aphelion.shared.physics.events.pub.ActorDiedPublic;
@@ -57,9 +58,9 @@ public class ActorDied extends Event implements ActorDiedPublic
         private static final Logger log = Logger.getLogger("aphelion.shared.physics");
         private final History[] history;
         
-        public ActorDied(EnvironmentConf econfig, Key key)
+        public ActorDied(SimpleEnvironment env, EnvironmentConf econfig, Key key)
         {
-                super(key);
+                super(env, key);
                 history = new History[econfig.TRAILING_STATES];
                 
                 for (int a = 0; a < econfig.TRAILING_STATES; ++a)
@@ -167,7 +168,7 @@ public class ActorDied extends Event implements ActorDiedPublic
                 {
                         set = other.set;
                         tick = other.tick;
-                        cause = other.cause;
+                        cause = other.cause == null ? null : other.cause.findInOtherEnv(myState.env);
                         
                         died = other.died == null ? null : other.died.findInOtherState(myState);
                         killer = other.killer == null ? null : other.killer.findInOtherState(myState);

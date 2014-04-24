@@ -41,6 +41,7 @@ package aphelion.shared.physics.events;
 
 import aphelion.shared.gameconfig.GCStringList;
 import aphelion.shared.physics.EnvironmentConf;
+import aphelion.shared.physics.SimpleEnvironment;
 import aphelion.shared.physics.entities.Actor;
 import aphelion.shared.physics.entities.Actor.WeaponConfig;
 import aphelion.shared.physics.entities.Projectile;
@@ -74,12 +75,12 @@ public class ProjectileExplosion extends Event implements ProjectileExplosionPub
           */
         final HashMap<Integer, ActorDied> diedEvents = new HashMap<>(4);
         
-        public ProjectileExplosion(EnvironmentConf econfig, Key key)
+        public ProjectileExplosion(SimpleEnvironment env, Key key)
         {
-                super(key);
+                super(env, key);
                 
-                history = new History[econfig.TRAILING_STATES];
-                for (int a = 0; a < econfig.TRAILING_STATES; ++a)
+                history = new History[env.econfig.TRAILING_STATES];
+                for (int a = 0; a < env.econfig.TRAILING_STATES; ++a)
                 {
                         history[a] = new History();
                 }
@@ -247,7 +248,7 @@ public class ProjectileExplosion extends Event implements ProjectileExplosionPub
                         ActorDied diedEvent = diedEvents.get(killed_pid);
                         if (diedEvent == null)
                         {
-                                diedEvent = new ActorDied(state.econfig, new ActorDied.Key((Key) this.key));
+                                diedEvent = new ActorDied(env, state.econfig, new ActorDied.Key((Key) this.key));
                                 diedEvents.put(killed_pid, diedEvent);
                         }
                         

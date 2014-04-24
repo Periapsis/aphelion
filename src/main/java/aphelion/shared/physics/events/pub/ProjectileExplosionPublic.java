@@ -39,7 +39,6 @@ package aphelion.shared.physics.events.pub;
 
 import aphelion.shared.physics.entities.ProjectilePublic;
 import aphelion.shared.physics.valueobjects.PhysicsPoint;
-import aphelion.shared.physics.WEAPON_SLOT;
 
 /**
  * The projectile hit an actor, a tile, or explodes because of prox.
