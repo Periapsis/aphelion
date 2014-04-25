@@ -132,8 +132,8 @@ public class ClientState
                 this.physicsEnv = serverGame.physicsEnv;
                 this.gameConn = gameConn;
                 this.ships = physicsEnv.getGlobalConfigStringList("ships");
-                this.receivedMove = new RollingHistory<>(physicsEnv.getTick(), EnvironmentConf.HIGHEST_DELAY + MAX_FUTURE_TICKS + 1);
-                this.receivedWeapon = new RollingHistory<>(physicsEnv.getTick(), EnvironmentConf.HIGHEST_DELAY + MAX_FUTURE_TICKS + 1);
+                this.receivedMove = new RollingHistory<>(physicsEnv.getTick(), physicsEnv.getConfig().HIGHEST_DELAY + MAX_FUTURE_TICKS + 1);
+                this.receivedWeapon = new RollingHistory<>(physicsEnv.getTick(), physicsEnv.getConfig().HIGHEST_DELAY + MAX_FUTURE_TICKS + 1);
         }
         
         public void setNickname(String nickname)

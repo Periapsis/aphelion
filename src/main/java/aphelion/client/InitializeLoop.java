@@ -208,7 +208,7 @@ public class InitializeLoop implements TickEvent
                 for (LoadYamlTask.Return yamlResult : loadYamlResult)
                 {
                         physicsEnv.loadConfig(
-                                physicsEnv.getTick() - EnvironmentConf.HIGHEST_DELAY,
+                                physicsEnv.getTick() - physicsEnv.getConfig().HIGHEST_DELAY,
                                 yamlResult.fileIdentifier, 
                                 yamlResult.yamlDocuments);
                 }

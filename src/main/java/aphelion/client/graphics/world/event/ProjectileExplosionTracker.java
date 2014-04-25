@@ -116,7 +116,7 @@ public class ProjectileExplosionTracker implements EventTracker
                         
                         // do not update the render delay after it has been set
                         renderDelay = projectile.renderDelay_current;
-                        if (renderDelay >= EnvironmentConf.HIGHEST_DELAY)
+                        if (renderDelay >= physicsEnv.getConfig().HIGHEST_DELAY)
                         {
                                 return; // too old
                         }

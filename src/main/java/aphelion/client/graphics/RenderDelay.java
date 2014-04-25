@@ -175,7 +175,7 @@ public class RenderDelay implements GameS2CListener, TickEvent
                 ship.renderDelay_current = SwissArmyKnife.clip(
                         ship.renderDelay_value.get(),
                         0, 
-                        EnvironmentConf.HIGHEST_DELAY);
+                        physicsEnv.getConfig().HIGHEST_DELAY);
                 
                 if (ship.renderDelay_current > createdAgo)
                 {
@@ -289,7 +289,7 @@ public class RenderDelay implements GameS2CListener, TickEvent
                 projectile.renderDelay_current = SwissArmyKnife.clip(
                         projectile.renderDelay_value.get(),
                         0, 
-                        EnvironmentConf.HIGHEST_DELAY);
+                        physicsEnv.getConfig().HIGHEST_DELAY);
                         
                 projectile.renderingAt_tick = physicsEnv.getTick() - projectile.renderDelay_current;
         }

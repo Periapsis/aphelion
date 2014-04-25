@@ -206,7 +206,8 @@ public class ServerMain implements LoopEvent, TickEvent
                 
                 for (LoadYamlTask.Return ret : gameConfig)
                 {
-                        physicsEnv.loadConfig(physicsEnv.getTick() - EnvironmentConf.HIGHEST_DELAY, ret.fileIdentifier, ret.yamlDocuments);
+                        
+                        physicsEnv.loadConfig(physicsEnv.getTick() - physicsEnv.getConfig().HIGHEST_DELAY, ret.fileIdentifier, ret.yamlDocuments);
                 }
                 gameConfig = null;
                 

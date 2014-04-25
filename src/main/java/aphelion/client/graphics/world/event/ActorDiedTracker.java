@@ -114,7 +114,7 @@ public class ActorDiedTracker implements EventTracker
                         // do not update the render delay after it has been set
                         
                         renderDelay = ship.renderDelay_current;
-                        if (renderDelay >= EnvironmentConf.HIGHEST_DELAY)
+                        if (renderDelay >= physicsEnv.getConfig().HIGHEST_DELAY)
                         {
                                 return; // too old
                         }

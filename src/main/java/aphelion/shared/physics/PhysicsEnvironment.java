@@ -59,6 +59,14 @@ import java.util.List;
  */
 public interface PhysicsEnvironment
 {
+        /** Returns the primary environment configuration used.
+         * In case multiple inner environment are used, the returned
+         * value represents the config of the environment that has the final say
+         * in inconsistencies (the one other environments reset to)
+         * @return This value never changes
+         */
+        public EnvironmentConf getConfig();
+        
         /** Used to sync up the internal tick count with the server tick count.
          * @param tick
          * @throws IllegalStateException If this environment has already began ticking

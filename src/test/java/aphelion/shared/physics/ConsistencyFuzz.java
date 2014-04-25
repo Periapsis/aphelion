@@ -114,7 +114,7 @@ public class ConsistencyFuzz
 
         private ConfigSelection applyTestSettings(PhysicsEnvironment env)
         {
-                env.loadConfig(env.getTick() - EnvironmentConf.HIGHEST_DELAY, "test", yamlDocuments);
+                env.loadConfig(env.getTick() - env.getConfig().HIGHEST_DELAY, "test", yamlDocuments);
                 return env.newConfigSelection();
         }
 

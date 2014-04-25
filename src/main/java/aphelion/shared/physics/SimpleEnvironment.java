@@ -175,6 +175,12 @@ public class SimpleEnvironment implements TickEvent, PhysicsEnvironment
                         this.threadedAddOperation = null;
                 }
         }
+
+        @Override
+        public EnvironmentConf getConfig()
+        {
+                return econfig;
+        }
         
         public @Nullable Event findForeignEvent(Event event)
         {
@@ -502,7 +508,7 @@ public class SimpleEnvironment implements TickEvent, PhysicsEnvironment
         {
                 final long now = this.tick_now;
                 
-                if (operation.ignorable && operation.tick <= now - EnvironmentConf.HIGHEST_DELAY)
+                if (operation.ignorable && operation.tick <= now - econfig.HIGHEST_DELAY)
                 {
                         log.log(Level.WARNING, "Operation about actor {1} at {2} dropped, too old ({0}). now = {3}", new Object[] {
                                 econfig.logString,

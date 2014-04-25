@@ -107,6 +107,13 @@ public class DualRunnerEnvironment implements TickEvent, LoopEvent, PhysicsEnvir
                 syncEnvsLock = new ReentrantLock();
         }
 
+        @ThreadSafe
+        @Override
+        public EnvironmentConf getConfig()
+        {
+                return econfig_thread;
+        }
+
         @Override
         public void tick(long tick)
         {
@@ -780,6 +787,11 @@ public class DualRunnerEnvironment implements TickEvent, LoopEvent, PhysicsEnvir
                 @ThreadSafe
                 public void done()
                 {
+                        if (!this.isAlive())
+                        {
+                                return;
+                        }
+                        
                         loop.interrupt();
                         try
                         {

@@ -345,7 +345,7 @@ public class DualRunnerEnvironmentTest extends PhysicsTest
                                 + "  projectile-damage: 2000\n"
                                 + "  ship-energy: 1500\n"
                         );
-                        env.loadConfig(env.getTick() - EnvironmentConf.HIGHEST_DELAY, "test", yamlDocuments);
+                        env.loadConfig(env.getTick() - env.getConfig().HIGHEST_DELAY, "test", yamlDocuments);
                 }
                 catch (Exception ex)
                 {

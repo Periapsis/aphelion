@@ -96,7 +96,7 @@ public abstract class Scenario implements TickEvent
                         throw new Error(ex);
                 }
                 
-                env.loadConfig(env.getTick() - EnvironmentConf.HIGHEST_DELAY, "scenario.game.yaml", yamlDocuments);
+                env.loadConfig(env.getTick() - env.getConfig().HIGHEST_DELAY, "scenario.game.yaml", yamlDocuments);
                 
                 String implConfig = this.getConfig();
                 if (implConfig != null)
@@ -110,7 +110,7 @@ public abstract class Scenario implements TickEvent
                                 throw new Error(ex);
                         }
                         
-                        env.loadConfig(env.getTick() - EnvironmentConf.HIGHEST_DELAY, "impl", yamlDocuments);
+                        env.loadConfig(env.getTick() - env.getConfig().HIGHEST_DELAY, "impl", yamlDocuments);
                 }
                 
                 this.config = env.newConfigSelection();

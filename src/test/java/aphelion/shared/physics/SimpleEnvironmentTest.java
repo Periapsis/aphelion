@@ -380,7 +380,7 @@ public class SimpleEnvironmentTest extends PhysicsTest
                         throw new Error(ex);
                 }
                 
-                env.loadConfig(env.getTick() - EnvironmentConf.HIGHEST_DELAY + 1, "testInvalidOperationOrder()", yamlDocuments);
+                env.loadConfig(env.getTick() - env.getConfig().HIGHEST_DELAY + 1, "testInvalidOperationOrder()", yamlDocuments);
                 
                 env.actorWarp(1, 1, false, 1000, 1000, 100, 100, 0);
                 env.actorNew(5, 1, 1234, "Warbird");

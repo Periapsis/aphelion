@@ -84,7 +84,7 @@ public final class EnvironmentConf
         
         /** The highest delay we simulate for.
          * Do not accept operations that are older than this many ticks. (if Operation.ignorable) */
-        public static final int HIGHEST_DELAY = 224; // static because it must be consistent for all peers
+        public final int HIGHEST_DELAY;
         
         /** If two timewarps need to be executed in rapid succession, wait this many ticks. */
         public final int TIMEWARP_EVERY_TICKS;
@@ -124,15 +124,17 @@ public final class EnvironmentConf
                         FIRST_STATE_DELAY = 4 * TRAILING_STATE_DELAY;
                         TRAILING_STATES = 1;
                         POSITION_SMOOTHING = enablePositionSmoothing;
+                        HIGHEST_DELAY = FIRST_STATE_DELAY + (TRAILING_STATES-1) * TRAILING_STATE_DELAY;
                 }
                 else
                 {
                         FIRST_STATE_DELAY = 0;
                         TRAILING_STATES = 8;
                         POSITION_SMOOTHING = enablePositionSmoothing;
+                        HIGHEST_DELAY = 224; // must be the same for all clients (look at the other constructor)
+                        
+                        assert HIGHEST_DELAY == FIRST_STATE_DELAY + (TRAILING_STATES-1) * TRAILING_STATE_DELAY;
                 }
-                
-                assert HIGHEST_DELAY == FIRST_STATE_DELAY + (TRAILING_STATES-1) * TRAILING_STATE_DELAY;
                 
                 KEEP_OPERATIONS_FOR_TICKS = HIGHEST_DELAY + 2;
                 
@@ -168,6 +170,7 @@ public final class EnvironmentConf
                 this.server = false;
                 logString = "(DualRunner thread)";
                 
+                HIGHEST_DELAY = 224;
                 TRAILING_STATE_DELAY = HIGHEST_DELAY;
                 TIMEWARP_EVERY_TICKS = 0;
                 FIRST_STATE_DELAY = 0;
