@@ -192,6 +192,12 @@ public class GameLoop
         {
                 try
                 {
+                        // This thread takes care of rendering graphics
+                        Thread.currentThread().setPriority(Thread.MAX_PRIORITY - 1);
+                        
+                        loop.addTickEvent(mapEntities);
+                        loop.addLoopEvent(mapEntities);
+                        
                         lookUpNiftyElements();
 
                         localChat = new LocalChat(loop, networkedGame, Collections.unmodifiableList(Arrays.asList(chatLocals)));
@@ -364,8 +370,11 @@ public class GameLoop
                 }
                 finally
                 {
+                        loop.removeTickEvent(mapEntities);
+                        loop.removeLoopEvent(mapEntities);
                         loop.removeLoopEvent(gameEventsDisplays);
                         loop.removeTickEvent(myKeyboard);
+                        physicsEnv.done();
                 }
         }
 }

@@ -428,7 +428,10 @@ public class InitializeLoop implements TickEvent
                 }
                 finally
                 {
+                        loop.removeTickEvent(mapEntities);
+                        loop.removeLoopEvent(mapEntities);
                         loop.removeTickEvent(this);
+                        physicsEnv.done();
                 }
         }
 
