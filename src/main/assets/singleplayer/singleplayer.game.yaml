@@ -721,7 +721,7 @@
 
   ship-speed: 4000
   ship-thrust: 50
-  ship-energy: 5000
+  ship-energy: 1200
   ship-recharge: 4000
   ship-rotation-speed: 6616210
   ship-boost-speed: 6000
@@ -737,7 +737,7 @@
   weapon-fire-delay: 5
   weapon-switch-delay: 5
   projectile-speed: 5000
-  
+  projectile-emp-time: 200
 
 - selector: {ship: superspider, weapon: *BOMBS}
   projectile-speed: 5000
@@ -763,10 +763,10 @@
 - {selector: {ship: superspider, weapon: [classic-gun-lvl3]}, weapon-nifty-show: gauge-gun-singlem-3}
 - {selector: {ship: superspider, weapon: [classic-gun-lvl4]}, weapon-nifty-show: gauge-gun-singlem-4}
 
-- {selector: {weapon: [classic-gun-lvl1, classic-mgun-lvl1]}, projectile-damage:  50}
-- {selector: {weapon: [classic-gun-lvl2, classic-mgun-lvl2]}, projectile-damage:  100}
-- {selector: {weapon: [classic-gun-lvl3, classic-mgun-lvl3]}, projectile-damage:  200}
-- {selector: {weapon: [classic-gun-lvl4, classic-mgun-lvl4]}, projectile-damage:  400}
-- {selector: {weapon: *BOMBSMINES}, projectile-damage:  200}
+- {selector: {ship: superspider, weapon: [classic-gun-lvl1, classic-mgun-lvl1]}, projectile-damage:  50}
+- {selector: {ship: superspider, weapon: [classic-gun-lvl2, classic-mgun-lvl2]}, projectile-damage:  100}
+- {selector: {ship: superspider, weapon: [classic-gun-lvl3, classic-mgun-lvl3]}, projectile-damage:  200}
+- {selector: {ship: superspider, weapon: [classic-gun-lvl4, classic-mgun-lvl4]}, projectile-damage:  400}
+- {selector: {ship: superspider, weapon: *BOMBSMINES}, projectile-damage:  200}
 
 ...
