@@ -233,6 +233,7 @@ public class GameLoop
 
                                         // must come before keyboard input, which generates new events, therefor prepend
                                         loop.prependTickEvent(physicsEnv); 
+                                        loop.addLoopEvent(physicsEnv);
                                         tickingPhysics = true;
                                 }
                                 
@@ -370,6 +371,8 @@ public class GameLoop
                 }
                 finally
                 {
+                        loop.removeTickEvent(physicsEnv); 
+                        loop.removeLoopEvent(physicsEnv);
                         loop.removeTickEvent(mapEntities);
                         loop.removeLoopEvent(mapEntities);
                         loop.removeLoopEvent(gameEventsDisplays);

@@ -43,7 +43,6 @@ import aphelion.shared.event.TickEvent;
 import aphelion.shared.gameconfig.ConfigSelection;
 import aphelion.shared.gameconfig.GameConfig;
 import aphelion.shared.net.game.NetworkedActor;
-import aphelion.shared.physics.EnvironmentConf;
 import aphelion.shared.physics.PhysicsEnvironment;
 import aphelion.shared.physics.WEAPON_SLOT;
 import aphelion.shared.physics.valueobjects.PhysicsMovement;

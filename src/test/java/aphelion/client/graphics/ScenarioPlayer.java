@@ -44,6 +44,7 @@ import aphelion.client.graphics.world.ActorShip;
 import aphelion.client.graphics.world.MapEntities;
 import aphelion.client.graphics.world.StarField;
 import aphelion.server.ServerConfigException;
+import aphelion.shared.event.LoopEvent;
 import aphelion.shared.event.TickEvent;
 import aphelion.shared.event.TickedEventLoop;
 import aphelion.shared.gameconfig.GameConfig;
@@ -62,6 +63,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.lwjgl.LWJGLException;
 import org.lwjgl.opengl.Display;
 import org.lwjgl.opengl.DisplayMode;
@@ -73,6 +76,7 @@ import org.newdawn.slick.Color;
  */
 public class ScenarioPlayer
 {
+        private static final Logger log = Logger.getLogger("aphelion.test.client.scenario");
         private final TickedEventLoop loop;
         private Scenario scene;
         private ResourceDB resourceDB;
@@ -196,7 +200,8 @@ public class ScenarioPlayer
         
         private void removeLoopEvents()
         {
-                loop.removeTickEvent((TickEvent) env);       
+                loop.removeTickEvent((TickEvent) env);
+                loop.removeLoopEvent((LoopEvent) env);
                 loop.removeTickEvent(mapEntities);
                 loop.removeLoopEvent(mapEntities);
                 loop.removeTickEvent(scene);
@@ -221,6 +226,7 @@ public class ScenarioPlayer
                 
                 if (scene != null)
                 {
+                        log.log(Level.INFO, "Playing scenario {0}", scene.getClass().getName());
                         if (dualRunner)
                         {
                                 env = new DualRunnerEnvironment(loop, mapClassic);
@@ -233,6 +239,7 @@ public class ScenarioPlayer
                         mapEntities.tryInitialize(env, null);
                         
                         loop.addTickEvent((TickEvent) env);
+                        loop.addLoopEvent((LoopEvent) env);
                         loop.addTickEvent(mapEntities);
                         loop.addLoopEvent(mapEntities);
                         
