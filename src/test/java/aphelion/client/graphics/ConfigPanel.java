@@ -60,6 +60,7 @@ public class ConfigPanel extends JPanel
 {
         private final HashMap<String, JComponent> fields = new HashMap<>();
         private final JCheckBox debug;
+        private final JCheckBox dualRunner;
         
         public ConfigPanel()
         {
@@ -67,6 +68,8 @@ public class ConfigPanel extends JPanel
                 
                 add(new JLabel("debug"));
                 add(debug = new JCheckBox());
+                add(new JLabel("DualRunner"));
+                add(dualRunner = new JCheckBox());
                 
                 addIntegerConfig("render-delay", 0);
                 addIntegerConfig("render-delay-latency-ratio", 0);
@@ -83,13 +86,17 @@ public class ConfigPanel extends JPanel
                 
                 debug.addChangeListener(new ChangeListener()
                 {
-
                         @Override
                         public void stateChanged(ChangeEvent e)
                         {
                                 Client.showDebug = debug.isSelected();
                         }
                 });
+        }
+        
+        public boolean isDualRunner()
+        {
+                return dualRunner.isSelected();
         }
         
         private void addIntegerConfig(String key, int def)

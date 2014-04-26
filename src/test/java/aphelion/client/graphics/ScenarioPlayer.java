@@ -44,10 +44,12 @@ import aphelion.client.graphics.world.ActorShip;
 import aphelion.client.graphics.world.MapEntities;
 import aphelion.client.graphics.world.StarField;
 import aphelion.server.ServerConfigException;
+import aphelion.shared.event.TickEvent;
 import aphelion.shared.event.TickedEventLoop;
 import aphelion.shared.gameconfig.GameConfig;
 import aphelion.shared.map.MapClassic;
 import aphelion.shared.map.tile.TileType;
+import aphelion.shared.physics.DualRunnerEnvironment;
 import aphelion.shared.physics.EnvironmentConf;
 import aphelion.shared.physics.PhysicsEnvironment;
 import aphelion.shared.physics.SimpleEnvironment;
@@ -81,7 +83,7 @@ public class ScenarioPlayer
         
         // Recreated for each scenario:
         private MapEntities mapEntities;
-        private SimpleEnvironment env;
+        private PhysicsEnvironment env;
         
         public ScenarioPlayer(TickedEventLoop loop)
         {
@@ -194,13 +196,13 @@ public class ScenarioPlayer
         
         private void removeLoopEvents()
         {
-                loop.removeTickEvent(env);       
+                loop.removeTickEvent((TickEvent) env);       
                 loop.removeTickEvent(mapEntities);
                 loop.removeLoopEvent(mapEntities);
                 loop.removeTickEvent(scene);
         }
         
-        public void setScenario(Scenario scene)
+        public void setScenario(Scenario scene, boolean dualRunner)
         {
                 if (!setup)
                 {
@@ -209,17 +211,28 @@ public class ScenarioPlayer
                 this.scene = scene;
                 
                 removeLoopEvents();
+                if (env instanceof DualRunnerEnvironment)
+                {
+                        ((DualRunnerEnvironment) env).done(); // blocks
+                }
                 
                 mapEntities = null;
                 env = null;
                 
                 if (scene != null)
                 {
-                        env = new SimpleEnvironment(false, mapClassic);
+                        if (dualRunner)
+                        {
+                                env = new DualRunnerEnvironment(loop, mapClassic);
+                        }
+                        else
+                        {
+                                env = new SimpleEnvironment(false, mapClassic);
+                        }
                         mapEntities = new MapEntities(resourceDB);
                         mapEntities.tryInitialize(env, null);
                         
-                        loop.addTickEvent(env);
+                        loop.addTickEvent((TickEvent) env);
                         loop.addTickEvent(mapEntities);
                         loop.addLoopEvent(mapEntities);
                         
@@ -240,7 +253,7 @@ public class ScenarioPlayer
                         throw new Error(ex);
                 }
 
-                env.loadConfig(env.getTick() - env.econfig.HIGHEST_DELAY, "player", yamlDocuments);
+                env.loadConfig(env.getTick() - env.getConfig().HIGHEST_DELAY, "player", yamlDocuments);
         }
         
         public void interrupt()
@@ -266,7 +279,7 @@ public class ScenarioPlayer
                 ScenarioSelector frame = new ScenarioSelector(new ScenarioSelector.ScenarioSelectorListener()
                 {
                         @Override
-                        public void selected(Class klass, final String config)
+                        public void selected(Class klass, final String config, final boolean dualRunner)
                         {
                                 try
                                 {
@@ -277,7 +290,7 @@ public class ScenarioPlayer
                                                 @Override
                                                 public void run()
                                                 {
-                                                        player.setScenario(scene);
+                                                        player.setScenario(scene, dualRunner);
                                                         player.addConfig(config);
                                                 }
                                         });

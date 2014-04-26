@@ -118,7 +118,7 @@ public class ScenarioSelector extends JFrame
                                 @Override
                                 public void actionPerformed(ActionEvent e)
                                 {
-                                        listener.selected(klas, configPanel.getValue());
+                                        listener.selected(klas, configPanel.getValue(), configPanel.isDualRunner());
                                 }
                         });
                 }
@@ -126,6 +126,6 @@ public class ScenarioSelector extends JFrame
         
         public static interface ScenarioSelectorListener
         {
-                void selected(Class klass, String config);
+                void selected(Class klass, String config, boolean dualRunner);
         }
 }
