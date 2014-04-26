@@ -180,6 +180,11 @@ public class ServerGame implements LoopEvent, TickEvent, GameProtoListener
                                 
                                 if (event.hasOccurred(0))
                                 {
+                                        log.log(Level.INFO, "{0} was killed by {1}", new Object[]
+                                        {
+                                                event.getDied(0),
+                                                event.getKiller(0)
+                                        });
                                         hasHandledEventConsumer.set(event_, Boolean.TRUE);
                                 
                                         GameS2C.S2C.Builder s2c = GameS2C.S2C.newBuilder();
