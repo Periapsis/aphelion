@@ -605,6 +605,8 @@ public class Actor extends MapEntity
                 {
                         long tick = tick_now + t;
                         
+                        boolean dead = this.isDead(tick);
+                        
                         int prevEnergy = this.energy.get(tick - 1);
                         PhysicsMoveable prevMove = this.getHistoricMovement(tick - 1, false);
                         
@@ -630,46 +632,52 @@ public class Actor extends MapEntity
                         
                         updatedPosition(tick); // updates the smoothed position
                         
-                        
-                        if (this.useSmoothForCollision(tick))
+                        if (!dead)
                         {
-                                final PhysicsPoint point = new PhysicsPoint();
-                                
-                                this.getHistoricSmoothPosition(point, tick - 1, false);
-                                collision.setPreviousPosition(point);
-                                
-                                collision.setPosHistoryDetails(null); // this would not work properly when smoothed
-                                
-                                this.getHistoricSmoothPosition(point, tick, false);
-                                collision.setNewPosition(point);
-                        }
-                        else
-                        {
-                                // the prevPos, newPos and posHistoryDetails are still set correctly on Collision,
-                                // in order to properly execute tickEntityCollision
-                        }
-                        collision.tickEntityCollision(tick);
-                        
-                        Iterator<Collision.HitData> it = collision.getHitEntities();
-                        while (it.hasNext())
-                        {
-                                Collision.HitData hit = it.next();
-                                
-                                if (hit.entity instanceof Projectile)
+                                if (this.useSmoothForCollision(tick))
                                 {
-                                        Projectile proj = (Projectile)hit.entity;
-                                        proj.hitByActor(tick, this, hit.location);
+                                        final PhysicsPoint point = new PhysicsPoint();
+
+                                        this.getHistoricSmoothPosition(point, tick - 1, false);
+                                        collision.setPreviousPosition(point);
+
+                                        collision.setPosHistoryDetails(null); // this would not work properly when smoothed
+
+                                        this.getHistoricSmoothPosition(point, tick, false);
+                                        collision.setNewPosition(point);
                                 }
                                 else
                                 {
-                                        log.log(Level.WARNING, "Hit something unexpected");
+                                        // the prevPos, newPos and posHistoryDetails are still set correctly on Collision,
+                                        // in order to properly execute tickEntityCollision
                                 }
+                                collision.tickEntityCollision(tick);
+
+                                Iterator<Collision.HitData> it = collision.getHitEntities();
+                                while (it.hasNext())
+                                {
+                                        Collision.HitData hit = it.next();
+                                        
+                                        if (hit.entity instanceof Projectile)
+                                        {
+                                                Projectile proj = (Projectile)hit.entity;
+                                                proj.hitByActor(tick, this, hit.location);
+                                                
+                                                if (this.isDead(tick))
+                                                {
+                                                        break; // just died, no more hits
+                                                }
+                                        }
+                                        else
+                                        {
+                                                log.log(Level.WARNING, "Hit something unexpected");
+                                        }
+                                }
+
+                                // Any speed increase applied during this tick is not used until the next tick
+                                applyMoveable(moveHistory.get(tick), tick);
+                                updatedPosition(tick);
                         }
-                        
-                        // Any speed increase applied during this tick is not used until the next tick
-                        applyMoveable(moveHistory.get(tick), tick);
-                        
-                        updatedPosition(tick);
                 }
         }
         
