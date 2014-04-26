@@ -86,6 +86,9 @@ public class DualRunnerEnvironment implements TickEvent, LoopEvent, PhysicsEnvir
         
         private final ReentrantLock syncEnvsLock;
         private final AtomicLong needsStateReset = new AtomicLong();
+        private long tryStateReset_lock_timeout = 0;
+        private static final long TRYSTATERESET_LOCKTIMEOUT_START = 2_000_000L;
+        private static final long TRYSTATERESET_LOCKTIMEOUT_PERTICK =  20_000L; // 10ms lock after 5 seconds of trying
         private volatile long env_tickCount = 0;
         private long nextOpSeq = 1;
         private long stateResets = 0;
@@ -120,44 +123,6 @@ public class DualRunnerEnvironment implements TickEvent, LoopEvent, PhysicsEnvir
                 this.tick();
         }
         
-        private void tryStateReset()
-        {
-                final long stateReset = this.needsStateReset.get();
-                if (stateReset > 0)
-                {
-                        try
-                        {
-                                if (syncEnvsLock.tryLock(EnvironmentConf.TICK_LENGTH / 2, TimeUnit.MILLISECONDS))
-                                {
-                                        try
-                                        {
-                                                resetState();
-                                                this.needsStateReset.addAndGet(-stateReset);
-                                                doLoopSync();
-                                        }
-                                        finally
-                                        {
-                                                syncEnvsLock.unlock();
-                                        }
-                                }
-                        }
-                        catch (InterruptedException ex)
-                        {
-                                Thread.currentThread().interrupt();
-                                return;
-                        }
-                }
-        }
-        
-        private void doLoopSync() // call with lock
-        {
-                // mainLoop might get synced because of clock sync
-                // so also synchronize the loop in the thread.
-                // add half a tick length so that the threads can be scheduled better
-                thread.loop.synchronize(mainLoop.currentNano() + EnvironmentConf.TICK_LENGTH * 1_000_000L / 2, mainLoop.currentTick());
-                lastLoopSync = System.nanoTime();
-        }
-
         @Override
         public void loop(long systemNanoTime, long sourceNanoTime)
         {
@@ -195,6 +160,57 @@ public class DualRunnerEnvironment implements TickEvent, LoopEvent, PhysicsEnvir
                 }
         }
         
+        private void tryStateReset()
+        {
+                final long stateReset = this.needsStateReset.get();
+                
+                if (stateReset > 0)
+                {
+                        try
+                        {
+                                // try for 2 milliseconds by default
+                                // if we do not acquire the lock, start to increase the timeout every tick (see tick())
+                                long timeout = tryStateReset_lock_timeout == 0 
+                                               ? TRYSTATERESET_LOCKTIMEOUT_START 
+                                               : tryStateReset_lock_timeout;
+                                
+                                if (syncEnvsLock.tryLock(timeout, TimeUnit.NANOSECONDS))
+                                {
+                                        try
+                                        {
+                                                tryStateReset_lock_timeout = 0;
+                                                resetState();
+                                                this.needsStateReset.addAndGet(-stateReset);
+                                                doLoopSync();
+                                        }
+                                        finally
+                                        {
+                                                syncEnvsLock.unlock();
+                                        }
+                                }
+                                else
+                                {
+                                        tryStateReset_lock_timeout = TRYSTATERESET_LOCKTIMEOUT_START;
+                                }
+                        }
+                        catch (InterruptedException ex)
+                        {
+                                Thread.currentThread().interrupt();
+                                return;
+                        }
+                }
+        }
+        
+        private void doLoopSync() // call with lock
+        {
+                // mainLoop might get synced because of clock sync
+                // so also synchronize the loop in the thread.
+                // add half a tick length so that the threads can be scheduled better
+                thread.loop.synchronize(mainLoop.currentNano() + EnvironmentConf.TICK_LENGTH * 1_000_000L / 2, mainLoop.currentTick());
+                lastLoopSync = System.nanoTime();
+        }
+        
+        
         @Override
         public void tick()
         {
@@ -203,6 +219,11 @@ public class DualRunnerEnvironment implements TickEvent, LoopEvent, PhysicsEnvir
                         thread.createLoop(mainLoop);
                         thread.syncLoop(mainLoop);
                         thread.start();
+                }
+                
+                if (tryStateReset_lock_timeout > 0)
+                {
+                        tryStateReset_lock_timeout += TRYSTATERESET_LOCKTIMEOUT_PERTICK;
                 }
                 
                 environment.tick();
@@ -741,6 +762,7 @@ public class DualRunnerEnvironment implements TickEvent, LoopEvent, PhysicsEnvir
                 MyThread(SimpleEnvironment env)
                 {
                         this.environment = env;
+                        setDaemon(true);
                 }
                 
                 /** Set the loop and sync with it properly.
@@ -781,6 +803,9 @@ public class DualRunnerEnvironment implements TickEvent, LoopEvent, PhysicsEnvir
                 @Override
                 public void run()
                 {
+                        log.log(Level.INFO, "Started dual runner thread with {0} states", new Object[] {
+                                this.environment.getConfig().TRAILING_STATES
+                        });
                         loop.run();
                 }
                 
