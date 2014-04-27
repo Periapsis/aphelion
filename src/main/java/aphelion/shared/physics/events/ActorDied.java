@@ -40,10 +40,10 @@
 package aphelion.shared.physics.events;
 
 
-import aphelion.shared.physics.EnvironmentConf;
 import aphelion.shared.physics.SimpleEnvironment;
 import aphelion.shared.physics.State;
 import aphelion.shared.physics.entities.Actor;
+import aphelion.shared.physics.entities.ActorKey;
 import aphelion.shared.physics.events.pub.ActorDiedPublic;
 import aphelion.shared.physics.events.pub.EventPublic;
 import aphelion.shared.swissarmyknife.SwissArmyKnife;
@@ -58,15 +58,21 @@ public class ActorDied extends Event implements ActorDiedPublic
         private static final Logger log = Logger.getLogger("aphelion.shared.physics");
         private final History[] history;
         
-        public ActorDied(SimpleEnvironment env, EnvironmentConf econfig, Key key)
+        public ActorDied(SimpleEnvironment env, Key key)
         {
                 super(env, key);
-                history = new History[econfig.TRAILING_STATES];
+                history = new History[env.econfig.TRAILING_STATES];
                 
-                for (int a = 0; a < econfig.TRAILING_STATES; ++a)
+                for (int a = 0; a < env.econfig.TRAILING_STATES; ++a)
                 {
                         history[a] = new History();
                 }
+        }
+
+        @Override
+        public Event cloneWithoutHistory(SimpleEnvironment env)
+        {
+                return new ActorDied(env, (Key) this.key);
         }
         
         public void execute(long tick, State state, Actor died, Event cause, Actor killer)
@@ -114,7 +120,14 @@ public class ActorDied extends Event implements ActorDiedPublic
                 History histFrom = ((ActorDied) resetToEvent).history[resetTo.id];
                 History histTo = history[state.id];
                 
-                histTo.set(histFrom, state, resetTo);
+                histTo.set(histFrom, state);
+        }
+        
+        @Override
+        public void resetToEmpty(State state)
+        {
+                History histTo = history[state.id];
+                histTo.set(new History(), state);
         }
 
         @Override
@@ -164,7 +177,7 @@ public class ActorDied extends Event implements ActorDiedPublic
                 Event cause;
                 Actor killer;
                 
-                public void set(History other, State myState, State otherState)
+                public void set(History other, State myState)
                 {
                         set = other.set;
                         tick = other.tick;
@@ -178,21 +191,24 @@ public class ActorDied extends Event implements ActorDiedPublic
         public static final class Key implements EventKey
         {
                 private final ProjectileExplosion.Key causedBy;
+                private final ActorKey died;
 
-                public Key(ProjectileExplosion.Key causedBy)
+                public Key(ProjectileExplosion.Key causedBy, ActorKey died)
                 {
-                        if (causedBy == null)
+                        if (causedBy == null || died == null)
                         {
                                 throw new IllegalArgumentException();
                         }
                         this.causedBy = causedBy;
+                        this.died = died;
                 }
 
                 @Override
                 public int hashCode()
                 {
-                        int hash = 3;
-                        hash = 83 * hash + Objects.hashCode(this.causedBy);
+                        int hash = 7;
+                        hash = 67 * hash + Objects.hashCode(this.causedBy);
+                        hash = 67 * hash + Objects.hashCode(this.died);
                         return hash;
                 }
 
@@ -212,7 +228,13 @@ public class ActorDied extends Event implements ActorDiedPublic
                         {
                                 return false;
                         }
+                        if (!Objects.equals(this.died, other.died))
+                        {
+                                return false;
+                        }
                         return true;
-                }   
+                }
+                
+                
         }
 }

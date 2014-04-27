@@ -182,6 +182,30 @@ public class SimpleEnvironment implements TickEvent, PhysicsEnvironment
                 return econfig;
         }
         
+        /** Use this method to find an event before you construct a new one to 
+         *  make sure it has not been created already.
+         * @param key
+         * @return 
+         */
+        public @Nullable Event findEvent(EventKey key)
+        {
+                return this.eventHistory.get(key);
+        }
+        
+        /** Register the occurrence of an event. 
+         * This should only be called by physics.
+         * Call me anytime you execute an event.
+         * @param event 
+         */
+        public void addEvent(Event event)
+        {
+                if (event.inEnvList) { return; }
+                assert !eventHistory.containsKey(event.key);
+                event.inEnvList = true;
+                eventHistoryList.append(event.link);
+                eventHistory.put(event.key, event);
+        }
+        
         public @Nullable Event findForeignEvent(Event event)
         {
                 if (event.env == this)
@@ -191,7 +215,7 @@ public class SimpleEnvironment implements TickEvent, PhysicsEnvironment
                 else
                 {
                         return this.eventHistory.get(event.key);
-                }       
+                }
         }
         
         @Override
@@ -997,19 +1021,6 @@ public class SimpleEnvironment implements TickEvent, PhysicsEnvironment
         public PhysicsMap getMap()
         {
                 return map;
-        }
-        
-        /** Register the occurrence of an event. 
-         * This should only be called by physics.
-         * Call me anytime you execute an event.
-         * @param event 
-         */
-        public void addEvent(Event event)
-        {
-                if (event.inEnvList) { return; }
-                event.inEnvList = true;
-                eventHistoryList.append(event.link);
-                eventHistory.put(event.key, event);
         }
         
         @Override

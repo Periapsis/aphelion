@@ -108,14 +108,6 @@ public final class Projectile extends MapEntity implements ProjectilePublic
         public long proxLastSeenDist;
         public long proxLastSeenDist_tick;
         public long proxActivatedAt_tick;
-        
-        /** The explosion event this projectile might have spawned. 
-         * In case a timewarp destroys an event, this attribute is used to 
-         * make sure a possible recreated event uses the same object. (which is
-         * useful for external code to track the event, but also useful incase
-         * ProjectileExplosion has state that needs to be kept regardless of timewarps).
-         */
-        public WeakReference<ProjectileExplosion> explosionEvent;
 
         public Projectile(
                 ProjectileKey key,
@@ -337,25 +329,15 @@ public final class Projectile extends MapEntity implements ProjectilePublic
                         this.pos.pos.set(location);
                         updatedPosition(tick);
                 }
-
-                for (int s = 0; s < this.crossStateList.length; ++s)
-                {
-                        Projectile other = (Projectile) this.crossStateList[s];
-                        if (other != null && other.explosionEvent != null)
-                        {
-                                this.explosionEvent = other.explosionEvent;
-                                break;
-                        }
-                }
                 
                 // Do not execute the hit tile event if it was planned.
                 hitTile.set = false;
 
-                ProjectileExplosion event = explosionEvent == null ? null : explosionEvent.get();
+                ProjectileExplosion.Key eventKey = new ProjectileExplosion.Key(this.key);
+                ProjectileExplosion event = (ProjectileExplosion) state.env.findEvent(eventKey);
                 if (event == null)
                 {
-                        event = new ProjectileExplosion(state.env, new ProjectileExplosion.Key(this.key));
-                        explosionEvent = new WeakReference<>(event);
+                        event = new ProjectileExplosion(state.env, eventKey);
                 }
                 
                 state.env.addEvent(event);
@@ -375,21 +357,11 @@ public final class Projectile extends MapEntity implements ProjectilePublic
                         // This is valid. (it happens when a timewarp occurs)
                         // The event should discard the previous consistency information.
 
-                        for (int s = 0; s < this.crossStateList.length; ++s)
-                        {
-                                Projectile other = (Projectile) this.crossStateList[s];
-                                if (other != null && other.explosionEvent != null)
-                                {
-                                        this.explosionEvent = other.explosionEvent;
-                                        break;
-                                }
-                        }
-
-                        ProjectileExplosion event = explosionEvent == null ? null : explosionEvent.get();
+                        ProjectileExplosion.Key eventKey = new ProjectileExplosion.Key(this.key);
+                        ProjectileExplosion event = (ProjectileExplosion) state.env.findEvent(eventKey);
                         if (event == null)
                         {
-                                event = new ProjectileExplosion(state.env, new ProjectileExplosion.Key(this.key));
-                                explosionEvent = new WeakReference<>(event);
+                                event = new ProjectileExplosion(state.env, eventKey);
                         }
 
                         state.env.addEvent(event);
@@ -471,22 +443,11 @@ public final class Projectile extends MapEntity implements ProjectilePublic
         {
                 assert !this.isRemoved(tick);
                 
-                
-                for (int s = 0; s < this.crossStateList.length; ++s)
-                {
-                        Projectile other = (Projectile) this.crossStateList[s];
-                        if (other != null && other.explosionEvent != null)
-                        {
-                                this.explosionEvent = other.explosionEvent;
-                                break;
-                        }
-                }
-                
-                ProjectileExplosion event = explosionEvent == null ? null : explosionEvent.get();
+                ProjectileExplosion.Key eventKey = new ProjectileExplosion.Key(this.key);
+                ProjectileExplosion event = (ProjectileExplosion) state.env.findEvent(eventKey);
                 if (event == null)
                 {
-                        event = new ProjectileExplosion(state.env, new ProjectileExplosion.Key(this.key));
-                        explosionEvent = new WeakReference<>(event);
+                        event = new ProjectileExplosion(state.env, eventKey);
                 }
 
                 state.env.addEvent(event);

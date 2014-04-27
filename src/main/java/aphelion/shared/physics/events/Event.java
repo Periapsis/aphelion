@@ -127,6 +127,20 @@ public abstract class Event implements EventPublic
          */
         abstract public void resetExecutionHistory(State state, State resetTo, Event resetToEvent);
         
+        /** Called during a foreign timewarp to reset the history state 
+         * of this to its initial value to mark that it has not been executed.
+         * 
+         * @param state
+         */
+        abstract public void resetToEmpty(State state);
+        
+        /** Clone this event, but do not include any history or other history like state.
+         * This used during a foreign timewarp.
+         * @param env
+         * @return An event such that this.getClass() == return.getClass()
+         */
+        abstract public Event cloneWithoutHistory(SimpleEnvironment env);
+        
         public @Nullable Event findInOtherEnv(SimpleEnvironment env)
         {
                 return env.findForeignEvent(this);

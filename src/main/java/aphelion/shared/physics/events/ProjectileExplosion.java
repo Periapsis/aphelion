@@ -40,7 +40,6 @@ package aphelion.shared.physics.events;
 
 
 import aphelion.shared.gameconfig.GCStringList;
-import aphelion.shared.physics.EnvironmentConf;
 import aphelion.shared.physics.SimpleEnvironment;
 import aphelion.shared.physics.entities.Actor;
 import aphelion.shared.physics.entities.Actor.WeaponConfig;
@@ -66,15 +65,6 @@ public class ProjectileExplosion extends Event implements ProjectileExplosionPub
         
         private final ProjectileFactory chained_factory = new ProjectileFactory();
         
-        /** The died events this event has spawned.
-          * This hash map should not be touched by resetExecutionHistory() or isConsistent().
-          * It is used to make sure the same event is not added multiple times when a 
-          * timewarp occurs.
-          * PhysicsEnvironment will handle resetting the history of ActorDied, that does
-          * not has to be performed here.
-          */
-        final HashMap<Integer, ActorDied> diedEvents = new HashMap<>(4);
-        
         public ProjectileExplosion(SimpleEnvironment env, Key key)
         {
                 super(env, key);
@@ -84,6 +74,12 @@ public class ProjectileExplosion extends Event implements ProjectileExplosionPub
                 {
                         history[a] = new History();
                 }
+        }
+        
+        @Override
+        public Event cloneWithoutHistory(SimpleEnvironment env)
+        {
+                return new ProjectileExplosion(env, (Key) this.key);
         }
         
         public void execute(long tick, State state, Projectile explodedProjectile, EXPLODE_REASON reason, Actor actorHit, PhysicsPoint tileHit)
@@ -245,11 +241,12 @@ public class ProjectileExplosion extends Event implements ProjectileExplosionPub
                 
                 for (Integer killed_pid : hist.killed_pids)
                 {
-                        ActorDied diedEvent = diedEvents.get(killed_pid);
+                        ActorDied.Key diedKey = new ActorDied.Key((Key) this.key, new ActorKey(killed_pid));
+                        
+                        ActorDied diedEvent = (ActorDied) env.findEvent(diedKey);
                         if (diedEvent == null)
                         {
-                                diedEvent = new ActorDied(env, state.econfig, new ActorDied.Key((Key) this.key));
-                                diedEvents.put(killed_pid, diedEvent);
+                                diedEvent = new ActorDied(env, diedKey);
                         }
                         
                         state.env.addEvent(diedEvent);
@@ -331,7 +328,14 @@ public class ProjectileExplosion extends Event implements ProjectileExplosionPub
                 History histFrom = ((ProjectileExplosion) resetToEvent).history[resetTo.id];
                 History histTo = history[state.id];
                 
-                histTo.set(histFrom, state, resetTo);
+                histTo.set(histFrom, state);
+        }
+
+        @Override
+        public void resetToEmpty(State state)
+        {
+                History histTo = history[state.id];
+                histTo.set(new History(), state);
         }
 
         @Override
@@ -530,7 +534,7 @@ public class ProjectileExplosion extends Event implements ProjectileExplosionPub
                 }
 
                 
-                public void set(History other, State myState, State otherState)
+                public void set(History other, State myState)
                 {
                         set = other.set;
                         reason = other.reason;

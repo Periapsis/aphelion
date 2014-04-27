@@ -704,6 +704,7 @@ public class State
                         todo.assertConsistency();
                         history.assertConsistency();
                 }
+               
                 
                 // reset the event history
                 for (LinkedListEntry<Event> linkEv = env.eventHistoryList.first, linkNext = null;
@@ -721,7 +722,14 @@ public class State
                                 resetToEvent = older.env.eventHistory.get(event.key);
                         }
                         
-                        event.resetExecutionHistory(this, older, resetToEvent);
+                        if (resetToEvent == null)
+                        {
+                                event.resetToEmpty(this);
+                        }
+                        else
+                        {
+                                event.resetExecutionHistory(this, older, resetToEvent);
+                        }
                         
                         boolean occurredSomewhere = false;
                         for (int s = 0; s < econfig.TRAILING_STATES; ++s)
@@ -737,6 +745,23 @@ public class State
                         {
                                 linkEv.remove();
                                 event.inEnvList = false;
+                        }
+                }
+                
+                if (this.isForeign(older))
+                {
+                        for (Event otherEvent : older.env.eventHistoryList)
+                        {
+                                Event myEvent = env.eventHistory.get(otherEvent.key);
+                                
+                                if (myEvent == null)
+                                {
+                                        // foreign environment has an event we do not know aboot.
+                                        
+                                        myEvent = otherEvent.cloneWithoutHistory(this.env);
+                                        myEvent.resetExecutionHistory(this, older, otherEvent);
+                                        env.addEvent(myEvent);
+                                }
                         }
                 }
                 
