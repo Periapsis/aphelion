@@ -201,7 +201,10 @@ public class ScenarioPlayer
         private void removeLoopEvents()
         {
                 loop.removeTickEvent((TickEvent) env);
-                loop.removeLoopEvent((LoopEvent) env);
+                if (env instanceof LoopEvent)
+                {
+                        loop.removeLoopEvent((LoopEvent) env);
+                }
                 loop.removeTickEvent(mapEntities);
                 loop.removeLoopEvent(mapEntities);
                 loop.removeTickEvent(scene);
@@ -239,7 +242,10 @@ public class ScenarioPlayer
                         mapEntities.tryInitialize(env, null);
                         
                         loop.addTickEvent((TickEvent) env);
-                        loop.addLoopEvent((LoopEvent) env);
+                        if (env instanceof LoopEvent)
+                        {
+                                loop.addLoopEvent((LoopEvent) env);
+                        }
                         loop.addTickEvent(mapEntities);
                         loop.addLoopEvent(mapEntities);
                         
