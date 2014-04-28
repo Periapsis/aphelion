@@ -743,8 +743,7 @@ public class State
                         
                         if (!occurredSomewhere)
                         {
-                                linkEv.remove();
-                                event.inEnvList = false;
+                                event.remove();
                         }
                 }
                 

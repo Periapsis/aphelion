@@ -75,6 +75,11 @@ public abstract class Event implements EventPublic
                 this.key = key;
         }
         
+        public void remove()
+        {
+                env.removeEvent(this);
+        }
+        
         @Override
         public final AttachmentData getAttachments()
         {

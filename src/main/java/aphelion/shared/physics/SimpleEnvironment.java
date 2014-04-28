@@ -206,6 +206,13 @@ public class SimpleEnvironment implements TickEvent, PhysicsEnvironment
                 eventHistory.put(event.key, event);
         }
         
+        public void removeEvent(Event event)
+        {
+                event.link.remove();
+                eventHistory.remove(event.key);
+                event.inEnvList = false;
+        }
+        
         public @Nullable Event findForeignEvent(Event event)
         {
                 if (event.env == this)
@@ -431,9 +438,7 @@ public class SimpleEnvironment implements TickEvent, PhysicsEnvironment
                         
                         if (event.isOld(this.tick_now - econfig.KEEP_EVENTS_FOR_TICKS))
                         {
-                                linkEv.remove();
-                                this.eventHistory.remove(event.key);
-                                event.inEnvList = false;
+                                event.remove();
                         }
                         
                         linkEv = linkEvNext;
