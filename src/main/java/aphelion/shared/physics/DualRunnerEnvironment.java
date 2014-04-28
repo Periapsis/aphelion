@@ -206,7 +206,10 @@ public class DualRunnerEnvironment implements TickEvent, LoopEvent, PhysicsEnvir
                 // mainLoop might get synced because of clock sync
                 // so also synchronize the loop in the thread.
                 // add half a tick length so that the threads can be scheduled better
-                thread.loop.synchronize(mainLoop.currentNano() + EnvironmentConf.TICK_LENGTH * 1_000_000L / 2, mainLoop.currentTick());
+                if (thread.loop != null)
+                {
+                        thread.loop.synchronize(mainLoop.currentNano() + EnvironmentConf.TICK_LENGTH * 1_000_000L / 2, mainLoop.currentTick());
+                }
                 lastLoopSync = System.nanoTime();
         }
         
