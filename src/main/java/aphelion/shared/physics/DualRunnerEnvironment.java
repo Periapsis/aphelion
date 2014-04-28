@@ -84,6 +84,7 @@ public class DualRunnerEnvironment implements TickEvent, LoopEvent, PhysicsEnvir
         final SimpleEnvironment environment;
         private final SimpleEnvironment[] envs;
         
+        private boolean firstTick = true;
         private final ReentrantLock syncEnvsLock;
         private final AtomicLong needsStateReset = new AtomicLong();
         private long tryStateReset_lock_timeout = 0;
@@ -126,7 +127,7 @@ public class DualRunnerEnvironment implements TickEvent, LoopEvent, PhysicsEnvir
         @Override
         public void loop(long systemNanoTime, long sourceNanoTime)
         {
-                if (environment.getTick() > 0)
+                if (!firstTick)
                 {
                         tryStateReset();
 
@@ -217,8 +218,11 @@ public class DualRunnerEnvironment implements TickEvent, LoopEvent, PhysicsEnvir
         @Override
         public void tick()
         {
-                if (environment.getTick() == 0)
+                if (firstTick)
                 {
+                        firstTick = false;
+                        log.log(Level.INFO, "Starting dual runner thread...");
+                        
                         thread.createLoop(mainLoop);
                         thread.syncLoop(mainLoop);
                         thread.start();

@@ -168,7 +168,7 @@ public final class EnvironmentConf
                 }
                 
                 this.server = false;
-                logString = "(DualRunner thread)";
+                logString = "(DualRunner main)";
                 
                 HIGHEST_DELAY = 224;
                 TRAILING_STATE_DELAY = HIGHEST_DELAY;
@@ -191,14 +191,14 @@ public final class EnvironmentConf
         {
                 Logger.getLogger("aphelion.shared.physics").log(Level.INFO, 
                         "EnvironmentConfiguration: "
-                        + "server: {0}; "
+                        + "{0} "
                         + "TRAILING_STATE_DELAY: {1}; "
                         + "TIMEWARP_EVERY_TICKS: {2}; "
                         + "FIRST_STATE_DELAY: {3}; "
                         + "TRAILING_STATES: {4}; "
                         + "MAX_OPERATION_AGE: {5}; ",
                         new Object[] {
-                                server,
+                                logString,
                                 TRAILING_STATE_DELAY,
                                 TIMEWARP_EVERY_TICKS,
                                 FIRST_STATE_DELAY,

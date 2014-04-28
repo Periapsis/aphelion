@@ -55,6 +55,7 @@ import aphelion.shared.swissarmyknife.ThreadSafe;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
@@ -301,9 +302,17 @@ public class SimpleEnvironment implements TickEvent, PhysicsEnvironment
                 }
         }
 
+        private boolean firstTick = true;
         @Override
         public void tick()
         {
+                if (firstTick)
+                {
+                        firstTick = false;
+                        log.log(Level.INFO, "{0}: First tick for environment", econfig.logString);
+                        econfig.log();
+                }
+                
                 pollThreadedAddOperation();
                 
                 ++tick_now;
