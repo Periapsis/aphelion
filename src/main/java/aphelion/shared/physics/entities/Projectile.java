@@ -175,6 +175,14 @@ public final class Projectile extends MapEntity implements ProjectilePublic
                 proxActivatedAt_tick = s.getProxActivatedAtTick();
         }
         
+        public void register()
+        {
+                Projectile oldValue = state.projectiles.put(this.key, this);
+                assert oldValue == null;
+                state.projectilesList.append(this.projectileListLink_state);
+                this.owner.projectiles.append(this.projectileListLink_actor);
+        }
+        
         public void hardRemove(long tick)
         {
                 if (!removed)
@@ -340,7 +348,7 @@ public final class Projectile extends MapEntity implements ProjectilePublic
                         event = new ProjectileExplosion(state.env, eventKey);
                 }
                 
-                state.env.addEvent(event);
+                state.env.registerEvent(event);
                 event.execute(tick, this.state, this, ProjectileExplosionPublic.EXPLODE_REASON.HIT_SHIP, actor, null);
         }
         
@@ -363,8 +371,13 @@ public final class Projectile extends MapEntity implements ProjectilePublic
                         {
                                 event = new ProjectileExplosion(state.env, eventKey);
                         }
+                        
+                        if (event.hasOccurred(this.state.id))
+                        {
+                                System.out.println("already occured??");
+                        }
 
-                        state.env.addEvent(event);
+                        state.env.registerEvent(event);
                         event.execute(tick, this.state, this, ProjectileExplosionPublic.EXPLODE_REASON.HIT_TILE, null, hitTile);
                         assert this.isRemoved(tick); // Otherwise this event fires over and over and over
                         return;
@@ -450,7 +463,7 @@ public final class Projectile extends MapEntity implements ProjectilePublic
                         event = new ProjectileExplosion(state.env, eventKey);
                 }
 
-                state.env.addEvent(event);
+                state.env.registerEvent(event);
                 event.execute(tick, this.state, this, reason, null, null);
         }
         

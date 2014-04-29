@@ -38,11 +38,6 @@
 
 package aphelion.shared.physics;
 
-
-import aphelion.shared.physics.PhysicsMap;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
 /**
  *
  * @author Joris

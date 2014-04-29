@@ -38,8 +38,8 @@
 
 package aphelion.shared.physics.operations;
 
-import aphelion.shared.physics.EnvironmentConf;
 import aphelion.shared.physics.PhysicsMap;
+import aphelion.shared.physics.SimpleEnvironment;
 import aphelion.shared.physics.operations.pub.ActorNewPublic;
 import aphelion.shared.physics.entities.Actor;
 import aphelion.shared.physics.entities.MapEntity;
@@ -64,10 +64,10 @@ public class ActorNew extends Operation implements ActorNewPublic
         public long seed;
         public String ship;
         
-        public ActorNew(EnvironmentConf econfig, OperationKey key)
+        public ActorNew(SimpleEnvironment env, OperationKey key)
         {
-                super(econfig, false, PRIORITY.ACTOR_NEW, key);
-                crossStateList = new MapEntity[econfig.TRAILING_STATES];
+                super(env, false, PRIORITY.ACTOR_NEW, key);
+                crossStateList = new MapEntity[env.econfig.TRAILING_STATES];
         }
         
         @Override
@@ -77,7 +77,7 @@ public class ActorNew extends Operation implements ActorNewPublic
                 
                 if (pid == 0)
                 {
-                        log.log(Level.SEVERE, "{0}: A pid of 0 is not allowed", econfig.logString);
+                        log.log(Level.SEVERE, "{0}: A pid of 0 is not allowed", env.econfig.logString);
                         return true;
                 }
 
@@ -85,7 +85,7 @@ public class ActorNew extends Operation implements ActorNewPublic
                 {
                         // pids should not be reused (or, only after a very long timeout)
                         log.log(Level.SEVERE, "{0}: Duplicate ActorNew for pid {1}, received at tick {2} (late {3}) in {4}", new Object[] {
-                                econfig.logString, pid, tick, ticks_late, state
+                                env.econfig.logString, pid, tick, ticks_late, state
                         });
                         return true;
                 }
@@ -149,7 +149,7 @@ public class ActorNew extends Operation implements ActorNewPublic
                 if (state.id == 0)
                 {
                         log.log(Level.INFO, "{0}: Added actor {1} at tick {2} (late {3})", new Object[] {
-                                econfig.logString, pid, tick, ticks_late
+                                env.econfig.logString, pid, tick, ticks_late
                         });
                 }
                 

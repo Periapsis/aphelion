@@ -42,6 +42,9 @@ import java.util.ArrayList;
 import org.junit.Test;
 import static org.junit.Assert.*;
 import static aphelion.shared.physics.EnvironmentConf.MAX_POSITION;
+import static aphelion.shared.physics.PhysicsTest.applyTestSettings;
+import org.junit.After;
+import org.junit.Before;
 
 /**
  *
@@ -51,6 +54,18 @@ public class CollisionTest
 {
         public CollisionTest()
         {
+        }
+        
+        @Before
+        public void setUp()
+        {
+                EnvironmentConf.testCaseAssertions = true;
+        }
+
+        @After
+        public void tearDown()
+        {
+                EnvironmentConf.testCaseAssertions = false;
         }
 
         @Test

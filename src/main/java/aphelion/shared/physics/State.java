@@ -108,7 +108,7 @@ public class State
                 this.allowHints = allowHints;
                 this.isLast = isLast;
         }
-        
+       
         public boolean isForeign(State other)
         {
                 return this.env != other.env;
@@ -134,6 +134,8 @@ public class State
                 while (itActor.hasNext())
                 {
                         Actor actor = itActor.next();
+                        
+                        assert actor.state == this;
                         
                         actor.updatedPosition(tick_now);
                         if (actor.moveHistory.getMostRecentTick() < this.tick_now)
@@ -230,6 +232,8 @@ public class State
                 {
                         Projectile projectile = linkProjectile.data;
                         linkProjectile_next = linkProjectile.next;
+                        
+                        assert projectile.state == this;
 
                         projectile.updatedPosition(tick_now);
                         
@@ -314,6 +318,7 @@ public class State
         {
                 for (Projectile projectile : this.projectilesList)
                 {
+                        assert projectile.state == this;
                         projectile.tickProjectileAfterActor(tick_now);
                 }
         }
@@ -325,6 +330,8 @@ public class State
                 {
                         assert linkOp.head == this.todo;
                         Operation op = linkOp.data;
+                        assert op.env == this.env;
+                        
                         if (op.tick > tick_now)
                         {
                                 break; // the todo (and history) lists are ordered. So there is nothing to-do anymore
@@ -361,6 +368,7 @@ public class State
         {
                 for (Actor actor : actorsList)
                 {
+                        assert actor.state == this;
                         actor.tickEnergy();
                 }
         }
@@ -548,6 +556,7 @@ public class State
                                 }
 
                                 actorMine.resetTo(this, actorOther);
+                                assert actorMine.state == this;
                         }
                 }
 
@@ -580,6 +589,7 @@ public class State
                                         }
                                         
                                         actorMine.resetTo(this, actorOther);
+                                        assert actorMine.state == this;
                                 }
                         }
                 }
@@ -619,6 +629,7 @@ public class State
                                 this.projectilesList.append(projectileMine.projectileListLink_state);
                                 this.projectiles.put(projectileMine.key, projectileMine);
                                 projectileMine.resetTo(this, projectileOther);
+                                assert projectileMine.state == this;
                                 
                                 entry = entry.next;
                         }
@@ -655,6 +666,8 @@ public class State
                         )
                         {
                                 Operation op = linkOp.data;
+                                assert op.env == this.env;
+                                
                                 if (op.tick > older.tick_now)
                                 {
                                         linkStart = linkOp;
@@ -681,7 +694,6 @@ public class State
                         {
                                 this.todo.prependForeignRange(linkStart, linkEnd);
                                 
-                                
                                 // reset the execution history for operations that are now
                                 // in the todo list for the newer state
 
@@ -690,19 +702,22 @@ public class State
                                         linkOp = linkOp.next
                                    )
                                 {
-                                        linkOp.data.placedBackOnTodo(this);
+                                        Operation op = linkOp.data;
+                                        op.placedBackOnTodo(this);
+                                        assert op.env == this.env;
 
                                         if (linkOp == linkEnd)
                                         {
                                                 break;
                                         }
                                 }
-
-                                
                         }
 
-                        todo.assertConsistency();
-                        history.assertConsistency();
+                        if (EnvironmentConf.testCaseAssertions)
+                        {
+                                todo.assertConsistency();
+                                history.assertConsistency();
+                        }
                 }
                
                 
@@ -715,6 +730,7 @@ public class State
                         
                         Event event = linkEv.data;
                         assert event.link == linkEv;
+                        assert event.env == this.env;
                         
                         Event resetToEvent = event;
                         if (this.isForeign(older))
@@ -759,7 +775,7 @@ public class State
                                         
                                         myEvent = otherEvent.cloneWithoutHistory(this.env);
                                         myEvent.resetExecutionHistory(this, older, otherEvent);
-                                        env.addEvent(myEvent);
+                                        env.registerEvent(myEvent);
                                 }
                         }
                 }
@@ -770,6 +786,8 @@ public class State
         void addOperation(Operation op)
         {
                 LinkedListEntry<Operation> opLink, link;
+                
+                assert op.env == this.env;
 
                 opLink = op.link[this.id];
                 assert opLink.head == null;
@@ -809,9 +827,12 @@ public class State
                            )
                         {
                                 link.append(opLink);
-                                
-                                todo.assertConsistency();
-                                history.assertConsistency();
+                         
+                                if (EnvironmentConf.testCaseAssertions)
+                                {
+                                        todo.assertConsistency();
+                                        history.assertConsistency();
+                                }
                                 return;
                         }
 
@@ -821,14 +842,18 @@ public class State
                 // went through the entire todo list, todo list is either empty or this operation is the oldest
                 this.todo.prepend(opLink);
                 
-                todo.assertConsistency();
-                history.assertConsistency();
+                if (EnvironmentConf.testCaseAssertions)
+                {
+                        todo.assertConsistency();
+                        history.assertConsistency();
+                }
         }
 
         private void operationToHistory(Operation op)
         {
                 LinkedListEntry<Operation> opLink, historyLink;
-
+                
+                assert op.env == this.env;
                 opLink = op.link[this.id];
 
                 historyLink = this.history.last;
@@ -840,8 +865,11 @@ public class State
                         {
                                 historyLink.appendForeignRange(opLink, opLink);
                                 
-                                todo.assertConsistency();
-                                history.assertConsistency();
+                                if (EnvironmentConf.testCaseAssertions)
+                                {
+                                        todo.assertConsistency();
+                                        history.assertConsistency();
+                                }
                                 return;
                         }
                         historyLink = historyLink.previous;
@@ -850,8 +878,11 @@ public class State
 
                 history.prependForeignRange(opLink, opLink);
                 
-                todo.assertConsistency();
-                history.assertConsistency();
+                if (EnvironmentConf.testCaseAssertions)
+                {
+                        todo.assertConsistency();
+                        history.assertConsistency();
+                }
         }
         
         @Override public String toString()

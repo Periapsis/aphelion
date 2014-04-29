@@ -162,6 +162,10 @@ public final class ProjectileKey
                 }
                 return true;
         }
-        
-        
+
+        @Override
+        public String toString()
+        {
+                return "ProjectileKey{" + "syncKey=" + syncKey + ", fireTick=" + fireTick + ", configIndex=" + configIndex + ", owner=" + owner + ", parent=" + parent + ", hashCode=" + hashCode + '}';
+        }
 }

@@ -198,8 +198,9 @@ public class SimpleEnvironment implements TickEvent, PhysicsEnvironment
          * Call me anytime you execute an event.
          * @param event 
          */
-        public void addEvent(Event event)
+        public void registerEvent(Event event)
         {
+                assert event.env == this;
                 if (event.inEnvList) { return; }
                 assert !eventHistory.containsKey(event.key);
                 event.inEnvList = true;
@@ -207,8 +208,9 @@ public class SimpleEnvironment implements TickEvent, PhysicsEnvironment
                 eventHistory.put(event.key, event);
         }
         
-        public void removeEvent(Event event)
+        public void unregisterEvent(Event event)
         {
+                assert event.env == this;
                 event.link.remove();
                 eventHistory.remove(event.key);
                 event.inEnvList = false;
@@ -293,6 +295,7 @@ public class SimpleEnvironment implements TickEvent, PhysicsEnvironment
                         Operation op;
                         while ((op = threadedAddOperation.poll()) != null)
                         {
+                                assert op.env == this;
                                 polledAddOperationsCount.getAndAdd(1);
                                 for (int s = 0; s < econfig.TRAILING_STATES; s++)
                                 {
@@ -337,6 +340,8 @@ public class SimpleEnvironment implements TickEvent, PhysicsEnvironment
                 {
                         State older = this.trailingStates[s];
                         State newer = this.trailingStates[s - 1];
+                        assert older.env == this;
+                        assert newer.env == this;
                         
                         if (!older.needTimewarpToThisState)
                         {
@@ -418,6 +423,7 @@ public class SimpleEnvironment implements TickEvent, PhysicsEnvironment
                 {
                         linkOpNext = linkOp.next;
                         op = linkOp.data;
+                        assert op.env == this;
                         
                         if (op.tick < this.tick_now - econfig.KEEP_OPERATIONS_FOR_TICKS)
                         {
@@ -444,6 +450,7 @@ public class SimpleEnvironment implements TickEvent, PhysicsEnvironment
                 {
                         linkEvNext = linkEv.next;
                         Event event = linkEv.data;
+                        assert event.env == this;
                         
                         if (event.isOld(this.tick_now - econfig.KEEP_EVENTS_FOR_TICKS))
                         {
@@ -545,6 +552,7 @@ public class SimpleEnvironment implements TickEvent, PhysicsEnvironment
         boolean addOperation(Operation operation)
         {
                 final long now = this.tick_now;
+                assert operation.env == this;
                 
                 if (operation.ignorable && operation.tick <= now - econfig.HIGHEST_DELAY)
                 {
@@ -838,7 +846,7 @@ public class SimpleEnvironment implements TickEvent, PhysicsEnvironment
         @ThreadSafe
         public void loadConfig(long tick, String fileIdentifier, List yamlDocuments)
         {
-                LoadConfig op = new LoadConfig(econfig, getNextOperationKey());
+                LoadConfig op = new LoadConfig(this, getNextOperationKey());
                 op.tick = tick;
                 op.fileIdentifier = fileIdentifier;
                 op.yamlDocuments = yamlDocuments;
@@ -851,7 +859,7 @@ public class SimpleEnvironment implements TickEvent, PhysicsEnvironment
         @ThreadSafe
         public void unloadConfig(long tick, String fileIdentifier)
         {
-                UnloadConfig op = new UnloadConfig(econfig, getNextOperationKey());
+                UnloadConfig op = new UnloadConfig(this, getNextOperationKey());
                 op.tick = tick;
                 op.fileIdentifier = fileIdentifier;
                 
@@ -863,7 +871,7 @@ public class SimpleEnvironment implements TickEvent, PhysicsEnvironment
         @ThreadSafe
         public void actorNew(long tick, int pid, long seed, String ship)
         {
-                ActorNew op = new ActorNew(econfig, getNextOperationKey());
+                ActorNew op = new ActorNew(this, getNextOperationKey());
                 op.tick = tick;
                 op.pid = pid;
                 op.seed = seed;
@@ -879,7 +887,7 @@ public class SimpleEnvironment implements TickEvent, PhysicsEnvironment
         {
                 assert !this.econfig.server;
                 
-                ActorSync op = new ActorSync(econfig, getNextOperationKey());
+                ActorSync op = new ActorSync(this, getNextOperationKey());
                 op.tick = sync.getTick();
                 op.pid = sync.getPid();
                 op.sync = sync;
@@ -892,7 +900,7 @@ public class SimpleEnvironment implements TickEvent, PhysicsEnvironment
         @ThreadSafe
         public void actorModification(long tick, int pid, String ship)
         {
-                ActorModification op = new ActorModification(econfig, getNextOperationKey());
+                ActorModification op = new ActorModification(this, getNextOperationKey());
                 op.tick = tick;
                 op.pid = pid;
                 op.ship = ship;
@@ -905,7 +913,7 @@ public class SimpleEnvironment implements TickEvent, PhysicsEnvironment
         @ThreadSafe
         public void actorRemove(long tick, int pid)
         {
-                ActorRemove op = new ActorRemove(econfig, getNextOperationKey());
+                ActorRemove op = new ActorRemove(this, getNextOperationKey());
                 op.tick = tick;
                 op.pid = pid;
 
@@ -917,7 +925,7 @@ public class SimpleEnvironment implements TickEvent, PhysicsEnvironment
         @ThreadSafe
         public boolean actorWarp(long tick, int pid, boolean hint, int x, int y, int x_vel, int y_vel, int rotation)
         {
-                ActorWarp op = new ActorWarp(econfig, getNextOperationKey());
+                ActorWarp op = new ActorWarp(this, getNextOperationKey());
                 op.tick = tick;
                 op.pid = pid;
                 op.hint = hint;
@@ -931,7 +939,7 @@ public class SimpleEnvironment implements TickEvent, PhysicsEnvironment
         public boolean actorWarp(
                 long tick, int pid, boolean hint, int x, int y, int x_vel, int y_vel, int rotation, boolean has_x, boolean has_y, boolean has_x_vel, boolean has_y_vel, boolean has_rotation)
         {
-                ActorWarp op = new ActorWarp(econfig, getNextOperationKey());
+                ActorWarp op = new ActorWarp(this, getNextOperationKey());
                 op.tick = tick;
                 op.pid = pid;
                 op.hint = hint;
@@ -949,7 +957,7 @@ public class SimpleEnvironment implements TickEvent, PhysicsEnvironment
         @ThreadSafe
         public boolean actorMove(long tick, int pid, PhysicsMovement move)
         {
-                ActorMove op = new ActorMove(econfig, getNextOperationKey());
+                ActorMove op = new ActorMove(this, getNextOperationKey());
                 op.tick = tick;
                 op.pid = pid;
                 op.move = move;
@@ -971,7 +979,7 @@ public class SimpleEnvironment implements TickEvent, PhysicsEnvironment
                 int hint_x_vel, int hint_y_vel, 
                 int hint_snapped_rotation)
         {
-                ActorWeaponFire op = new ActorWeaponFire(econfig, getNextOperationKey());
+                ActorWeaponFire op = new ActorWeaponFire(this, getNextOperationKey());
                 op.tick = tick;
                 op.pid = pid;
                 op.weapon_slot = weapon_slot;
@@ -998,7 +1006,7 @@ public class SimpleEnvironment implements TickEvent, PhysicsEnvironment
         @ThreadSafe
         public boolean actorWeapon(long tick, int pid, WEAPON_SLOT weapon_slot)
         {
-                ActorWeaponFire op = new ActorWeaponFire(econfig, getNextOperationKey());
+                ActorWeaponFire op = new ActorWeaponFire(this, getNextOperationKey());
                 op.tick = tick;
                 op.pid = pid;
                 op.weapon_slot = weapon_slot;
@@ -1022,7 +1030,7 @@ public class SimpleEnvironment implements TickEvent, PhysicsEnvironment
                 assert !econfig.server;
                 // do not modify "projectiles" after calling this method
                 
-                WeaponSync op = new WeaponSync(econfig, getNextOperationKey());
+                WeaponSync op = new WeaponSync(this, getNextOperationKey());
                 op.tick = tick;
                 op.pid = owner_pid;
                 op.weaponKey = weaponKey;

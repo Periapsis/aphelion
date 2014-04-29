@@ -41,6 +41,7 @@ package aphelion.shared.physics.operations;
 
 import aphelion.shared.net.protobuf.GameOperation;
 import aphelion.shared.physics.EnvironmentConf;
+import aphelion.shared.physics.SimpleEnvironment;
 import aphelion.shared.physics.entities.Actor;
 import aphelion.shared.physics.operations.pub.ActorSyncPublic;
 import aphelion.shared.physics.State;
@@ -61,10 +62,10 @@ public class ActorSync extends Operation implements ActorSyncPublic
         
         private boolean logged = false;
         
-        public ActorSync(EnvironmentConf econfig, OperationKey key)
+        public ActorSync(SimpleEnvironment env, OperationKey key)
         {
-                super(econfig, false, PRIORITY.ACTOR_SYNC, key);
-                executionCount = new int[econfig.TRAILING_STATES];
+                super(env, false, PRIORITY.ACTOR_SYNC, key);
+                executionCount = new int[env.econfig.TRAILING_STATES];
         }
         
         @Override

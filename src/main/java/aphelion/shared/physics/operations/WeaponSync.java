@@ -41,6 +41,7 @@ package aphelion.shared.physics.operations;
 
 import aphelion.shared.net.protobuf.GameOperation;
 import aphelion.shared.physics.EnvironmentConf;
+import aphelion.shared.physics.SimpleEnvironment;
 import aphelion.shared.physics.operations.pub.WeaponSyncPublic;
 import aphelion.shared.physics.entities.Actor;
 import aphelion.shared.physics.entities.Projectile;
@@ -64,9 +65,9 @@ public class WeaponSync extends Operation implements WeaponSyncPublic
         public GameOperation.WeaponSync.Projectile[] syncProjectiles;
         public long syncKey;
         
-        public WeaponSync(EnvironmentConf econfig, OperationKey key)
+        public WeaponSync(SimpleEnvironment env, OperationKey key)
         {
-                super(econfig, true, PRIORITY.ACTOR_WEAPON_SYNC, key);
+                super(env, true, PRIORITY.ACTOR_WEAPON_SYNC, key);
         }
 
         @Override
@@ -97,10 +98,7 @@ public class WeaponSync extends Operation implements WeaponSyncPublic
                                 projectile.softRemove(tick);
                         }
                         
-                        state.projectilesList.append(projectile.projectileListLink_state);
-                        state.projectiles.put(projectile.key, projectile);
-                        actor.projectiles.append(projectile.projectileListLink_actor);
-                        
+                        projectile.register();
                         projectile.updatedPosition(tick);
                         
                         // dead reckon current position so that it is no longer late

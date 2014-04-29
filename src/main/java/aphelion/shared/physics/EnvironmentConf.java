@@ -46,6 +46,11 @@ import java.util.logging.Logger;
  */
 public final class EnvironmentConf
 {
+        /** Enable expensive assertions?.
+         * This is useful for test cases
+         */
+        public static boolean testCaseAssertions = false;
+        
         /** Running as a server or as a client?. 
          * This matters only for log messages, setting up the EnvironmentConfiguration, and some
          * assertions. Server or client specific code should be avoided!

@@ -40,6 +40,7 @@ package aphelion.shared.physics.operations;
 
 
 import aphelion.shared.physics.EnvironmentConf;
+import aphelion.shared.physics.SimpleEnvironment;
 import aphelion.shared.physics.State;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -54,9 +55,9 @@ public class UnloadConfig extends Operation
 
         public String fileIdentifier;
         
-        public UnloadConfig(EnvironmentConf econfig, OperationKey key)
+        public UnloadConfig(SimpleEnvironment env, OperationKey key)
         {
-                super(econfig, false, PRIORITY.UNLOAD_CONFIG, key);
+                super(env, false, PRIORITY.UNLOAD_CONFIG, key);
         }
         
         @Override

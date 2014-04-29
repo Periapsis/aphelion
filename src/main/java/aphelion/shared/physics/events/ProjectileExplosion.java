@@ -149,6 +149,7 @@ public class ProjectileExplosion extends Event implements ProjectileExplosionPub
                                         continue;
                                 }
                                 
+
                                 assert hist.projectile.crossStateList == explodedProjectile.crossStateList;
                                 assert hist.projectile.crossStateList[state.id] == explodedProjectile;
                         }
@@ -249,7 +250,7 @@ public class ProjectileExplosion extends Event implements ProjectileExplosionPub
                                 diedEvent = new ActorDied(env, diedKey);
                         }
                         
-                        state.env.addEvent(diedEvent);
+                        state.env.registerEvent(diedEvent);
                         diedEvent.execute(tick, state, state.actors.get(new ActorKey(killed_pid)), this, explodedProjectile.owner);
                 }
                 
@@ -284,12 +285,7 @@ public class ProjectileExplosion extends Event implements ProjectileExplosionPub
                         {
                                 Projectile projectile = projectiles[p];
                                 projectile.initFire(tick, actorPos);
-                                
-                                state.projectilesList.append(projectile.projectileListLink_state);
-                                state.projectiles.put(projectile.key, projectile);
-                                projectile.owner.projectiles.append(projectile.projectileListLink_actor);
-
-
+                                projectile.register();
                                 projectile.updatedPosition(tick);
 
                                 // dead reckon current position so that it is no longer late
@@ -594,6 +590,12 @@ public class ProjectileExplosion extends Event implements ProjectileExplosionPub
                                 return false;
                         }
                         return true;
-                }   
+                }
+
+                @Override
+                public String toString()
+                {
+                        return "ProjectileExplosion.Key{" + "causedBy=" + causedBy + '}';
+                }
         }
 }

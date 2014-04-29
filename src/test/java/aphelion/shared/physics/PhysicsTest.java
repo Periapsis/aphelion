@@ -78,6 +78,7 @@ public abstract class PhysicsTest
         @Before
         public void setUp()
         {
+                EnvironmentConf.testCaseAssertions = true;
                 createEnvironment();
                 conf = applyTestSettings(env);
         }
@@ -86,6 +87,7 @@ public abstract class PhysicsTest
         public void tearDown()
         {
                 env = null;
+                EnvironmentConf.testCaseAssertions = false;
         }
         
         

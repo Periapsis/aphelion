@@ -38,6 +38,7 @@
 package aphelion.shared.physics.operations;
 
 import aphelion.shared.physics.EnvironmentConf;
+import aphelion.shared.physics.SimpleEnvironment;
 import aphelion.shared.physics.operations.pub.OperationPublic;
 import aphelion.shared.physics.State;
 import aphelion.shared.swissarmyknife.LinkedListEntry;
@@ -49,7 +50,7 @@ import aphelion.shared.swissarmyknife.LinkedListEntry;
 public abstract class Operation implements OperationPublic
 {
         public final OperationKey key;
-        public final EnvironmentConf econfig;
+        public final SimpleEnvironment env;
         public final LinkedListEntry<Operation>[] link; // key is state_id. This is used in the linkedlist for PhysicsState.todo and PhysicsState.history
         public long tick;
         public int pid = 0; // 0 means this operation does not belong to a player
@@ -86,17 +87,17 @@ public abstract class Operation implements OperationPublic
         }
         
         @SuppressWarnings("unchecked")
-        protected Operation(EnvironmentConf econfig, boolean ignorable, PRIORITY priority, OperationKey key)
+        protected Operation(SimpleEnvironment env, boolean ignorable, PRIORITY priority, OperationKey key)
         {
                 int i;
   
                 this.key = key;
-                this.econfig = econfig;
+                this.env = env;
                 this.ignorable = ignorable;
                 this.priority = priority.priority;
 
-                link = new LinkedListEntry[econfig.TRAILING_STATES];
-                for (i = 0; i < econfig.TRAILING_STATES; i++)
+                link = new LinkedListEntry[env.econfig.TRAILING_STATES];
+                for (i = 0; i < env.econfig.TRAILING_STATES; i++)
                 {
                         link[i] = new LinkedListEntry<>(null, this);
                 }

@@ -40,6 +40,7 @@ package aphelion.shared.physics.operations;
 
 
 import aphelion.shared.physics.EnvironmentConf;
+import aphelion.shared.physics.SimpleEnvironment;
 import aphelion.shared.physics.State;
 import java.util.List;
 import java.util.logging.Level;
@@ -58,10 +59,10 @@ public class LoadConfig extends Operation
         
         private final boolean[] executed;
         
-        public LoadConfig(EnvironmentConf econfig, OperationKey key)
+        public LoadConfig(SimpleEnvironment env, OperationKey key)
         {
-                super(econfig, false, PRIORITY.LOAD_CONFIG, key);
-                executed = new boolean[econfig.TRAILING_STATES];
+                super(env, false, PRIORITY.LOAD_CONFIG, key);
+                executed = new boolean[env.econfig.TRAILING_STATES];
         }
         
         @Override

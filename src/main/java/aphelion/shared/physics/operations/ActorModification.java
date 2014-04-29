@@ -40,6 +40,7 @@ package aphelion.shared.physics.operations;
 
 
 import aphelion.shared.physics.EnvironmentConf;
+import aphelion.shared.physics.SimpleEnvironment;
 import aphelion.shared.physics.entities.Actor;
 import aphelion.shared.physics.operations.pub.ActorModificationPublic;
 import aphelion.shared.physics.State;
@@ -60,10 +61,10 @@ public class ActorModification extends Operation implements ActorModificationPub
         // all attributes are optional
         public String ship;
         
-        public ActorModification(EnvironmentConf econfig, OperationKey key)
+        public ActorModification(SimpleEnvironment env, OperationKey key)
         {
-                super(econfig, false, PRIORITY.ACTOR_MODIFICATION, key);
-                executed = new boolean[econfig.TRAILING_STATES];
+                super(env, false, PRIORITY.ACTOR_MODIFICATION, key);
+                executed = new boolean[env.econfig.TRAILING_STATES];
         }
         
         @Override

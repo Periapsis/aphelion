@@ -77,7 +77,7 @@ public abstract class Event implements EventPublic
         
         public void remove()
         {
-                env.removeEvent(this);
+                env.unregisterEvent(this);
         }
         
         @Override

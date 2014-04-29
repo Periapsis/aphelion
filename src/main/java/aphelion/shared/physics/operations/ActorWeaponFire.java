@@ -40,6 +40,7 @@ package aphelion.shared.physics.operations;
 
 
 import aphelion.shared.physics.EnvironmentConf;
+import aphelion.shared.physics.SimpleEnvironment;
 import aphelion.shared.physics.operations.pub.ActorWeaponFirePublic;
 import aphelion.shared.physics.entities.Actor;
 import aphelion.shared.physics.entities.Projectile;
@@ -78,10 +79,10 @@ public class ActorWeaponFire extends Operation implements ActorWeaponFirePublic
         // projectile index -> state id -> map entity
         private ArrayList<PhysicsPositionVector[]> fireHistories;
         
-        public ActorWeaponFire(EnvironmentConf econfig, OperationKey key)
+        public ActorWeaponFire(SimpleEnvironment env, OperationKey key)
         {
-                super(econfig, true, PRIORITY.ACTOR_WEAPON_FIRE, key);
-                usedHint = new boolean[econfig.TRAILING_STATES];
+                super(env, true, PRIORITY.ACTOR_WEAPON_FIRE, key);
+                usedHint = new boolean[env.econfig.TRAILING_STATES];
         }
         
         @Override
@@ -186,7 +187,7 @@ public class ActorWeaponFire extends Operation implements ActorWeaponFirePublic
                         }
                         else
                         {
-                                fireHistory = new PhysicsPositionVector[econfig.TRAILING_STATES];
+                                fireHistory = new PhysicsPositionVector[env.econfig.TRAILING_STATES];
                                 fireHistories.add(fireHistory);
                                 assert p == fireHistories.size() - 1;
                                 
@@ -197,17 +198,9 @@ public class ActorWeaponFire extends Operation implements ActorWeaponFirePublic
                         }                      
                         
                         Projectile projectile = projectiles[p];
-                       
-                        
                         projectile.initFire(tick, actorPos);
-                        
                         fireHistory[state.id].set(projectile.pos);
-                        
-                        state.projectilesList.append(projectile.projectileListLink_state);
-                        state.projectiles.put(projectile.key, projectile);
-                        projectile.owner.projectiles.append(projectile.projectileListLink_actor);
-                        
-                        
+                        projectile.register();
                         projectile.updatedPosition(tick);
                         
                         // dead reckon current position so that it is no longer late
