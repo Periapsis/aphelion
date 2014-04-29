@@ -67,8 +67,8 @@ public class TickedEventLoop implements Workable, Timerable
         private boolean breakdown = false;
         private volatile boolean interrupted = false;
         
-        private static final int TASK_QUEUE_SIZE = 32; // per thread
-        private static final int COMPLETED_TASK_QUEUE_SIZE = 32;
+        private static final int TASK_QUEUE_SIZE = 128; // per thread
+        private static final int COMPLETED_TASK_QUEUE_SIZE = 128; // per thread
         
         private long loop_nanoTime;
         private long loop_systemNanoTime;
@@ -79,25 +79,25 @@ public class TickedEventLoop implements Workable, Timerable
         volatile long deadlock_tick_lastseen = -1;
         
         // tick and loop events are not added to or removed frequently
-        private ArrayList<TickEvent> tickEvents  = new ArrayList<>(8);
-        private ArrayList<LoopEvent> loopEvents  = new ArrayList<>(8);
+        private final ArrayList<TickEvent> tickEvents  = new ArrayList<>(8);
+        private final ArrayList<LoopEvent> loopEvents  = new ArrayList<>(8);
         
         // Timer events are added and removed frequently
-        private LinkedListHead<TimerData> timerEvents = new LinkedListHead<>();
+        private final LinkedListHead<TimerData> timerEvents = new LinkedListHead<>();
         
         // Tasks that have not yet been started
-        private ArrayBlockingQueue<WorkerTask> tasks;
+        private final ArrayBlockingQueue<WorkerTask> tasks;
         
         
         /** Tasks that have been completed, will be fired as callbacks the next tick. */
-        private ArrayBlockingQueue<TaskCompleteEntry> completedTasks;
+        private final ArrayBlockingQueue<TaskCompleteEntry> completedTasks;
         
         /** Same as the completedTasks, however this list is intended to be used by the consumer thread.
           * This is to prevent dead locks
           */
-        private LinkedList<TaskCompleteEntry> completedTasks_local; // stuff added by the same thread that is consuming
+        private final LinkedList<TaskCompleteEntry> completedTasks_local; // stuff added by the same thread that is consuming
         
-        private WorkerThread[] workerThreads;
+        private final WorkerThread[] workerThreads;
         
         /**
          * @param tickLength How long does a tick last in milliseconds
@@ -117,9 +117,13 @@ public class TickedEventLoop implements Workable, Timerable
                 
                 if (workerThreads > 0)
                 {
-                        this.tasks = new ArrayBlockingQueue<>(workerThreads * TASK_QUEUE_SIZE); // with 4 threads, queue a maximum of 128 tasks
+                        this.tasks = new ArrayBlockingQueue<>(workerThreads * TASK_QUEUE_SIZE);
                 }
-                this.completedTasks = new ArrayBlockingQueue<>(COMPLETED_TASK_QUEUE_SIZE); // Fire a maximum of 32 callbacks a time
+                else
+                {
+                        this.tasks = null;
+                }
+                this.completedTasks = new ArrayBlockingQueue<>(workerThreads * COMPLETED_TASK_QUEUE_SIZE);
                 this.completedTasks_local = new LinkedList<>(); // Fire a maximum of 32 callbacks a time
                 this.workerThreads = new WorkerThread[workerThreads];
                 
@@ -132,7 +136,7 @@ public class TickedEventLoop implements Workable, Timerable
         
         /** Construct and synchronize with an other event loop.
          * This loop will have the same clock source and tick length.
-         * This loop will begin with the same tick cound and will tick at the same time.
+         * This loop will begin with the same tick count and will tick at the same time.
          * 
          * When you use this constructor to synchronize loops across threads, make sure
          * that the clock source returns the same value on all threads! (this is a known issue
@@ -156,6 +160,10 @@ public class TickedEventLoop implements Workable, Timerable
                 if (workerThreads > 0)
                 {
                         this.tasks = new ArrayBlockingQueue<>(workerThreads * TASK_QUEUE_SIZE); // with 4 threads, queue a maximum of 128 tasks
+                }
+                else
+                {
+                        this.tasks = null;
                 }
                 this.completedTasks = new ArrayBlockingQueue<>(COMPLETED_TASK_QUEUE_SIZE); // Fire a maximum of 32 callbacks a time
                 this.completedTasks_local = new LinkedList<>(); // Fire a maximum of 32 callbacks a time
@@ -352,7 +360,7 @@ public class TickedEventLoop implements Workable, Timerable
                 // Time = 2147483647+1 = -2147483648:  -2147483648 - 2147483547 = 101
                 // Time = 2147483647+2 = -2147483647:  -2147483647 - 2147483547 = 102
                 long delta = loop_nanoTime - nano;
-                while (delta >= TICK)
+                while (delta >= TICK && !interrupted)
                 {
                         delta -= TICK;
                         nano += TICK;

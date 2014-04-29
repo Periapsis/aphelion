@@ -50,11 +50,13 @@ class WorkerThread extends Thread
         private static final Logger log = Logger.getLogger("aphelion.eventloop");
         Workable workable;
         ArrayBlockingQueue<WorkerTask> tasks;
+        private final String spawnThreadName;
 
         WorkerThread(Workable workable, ArrayBlockingQueue<WorkerTask> tasks, ArrayBlockingQueue<TickedEventLoop.TaskCompleteEntry> completedTasks)
         {
                 this.workable = workable;
                 this.tasks = tasks;
+                spawnThreadName = Thread.currentThread().getName();
         }
 
         
@@ -63,6 +65,7 @@ class WorkerThread extends Thread
         public void run()
         {
                 WorkerTask task;
+                setName(spawnThreadName+"-WorkerThread-"+this.getId());
                 try
                 {
                         while (!this.isInterrupted())
