@@ -240,15 +240,8 @@ public class DualRunnerEnvironment implements TickEvent, LoopEvent, PhysicsEnvir
         
         public void done()
         {
-                syncEnvsLock.lock();
-                try
-                {
-                        thread.done();
-                }
-                finally
-                {
-                        syncEnvsLock.unlock();
-                }
+                log.log(Level.INFO, "Stopping dual runner environment...");
+                thread.done();
         }
         
         /** Wait until the internal thread has caught up with the loop on the main thread.
@@ -498,7 +491,7 @@ public class DualRunnerEnvironment implements TickEvent, LoopEvent, PhysicsEnvir
                 OperationKey key = getNextOperationKey();
                 for (SimpleEnvironment env : envs)
                 {
-                        LoadConfig op = new LoadConfig(env.econfig, key);
+                        LoadConfig op = new LoadConfig(env, key);
                         op.tick = tick;
                         op.fileIdentifier = fileIdentifier;
                         op.yamlDocuments = yamlDocuments;
@@ -515,7 +508,7 @@ public class DualRunnerEnvironment implements TickEvent, LoopEvent, PhysicsEnvir
                 OperationKey key = getNextOperationKey();
                 for (SimpleEnvironment env : envs)
                 {
-                        UnloadConfig op = new UnloadConfig(env.econfig, key);
+                        UnloadConfig op = new UnloadConfig(env, key);
                         op.tick = tick;
                         op.fileIdentifier = fileIdentifier;
 
@@ -531,7 +524,7 @@ public class DualRunnerEnvironment implements TickEvent, LoopEvent, PhysicsEnvir
                 OperationKey key = getNextOperationKey();
                 for (SimpleEnvironment env : envs)
                 {
-                        ActorNew op = new ActorNew(env.econfig, key);
+                        ActorNew op = new ActorNew(env, key);
                         op.tick = tick;
                         op.pid = pid;
                         op.seed = seed;
@@ -551,7 +544,7 @@ public class DualRunnerEnvironment implements TickEvent, LoopEvent, PhysicsEnvir
                 {
                         assert !env.econfig.server;
 
-                        ActorSync op = new ActorSync(env.econfig, key);
+                        ActorSync op = new ActorSync(env, key);
                         op.tick = sync.getTick();
                         op.pid = sync.getPid();
                         op.sync = sync;
@@ -568,7 +561,7 @@ public class DualRunnerEnvironment implements TickEvent, LoopEvent, PhysicsEnvir
                 OperationKey key = getNextOperationKey();
                 for (SimpleEnvironment env : envs)
                 {
-                        ActorModification op = new ActorModification(env.econfig, key);
+                        ActorModification op = new ActorModification(env, key);
                         op.tick = tick;
                         op.pid = pid;
                         op.ship = ship;
@@ -585,7 +578,7 @@ public class DualRunnerEnvironment implements TickEvent, LoopEvent, PhysicsEnvir
                 OperationKey key = getNextOperationKey();
                 for (SimpleEnvironment env : envs)
                 {
-                        ActorRemove op = new ActorRemove(env.econfig, key);
+                        ActorRemove op = new ActorRemove(env, key);
                         op.tick = tick;
                         op.pid = pid;
 
@@ -603,7 +596,7 @@ public class DualRunnerEnvironment implements TickEvent, LoopEvent, PhysicsEnvir
                 
                 for (SimpleEnvironment env : envs)
                 {
-                        ActorWarp op = new ActorWarp(env.econfig, key);
+                        ActorWarp op = new ActorWarp(env, key);
                         op.tick = tick;
                         op.pid = pid;
                         op.hint = hint;
@@ -625,7 +618,7 @@ public class DualRunnerEnvironment implements TickEvent, LoopEvent, PhysicsEnvir
                 
                 for (SimpleEnvironment env : envs)
                 {
-                        ActorWarp op = new ActorWarp(env.econfig, key);
+                        ActorWarp op = new ActorWarp(env, key);
                         op.tick = tick;
                         op.pid = pid;
                         op.hint = hint;
@@ -651,7 +644,7 @@ public class DualRunnerEnvironment implements TickEvent, LoopEvent, PhysicsEnvir
                 
                 for (SimpleEnvironment env : envs)
                 {
-                        ActorMove op = new ActorMove(env.econfig, key);
+                        ActorMove op = new ActorMove(env, key);
                         op.tick = tick;
                         op.pid = pid;
                         op.move = move;
@@ -681,7 +674,7 @@ public class DualRunnerEnvironment implements TickEvent, LoopEvent, PhysicsEnvir
                 
                 for (SimpleEnvironment env : envs)
                 {
-                        ActorWeaponFire op = new ActorWeaponFire(env.econfig, key);
+                        ActorWeaponFire op = new ActorWeaponFire(env, key);
                         op.tick = tick;
                         op.pid = pid;
                         op.weapon_slot = weapon_slot;
@@ -716,7 +709,7 @@ public class DualRunnerEnvironment implements TickEvent, LoopEvent, PhysicsEnvir
                 
                 for (SimpleEnvironment env : envs)
                 {
-                        ActorWeaponFire op = new ActorWeaponFire(env.econfig, key);
+                        ActorWeaponFire op = new ActorWeaponFire(env, key);
                         op.tick = tick;
                         op.pid = pid;
                         op.weapon_slot = weapon_slot;
@@ -748,7 +741,7 @@ public class DualRunnerEnvironment implements TickEvent, LoopEvent, PhysicsEnvir
                         assert !env.econfig.server;
                         // do not modify "projectiles" after calling this method
 
-                        WeaponSync op = new WeaponSync(env.econfig, key);
+                        WeaponSync op = new WeaponSync(env, key);
                         op.tick = tick;
                         op.pid = owner_pid;
                         op.weaponKey = weaponKey;
@@ -813,6 +806,7 @@ public class DualRunnerEnvironment implements TickEvent, LoopEvent, PhysicsEnvir
                         log.log(Level.INFO, "Started dual runner thread with {0} states", new Object[] {
                                 this.environment.getConfig().TRAILING_STATES
                         });
+                        setName("DualRunnerEnvironment-"+this.getId());
                         loop.run();
                 }
                 
@@ -825,6 +819,7 @@ public class DualRunnerEnvironment implements TickEvent, LoopEvent, PhysicsEnvir
                         }
                         
                         loop.interrupt();
+                        this.interrupt();
                         try
                         {
                                 this.join();
