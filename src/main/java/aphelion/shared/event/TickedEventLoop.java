@@ -45,6 +45,7 @@ import aphelion.shared.swissarmyknife.ThreadSafe;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -67,8 +68,7 @@ public class TickedEventLoop implements Workable, Timerable
         private boolean breakdown = false;
         private volatile boolean interrupted = false;
         
-        private static final int TASK_QUEUE_SIZE = 128; // per thread
-        private static final int COMPLETED_TASK_QUEUE_SIZE = 128; // per thread
+        private static final int COMPLETED_TASK_QUEUE_SIZE = 512;
         
         private long loop_nanoTime;
         private long loop_systemNanoTime;
@@ -86,7 +86,7 @@ public class TickedEventLoop implements Workable, Timerable
         private final LinkedListHead<TimerData> timerEvents = new LinkedListHead<>();
         
         // Tasks that have not yet been started
-        private final ArrayBlockingQueue<WorkerTask> tasks;
+        private final LinkedBlockingDeque<WorkerTask> tasks;
         
         
         /** Tasks that have been completed, will be fired as callbacks the next tick. */
@@ -117,13 +117,13 @@ public class TickedEventLoop implements Workable, Timerable
                 
                 if (workerThreads > 0)
                 {
-                        this.tasks = new ArrayBlockingQueue<>(workerThreads * TASK_QUEUE_SIZE);
+                        this.tasks = new LinkedBlockingDeque<>();
                 }
                 else
                 {
                         this.tasks = null;
                 }
-                this.completedTasks = new ArrayBlockingQueue<>(workerThreads * COMPLETED_TASK_QUEUE_SIZE);
+                this.completedTasks = new ArrayBlockingQueue<>(COMPLETED_TASK_QUEUE_SIZE);
                 this.completedTasks_local = new LinkedList<>(); // Fire a maximum of 32 callbacks a time
                 this.workerThreads = new WorkerThread[workerThreads];
                 
@@ -159,7 +159,7 @@ public class TickedEventLoop implements Workable, Timerable
                 
                 if (workerThreads > 0)
                 {
-                        this.tasks = new ArrayBlockingQueue<>(workerThreads * TASK_QUEUE_SIZE); // with 4 threads, queue a maximum of 128 tasks
+                        this.tasks = new LinkedBlockingDeque<>(); // with 4 threads, queue a maximum of 128 tasks
                 }
                 else
                 {

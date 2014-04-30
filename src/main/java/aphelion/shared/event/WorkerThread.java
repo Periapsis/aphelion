@@ -39,6 +39,7 @@ package aphelion.shared.event;
 
 import aphelion.shared.event.promise.PromiseException;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.LinkedBlockingDeque;
 import java.util.logging.Logger;
 
 /**
@@ -49,10 +50,10 @@ class WorkerThread extends Thread
 {
         private static final Logger log = Logger.getLogger("aphelion.eventloop");
         Workable workable;
-        ArrayBlockingQueue<WorkerTask> tasks;
+        LinkedBlockingDeque<WorkerTask> tasks;
         private final String spawnThreadName;
 
-        WorkerThread(Workable workable, ArrayBlockingQueue<WorkerTask> tasks, ArrayBlockingQueue<TickedEventLoop.TaskCompleteEntry> completedTasks)
+        WorkerThread(Workable workable, LinkedBlockingDeque<WorkerTask> tasks, ArrayBlockingQueue<TickedEventLoop.TaskCompleteEntry> completedTasks)
         {
                 this.workable = workable;
                 this.tasks = tasks;
@@ -70,6 +71,7 @@ class WorkerThread extends Thread
                 {
                         while (!this.isInterrupted())
                         {
+                                
                                 task = tasks.take(); // blocks
                                 try
                                 {
