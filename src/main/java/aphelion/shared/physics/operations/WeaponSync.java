@@ -80,6 +80,8 @@ public class WeaponSync extends Operation implements WeaponSyncPublic
                         return true;
                 }
                 
+                assert syncKey != 0;
+                
                 int projectile_count = syncProjectiles.length;
                 factory.hintProjectileCount(projectile_count);
                 Actor.WeaponConfig config = actor.getWeaponConfig(weaponKey);
@@ -98,7 +100,7 @@ public class WeaponSync extends Operation implements WeaponSyncPublic
                                 projectile.softRemove(tick);
                         }
                         
-                        projectile.register();
+                        projectile.register(); // err
                         projectile.updatedPosition(tick);
                         
                         // dead reckon current position so that it is no longer late

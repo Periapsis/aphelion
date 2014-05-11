@@ -359,7 +359,9 @@ public class ClientState
                                 weaponSync.setTick(oldestStateTick);
                                 weaponSync.setPid(projectile.getOwner());
                                 weaponSync.setWeaponKey(projectile.getWeaponKey());
-                                weaponSync.setKey(nextWeaponSyncKey++);
+                                nextWeaponSyncKey++;
+                                if (nextWeaponSyncKey == 0) { nextWeaponSyncKey = 1; } // reserve 0 as a special value
+                                weaponSync.setKey(nextWeaponSyncKey);
 
                                 Iterator<ProjectilePublic> projIt = projectile.getCoupledProjectiles();
                                 while (projIt.hasNext())
