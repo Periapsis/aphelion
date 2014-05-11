@@ -68,8 +68,6 @@ public class TickedEventLoop implements Workable, Timerable
         private boolean breakdown = false;
         private volatile boolean interrupted = false;
         
-        private static final int COMPLETED_TASK_QUEUE_SIZE = 512;
-        
         private long loop_nanoTime;
         private long loop_systemNanoTime;
         
@@ -90,7 +88,7 @@ public class TickedEventLoop implements Workable, Timerable
         
         
         /** Tasks that have been completed, will be fired as callbacks the next tick. */
-        private final ArrayBlockingQueue<TaskCompleteEntry> completedTasks;
+        private final LinkedBlockingDeque<TaskCompleteEntry> completedTasks;
         
         /** Same as the completedTasks, however this list is intended to be used by the consumer thread.
           * This is to prevent dead locks
@@ -123,13 +121,13 @@ public class TickedEventLoop implements Workable, Timerable
                 {
                         this.tasks = null;
                 }
-                this.completedTasks = new ArrayBlockingQueue<>(COMPLETED_TASK_QUEUE_SIZE);
+                this.completedTasks = new LinkedBlockingDeque<>();
                 this.completedTasks_local = new LinkedList<>(); // Fire a maximum of 32 callbacks a time
                 this.workerThreads = new WorkerThread[workerThreads];
                 
                 for (int i = 0; i < workerThreads; ++i)
                 {
-                        this.workerThreads[i] = new WorkerThread(this, tasks, completedTasks);
+                        this.workerThreads[i] = new WorkerThread(this, tasks);
                         this.workerThreads[i].setDaemon(true);
                 }
         }
@@ -165,14 +163,14 @@ public class TickedEventLoop implements Workable, Timerable
                 {
                         this.tasks = null;
                 }
-                this.completedTasks = new ArrayBlockingQueue<>(COMPLETED_TASK_QUEUE_SIZE); // Fire a maximum of 32 callbacks a time
-                this.completedTasks_local = new LinkedList<>(); // Fire a maximum of 32 callbacks a time
+                this.completedTasks = new LinkedBlockingDeque<>();
+                this.completedTasks_local = new LinkedList<>();
                 this.workerThreads = new WorkerThread[workerThreads];
 
                 
                 for (int i = 0; i < workerThreads; ++i)
                 {
-                        this.workerThreads[i] = new WorkerThread(this, tasks, completedTasks);
+                        this.workerThreads[i] = new WorkerThread(this, tasks);
                         this.workerThreads[i].setDaemon(true);
                 }
         }
@@ -722,11 +720,11 @@ public class TickedEventLoop implements Workable, Timerable
         
         @Override
         @SuppressWarnings("unchecked")
-        public AbstractPromise addWorkerTask(WorkerTask task, Object argument) throws IllegalArgumentException, IllegalStateException
+        public AbstractPromise addWorkerTask(WorkerTask task, Object argument) throws IllegalStateException
         {
                 if (workerThreads.length <= 0)
                 {
-                        throw new IllegalArgumentException("There are no worker threads present");
+                        throw new IllegalStateException("There are no worker threads present");
                 }
                 
                 task.argument = argument;

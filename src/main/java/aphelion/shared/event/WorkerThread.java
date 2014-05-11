@@ -53,7 +53,7 @@ class WorkerThread extends Thread
         LinkedBlockingDeque<WorkerTask> tasks;
         private final String spawnThreadName;
 
-        WorkerThread(Workable workable, LinkedBlockingDeque<WorkerTask> tasks, ArrayBlockingQueue<TickedEventLoop.TaskCompleteEntry> completedTasks)
+        WorkerThread(Workable workable, LinkedBlockingDeque<WorkerTask> tasks)
         {
                 this.workable = workable;
                 this.tasks = tasks;
