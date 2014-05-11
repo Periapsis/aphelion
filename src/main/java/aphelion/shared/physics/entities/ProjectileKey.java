@@ -78,8 +78,8 @@ public final class ProjectileKey
         {
                 if (syncKey == 0) { throw new IllegalArgumentException(); }
                 this.syncKey = syncKey;
+                this.configIndex = configIndex;
                 this.fireTick = 0;
-                this.configIndex = 0;
                 this.owner = 0;
                 this.parent = null;
                 this.hashCode = calculateHashcode();
@@ -88,11 +88,11 @@ public final class ProjectileKey
         public ProjectileKey(long fireTick, int configIndex, int owner)
         {
                 if (owner == 0) { throw new IllegalArgumentException("Not implemented yet"); }
-                this.syncKey = 0;
                 this.fireTick = fireTick;
                 this.configIndex = configIndex;
                 this.owner = owner;
                 this.parent = null;
+                this.syncKey = 0;
                 this.hashCode = calculateHashcode();
         }
         
@@ -103,17 +103,17 @@ public final class ProjectileKey
                         throw new IllegalArgumentException();
                 }
                 if (owner == 0) { throw new IllegalArgumentException("Not implemented yet"); }
-                this.syncKey = 0;
-                this.fireTick = 0;
                 this.configIndex = configIndex;
                 this.owner = owner;
                 this.parent = parent;
+                this.syncKey = 0;
+                this.fireTick = 0; // this value might change because this projectile is triggered by the parent
                 this.hashCode = calculateHashcode();
         }
         
         private int calculateHashcode()
         {
-                 int hash = 7;
+                int hash = 7;
                 hash = 13 * hash + (int) (this.syncKey ^ (this.syncKey >>> 32));
                 hash = 13 * hash + (int) (this.fireTick ^ (this.fireTick >>> 32));
                 hash = 13 * hash + this.configIndex;
