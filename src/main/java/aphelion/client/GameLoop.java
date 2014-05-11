@@ -339,12 +339,13 @@ public class GameLoop
                                 Element dbg = mainScreen == null ? null : mainScreen.findElementByName("debug-info");
                                 if (physicsEnv != null && dbg != null)
                                 {
-                                        String text = String.format("%d (%2dms) %4d %d %3dms",
+                                        String text = String.format("%d (%2dms) %4d (%d %d) %3dms",
                                                 lastFps, 
                                                 frameTimeDelta, 
                                                 physicsEnv.getTick(),
                                                 physicsEnv.getTimewarpCount(),
-                                                networkedGame.getlastRTTNano() / 1000_000L);
+                                                physicsEnv.getResetCount(),
+                                                networkedGame.getlastRTTNano() / 1_000_000L);
 
                                         if (localShip != null)
                                         {

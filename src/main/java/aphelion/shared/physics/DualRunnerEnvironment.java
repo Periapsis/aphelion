@@ -479,6 +479,11 @@ public class DualRunnerEnvironment implements TickEvent, LoopEvent, PhysicsEnvir
                 return thread.timewarpCountLastSeen;
         }
         
+        public long getResetCount()
+        {
+                return this.stateResets;
+        }
+        
         private OperationKey getNextOperationKey()
         {
                 return new OperationKey(nextOpSeq++);
