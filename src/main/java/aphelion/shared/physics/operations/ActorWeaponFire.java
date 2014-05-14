@@ -39,7 +39,6 @@
 package aphelion.shared.physics.operations;
 
 
-import aphelion.shared.physics.EnvironmentConf;
 import aphelion.shared.physics.SimpleEnvironment;
 import aphelion.shared.physics.operations.pub.ActorWeaponFirePublic;
 import aphelion.shared.physics.entities.Actor;
@@ -77,7 +76,7 @@ public class ActorWeaponFire extends Operation implements ActorWeaponFirePublic
         public int hint_snapped_rot;
         
         // projectile index -> state id -> map entity
-        private ArrayList<PhysicsPositionVector[]> fireHistories;
+        private final ArrayList<PhysicsPositionVector[]> fireHistories = new ArrayList<>(0);
         
         public ActorWeaponFire(SimpleEnvironment env, OperationKey key)
         {
@@ -136,15 +135,7 @@ public class ActorWeaponFire extends Operation implements ActorWeaponFirePublic
                 // limit to 1024, lots of projectiles is expensive
                 int projectile_count = SwissArmyKnife.clip(config.projectiles.get(), 1, 1024); 
                 factory.hintProjectileCount(projectile_count);
-                
-                if (fireHistories == null)
-                {
-                        fireHistories = new ArrayList(projectile_count);
-                }
-                else
-                {
-                        fireHistories.ensureCapacity(projectile_count); 
-                }
+                fireHistories.ensureCapacity(projectile_count);
                 
                 PhysicsShipPosition actorPos = new PhysicsShipPosition();
                 
@@ -179,23 +170,7 @@ public class ActorWeaponFire extends Operation implements ActorWeaponFirePublic
                 
                 for (int p = 0; p < projectile_count; ++p)
                 {
-                        PhysicsPositionVector[] fireHistory;
-                        
-                        if (p < fireHistories.size())
-                        {
-                                fireHistory = fireHistories.get(p);
-                        }
-                        else
-                        {
-                                fireHistory = new PhysicsPositionVector[env.econfig.TRAILING_STATES];
-                                fireHistories.add(fireHistory);
-                                assert p == fireHistories.size() - 1;
-                                
-                                for (int s = 0; s < fireHistory.length; ++s)
-                                {
-                                        fireHistory[s] = new PhysicsPositionVector();
-                                }
-                        }                      
+                        PhysicsPositionVector[] fireHistory = this.getFireHistory(p, true);
                         
                         Projectile projectile = projectiles[p];
                         projectile.initFire(tick, actorPos);
@@ -232,29 +207,59 @@ public class ActorWeaponFire extends Operation implements ActorWeaponFirePublic
                 return true;
         }
         
+        private PhysicsPositionVector[] getFireHistory(int proj_index, boolean ensureExists)
+        {
+                if (proj_index >= this.fireHistories.size())
+                {
+                        if (!ensureExists)
+                        {
+                                return null;
+                        }
+                        
+                        this.fireHistories.ensureCapacity(proj_index + 1);
+                        
+                        while (this.fireHistories.size() <= proj_index)
+                        {
+                                PhysicsPositionVector[] fireHistory = new PhysicsPositionVector[env.econfig.TRAILING_STATES];
+                                
+                                for (int s = 0; s < fireHistory.length; ++s)
+                                {
+                                        fireHistory[s] = new PhysicsPositionVector();
+                                }
+                                
+                                this.fireHistories.add(fireHistory);
+                        }
+                }
+                
+                PhysicsPositionVector[] fireHistory = this.fireHistories.get(proj_index);
+                assert fireHistory != null;
+                return fireHistory;
+        }
+        
         @Override
         public void resetExecutionHistory(State state, State resetTo, Operation resetToOperation)
         {
                 ActorWeaponFire resetToWF = (ActorWeaponFire) resetToOperation;
                 
-                if (fireHistories == null)
-                {
-                        return;
-                }
+                int size = SwissArmyKnife.max(
+                        fireHistories.size(), 
+                        resetToWF.fireHistories.size()
+                );
                 
-                for (int p = 0; p < fireHistories.size(); ++p)
+                for (int p = 0; p < size; ++p)
                 {
-                        PhysicsPositionVector[] fireHistory = fireHistories.get(p);
-                        if (p >= resetToWF.fireHistories.size())
+                        PhysicsPositionVector[] fireHistory = this.getFireHistory(p, true);
+                        PhysicsPositionVector[] resetToFireHistory = resetToWF.getFireHistory(p, false);
+                        assert fireHistory != null;
+                        
+                        if (resetToFireHistory == null)
                         {
                                 fireHistory[state.id].unset();
                                 continue;
                         }
-
-                        PhysicsPositionVector[] resetToFireHistory = resetToWF.fireHistories.get(p);
+                        
                         fireHistory[state.id].set(resetToFireHistory[resetTo.id]);
                 }
-
         }
 
         @Override

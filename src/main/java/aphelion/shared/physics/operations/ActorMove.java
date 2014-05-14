@@ -37,7 +37,6 @@
  */
 package aphelion.shared.physics.operations;
 
-import aphelion.shared.physics.EnvironmentConf;
 import aphelion.shared.physics.SimpleEnvironment;
 import aphelion.shared.physics.operations.pub.ActorMovePublic;
 import aphelion.shared.physics.entities.Actor;

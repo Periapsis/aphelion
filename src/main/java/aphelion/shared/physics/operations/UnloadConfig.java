@@ -39,7 +39,6 @@
 package aphelion.shared.physics.operations;
 
 
-import aphelion.shared.physics.EnvironmentConf;
 import aphelion.shared.physics.SimpleEnvironment;
 import aphelion.shared.physics.State;
 import java.util.logging.Level;
