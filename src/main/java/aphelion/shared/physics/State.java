@@ -194,7 +194,6 @@ public class State
                         {
                                 if (this.tick_now >= actor.spawnAt_tick)
                                 {
-                                        assert this.tick_now == actor.spawnAt_tick;
                                         PhysicsPoint spawn = new PhysicsPoint();
                                         actor.dead.setAbsoluteValue(0, actor.spawnAt_tick, 0);
                                         
