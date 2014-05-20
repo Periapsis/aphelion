@@ -127,8 +127,8 @@ public class SimpleEnvironment implements TickEvent, PhysicsEnvironment
         public final EnvironmentConf econfig;
         
         long tick_now;
-        long ticked_at;
-        private long lastTimewarp_tick = 0;
+        long tickedAt_nano;
+        private long lastTimewarp_nano = 0;
         private final PhysicsMap map;
         final State[] trailingStates;  //Delay = index * TRAILING_STATE_DURATION
         final LinkedListHead<Event> eventHistoryList = new LinkedListHead<>(); // ordered by the order of appending
@@ -248,7 +248,7 @@ public class SimpleEnvironment implements TickEvent, PhysicsEnvironment
         @Override
         public long getTickedAt()
         {
-                return ticked_at;
+                return tickedAt_nano;
         }
         
         
@@ -319,7 +319,7 @@ public class SimpleEnvironment implements TickEvent, PhysicsEnvironment
                 pollThreadedAddOperation();
                 
                 ++tick_now;
-                ticked_at = System.nanoTime();
+                tickedAt_nano = System.nanoTime();
 
                 for (int s = 0; s < econfig.TRAILING_STATES; s++)
                 {
@@ -350,9 +350,8 @@ public class SimpleEnvironment implements TickEvent, PhysicsEnvironment
                         
                         if (older.needTimewarpToThisState)
                         {
-                                if (older.isLast // Always timewarp to the last state (because state data is going to be discarded)
-                                   || this.lastTimewarp_tick == 0 
-                                   || this.tick_now - this.lastTimewarp_tick >= econfig.TIMEWARP_EVERY_TICKS)
+                                if (this.lastTimewarp_nano == 0 
+                                   || this.tickedAt_nano - this.lastTimewarp_nano >= econfig.TIMEWARP_EVERY_NANO)
                                         
                                 {
                                         // state is not consistent with the older state
@@ -374,7 +373,6 @@ public class SimpleEnvironment implements TickEvent, PhysicsEnvironment
          */
         public void timewarp(int stateid)
         {
-                lastTimewarp_tick = this.tick_now;
                 long start = System.nanoTime();
                 
                 ++timewarps;
@@ -397,6 +395,10 @@ public class SimpleEnvironment implements TickEvent, PhysicsEnvironment
                         this.trailingStates[0].tick_now,
                         this.trailingStates[stateid].tick_now,
                 });
+                
+                // At the end of execution, so that if timewarps become long running,
+                // they will not cause a timewarp right again.
+                lastTimewarp_nano = System.nanoTime();
         }
         
         /** The number of timewarps performed since the start of environment.

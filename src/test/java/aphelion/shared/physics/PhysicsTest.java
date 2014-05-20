@@ -72,7 +72,7 @@ public abstract class PhysicsTest
         
         protected void createEnvironment()
         {
-                env = new SimpleEnvironment(false, new MapEmpty());
+                env = new SimpleEnvironment(new EnvironmentConf(false, true, true), new MapEmpty(), false);
         }
 
         @Before

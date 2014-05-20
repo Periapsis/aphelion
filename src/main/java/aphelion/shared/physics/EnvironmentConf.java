@@ -91,8 +91,8 @@ public final class EnvironmentConf
          * Do not accept operations that are older than this many ticks. (if Operation.ignorable) */
         public final int HIGHEST_DELAY;
         
-        /** If two timewarps need to be executed in rapid succession, wait this many ticks. */
-        public final int TIMEWARP_EVERY_TICKS;
+        /** If two timewarps need to be executed in rapid succession, wait this many nanoseconds. */
+        public final long TIMEWARP_EVERY_NANO;
 
         /** The last state must _at least_ keep history for this many ticks.
          * (including the current tick).
@@ -114,14 +114,15 @@ public final class EnvironmentConf
         
         public final boolean POSITION_SMOOTHING;
 
-        public EnvironmentConf(boolean server, boolean enablePositionSmoothing)
+        
+        public EnvironmentConf(boolean server, boolean enablePositionSmoothing, boolean strictTimeWarps)
         {
                 this.server = server;
                 
                 logString = server ? "(server)" : "(client)";
                 
                 TRAILING_STATE_DELAY = 32;
-                TIMEWARP_EVERY_TICKS = 10;
+                TIMEWARP_EVERY_NANO = strictTimeWarps ? 0 : 5_000_000_000L;
                 MINIMUM_HISTORY_TICKS = 2;
                 
                 if (server)
@@ -158,7 +159,7 @@ public final class EnvironmentConf
         
         public EnvironmentConf(boolean server)
         {
-                this(server, !server);
+                this(server, !server, false);
         }
         
         /** Construct with only 1 state, used for dual runner.
@@ -177,7 +178,7 @@ public final class EnvironmentConf
                 
                 HIGHEST_DELAY = 224;
                 TRAILING_STATE_DELAY = HIGHEST_DELAY;
-                TIMEWARP_EVERY_TICKS = 0;
+                TIMEWARP_EVERY_NANO = 0;
                 FIRST_STATE_DELAY = 0;
                 TRAILING_STATES = 1;
                 MINIMUM_HISTORY_TICKS = HIGHEST_DELAY + 2;
@@ -198,14 +199,14 @@ public final class EnvironmentConf
                         "EnvironmentConfiguration: "
                         + "{0} "
                         + "TRAILING_STATE_DELAY: {1}; "
-                        + "TIMEWARP_EVERY_TICKS: {2}; "
+                        + "TIMEWARP_EVERY_NANO: {2}; "
                         + "FIRST_STATE_DELAY: {3}; "
                         + "TRAILING_STATES: {4}; "
                         + "MAX_OPERATION_AGE: {5}; ",
                         new Object[] {
                                 logString,
                                 TRAILING_STATE_DELAY,
-                                TIMEWARP_EVERY_TICKS,
+                                TIMEWARP_EVERY_NANO,
                                 FIRST_STATE_DELAY,
                                 TRAILING_STATES,
                                 HIGHEST_DELAY
