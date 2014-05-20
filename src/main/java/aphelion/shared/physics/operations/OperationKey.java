@@ -60,7 +60,7 @@ public class OperationKey
         @Override
         public int hashCode()
         {
-                return Long.hashCode(seq);
+                return (int)(seq ^ (seq >>> 32));
         }
 
         @Override

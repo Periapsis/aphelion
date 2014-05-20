@@ -60,7 +60,7 @@ public final class ActorKey
         @Override
         public int hashCode()
         {
-                return Integer.hashCode(pid);
+                return pid;
         }
 
         @Override
