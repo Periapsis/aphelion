@@ -95,7 +95,7 @@ public class ServerDaemon implements Daemon
                 InetSocketAddress listen = new InetSocketAddress(address, port);
                 this.ssChannel = HttpServer.openServerChannel(listen);
                 
-                Deadlock.start(false, new Deadlock.DeadLockListener()
+                Deadlock.start(false, new Deadlock.DeadlockListener()
                 {
                         @Override
                         public boolean deadlockDetected(TickedEventLoop eventLoop, Thread thread)

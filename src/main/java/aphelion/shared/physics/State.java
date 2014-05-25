@@ -37,6 +37,7 @@
  */
 package aphelion.shared.physics;
 
+import aphelion.shared.event.Deadlock;
 import aphelion.shared.gameconfig.ConfigSelection;
 import aphelion.shared.gameconfig.GameConfig;
 import aphelion.shared.physics.entities.*;
@@ -484,11 +485,19 @@ public class State
                 return new MapEntity[env.econfig.TRAILING_STATES];
         }
 
-        
         /** Reset to the given state and simulate enough times so that we are current again.
          * @param older The state to reset to, foreign states are allowed.
          */
         public void timewarp(State older)
+        {
+                timewarp(older, Deadlock.noopTicker);
+        }
+        
+        /** Reset to the given state and simulate enough times so that we are current again.
+         * @param older The state to reset to, foreign states are allowed.
+         * @param deadlockTicker
+         */
+        public void timewarp(State older, Deadlock.DeadlockTicker deadlockTicker)
         {
                 long wasTick = this.tick_now;
 
@@ -497,6 +506,7 @@ public class State
                 long tick = this.tick_now + 1;
                 while (tick <= wasTick)
                 {
+                        deadlockTicker.tickDeadlock();
                         this.tick(tick);
                         tick++;
                 }

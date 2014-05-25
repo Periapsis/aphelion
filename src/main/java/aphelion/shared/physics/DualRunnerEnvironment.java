@@ -41,6 +41,7 @@
 
 package aphelion.shared.physics;
 
+import aphelion.shared.event.Deadlock;
 import aphelion.shared.event.LoopEvent;
 import aphelion.shared.event.TickEvent;
 import aphelion.shared.event.TickedEventLoop;
@@ -761,6 +762,7 @@ public class DualRunnerEnvironment implements TickEvent, LoopEvent, PhysicsEnvir
         private final class MyThread extends Thread implements TickEvent, LoopEvent
         {
                 TickedEventLoop loop;
+                Deadlock.DeadlockTicker deadlockTicker;
                 final SimpleEnvironment environment;
                 volatile long timewarpCountLastSeen = 0;
 
@@ -781,6 +783,7 @@ public class DualRunnerEnvironment implements TickEvent, LoopEvent, PhysicsEnvir
                         }
                         
                         loop = new TickedEventLoop(syncWith, 0);
+                        deadlockTicker = loop;
                         loop.addTickEvent(this);
                         loop.addLoopEvent(this);
                 }
@@ -843,7 +846,7 @@ public class DualRunnerEnvironment implements TickEvent, LoopEvent, PhysicsEnvir
                                 syncEnvsLock.lock();
                                 try
                                 {
-                                        environment.pollThreadedAddOperation();
+                                        environment.pollThreadedAddOperation(deadlockTicker);
                                 }
                                 finally
                                 {
@@ -868,10 +871,12 @@ public class DualRunnerEnvironment implements TickEvent, LoopEvent, PhysicsEnvir
                                         // The reverse situation is okay because we can catch up by calling tick() 
                                         // an extra time.
 
-                                        environment.pollThreadedAddOperation();
+                                        environment.pollThreadedAddOperation(deadlockTicker);
                                         
                                         hasLock = false;
                                         syncEnvsLock.unlock();
+                                        
+                                        deadlockTicker.tickDeadlock();
                                         
                                         try
                                         {
@@ -887,7 +892,8 @@ public class DualRunnerEnvironment implements TickEvent, LoopEvent, PhysicsEnvir
                                         hasLock = true;
                                 }
                                 
-                                environment.tick();
+                                environment.tick(deadlockTicker);
+                                
                                 //System.out.printf("%d: %4d => %4d (T)\n", Objects.hashCode(this.loop), (loop.currentNano()/1_000_000L), environment.getTick());
                                 if (timewarpCountLastSeen != environment.getTimewarpCount())
                                 {

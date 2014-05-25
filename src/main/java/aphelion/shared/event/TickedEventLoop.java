@@ -56,7 +56,7 @@ import java.util.logging.Logger;
  * Methods are not safe to call from different threads (unless noted otherwise).
  * @author Joris
  */
-public class TickedEventLoop implements Workable, Timerable
+public class TickedEventLoop implements Workable, Timerable, Deadlock.DeadlockTicker
 {
         private static final Logger log = Logger.getLogger("aphelion.eventloop");
         public final long TICK; // length of a tick in nanoseconds
@@ -208,6 +208,14 @@ public class TickedEventLoop implements Workable, Timerable
                 this.clockSource = clockSource;
         }
         
+        
+        @ThreadSafe
+        @Override
+        public final void tickDeadlock()
+        {
+                ++this.deadlock_tick;
+        }
+        
         /** When this EventLoop is part of another loop, use this method before starting the loop */
         public void setup()
         {
@@ -297,7 +305,7 @@ public class TickedEventLoop implements Workable, Timerable
                 assert setup;
                 assert !breakdown;
                 
-                ++deadlock_tick;
+                tickDeadlock();
                 
                 if (!internal)
                 {
@@ -335,7 +343,7 @@ public class TickedEventLoop implements Workable, Timerable
                                         t.runFromMain.run();
                                 }
                                 
-                                ++deadlock_tick;
+                                tickDeadlock();
                         }
                 }
                 
@@ -346,7 +354,7 @@ public class TickedEventLoop implements Workable, Timerable
                 for (LoopEvent event : loopEvents)
                 {
                         event.loop(loop_systemNanoTime, loop_nanoTime);
-                        ++deadlock_tick;
+                        tickDeadlock();
                 }
                 
 
@@ -366,7 +374,7 @@ public class TickedEventLoop implements Workable, Timerable
                         
                         //System.out.printf("%d: %4d => %4d\n", Objects.hashCode(this), (nano/1_000_000L), tick);
                         tick();
-                        ++deadlock_tick;
+                        tickDeadlock();
                 }
         }
         

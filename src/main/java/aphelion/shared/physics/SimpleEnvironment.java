@@ -37,6 +37,7 @@
  */
 package aphelion.shared.physics;
 
+import aphelion.shared.event.Deadlock;
 import aphelion.shared.physics.entities.*;
 import aphelion.shared.physics.operations.*;
 import aphelion.shared.event.TickEvent;
@@ -290,6 +291,11 @@ public class SimpleEnvironment implements TickEvent, PhysicsEnvironment
         
         public void pollThreadedAddOperation()
         {
+                pollThreadedAddOperation(Deadlock.noopTicker);
+        }
+        
+        public void pollThreadedAddOperation(Deadlock.DeadlockTicker deadlockTicker)
+        {
                 if (threadedAddOperation != null)
                 {
                         Operation op;
@@ -301,13 +307,19 @@ public class SimpleEnvironment implements TickEvent, PhysicsEnvironment
                                 {
                                         trailingStates[s].addOperation(op);
                                 }
+                                deadlockTicker.tickDeadlock();
                         }
                 }
         }
-
-        private boolean firstTick = true;
+        
         @Override
         public void tick()
+        {
+                tick(Deadlock.noopTicker);
+        }
+
+        private boolean firstTick = true;
+        public void tick(Deadlock.DeadlockTicker deadlockTicker)
         {
                 if (firstTick)
                 {
@@ -316,7 +328,7 @@ public class SimpleEnvironment implements TickEvent, PhysicsEnvironment
                         econfig.log();
                 }
                 
-                pollThreadedAddOperation();
+                pollThreadedAddOperation(deadlockTicker);
                 
                 ++tick_now;
                 tickedAt_nano = System.nanoTime();
@@ -329,12 +341,16 @@ public class SimpleEnvironment implements TickEvent, PhysicsEnvironment
                 }
 
                 
-                consistencyCheck();
+                consistencyCheck(deadlockTicker);
                 removeOldHistory();
         }
 
-        
         public boolean consistencyCheck()
+        {
+                return consistencyCheck(Deadlock.noopTicker);
+        }
+        
+        public boolean consistencyCheck(Deadlock.DeadlockTicker deadlockTicker)
         {
                 for (int s = econfig.TRAILING_STATES - 1; s > 0; --s)
                 {
@@ -367,11 +383,19 @@ public class SimpleEnvironment implements TickEvent, PhysicsEnvironment
                 return true;
         }
         
-        
         /** Reset all states to the given state and re-simulate.
          * @param stateid The state to reset lower (more recent) states to
          */
         public void timewarp(int stateid)
+        {
+                timewarp(stateid, Deadlock.noopTicker);
+        }
+        
+        /** Reset all states to the given state and re-simulate.
+         * @param stateid The state to reset lower (more recent) states to
+         * @param deadlockTicker 
+         */
+        public void timewarp(int stateid, Deadlock.DeadlockTicker deadlockTicker)
         {
                 long start = System.nanoTime();
                 
@@ -383,7 +407,7 @@ public class SimpleEnvironment implements TickEvent, PhysicsEnvironment
                         State newer = this.trailingStates[s - 1];
                         
                         older.needTimewarpToThisState = false;
-                        newer.timewarp(older);
+                        newer.timewarp(older, deadlockTicker);
                 }
                 
                 long end = System.nanoTime();

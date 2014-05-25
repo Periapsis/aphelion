@@ -55,12 +55,12 @@ public class Deadlock
         private final static CopyOnWriteArrayList<TickedEventLoop> eventLoops = new CopyOnWriteArrayList<>();
         private static DeadlockThread thread;
         private static boolean gui;
-        private static DeadLockListener listener;
+        private static DeadlockListener listener;
         
         /** If an event loop has not updated its watchdog counter for this many milliseconds, do something. */
         private static final int CHECK_INTERVAL_MILLIS = 30000;
         
-        public static interface DeadLockListener
+        public static interface DeadlockListener
         {
                 /** Called if a deadlock has been detect in an event loop.
                  * At this point the event loop is no longer monitored. 
@@ -80,7 +80,26 @@ public class Deadlock
                 void deadlockAfterStop(TickedEventLoop eventLoop, Thread thread);
         }
         
-        public static void start(boolean showGUI, DeadLockListener deadlockListener)
+        public static interface DeadlockTicker
+        {
+                /** Update the deadlock tick count.
+                * Ticked event loops are monitored by a deadlock thread which watches this value.
+                * If this value is not updated in a long while, the application is terminated.
+                * Call this method to manually update this value.
+                */
+               @ThreadSafe
+               void tickDeadlock();
+        }
+        
+        public static final DeadlockTicker noopTicker = new DeadlockTicker()
+        {
+                @Override
+                public void tickDeadlock()
+                {
+                }
+        };
+        
+        public static void start(boolean showGUI, DeadlockListener deadlockListener)
         {
                 gui = showGUI;
                 listener = deadlockListener;
