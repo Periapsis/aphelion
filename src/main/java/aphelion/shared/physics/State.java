@@ -210,7 +210,7 @@ public class State
                                         actor.pos.pos.set(spawn);
                                         actor.pos.vel.set(0, 0);
                                         actor.rot.points = actor.randomRotation(actor.spawnAt_tick);
-                                        actor.rot.snapped = PhysicsMath.snapRotation(actor.rot.points, actor.rotationPoints.get());
+                                        actor.rot.snapped = PhysicsMath.snapRotation(actor.rot.points, actor.config.rotationPoints.get());
                                         
                                         actor.energy.addAbsoluteValue(Actor.ENERGY_SETTER.OTHER.id, this.tick_now, actor.getMaxEnergy());
                                         

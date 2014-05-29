@@ -278,7 +278,7 @@ public class ActorPublicImpl implements ActorPublic
                 }
                 else
                 {
-                        return actor.weaponSlots[slot.id].weaponKey;
+                        return actor.config.weaponSlots[slot.id].weaponKey;
                 }
         }
 
@@ -291,7 +291,7 @@ public class ActorPublicImpl implements ActorPublic
                         return null;
                 }
                 
-                return actor.actorConfigSelection.getInteger(name);
+                return actor.config.selection.getInteger(name);
         }
 
         @Override
@@ -303,7 +303,7 @@ public class ActorPublicImpl implements ActorPublic
                         return null;
                 }
                 
-                return actor.actorConfigSelection.getString(name);
+                return actor.config.selection.getString(name);
         }
 
         @Override
@@ -315,7 +315,7 @@ public class ActorPublicImpl implements ActorPublic
                         return null;
                 }
                 
-                return actor.actorConfigSelection.getBoolean(name);
+                return actor.config.selection.getBoolean(name);
         }
         
         @Override
@@ -327,7 +327,7 @@ public class ActorPublicImpl implements ActorPublic
                         return null;
                 }
                 
-                return actor.actorConfigSelection.getIntegerList(name);
+                return actor.config.selection.getIntegerList(name);
         }
 
         @Override
@@ -339,7 +339,7 @@ public class ActorPublicImpl implements ActorPublic
                         return null;
                 }
                 
-                return actor.actorConfigSelection.getStringList(name);
+                return actor.config.selection.getStringList(name);
         }
 
         @Override
@@ -351,7 +351,7 @@ public class ActorPublicImpl implements ActorPublic
                         return null;
                 }
                 
-                return actor.actorConfigSelection.getBooleanList(name);
+                return actor.config.selection.getBooleanList(name);
         }
         
         @Override
@@ -363,7 +363,7 @@ public class ActorPublicImpl implements ActorPublic
                         return null;
                 }
                 
-                return actor.actorConfigSelection.getImage(name, db);
+                return actor.config.selection.getImage(name, db);
         }
         
         @Override
@@ -375,7 +375,7 @@ public class ActorPublicImpl implements ActorPublic
                         return null;
                 }
                 
-                return actor.actorConfigSelection.getColour(name);
+                return actor.config.selection.getColour(name);
         }
         
         
@@ -387,7 +387,7 @@ public class ActorPublicImpl implements ActorPublic
                         return null;
                 }
 
-                return actor.getWeaponConfig(weaponKey).configSelection;
+                return actor.config.getWeaponConfig(weaponKey).selection;
         }
         
         @Override
@@ -627,7 +627,7 @@ public class ActorPublicImpl implements ActorPublic
                         return false;
                 }
 
-                if (actor.energy.get(state.tick_now-1) < actor.boostEnergy.get())
+                if (actor.energy.get(state.tick_now-1) < actor.config.boostEnergy.get())
                 {
                         return false;
                 }

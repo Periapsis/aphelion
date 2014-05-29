@@ -42,7 +42,7 @@ package aphelion.shared.physics.events;
 import aphelion.shared.gameconfig.GCStringList;
 import aphelion.shared.physics.SimpleEnvironment;
 import aphelion.shared.physics.entities.Actor;
-import aphelion.shared.physics.entities.Actor.WeaponConfig;
+import aphelion.shared.physics.entities.WeaponConfig;
 import aphelion.shared.physics.entities.Projectile;
 import aphelion.shared.physics.entities.ProjectilePublic;
 import aphelion.shared.physics.events.pub.ProjectileExplosionPublic;
@@ -259,7 +259,7 @@ public class ProjectileExplosion extends Event implements ProjectileExplosionPub
                 if (!weapon.isEmpty())
                 {
                         // todo projectile.owner == null
-                        Actor.WeaponConfig chainConfig = explodedProjectile.owner.getWeaponConfig(weapon);
+                        WeaponConfig chainConfig = explodedProjectile.owner.config.getWeaponConfig(weapon);
                         
                         int projectile_count = SwissArmyKnife.clip(chainConfig.projectiles.get(), 1, 1024);
                         chained_factory.hintProjectileCount(projectile_count);

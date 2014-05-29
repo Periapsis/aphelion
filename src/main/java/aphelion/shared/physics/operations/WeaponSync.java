@@ -45,8 +45,7 @@ import aphelion.shared.physics.operations.pub.WeaponSyncPublic;
 import aphelion.shared.physics.entities.Actor;
 import aphelion.shared.physics.entities.Projectile;
 import aphelion.shared.physics.State;
-import aphelion.shared.physics.entities.ActorKey;
-import aphelion.shared.physics.entities.ProjectileFactory;
+import aphelion.shared.physics.entities.*;
 import java.util.logging.Logger;
 
 /**
@@ -83,7 +82,7 @@ public class WeaponSync extends Operation implements WeaponSyncPublic
                 
                 int projectile_count = syncProjectiles.length;
                 factory.hintProjectileCount(projectile_count);
-                Actor.WeaponConfig config = actor.getWeaponConfig(weaponKey);
+                WeaponConfig config = actor.config.getWeaponConfig(weaponKey);
                 
                 Projectile[] projectiles = factory.constructProjectiles(state, actor, tick, config, projectile_count, null, syncKey);
                 assert projectiles.length == projectile_count;

@@ -78,7 +78,7 @@ public class ProjectileFactory
                 @Nonnull State state,
                 @Nullable Actor owner,
                 long createdAt_tick,
-                @Nonnull Actor.WeaponConfig config,
+                @Nonnull WeaponConfig config,
                 int projectile_count,
                 @Nullable Projectile chainedBy,
                 long syncKey

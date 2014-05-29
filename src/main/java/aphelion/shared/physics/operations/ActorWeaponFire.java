@@ -47,8 +47,7 @@ import aphelion.shared.physics.State;
 import aphelion.shared.physics.valueobjects.PhysicsPositionVector;
 import aphelion.shared.physics.valueobjects.PhysicsShipPosition;
 import aphelion.shared.physics.WEAPON_SLOT;
-import aphelion.shared.physics.entities.ActorKey;
-import aphelion.shared.physics.entities.ProjectileFactory;
+import aphelion.shared.physics.entities.*;
 import aphelion.shared.swissarmyknife.SwissArmyKnife;
 import java.util.ArrayList;
 import java.util.logging.Level;
@@ -130,7 +129,7 @@ public class ActorWeaponFire extends Operation implements ActorWeaponFirePublic
                         return true;
                 }
                 
-                Actor.WeaponConfig config = actor.weaponSlots[weapon_slot.id].config;
+                WeaponConfig config = actor.config.weaponSlots[weapon_slot.id].config;
                 
                 // limit to 1024, lots of projectiles is expensive
                 int projectile_count = SwissArmyKnife.clip(config.projectiles.get(), 1, 1024); 

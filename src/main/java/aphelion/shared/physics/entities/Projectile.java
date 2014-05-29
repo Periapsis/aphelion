@@ -81,7 +81,7 @@ public final class Projectile extends MapEntity implements ProjectilePublic
         final public LinkedListEntry<Projectile> coupled = new LinkedListEntry<>(null, this);
         
         public Actor owner;
-        public Actor.WeaponConfig config;
+        public WeaponConfig config;
         public final int configIndex; // the config index
         
         // IF AN ATTRIBUTE IS ADDED, DO NOT FORGET TO UPDATE resetTo()
@@ -115,7 +115,7 @@ public final class Projectile extends MapEntity implements ProjectilePublic
                 MapEntity[] crossStateList, 
                 Actor owner, 
                 long createdAt_tick, 
-                Actor.WeaponConfig config, 
+                WeaponConfig config, 
                 int projectile_index)
         {
                 super(state, 
@@ -492,7 +492,7 @@ public final class Projectile extends MapEntity implements ProjectilePublic
                         if (other.owner != null)
                         {
                                 this.owner = (Actor) other.owner.findInOtherState(state);
-                                this.config = this.owner.getWeaponConfig(other.config.weaponKey);
+                                this.config = this.owner.config.getWeaponConfig(other.config.weaponKey);
                         }
                 }
                 else
@@ -760,49 +760,49 @@ public final class Projectile extends MapEntity implements ProjectilePublic
         @Override
         public GCInteger getWeaponConfigInteger(String name)
         {
-                return config.configSelection.getInteger(name);
+                return config.selection.getInteger(name);
         }
 
         @Override
         public GCString getWeaponConfigString(String name)
         {
-                return config.configSelection.getString(name);
+                return config.selection.getString(name);
         }
 
         @Override
         public GCBoolean getWeaponConfigBoolean(String name)
         {
-                return config.configSelection.getBoolean(name);
+                return config.selection.getBoolean(name);
         }
         
         @Override
         public GCIntegerList getWeaponConfigIntegerList(String name)
         {
-                return config.configSelection.getIntegerList(name);
+                return config.selection.getIntegerList(name);
         }
 
         @Override
         public GCStringList getWeaponConfigStringList(String name)
         {
-                return config.configSelection.getStringList(name);
+                return config.selection.getStringList(name);
         }
 
         @Override
         public GCBooleanList getWeaponConfigBooleanList(String name)
         {
-                return config.configSelection.getBooleanList(name);
+                return config.selection.getBooleanList(name);
         }
 
         @Override
         public GCImage getWeaponConfigImage(String name, ResourceDB db)
         {
-                return config.configSelection.getImage(name, db);
+                return config.selection.getImage(name, db);
         }
         
         @Override
         public GCColour getWeaponConfigColour(String name)
         {
-                return config.configSelection.getColour(name);
+                return config.selection.getColour(name);
         }
 
         @Override

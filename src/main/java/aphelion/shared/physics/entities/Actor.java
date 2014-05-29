@@ -51,9 +51,7 @@ import aphelion.shared.physics.valueobjects.PhysicsWarp;
 import aphelion.shared.physics.valueobjects.*;
 import aphelion.shared.physics.valueobjects.PhysicsPointHistorySmooth.SMOOTHING_ALGORITHM;
 import aphelion.shared.swissarmyknife.*;
-import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Map;
 import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -120,177 +118,7 @@ public class Actor extends MapEntity
         // IF AN ATTRIBUTE IS ADDED, DO NOT FORGET TO UPDATE resetTo()
         // (except config, publicWrapper, etc)
         
-        // CONFIG
-        public final ConfigSelection actorConfigSelection;
-        public GCInteger bounceFriction;
-        public GCInteger bounceOtherAxisFriction;
-        public GCInteger rotationSpeed;
-        public GCInteger rotationPoints;
-        public GCInteger speed;
-        public GCInteger thrust;
-        public GCInteger boostSpeed;
-        public GCInteger boostThrust;
-        public GCInteger boostEnergy;
-        public GCInteger maxEnergy;
-        public GCInteger recharge;
-        public GCInteger spawnX;
-        public GCInteger spawnY;
-        public GCInteger spawnRadius;
-        public GCInteger respawnDelay;
-        public GCString  smoothingAlgorithm;
-        public GCInteger smoothingLookAheadTicks;
-        public GCInteger smoothingStepRatio;
-        public GCInteger smoothingDistanceLimit;
-        public GCBoolean smoothingProjectileCollisions;
-        
-        public WeaponSlotConfig[] weaponSlots = new WeaponSlotConfig[WEAPON_SLOT.values().length];
-        
-        // Note: at the moment old weapon definitions that no longer exist are not removed
-        public Map<String, WeaponConfig> weapons = new HashMap<>();
-        
-        public class WeaponSlotConfig implements WrappedValueAbstract.ChangeListener
-        {
-                public final WEAPON_SLOT slot;
-                public GCString weaponKey;
-                public WeaponConfig config;
-
-                public WeaponSlotConfig(WEAPON_SLOT slot)
-                {
-                        this.slot = slot;
-                        weaponKey = actorConfigSelection.getString(slot.settingName);
-                        weaponKey.addWeakChangeListener(this);
-                        config = getWeaponConfig(weaponKey.get());
-                }
-                
-                @Override
-                public void gameConfigValueChanged(WrappedValueAbstract val)
-                {
-                        assert val == weaponKey;
-                        config = getWeaponConfig(weaponKey.get());
-                }
-                
-                
-                public boolean isValidWeapon()
-                {
-                        return this.config != null;
-                }
-        }
-        
-        public class WeaponConfig
-        {
-                public final ConfigSelection configSelection;
-                public final String weaponKey;
-                
-                public long nextWeaponFire_tick = createdAt_tick;
-                
-                public final GCInteger fireEnergy;
-                public final GCInteger fireDelay;
-                public final GCInteger switchDelay;
-                public final GCIntegerList fireProjectileLimit;
-                public final GCIntegerList fireProjectileLimitGroup;
-                
-                public final GCInteger projectiles;
-                public final GCIntegerList projectile_offsetX;
-                public final GCIntegerList projectile_offsetY;
-                public final GCIntegerList projectile_angle;
-                public final GCBooleanList projectile_angleRelative;
-                public final GCIntegerList projectile_bounceFriction;
-                public final GCIntegerList projectile_bounceOtherAxisFriction;
-                public final GCIntegerList projectile_speed;
-                public final GCIntegerList projectile_bounces;
-                public final GCIntegerList projectile_activateBounces;
-                public final GCBooleanList projectile_speedRelative;
-                public final GCIntegerList projectile_limitGroup;
-                
-                public final GCIntegerList projectile_expirationTicks;
-                public final GCBooleanList projectile_expirationExplode;
-                public final GCStringList  projectile_expirationChainWeapon;
-                
-                public final GCBooleanList projectile_hitTile;
-                public final GCBooleanList projectile_hitTileCoupled;
-                public final GCStringList  projectile_hitTileChainWeapon;
-                
-                public final GCBooleanList projectile_hitShip;
-                public final GCBooleanList projectile_hitShipCoupled;
-                public final GCStringList  projectile_hitShipChainWeapon;
-                
-                public final GCIntegerList projectile_proxDistance;
-                public final GCIntegerList projectile_proxExplodeTicks;
-                public final GCStringList projectile_proxChainWeapon;
-                
-                public final GCIntegerList projectile_damage;
-                public final GCIntegerList projectile_damageSplash;
-                public final GCBooleanList projectile_damageTeam;
-                public final GCBooleanList projectile_damageSelf;
-                public final GCBooleanList projectile_damageTeamKill;
-                public final GCBooleanList projectile_damageSelfKill;
-                
-                public final GCIntegerList projectile_empTime;
-                public final GCIntegerList projectile_empSplash;
-                public final GCBooleanList projectile_empTeam;
-                public final GCBooleanList projectile_empSelf;
-                
-                
-                
-                
-
-                public WeaponConfig(String weaponKey)
-                {
-                        this.weaponKey = weaponKey;
-                        this.configSelection = state.config.newSelection();
-                        configSelection.selection.setWeapon(weaponKey);
-                        configSelection.selection.setShip(ship);
-                        
-                        fireEnergy = configSelection.getInteger("weapon-fire-energy");
-                        fireDelay = configSelection.getInteger("weapon-fire-delay");
-                        switchDelay = configSelection.getInteger("weapon-switch-delay");
-                        projectiles = configSelection.getInteger("weapon-projectiles");
-                        fireProjectileLimit = configSelection.getIntegerList("weapon-fire-projectile-limit");
-                        fireProjectileLimitGroup = configSelection.getIntegerList("weapon-fire-projectile-limit-group");
-                        
-                        projectile_offsetX = configSelection.getIntegerList("projectile-offset-x");
-                        projectile_offsetY = configSelection.getIntegerList("projectile-offset-y");
-                        projectile_angle = configSelection.getIntegerList("projectile-angle");
-                        projectile_angleRelative = configSelection.getBooleanList("projectile-angle-relative");
-                        projectile_bounceFriction = configSelection.getIntegerList("projectile-bounce-friction");
-                        projectile_bounceOtherAxisFriction = configSelection.getIntegerList("projectile-bounce-friction-other-axis");
-                        projectile_speed = configSelection.getIntegerList("projectile-speed");
-                        projectile_speedRelative = configSelection.getBooleanList("projectile-speed-relative");
-                        projectile_bounces = configSelection.getIntegerList("projectile-bounces");
-                        projectile_activateBounces = configSelection.getIntegerList("projectile-activate-bounces");
-                        projectile_limitGroup =  configSelection.getIntegerList("projectile-limit-group");
-                        
-                        projectile_expirationTicks = configSelection.getIntegerList("projectile-expiration-ticks");
-                        projectile_expirationExplode = configSelection.getBooleanList("projectile-expiration-explode");
-                        projectile_expirationChainWeapon = configSelection.getStringList("projectile-expiration-chain-weapon");
-                        
-                        projectile_hitTile = configSelection.getBooleanList("projectile-hit-tile");
-                        projectile_hitTileCoupled = configSelection.getBooleanList("projectile-hit-tile-coupled");
-                        projectile_hitTileChainWeapon = configSelection.getStringList("projectile-hit-tile-chain-weapon");
-                        
-                        projectile_hitShip = configSelection.getBooleanList("projectile-hit-ship");
-                        projectile_hitShipCoupled = configSelection.getBooleanList("projectile-hit-ship-coupled");
-                        projectile_hitShipChainWeapon = configSelection.getStringList("projectile-hit-ship-chain-weapon");
-                        
-                        projectile_proxDistance = configSelection.getIntegerList("projectile-prox-distance");
-                        projectile_proxExplodeTicks = configSelection.getIntegerList("projectile-prox-explode-ticks");
-                        projectile_proxChainWeapon = configSelection.getStringList("projectile-prox-chain-weapon");
-                        
-                        projectile_damage = configSelection.getIntegerList("projectile-damage");
-                        projectile_damageSplash = configSelection.getIntegerList("projectile-damage-splash");
-                        projectile_damageTeam = configSelection.getBooleanList("projectile-damage-team");
-                        projectile_damageSelf = configSelection.getBooleanList("projectile-damage-self");
-                        projectile_damageTeamKill = configSelection.getBooleanList("projectile-damage-team-kill");
-                        projectile_damageSelfKill = configSelection.getBooleanList("projectile-damage-self-kill");
-                        
-                        projectile_empTime = configSelection.getIntegerList("projectile-emp-time");
-                        projectile_empSplash = configSelection.getIntegerList("projectile-emp-splash");
-                        projectile_empTeam = configSelection.getBooleanList("projectile-emp-team");
-                        projectile_empSelf = configSelection.getBooleanList("projectile-emp-self");
-                        
-                        
-                }
-        }
+        public final ActorConfig config;
 
         public Actor(State state, MapEntity[] crossStateList, int pid, long createdAt_tick)
         {
@@ -337,40 +165,12 @@ public class Actor extends MapEntity
                 dead.setMinimum(createdAt_tick, 0);
                 dead.setMaximum(createdAt_tick, 1);
                 
-                actorConfigSelection = state.config.newSelection();
-                
-                this.radius = actorConfigSelection.getInteger("ship-radius");
-                this.bounceFriction = actorConfigSelection.getInteger("ship-bounce-friction");
-                this.bounceOtherAxisFriction = actorConfigSelection.getInteger("ship-bounce-friction-other-axis");
-                this.rotationSpeed = actorConfigSelection.getInteger("ship-rotation-speed");
-                this.rotationPoints = actorConfigSelection.getInteger("ship-rotation-points");
-                this.speed = actorConfigSelection.getInteger("ship-speed");
-                this.thrust = actorConfigSelection.getInteger("ship-thrust");
-                this.boostSpeed = actorConfigSelection.getInteger("ship-boost-speed");
-                this.boostThrust = actorConfigSelection.getInteger("ship-boost-thrust");
-                this.boostEnergy = actorConfigSelection.getInteger("ship-boost-energy");
-                this.maxEnergy = actorConfigSelection.getInteger("ship-energy");
-                this.recharge = actorConfigSelection.getInteger("ship-recharge");
-                this.spawnX = actorConfigSelection.getInteger("ship-spawn-x");
-                this.spawnY = actorConfigSelection.getInteger("ship-spawn-y");
-                this.spawnRadius = actorConfigSelection.getInteger("ship-spawn-radius");
-                this.respawnDelay = actorConfigSelection.getInteger("ship-respawn-delay");
-                this.smoothingAlgorithm = actorConfigSelection.getString("smoothing-algorithm");
-                this.smoothingLookAheadTicks = actorConfigSelection.getInteger("smoothing-look-ahead-ticks");
-                this.smoothingStepRatio = actorConfigSelection.getInteger("smoothing-step-ratio");
-                this.smoothingDistanceLimit = actorConfigSelection.getInteger("smoothing-distance-limit");
-                this.smoothingProjectileCollisions = actorConfigSelection.getBoolean("smoothing-projectile-collisions");
-                
-                smoothingAlgorithm.addWeakChangeListenerAndFire(smoothingChangeListener);
-                smoothingLookAheadTicks.addWeakChangeListenerAndFire(smoothingChangeListener);
-                smoothingStepRatio.addWeakChangeListenerAndFire(smoothingChangeListener);
-                smoothingDistanceLimit.addWeakChangeListenerAndFire(smoothingChangeListener);
-                
-                for (int slotId = 0; slotId < weaponSlots.length; ++slotId)
-                {
-                        weaponSlots[slotId] = new WeaponSlotConfig(WEAPON_SLOT.byId(slotId));
-                }
-                
+                config = new ActorConfig(this);
+                this.radius = config.radius;
+                config.smoothingAlgorithm.addWeakChangeListenerAndFire(smoothingChangeListener);
+                config.smoothingLookAheadTicks.addWeakChangeListenerAndFire(smoothingChangeListener);
+                config.smoothingStepRatio.addWeakChangeListenerAndFire(smoothingChangeListener);
+                config.smoothingDistanceLimit.addWeakChangeListenerAndFire(smoothingChangeListener);
                 
                 publicWrapper = new ActorPublicImpl(this, state);
         }
@@ -380,10 +180,10 @@ public class Actor extends MapEntity
                 @Override
                 public void gameConfigValueChanged(WrappedValueAbstract val)
                 {
-                        if (val == smoothingAlgorithm)
+                        if (val == config.smoothingAlgorithm)
                         {
                                 SMOOTHING_ALGORITHM algo = SMOOTHING_ALGORITHM.NONE;
-                                String algoStr = smoothingAlgorithm.get();
+                                String algoStr = config.smoothingAlgorithm.get();
                                 try
                                 {
                                         if (!algoStr.isEmpty())
@@ -393,25 +193,25 @@ public class Actor extends MapEntity
                                 }
                                 catch (IllegalArgumentException ex)
                                 {
-                                        log.log(Level.WARNING, "Given smoothing-algorithm algorithm {0} is not a known algorithm", smoothingAlgorithm.get());
+                                        log.log(Level.WARNING, "Given smoothing-algorithm algorithm {0} is not a known algorithm", config.smoothingAlgorithm.get());
                                 }
 
                                 smoothHistory.setAlgorithm(algo);
                         }
                         
-                        if (val == smoothingLookAheadTicks)
+                        if (val == config.smoothingLookAheadTicks)
                         {
-                                smoothHistory.setLookAheadTicks(smoothingLookAheadTicks.get());
+                                smoothHistory.setLookAheadTicks(config.smoothingLookAheadTicks.get());
                         }
                         
-                        if (val == smoothingStepRatio)
+                        if (val == config.smoothingStepRatio)
                         {
-                                smoothHistory.setStepRatio(smoothingStepRatio.get());
+                                smoothHistory.setStepRatio(config.smoothingStepRatio.get());
                         }
                         
-                        if (val == smoothingDistanceLimit)
+                        if (val == config.smoothingDistanceLimit)
                         {
-                                smoothHistory.setSmoothLimitDistance(smoothingDistanceLimit.get() * 1024);
+                                smoothHistory.setSmoothLimitDistance(config.smoothingDistanceLimit.get() * 1024);
                         }
                 }
         };
@@ -430,13 +230,12 @@ public class Actor extends MapEntity
                 // position is synced using a warp packet
                 s.setNextSwitchedWeaponFireTick(this.nextSwitchedWeaponFire_tick);
                 
-                for (WeaponConfig c : weapons.values())
+                for (WeaponConfig c : config.weapons.values())
                 {
                         if (c.nextWeaponFire_tick < state.tick_now)
                         {
                                 continue; // no need to send
                         }
-                        
                         
                         s.addNextWeaponFireKey(c.weaponKey);
                         s.addNextWeaponFireTick(c.nextWeaponFire_tick);
@@ -518,7 +317,7 @@ public class Actor extends MapEntity
                 
                 for (int i = 0; i < s.getNextWeaponFireKeyCount(); ++i)
                 {
-                        WeaponConfig c = this.getWeaponConfig(s.getNextWeaponFireKey(i));
+                        WeaponConfig c = config.getWeaponConfig(s.getNextWeaponFireKey(i));
                         try
                         {
                                 c.nextWeaponFire_tick = initFromSync_set(c.nextWeaponFire_tick, s.getNextWeaponFireTick(i));
@@ -531,7 +330,7 @@ public class Actor extends MapEntity
                 
                 if (s.hasLastWeaponFire())
                 {
-                        this.lastWeaponFire = initFromSync_set(this.lastWeaponFire, this.getWeaponConfig(s.getLastWeaponFire()));
+                        this.lastWeaponFire = initFromSync_set(this.lastWeaponFire, config.getWeaponConfig(s.getLastWeaponFire()));
                 }
                 else
                 {
@@ -576,7 +375,7 @@ public class Actor extends MapEntity
         public void died(long tick)
         {
                 dead.setAbsoluteValue(0, tick, 1);
-                spawnAt_tick = tick + respawnDelay.get();
+                spawnAt_tick = tick + config.respawnDelay.get();
                 if (spawnAt_tick <= tick)
                 {
                         // can not be respawned in this tick (or in the past)
@@ -598,8 +397,8 @@ public class Actor extends MapEntity
                 collision.setRadius(this.radius.get());
                 collision.setCollideGrid(state.entityGrid);
                 collision.setCollideFilter(collideFilter);
-                collision.setBounceFriction(this.bounceFriction.get());
-                collision.setOtherAxisFriction(this.bounceOtherAxisFriction.get());
+                collision.setBounceFriction(config.bounceFriction.get());
+                collision.setOtherAxisFriction(config.bounceOtherAxisFriction.get());
                 
                 for (long t = 0; t < reckon_ticks; ++t)
                 {
@@ -614,12 +413,12 @@ public class Actor extends MapEntity
                         boolean prevBoost = 
                                 prevMove instanceof PhysicsMovement
                                 && ((PhysicsMovement) prevMove).isValidBoost()
-                                && prevEnergy >= this.boostEnergy.get();
+                                && prevEnergy >= config.boostEnergy.get();
                         
                         this.pos.vel.limitLength(
-                                prevBoost && this.boostSpeed.isSet() 
-                                ? this.boostSpeed.get() 
-                                : this.speed.get());
+                                prevBoost && config.boostSpeed.isSet() 
+                                ? config.boostSpeed.get() 
+                                : config.speed.get());
                         
                         this.pos.vel.enforceOverflowLimit();
                         
@@ -708,12 +507,12 @@ public class Actor extends MapEntity
                 
                 this.ship = ship;
                 
-                this.actorConfigSelection.selection.setShip(ship);
-                this.actorConfigSelection.resolveAllValues();
-                for (WeaponConfig weapon : this.weapons.values())
+                config.selection.selection.setShip(ship);
+                config.selection.resolveAllValues();
+                for (WeaponConfig weapon : config.weapons.values())
                 {
-                        weapon.configSelection.selection.setShip(ship);
-                        weapon.configSelection.resolveAllValues();
+                        weapon.selection.selection.setShip(ship);
+                        weapon.selection.resolveAllValues();
                 }
         }
         
@@ -763,7 +562,7 @@ public class Actor extends MapEntity
                         if (warp.has_rotation)
                         {
                                 rot.points = warp.rotation;
-                                rot.snap(this.rotationPoints.get());
+                                rot.snap(config.rotationPoints.get());
                         }
                 }
                 else if (move_ instanceof PhysicsMovement)
@@ -774,12 +573,12 @@ public class Actor extends MapEntity
                                 // rotationSpeed is never larger than ROTATION_POINTS
                                 if (move.left)
                                 {
-                                        this.rot.points -= this.rotationSpeed.get();
+                                        this.rot.points -= config.rotationSpeed.get();
                                 }
 
                                 if (move.right)
                                 {
-                                        this.rot.points += this.rotationSpeed.get();
+                                        this.rot.points += config.rotationSpeed.get();
                                 }
 
                                 this.rot.points %= EnvironmentConf.ROTATION_POINTS;
@@ -789,7 +588,7 @@ public class Actor extends MapEntity
                                         this.rot.points += EnvironmentConf.ROTATION_POINTS;
                                 }
 
-                                this.rot.snapped = PhysicsMath.snapRotation(this.rot.points, this.rotationPoints.get());
+                                this.rot.snapped = PhysicsMath.snapRotation(this.rot.points, config.rotationPoints.get());
                         }
 
                         if (move.up || move.down)
@@ -801,21 +600,21 @@ public class Actor extends MapEntity
                                 // Using "tick - 0" could result in inconsistencies with different states
                                 // if this movement is not executed in the same order in relation to other 
                                 // energy modifiers.
-                                if (move.boost && this.energy.get(tick - 1) >= this.boostEnergy.get())
+                                if (move.boost && this.energy.get(tick - 1) >= config.boostEnergy.get())
                                 {
-                                        thrust = this.boostThrust.isSet() ? this.boostThrust.get() : this.thrust.get();
+                                        thrust = config.boostThrust.isSet() ? config.boostThrust.get() : config.thrust.get();
 
                                         this.energy.setRelativeValue(
                                                 ENERGY_SETTER.BOOST_COST.id,
                                                 tick,
-                                                -this.boostEnergy.get()
+                                                -config.boostEnergy.get()
                                                 );
 
                                         //System.out.println(tick + " " + state.id + " " + this.energy.get(tick));
                                 }
                                 else
                                 {
-                                        thrust = this.thrust.get();
+                                        thrust = config.thrust.get();
                                 }
 
                                 if (move.up)
@@ -898,9 +697,9 @@ public class Actor extends MapEntity
                 
                 nextSwitchedWeaponFire_tick = other.nextSwitchedWeaponFire_tick;
                 this.lastWeaponFire = null;
-                for (WeaponConfig otherConfig : other.weapons.values())
+                for (WeaponConfig otherConfig : other.config.weapons.values())
                 {
-                        WeaponConfig myConfig = this.getWeaponConfig(otherConfig.weaponKey); // never returns null
+                        WeaponConfig myConfig = config.getWeaponConfig(otherConfig.weaponKey); // never returns null
                         myConfig.nextWeaponFire_tick = otherConfig.nextWeaponFire_tick;
                         
                         if (otherConfig == other.lastWeaponFire)
@@ -946,18 +745,19 @@ public class Actor extends MapEntity
          */
         public boolean canFireWeapon(WEAPON_SLOT weapon, long tick, boolean weakCheck)
         {
-                Actor.WeaponConfig config = this.weaponSlots[weapon.id].config;
+                ActorConfig.WeaponSlotConfig slot = this.config.weaponSlots[weapon.id];
+                
                 if (isDead(tick))
                 {
                         return false;
                 }
 
-                if (!this.weaponSlots[weapon.id].isValidWeapon())
+                if (!slot.isValidWeapon())
                 {
                         return false;
                 }
                 
-                if (weaponSlots[weapon.id].config.projectile_expirationTicks.get(0, this.configSeed(tick)) <= 0)
+                if (slot.config.projectile_expirationTicks.get(0, this.configSeed(tick)) <= 0)
                 {
                         return false;
                 }
@@ -966,13 +766,13 @@ public class Actor extends MapEntity
                 // (this is very rare because the input code does not send a weapon fire packet
                 //  to the server if the player does not have the proper amount of energy)
                 
-                if (tick < this.weaponSlots[weapon.id].config.nextWeaponFire_tick)
+                if (tick < slot.config.nextWeaponFire_tick)
                 {
                         // reload per weapon
                         return false;
                 }
                 
-                if (this.weaponSlots[weapon.id].config != this.lastWeaponFire)
+                if (slot.config != this.lastWeaponFire)
                 {
                         if (tick < this.nextSwitchedWeaponFire_tick)
                         {
@@ -986,17 +786,17 @@ public class Actor extends MapEntity
                         return true;
                 }
                 
-                if (this.energy.get(tick - 1) < weaponSlots[weapon.id].config.fireEnergy.get() * 1024)
+                if (this.energy.get(tick - 1) < this.config.weaponSlots[weapon.id].config.fireEnergy.get() * 1024)
                 {
                         return false;
                 }
                 
-                if (config.fireProjectileLimit.isSet())
+                if (slot.config.fireProjectileLimit.isSet())
                 {
-                        for (int i = 0; i < config.fireProjectileLimit.getValuesLength(); ++i)
+                        for (int i = 0; i < slot.config.fireProjectileLimit.getValuesLength(); ++i)
                         {
-                                int count = findProjectileCount(tick, config.fireProjectileLimitGroup.get(i, this.configSeed(tick)), null);
-                                if (count >= config.fireProjectileLimit.get(i, this.configSeed(tick)))
+                                int count = findProjectileCount(tick, slot.config.fireProjectileLimitGroup.get(i, this.configSeed(tick)), null);
+                                if (count >= slot.config.fireProjectileLimit.get(i, this.configSeed(tick)))
                                 {
                                         return false; // too many
                                 }
@@ -1008,14 +808,14 @@ public class Actor extends MapEntity
         
         public int getMaxEnergy()
         {
-                int nrg = this.maxEnergy.get() * 1024;
+                int nrg = config.maxEnergy.get() * 1024;
                 if (nrg < 1) { nrg = 1; }
                 return nrg;
         }
         
         public void tickEnergy()
         {
-                int effectiveRecharge = this.recharge.get();
+                int effectiveRecharge = config.recharge.get();
                 if (isDead(state.tick_now))
                 {
                         effectiveRecharge = 0;
@@ -1098,7 +898,7 @@ public class Actor extends MapEntity
                         return false;
                 }
                 
-                return this.smoothingProjectileCollisions.get();
+                return config.smoothingProjectileCollisions.get();
         }
         
         public int getHistoricEnergy(long tick, boolean lookAtOlderStates)
@@ -1125,17 +925,6 @@ public class Actor extends MapEntity
                 return actor.moveHistory.get(tick);
         }
         
-        public WeaponConfig getWeaponConfig(String key)
-        {
-                WeaponConfig config = weapons.get(key);
-                if (config == null)
-                {
-                        config = new WeaponConfig(key);
-                        weapons.put(key, config);
-                }
-                return config;
-        }
-        
         public int randomRotation(long tick)
         {
                 int tick_low = (int) tick; // low bits
@@ -1153,7 +942,7 @@ public class Actor extends MapEntity
                         resultTile, 
                         tick, 
                         seed, 
-                        spawnX.get(), spawnY.get(), spawnRadius.get(), tileRadius);
+                        config.spawnX.get(), config.spawnY.get(), config.spawnRadius.get(), tileRadius);
         }
         
         public void applyEmp(long tick, int empTime)
