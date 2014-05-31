@@ -52,6 +52,10 @@ public final class PhysicsMath
 {
         private static final Logger log = Logger.getLogger("aphelion.shared.physics");
         
+        private PhysicsMath()
+        {
+        }
+        
         /**
          * Converts a rotation point and a length to a point.
          *
@@ -108,10 +112,41 @@ public final class PhysicsMath
         {
                 return rectanglesCollide(aLT.x, aLT.y, aBR.x, aBR.y, bLT.x, bLT.y, bBR.x, bBR.y);
         }
-
         
-        
-        private PhysicsMath()
+        public static void force(
+                PhysicsPoint ret, 
+                PhysicsPoint applyTo, 
+                PhysicsPoint forcePoint, 
+                int range,
+                int strength)
         {
+                ret.unset();
+                if (!applyTo.set || range < 1)
+                {
+                        return;
+                }
+                
+                long dist = forcePoint.distance(applyTo);
+                if (dist >= range)
+                {
+                        // too far away
+                        return;
+                }
+                
+                if (dist == 0)
+                {
+                        // apply south
+                        ret.x = 0;
+                        ret.y = strength;
+                        ret.set = true;
+                        return;
+                }
+                
+                long force = range - dist; // fits integer
+                force = force * strength / range;
+                
+                ret.x = (int) ((forcePoint.x - applyTo.x) * force / dist);
+                ret.y = (int) ((forcePoint.y - applyTo.y) * force / dist);
+                ret.set = true;
         }
 }
