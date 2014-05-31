@@ -161,13 +161,19 @@ message WeaponSync {
                 required int32   activate_bounces_left = 8;
                 required bool collideTile = 9;
                 required bool collideShip = 10;
-                required int32 bounceFriction = 11;
-                required int32 bounceOtherAxisFriction = 12;
-                required int32 proxDist = 13;
-                required int32 proxExplodeDelay = 14;
-                required int32 proxActivatedBy = 15; // pid (or 0)
-                required int64 proxLastSeenDist = 16;
-                required int64 proxLastSeenDist_tick = 17;
-                required int64 proxActivatedAt_tick = 18;
+                required bool damageSelf = 11;
+                required bool damageTeam = 12;
+                required int32 bounceFriction = 13;
+                required int32 bounceOtherAxisFriction = 14;
+                required int32 proxDist = 15;
+                required int32 proxExplodeDelay = 16;
+                required int32 proxActivatedBy = 17; // pid (or 0)
+                required int64 proxLastSeenDist = 18;
+                required int64 proxLastSeenDist_tick = 19;
+                required int64 proxActivatedAt_tick = 20;
+                required int32 forceDistanceShip = 21;
+                required int32 forceVelocityShip = 22;
+                required int32 forceDistanceProjectile = 23;
+                required int32 forceVelocityProjectile = 24;
         }
 }

@@ -58,7 +58,7 @@ import aphelion.shared.swissarmyknife.AttachmentData;
 import aphelion.shared.swissarmyknife.AttachmentManager;
 import aphelion.shared.swissarmyknife.LinkedListEntry;
 import aphelion.shared.swissarmyknife.LoopFilter;
-import java.lang.ref.WeakReference;
+import aphelion.shared.swissarmyknife.SwissArmyKnife;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
@@ -91,16 +91,18 @@ public final class Projectile extends MapEntity implements ProjectilePublic
         public int bouncesLeft; // -1 for infinite
         public int activateBouncesLeft;
         
-        // These values are used in deadReckon and collision
-        // Initialize them when the projectile launches because otherwise these config
-        // values would be ready very very often during deadreckon.
+        // Settings that are read when the projectile is spawned, instead of on usage.
+        // This mainly affects settings that are randomized based on tick.
+        // This is because of performance.
+        // All of these attributes will have to go into the WeaponSync message
         public boolean collideTile;
         public boolean collideShip;
+        public boolean damageSelf;
+        public boolean damageTeam;
         public int bounceFriction;
         public int bounceOtherAxisFriction;
         public int proxDist;
         public int proxExplodeDelay;
-        
         
         /** If set, we hit a tile during during performDeadReckoning() and an event should be fired soon. */
         private final PhysicsPoint hitTile = new PhysicsPoint();
@@ -143,6 +145,8 @@ public final class Projectile extends MapEntity implements ProjectilePublic
                 p.setActivateBouncesLeft(activateBouncesLeft);
                 p.setCollideTile(collideTile); 
                 p.setCollideShip(collideShip); 
+                p.setDamageSelf(damageSelf); 
+                p.setDamageTeam(damageTeam);
                 p.setBounceFriction(bounceFriction); 
                 p.setBounceOtherAxisFriction(bounceOtherAxisFriction);
                 p.setProxDist(proxDist); 
@@ -151,6 +155,10 @@ public final class Projectile extends MapEntity implements ProjectilePublic
                 p.setProxLastSeenDist(proxLastSeenDist); 
                 p.setProxLastSeenDistTick(proxLastSeenDist_tick); 
                 p.setProxActivatedAtTick(proxActivatedAt_tick);
+                p.setForceDistanceShip(forceDistanceShip);
+                p.setForceVelocityShip(forceVelocityShip);
+                p.setForceDistanceProjectile(forceDistanceProjectile);
+                p.setForceVelocityProjectile(forceVelocityProjectile);
         }
         
         public void initFromSync(GameOperation.WeaponSync.Projectile s, long tick_now)
@@ -165,6 +173,8 @@ public final class Projectile extends MapEntity implements ProjectilePublic
                 activateBouncesLeft = s.getActivateBouncesLeft();
                 collideTile = s.getCollideTile();
                 collideShip = s.getCollideShip();
+                damageSelf = s.getDamageSelf();
+                damageTeam = s.getDamageTeam();
                 bounceFriction = s.getBounceFriction();
                 bounceOtherAxisFriction = s.getBounceOtherAxisFriction();
                 proxDist = s.getProxDist();
@@ -173,6 +183,10 @@ public final class Projectile extends MapEntity implements ProjectilePublic
                 proxLastSeenDist = s.getProxLastSeenDist();
                 proxLastSeenDist_tick = s.getProxLastSeenDistTick();
                 proxActivatedAt_tick = s.getProxActivatedAtTick();
+                forceDistanceShip = s.getForceDistanceShip();
+                forceVelocityShip = s.getForceVelocityShip();
+                forceDistanceProjectile = s.getForceDistanceProjectile();
+                forceVelocityProjectile = s.getForceVelocityProjectile();
         }
         
         public void register()
@@ -263,6 +277,8 @@ public final class Projectile extends MapEntity implements ProjectilePublic
                 
                 collideTile = cfg(config.projectile_hitTile, tick);
                 collideShip = cfg(config.projectile_hitShip, tick);
+                damageSelf = cfg(config.projectile_damageSelf, tick);
+                damageTeam = cfg(config.projectile_damageTeam, tick);
                 expiresAt_tick = tick + cfg(config.projectile_expirationTicks, tick);
                 bouncesLeft = cfg(config.projectile_bounces, tick);
                 activateBouncesLeft = cfg(config.projectile_activateBounces, tick);
@@ -272,6 +288,10 @@ public final class Projectile extends MapEntity implements ProjectilePublic
                 proxExplodeDelay = config.projectile_proxExplodeTicks.isSet()
                         ? cfg(config.projectile_proxExplodeTicks, tick)
                         : -1;
+                forceDistanceShip = cfg(config.projectile_forceDistanceShip, tick);
+                forceVelocityShip = cfg(config.projectile_forceVelocityShip, tick);
+                forceDistanceProjectile = cfg(config.projectile_forceDistanceProjectile, tick);
+                forceVelocityProjectile = cfg(config.projectile_forceVelocityProjectile, tick);
         }
         
         @SuppressWarnings("unchecked")
@@ -606,9 +626,7 @@ public final class Projectile extends MapEntity implements ProjectilePublic
                 
                 long splashSq = splash * (long) splash;
                 
-                boolean damageSelf = cfg(config.projectile_damageSelf, tick);
                 boolean damageSelfKill = cfg(config.projectile_damageSelfKill, tick);
-                boolean damageTeam = cfg(config.projectile_damageTeam, tick);
                 boolean damageTeamKill = cfg(config.projectile_damageTeamKill, tick);
                 
                 for (Actor actor : state.actorsList)
@@ -652,14 +670,14 @@ public final class Projectile extends MapEntity implements ProjectilePublic
                 
                 long splashSq = splash * (long) splash;
                 
-                boolean damageSelf = cfg(config.projectile_empSelf, tick);
-                boolean damageTeam = cfg(config.projectile_empTeam, tick);
+                boolean empSelf = cfg(config.projectile_empSelf, tick);
+                boolean empTeam = cfg(config.projectile_empTeam, tick);
                 
                 for (Actor actor : state.actorsList)
                 {
                         if (actor.isRemoved(tick) || actor.isDead(tick)) { continue; }
                         if (actor == except) { continue; }
-                        if (actor == this.owner && !damageSelf) { continue; }
+                        if (actor == this.owner && !empSelf) { continue; }
                         
                         // todo team
 
