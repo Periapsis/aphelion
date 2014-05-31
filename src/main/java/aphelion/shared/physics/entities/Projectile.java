@@ -103,6 +103,10 @@ public final class Projectile extends MapEntity implements ProjectilePublic
         public int bounceOtherAxisFriction;
         public int proxDist;
         public int proxExplodeDelay;
+        public int forceDistanceShip;
+        public int forceVelocityShip;
+        public int forceDistanceProjectile;
+        public int forceVelocityProjectile;
         
         /** If set, we hit a tile during during performDeadReckoning() and an event should be fired soon. */
         private final PhysicsPoint hitTile = new PhysicsPoint();

@@ -104,8 +104,10 @@ public final class WeaponConfig
         public final GCBooleanList projectile_empTeam;
         public final GCBooleanList projectile_empSelf;
 
-
-
+        public final GCIntegerList projectile_forceDistanceShip;
+        public final GCIntegerList projectile_forceVelocityShip;
+        public final GCIntegerList projectile_forceDistanceProjectile;
+        public final GCIntegerList projectile_forceVelocityProjectile;
 
 
         public WeaponConfig(Actor actor, String weaponKey)
@@ -164,5 +166,10 @@ public final class WeaponConfig
                 projectile_empSplash = selection.getIntegerList("projectile-emp-splash");
                 projectile_empTeam = selection.getBooleanList("projectile-emp-team");
                 projectile_empSelf = selection.getBooleanList("projectile-emp-self");
+                
+                projectile_forceDistanceShip = selection.getIntegerList("projectile-force-distance-ship");
+                projectile_forceVelocityShip = selection.getIntegerList("projectile-force-velocity-ship");
+                projectile_forceDistanceProjectile = selection.getIntegerList("projectile-force-distance-projectile");
+                projectile_forceVelocityProjectile = selection.getIntegerList("projectile-force-velocity-projectile");
         }
 }
