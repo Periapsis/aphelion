@@ -206,4 +206,18 @@ public class EntityGrid
                         }
                 };
         }
+        
+        /** Iterate over all the entities within the given radius (square).
+         * @param center
+         * @param radius
+         * @return 
+         */
+        public Iterator<MapEntity> iterator(final PhysicsPoint center, int radius)
+        {
+                final PhysicsPoint low = new PhysicsPoint(center);
+                final PhysicsPoint high = new PhysicsPoint(center);
+                low.sub(radius);
+                high.add(radius);
+                return iterator(low, high);
+        }
 }
