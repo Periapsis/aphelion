@@ -286,7 +286,7 @@ public final class Projectile extends MapEntity implements ProjectilePublic
                 {
                         long tick = tick_now + t;
                         
-                        if (this.isRemoved(tick))
+                        if (this.isRemoved(tick) || hitTile.set)
                         {
                                 updatedPosition(tick);
                                 continue;
