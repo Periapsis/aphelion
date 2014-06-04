@@ -175,6 +175,7 @@ public class LinkedListHead<T> implements Iterable<T>
                 if (this.first == null)
                 {
                         assert this.last == null;
+                        return;
                 }
                 
                 removeRange(first, last);
@@ -456,8 +457,8 @@ public class LinkedListHead<T> implements Iterable<T>
         {
                 private LinkedListEntry<T> current;
                 private LinkedListEntry<T> next;
-                private boolean readonly;
-                private boolean reverse;
+                private final boolean readonly;
+                private final boolean reverse;
 
                 Itr(boolean readonly, boolean reverse)
                 {
