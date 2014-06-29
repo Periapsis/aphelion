@@ -49,7 +49,7 @@ import aphelion.shared.physics.valueobjects.PhysicsShipPosition;
 import aphelion.shared.physics.WEAPON_SLOT;
 import aphelion.shared.physics.entities.*;
 import aphelion.shared.swissarmyknife.SwissArmyKnife;
-import java.util.ArrayList;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -180,7 +180,17 @@ public class ActorWeaponFire extends Operation implements ActorWeaponFirePublic
                         // dead reckon current position so that it is no longer late
                         // the position at the tick of this operation should not be dead reckoned, therefor +1
                         projectile.performDeadReckoning(state.env.getMap(), this.tick + 1, ticks_late);
+                        
+                        if (projectile.isForceEmitter())
+                        {
+                                // however a force emitter should emit for the current tick also ( <= )
+                                for (long t = 0; t <= ticks_late; ++t)
+                                {
+                                        projectile.emitForce(tick + t);
+                                }
+                        }
                 }
+                
                 
                 // this is consistent with reordered weapons thanks to the canFireWeapon() check above
                 long next = tick + config.fireDelay.get();

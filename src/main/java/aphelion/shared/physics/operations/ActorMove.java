@@ -104,42 +104,21 @@ public class ActorMove extends Operation implements ActorMovePublic
                         return true;
                 }
                 
-                // Rewind his position to the tick of this operation
-
-                PhysicsShipPosition historicPos = new PhysicsShipPosition();
+                // Note: this tick the new velocity is set, but this new velocity is not used yet.
+                // It will be used in the next tick
                 
-                // false = only use history from our own state
-                
-                if (actor.getHistoricPosition(historicPos, this.tick, false))
+                actor.moveHistory.setHistory(this.tick, move);
+                if (ticks_late == 0) // not late, apply immediately
                 {
-                        actor.pos.pos.x = historicPos.x;
-                        actor.pos.pos.y = historicPos.y;
-                        actor.pos.vel.x = historicPos.x_vel;
-                        actor.pos.vel.y = historicPos.y_vel;
-                        actor.rot.points = historicPos.rot;
-                        actor.rot.snapped = historicPos.rot_snapped;
+                        actor.applyMoveable(move, this.tick);
+                        actor.updatedPosition(this.tick);
                 }
                 else
                 {
-                        // there is no historic position and we are late,
-                        // there is no way to solve this right now, wait for a timewarp
-                        if (ticks_late > 0)
-                        {
-                                return true;
-                        }
+                        // dead reckon current position so that it is no longer late (defered until state.tickReexecuteDirtyPositionPath() )
+                        // note: the position at the tick of this operation is not affected by this operation, therefor +1
+                        actor.markDirtyPositionPath(this.tick);
                 }
-                
-                
-                actor.moveHistory.setHistory(this.tick, move);
-                actor.applyMoveable(move, this.tick);
-                actor.updatedPosition(this.tick);
-                
-                // Note: this tick the new velocity is set, but this new velocity is not used yet.
-                // It will be used in the next tick
-
-                // dead reckon current position so that it is no longer late
-                // the position at the tick of this operation should not be dead reckoned, therefor +1
-                actor.performDeadReckoning(state.env.getMap(), this.tick + 1, ticks_late);
                 
                 return true;
         }

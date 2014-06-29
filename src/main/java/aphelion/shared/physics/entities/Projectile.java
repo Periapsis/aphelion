@@ -76,10 +76,13 @@ public final class Projectile extends MapEntity implements ProjectilePublic
         public final ProjectileKey key;
         
         public final LinkedListEntry<Projectile> projectileListLink_state = new LinkedListEntry<>(null, this);
+        public final LinkedListEntry<Projectile> forceEmitterListLink_state = new LinkedListEntry<>(null, this);
         public final LinkedListEntry<Projectile> projectileListLink_actor = new LinkedListEntry<>(null, this);
         // circular headless linked list
         final public LinkedListEntry<Projectile> coupled = new LinkedListEntry<>(null, this);
         
+        /** Has initFire or initFromSync been called?. */
+        private boolean initialized;
         public Actor owner;
         public WeaponConfig config;
         public final int configIndex; // the config index
@@ -167,6 +170,7 @@ public final class Projectile extends MapEntity implements ProjectilePublic
         
         public void initFromSync(GameOperation.WeaponSync.Projectile s, long tick_now)
         {
+                initialized = true;
                 assert configIndex == s.getIndex();
                 pos.pos.x = s.getX(); 
                 pos.pos.y = s.getY();
@@ -199,19 +203,20 @@ public final class Projectile extends MapEntity implements ProjectilePublic
                 assert oldValue == null;
                 state.projectilesList.append(this.projectileListLink_state);
                 this.owner.projectiles.append(this.projectileListLink_actor);
+                if (this.isForceEmitter())
+                {
+                        state.forceEmitterList.append(this.forceEmitterListLink_state);
+                }
         }
         
+        @Override
         public void hardRemove(long tick)
         {
-                if (!removed)
-                {
-                        removed = true;
-                        removedAt_tick = tick;
-                }
+                super.hardRemove(tick);
                 
-                crossStateList[state.id] = null;
                 projectileListLink_actor.remove();
                 projectileListLink_state.remove();
+                forceEmitterListLink_state.remove();
                 state.projectiles.remove(this.key);
                 coupled.remove();
                 
@@ -221,6 +226,7 @@ public final class Projectile extends MapEntity implements ProjectilePublic
         
         public void initFire(long tick, PhysicsShipPosition actorPos)
         {
+                initialized = true;
                 pos.pos.set(actorPos.x, actorPos.y);
                         
                 int rot = 0;
@@ -299,6 +305,7 @@ public final class Projectile extends MapEntity implements ProjectilePublic
         }
         
         @SuppressWarnings("unchecked")
+        @Override
         public void performDeadReckoning(PhysicsMap map, long tick_now, long reckon_ticks)
         {
                 Collision collision = state.collision;
@@ -306,15 +313,26 @@ public final class Projectile extends MapEntity implements ProjectilePublic
                 collision.setMap(this.collideTile ? map : null);
                 collision.setRadius(this.radius.get());
                 
+                final PhysicsPoint prevForce = new PhysicsPoint();
+                
                 for (long t = 0; t < reckon_ticks; ++t)
                 {
                         long tick = tick_now + t;
+                        
+                        dirtyPositionPathTracker.resolved(tick);
+                        assert !dirtyPositionPathTracker.isDirty(tick) : "performDeadReckoning: Skipped a tick!";
                         
                         if (this.isRemoved(tick) || hitTile.set)
                         {
                                 updatedPosition(tick);
                                 continue;
                         }
+                        
+                        // force for _this_ tick is added AFTER we dead reckon.
+                        // so wait for the next tick to do the force for _this_ tick.
+                        // otherwise all entities have to be looped an extra time.
+                        this.forceHistory.get(prevForce, tick - 1);
+                        this.pos.vel.add(prevForce);
                         
                         collision.setPreviousPosition(pos.pos);
                         collision.setVelocity(pos.vel);
@@ -510,6 +528,8 @@ public final class Projectile extends MapEntity implements ProjectilePublic
                 
                 Projectile other = (Projectile) other_;
                 assert this.key.equals(other.key);
+                
+                this.initialized = other.initialized;
                 
                 if (this.owner == null)
                 {
@@ -777,6 +797,77 @@ public final class Projectile extends MapEntity implements ProjectilePublic
                 }
                 
                 return true;
+        }
+        
+        public boolean isForceEmitter()
+        {
+                if (!initialized)
+                {
+                        throw new IllegalStateException();
+                }
+                final boolean doShip = this.forceDistanceShip > 0 && this.forceVelocityShip != 0;
+                final boolean doProjectile = this.forceDistanceProjectile > 0 && this.forceVelocityProjectile != 0;
+                return doShip || doProjectile;
+        }
+        
+        /** Emit the configured force on the "forceHistory" of other entities, without updating the velocity or position.
+         * The velocity and position must be updated in a separate step.
+         * @param tick
+         */
+        public void emitForce(long tick)
+        {
+                final boolean doShip = this.forceDistanceShip > 0 && this.forceVelocityShip != 0;
+                final boolean doProjectile = this.forceDistanceProjectile > 0 && this.forceVelocityProjectile != 0;
+
+                if (!doShip && !doProjectile)
+                {
+                        return;
+                }
+
+                final PhysicsPoint forcePoint = new PhysicsPoint();
+                this.getHistoricPosition(forcePoint, tick, false);
+
+                Iterator<MapEntity> it = state.entityGrid.iterator(
+                        forcePoint,
+                        SwissArmyKnife.max(this.forceDistanceShip, this.forceDistanceProjectile));
+
+                final PhysicsPoint otherPosition = new PhysicsPoint();
+                final PhysicsPoint velocity = new PhysicsPoint();
+                final PhysicsPoint forceHist = new PhysicsPoint();
+
+                while (it.hasNext())
+                {
+                        MapEntity en = it.next();
+                        if (en == this) { continue; }
+                        
+                        if (doShip && en instanceof Actor)
+                        {
+                                if (!damageSelf && en == this.owner)
+                                {
+                                        continue;
+                                }
+                        }
+                        else if (doProjectile && en instanceof Projectile)
+                        {
+                                Projectile proj = (Projectile) en;
+                                if (!damageSelf && proj.owner == this.owner)
+                                {
+                                        continue;
+                                }
+                        }
+                        
+                        en.getHistoricPosition(otherPosition, tick, false);
+                        PhysicsMath.force(velocity, otherPosition, forcePoint, forceDistanceShip, forceVelocityShip);
+                        if (!velocity.isZero())
+                        {
+                                en.markDirtyPositionPath(tick + 1);
+                                
+                                en.forceHistory.get(forceHist, tick);
+                                forceHist.add(velocity);
+                                forceHist.enforceOverflowLimit();
+                                en.forceHistory.setHistory(tick, forceHist);
+                        }
+                }
         }
 
         @Override

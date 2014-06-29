@@ -54,7 +54,7 @@ public class PhysicsPointHistoryDetailed extends PhysicsPointHistory
         
         // Entries will be destroyed and created by a large volume in the main loop
         // Never GC them (an intentional "memory leak" until the thread is destroyed)
-        private static ThreadLocal<Entry> unused = new ThreadLocal<>();
+        private static final ThreadLocal<Entry> unused = new ThreadLocal<>();
         
         private static Entry newEntry(long tick, int x, int y)
         {

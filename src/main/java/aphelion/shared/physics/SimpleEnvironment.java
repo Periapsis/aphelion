@@ -142,6 +142,8 @@ public class SimpleEnvironment implements TickEvent, PhysicsEnvironment
         private final AtomicLong nextOpSeqSafe = new AtomicLong(1);
         
         private long timewarps = 0;
+        /** should only be set by test cases */
+        public boolean testcaseImmediateMove;
 
         public SimpleEnvironment(boolean server, PhysicsMap map)
         {
@@ -330,6 +332,12 @@ public class SimpleEnvironment implements TickEvent, PhysicsEnvironment
                 
                 pollThreadedAddOperation(deadlockTicker);
                 
+                for (int s = 0; s < econfig.TRAILING_STATES; s++)
+                {
+                        debug_current_state = s;
+                        this.trailingStates[s].doReexecuteDirtyPositionPath();
+                }
+                
                 ++tick_now;
                 tickedAt_nano = System.nanoTime();
 
@@ -344,6 +352,7 @@ public class SimpleEnvironment implements TickEvent, PhysicsEnvironment
                 consistencyCheck(deadlockTicker);
                 removeOldHistory();
         }
+        
 
         public boolean consistencyCheck()
         {
@@ -993,7 +1002,21 @@ public class SimpleEnvironment implements TickEvent, PhysicsEnvironment
                         throw new IllegalArgumentException();
                 }
 
-                return addOperation(op);
+                try
+                {
+                        return addOperation(op);
+                }
+                finally
+                {
+                        if (this.testcaseImmediateMove)
+                        {
+                                for (int s = 0; s < econfig.TRAILING_STATES; s++)
+                                {
+                                        debug_current_state = s;
+                                        this.trailingStates[s].doReexecuteDirtyPositionPath();
+                                }
+                        }
+                }
         }
         
         @Override

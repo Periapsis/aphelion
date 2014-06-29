@@ -39,10 +39,9 @@
 package aphelion.shared.physics.entities;
 
 import aphelion.shared.gameconfig.GCInteger;
+import aphelion.shared.physics.PhysicsMap;
 import aphelion.shared.physics.State;
-import aphelion.shared.physics.valueobjects.PhysicsPoint;
-import aphelion.shared.physics.valueobjects.PhysicsPointHistoryDetailed;
-import aphelion.shared.physics.valueobjects.PhysicsPositionVector;
+import aphelion.shared.physics.valueobjects.*;
 import aphelion.shared.swissarmyknife.LinkedListEntry;
 
 /**
@@ -56,6 +55,14 @@ public abstract class MapEntity
         /** valid if removed = true */
         public long removedAt_tick;
         
+        public final LinkedListEntry<MapEntity> dirtyPositionPathLink_state = new LinkedListEntry<>(null, this);
+        
+        /** Tracks for which ticks the position path needs reexecuting.
+         * Any dirty tick will need to reexecute dead reckon.
+         * This is consistent as long as everything is received in-order (otherwise a timewarp is needed)
+         */
+        public final SequentialDirtyTracker dirtyPositionPathTracker = new SequentialDirtyTracker();
+        
         /** Set if this entity was removed during State.resetTo(). 
          * It is very likely this entity will be reused if this attribute is set.
          * This attribute is used for assertions and should not be modified in MapEntity.resetTo
@@ -68,8 +75,20 @@ public abstract class MapEntity
         public final LinkedListEntry<MapEntity> entityGridEntry = new LinkedListEntry<>(null, this);
         
         public final int HISTORY_LENGTH;
+        /** The most recent position. 
+         * Most methods work on this value, after which it is added to the posHistory.
+         */
         public final PhysicsPositionVector pos = new PhysicsPositionVector();
+        /** The history of all positions of this entity. */
         public final PhysicsPointHistoryDetailed posHistory;
+        /** The history of all velocities of this entity. */
+        public final PhysicsPointHistory velHistory;
+        
+        /** The history of all force (summed) that has been applied on this entity. 
+         * Force is applied to the total velocity of the same tick.
+         * Velocity affect the position of the next tick.
+         */
+        public final PhysicsPointHistory forceHistory;
         
         /** The radius in pixels * 1024 (not diameter) of the object. The radius may be 0 if it has no
          * diameter, like a bullet.
@@ -89,6 +108,23 @@ public abstract class MapEntity
                 this.HISTORY_LENGTH = historyLength;
                 this.posHistory = new PhysicsPointHistoryDetailed(createdAt_tick, HISTORY_LENGTH);
                 assert posHistory.HISTORY_LENGTH == HISTORY_LENGTH;
+                this.velHistory = new PhysicsPointHistoryDetailed(createdAt_tick, HISTORY_LENGTH);
+                assert velHistory.HISTORY_LENGTH == HISTORY_LENGTH;
+                this.forceHistory = new PhysicsPointHistory(createdAt_tick, HISTORY_LENGTH);
+                assert forceHistory.HISTORY_LENGTH == HISTORY_LENGTH;
+                dirtyPositionPathTracker.setFirstDirtyTick(createdAt_tick+1);
+        }
+        
+        public void hardRemove(long tick)
+        {
+                if (!removed)
+                {
+                        removed = true;
+                        removedAt_tick = tick;
+                }
+                
+                crossStateList[state.id] = null;
+                dirtyPositionPathLink_state.remove();
         }
         
         public void softRemove(long tick)
@@ -123,6 +159,17 @@ public abstract class MapEntity
                 }
                 
                 return false;
+        }
+        
+        public void markDirtyPositionPath(long dirtyTick)
+        {
+                dirtyPositionPathTracker.markDirty(dirtyTick);
+
+                if (dirtyPositionPathTracker.isDirty(state.tick_now)
+                    && dirtyPositionPathLink_state.head == null)
+                {
+                        state.dirtyPositionPathList.append(dirtyPositionPathLink_state);
+                }
         }
         
         public MapEntity getOlderEntity(long tick, boolean ignoreSoftDelete, boolean lookAtOtherStates)
@@ -208,6 +255,8 @@ public abstract class MapEntity
                 return false;
         }
         
+        public abstract void performDeadReckoning(PhysicsMap map, long tick_now, long reckon_ticks);
+        
         /** Add (or update) the current position to the history
          *
          * @param tick The tick the current position (this.pos) belongs to
@@ -215,6 +264,9 @@ public abstract class MapEntity
         public void updatedPosition(long tick)
         {
                 posHistory.setHistory(tick, pos.pos);
+                velHistory.setHistory(tick, pos.vel);
+                forceHistory.ensureHighestTick(tick);
+                dirtyPositionPathTracker.resolved(tick);
                 
                 if (tick == state.tick_now)
                 {
@@ -268,6 +320,8 @@ public abstract class MapEntity
                 
                 pos.set(other.pos);
                 posHistory.set(other.posHistory);
+                velHistory.set(other.velHistory);
+                forceHistory.set(other.forceHistory);
                 
                 if (state.isForeign(other) && posHistory.HISTORY_LENGTH != other.posHistory.HISTORY_LENGTH)
                 {
@@ -284,9 +338,11 @@ public abstract class MapEntity
                                 if (other.crossStateList[s] != null)
                                 {
                                         posHistory.overwrite(other.crossStateList[s].posHistory);
+                                        forceHistory.overwrite(other.crossStateList[s].forceHistory);
                                 }
                         }
                 }
                 
+                markDirtyPositionPath(other.dirtyPositionPathTracker.getFirstDirtyTick());
         }
 }

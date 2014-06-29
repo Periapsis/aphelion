@@ -77,7 +77,6 @@ public class Actor extends MapEntity
         public final PhysicsRotation rot = new PhysicsRotation();
         
         public final PhysicsPointHistoryDetailed posHistoryDetailed;
-        public final PhysicsPointHistory velHistory;
         public final PhysicsPointHistory rotHistory; // x = rotation, y = rotation snapped
         public final RollingHistory<PhysicsMoveable> moveHistory;
         private long mostRecentMove_tick;
@@ -143,7 +142,6 @@ public class Actor extends MapEntity
                 
                 moveHistory = new RollingHistory<>(createdAt_tick, HISTORY_LENGTH);
                 this.mostRecentMove_tick = this.createdAt_tick;
-                velHistory = new PhysicsPointHistory(createdAt_tick, HISTORY_LENGTH);
                 rotHistory = new PhysicsPointHistory(createdAt_tick, HISTORY_LENGTH);
                 smoothHistory = new PhysicsPointHistorySmooth(createdAt_tick, posHistory, velHistory);
                 
@@ -215,6 +213,14 @@ public class Actor extends MapEntity
                         }
                 }
         };
+
+        @Override
+        public void hardRemove(long tick)
+        {
+                super.hardRemove(tick);
+                state.actors.remove(this.key);
+                state.actorsList.remove(this);
+        }
         
         public void getSync(GameOperation.ActorSync.Builder s)
         {
@@ -389,6 +395,7 @@ public class Actor extends MapEntity
          * @param tick_now The first tick to apply to
          * @param reckon_ticks
          */
+        @Override
         public void performDeadReckoning(PhysicsMap map, long tick_now, long reckon_ticks)
         {
                 Collision collision = state.collision;
@@ -400,20 +407,32 @@ public class Actor extends MapEntity
                 collision.setBounceFriction(config.bounceFriction.get());
                 collision.setOtherAxisFriction(config.bounceOtherAxisFriction.get());
                 
+                final PhysicsPoint prevForce = new PhysicsPoint();
+                
                 for (long t = 0; t < reckon_ticks; ++t)
                 {
                         long tick = tick_now + t;
                         
-                        boolean dead = this.isDead(tick);
+                        dirtyPositionPathTracker.resolved(tick);
+                        assert !dirtyPositionPathTracker.isDirty(tick) : "performDeadReckoning: Skipped a tick!";
+                        
+                        final boolean dead = this.isDead(tick);
                         
                         int prevEnergy = this.energy.get(tick - 1);
                         PhysicsMoveable prevMove = this.getHistoricMovement(tick - 1, false);
+                        
+                        // force for _this_ tick is added AFTER we dead reckon.
+                        // so wait for the next tick to do the force for _this_ tick.
+                        // otherwise all entities have to be looped an extra time.
+                        this.forceHistory.get(prevForce, tick - 1);
                         
                         
                         boolean prevBoost = 
                                 prevMove instanceof PhysicsMovement
                                 && ((PhysicsMovement) prevMove).isValidBoost()
                                 && prevEnergy >= config.boostEnergy.get();
+                        
+                        this.pos.vel.add(prevForce);
                         
                         this.pos.vel.limitLength(
                                 prevBoost && config.boostSpeed.isSet() 
@@ -428,8 +447,6 @@ public class Actor extends MapEntity
                         collision.tickMap(tick);
                         collision.getNewPosition(pos.pos);
                         collision.getVelocity(pos.vel);
-                        
-                        updatedPosition(tick); // updates the smoothed position
                         
                         if (!dead)
                         {
@@ -475,8 +492,9 @@ public class Actor extends MapEntity
 
                                 // Any speed increase applied during this tick is not used until the next tick
                                 applyMoveable(moveHistory.get(tick), tick);
-                                updatedPosition(tick);
                         }
+                        
+                        updatedPosition(tick);
                 }
         }
         
@@ -651,7 +669,6 @@ public class Actor extends MapEntity
                         log.log(Level.SEVERE, "Error setting the history for the actor {0}", this.pid);
                         throw ex;
                 }
-                velHistory.setHistory(tick, pos.vel);
                 rotHistory.setHistory(tick, rot.points, rot.snapped);
         }
 
@@ -684,7 +701,6 @@ public class Actor extends MapEntity
                 
                 setShip(other.ship);
                 
-                velHistory.set(other.velHistory);
                 rotHistory.set(other.rotHistory);
                 moveHistory.set(other.moveHistory);
                 mostRecentMove_tick = other.mostRecentMove_tick;

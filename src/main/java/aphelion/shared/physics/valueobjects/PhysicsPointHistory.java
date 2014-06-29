@@ -87,12 +87,7 @@ public class PhysicsPointHistory
                 this.listener = listener;
         }
         
-        public int setHistory(long tick, PhysicsPoint point)
-        {
-                return setHistory(tick, point.x, point.y);
-        }
-        
-        public int setHistory(long tick, int x, int y)
+        public void ensureHighestTick(long tick)
         {
                 while (tick > history_tick)
                 {
@@ -105,6 +100,16 @@ public class PhysicsPointHistory
                         history_x[history_index] = 0;
                         history_y[history_index] = 0;
                 }
+        }
+        
+        public int setHistory(long tick, PhysicsPoint point)
+        {
+                return setHistory(tick, point.x, point.y);
+        }
+        
+        public int setHistory(long tick, int x, int y)
+        {
+                ensureHighestTick(tick);
 
                 long tick_diff = history_tick - tick;
                 if (tick_diff >= HISTORY_LENGTH)

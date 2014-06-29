@@ -40,11 +40,14 @@ package aphelion.shared.physics;
 
 import aphelion.shared.gameconfig.ConfigSelection;
 import aphelion.shared.gameconfig.GameConfig;
+import aphelion.shared.physics.entities.Actor;
 import aphelion.shared.physics.entities.ActorPublic;
+import aphelion.shared.physics.entities.ActorPublicImpl;
 import aphelion.shared.physics.entities.ProjectilePublic;
 import aphelion.shared.physics.valueobjects.PhysicsMovement;
 import aphelion.shared.physics.valueobjects.PhysicsPoint;
 import aphelion.shared.physics.valueobjects.PhysicsShipPosition;
+import java.lang.reflect.Field;
 import java.util.Iterator;
 import java.util.List;
 import org.junit.After;
@@ -73,6 +76,7 @@ public abstract class PhysicsTest
         protected void createEnvironment()
         {
                 env = new SimpleEnvironment(new EnvironmentConf(false, true, true), new MapEmpty(), false);
+                ((SimpleEnvironment) env).testcaseImmediateMove = true;
         }
 
         @Before
@@ -88,6 +92,33 @@ public abstract class PhysicsTest
         {
                 env = null;
                 EnvironmentConf.testCaseAssertions = false;
+        }
+        
+        
+        private static final Field privateActorField;
+        static
+        {
+                try
+                {
+                        privateActorField = ActorPublicImpl.class.getDeclaredField("privateActor");
+                        privateActorField.setAccessible(true);
+                }
+                catch (NoSuchFieldException | SecurityException ex)
+                {
+                        throw new Error(ex);
+                }
+        }
+        
+        public static Actor getPrivateActor(ActorPublic actor)
+        {
+                try
+                {
+                        return (Actor) privateActorField.get(actor);
+                }
+                catch (IllegalArgumentException | IllegalAccessException ex)
+                {
+                        throw new Error(ex);
+                }
         }
         
         

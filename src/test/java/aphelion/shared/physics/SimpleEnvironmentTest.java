@@ -38,6 +38,7 @@
 package aphelion.shared.physics;
 
 import aphelion.shared.gameconfig.GameConfig;
+import aphelion.shared.physics.entities.Actor;
 import aphelion.shared.physics.entities.ProjectilePublic;
 import aphelion.shared.physics.entities.ActorPublic;
 import java.util.Iterator;
@@ -126,7 +127,9 @@ public class SimpleEnvironmentTest extends PhysicsTest
                 env.tick(); // 2
                 env.tick(); // 3
 
-                env.actorNew(3, 1, 1234, "Warbird");                 ActorPublic actor = env.getActor(1); // actor created at tick 3
+                env.actorNew(3, 1, 1234, "Warbird");
+                ActorPublic actor = env.getActor(1); // actor created at tick 3
+                Actor privateActor = getPrivateActor(actor);
 
                 env.tick(); // 4
 
@@ -137,7 +140,7 @@ public class SimpleEnvironmentTest extends PhysicsTest
 
                 env.tick(); // 5
                 
-                assertPosition(1100, 105, actor); // ERROR
+                assertPosition(1100, 105, actor);
                 
 
                 env.actorMove(5, 1, MOVE_UP); // up

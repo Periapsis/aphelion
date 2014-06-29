@@ -47,6 +47,8 @@ import aphelion.shared.physics.operations.Operation;
 import aphelion.shared.physics.operations.OperationKey;
 import aphelion.shared.physics.valueobjects.EntityGrid;
 import aphelion.shared.physics.valueobjects.PhysicsPoint;
+import aphelion.shared.physics.valueobjects.PhysicsShipPosition;
+import aphelion.shared.physics.valueobjects.SequentialDirtyTracker;
 import aphelion.shared.swissarmyknife.LinkedListEntry;
 import aphelion.shared.swissarmyknife.LinkedListHead;
 import aphelion.shared.swissarmyknife.SwissArmyKnife;
@@ -84,6 +86,8 @@ public class State
         
         public final HashMap<ProjectileKey, Projectile> projectiles = new HashMap<>(PROJECTILE_INITIALCAPACITY);
         public LinkedListHead<Projectile> projectilesList = new LinkedListHead<>();
+        public final LinkedListHead<Projectile> forceEmitterList = new LinkedListHead<>();
+        public final LinkedListHead<MapEntity> dirtyPositionPathList = new LinkedListHead<>();
         
         public final LinkedListHead<Operation> history = new LinkedListHead<>(); // ordered by tick ascending
         public final LinkedListHead<Operation> todo = new LinkedListHead<>(); // ordered by tick ascending
@@ -129,6 +133,56 @@ public class State
                 }
         }
 
+        /** if a late weapon has emmited forces,
+            or if a late move has been applied,
+            reexecute dead reckon here.
+        */
+        public void doReexecuteDirtyPositionPath()
+        {
+                Iterator<MapEntity> it = dirtyPositionPathList.iterator();
+                
+                while (it.hasNext())
+                {
+                        MapEntity en = it.next();
+                        it.remove();
+                        
+                        // the first tick that is not dirty
+                        long tick = en.dirtyPositionPathTracker.getFirstDirtyTick() - 1;
+                        
+                        if (tick > en.posHistory.getLowestTick())
+                        {
+                                tick = en.posHistory.getLowestTick();
+                                en.dirtyPositionPathTracker.setFirstDirtyTick(tick + 1);
+                        }
+
+                        en.posHistory.get(en.pos.pos, tick);
+                        en.velHistory.get(en.pos.vel, tick);
+                        
+                        if (en instanceof Projectile)
+                        {
+                        }
+                        else if (en instanceof Actor)
+                        {
+                                Actor actor = (Actor) en;
+                                
+                                actor.rot.points = actor.rotHistory.getX(tick);
+                                actor.rot.snapped = actor.rotHistory.getY(tick);
+                        }
+                        else
+                        {
+                                assert false;
+                        }
+                        
+                        // this method is called in between tick()s
+                        // so we also need to resimulate the current tick of the state
+                        en.performDeadReckoning(env.getMap(), tick + 1, tick_now - tick);
+                        
+                        assert en.dirtyPositionPathTracker.getFirstDirtyTick() > this.tick_now;
+                }
+                
+                dirtyPositionPathList.clear();
+        }
+
         private void tickActors()
         {
                 Iterator<Actor> itActor = this.actorsList.iterator();
@@ -169,21 +223,21 @@ public class State
 
                                                         if (state == this)
                                                         {
-                                                                Actor removed = state.actors.remove(actor.key);
-                                                                assert removed != null;
+                                                                Actor stateActor = state.actors.remove(actor.key);
+                                                                assert stateActor == actor;
                                                                 itActor.remove(); // actorsList
+                                                                // this method also tries to remove it from actorsList
+                                                                // however it is already gone
+                                                                stateActor.hardRemove(tick_now);
                                                         }
                                                         else
                                                         {
                                                                 Actor stateActor = state.actors.remove(actor.key);
                                                                 if (stateActor != null)
                                                                 {
-                                                                        boolean removed = state.actorsList.remove(stateActor);
-                                                                        assert removed;
+                                                                        stateActor.hardRemove(tick_now);
                                                                 }
                                                         }
-
-                                                        actor.crossStateList[s] = null;
                                                 }
                                         }
                                 }
@@ -364,12 +418,21 @@ public class State
         }
         
         
+        
         private void tickActorsLate()
         {
                 for (Actor actor : actorsList)
                 {
                         assert actor.state == this;
                         actor.tickEnergy();
+                }
+        }
+        
+        private void tickForceEmitters()
+        {
+                for (Projectile proj : forceEmitterList)
+                {
+                        proj.emitForce(tick_now);
                 }
         }
         
@@ -395,7 +458,15 @@ public class State
                 tickProjectilesAfterActor();
                 
                 tickOperations(false);
+                
                 tickActorsLate();
+                
+                // Now that all positions are up to date, emit forces 
+                // (which are applied next tick)
+                tickForceEmitters();
+                
+                
+                
                 config.tick(tick_now); // used for cleanup
                 tickOperations(true); // sync operations
         }
@@ -540,6 +611,8 @@ public class State
                         config.applyChanges();
                 }
                 
+                this.dirtyPositionPathList.clear();
+                
                 // Reset actors
                 {
                         Iterator<Actor> actorIt = this.actorsList.iterator();
@@ -553,10 +626,8 @@ public class State
                                 {
                                         actorMine.softRemove(old_tick_now);
                                         
-                                        this.actors.remove(actorMine.key);
                                         actorIt.remove(); // actorsList
-                                        
-                                        actorMine.crossStateList[this.id] = null;
+                                        actorMine.hardRemove(old_tick_now);
                                         
                                         actorMine.removedDuringReset = true;
                                         this.actorsRemovedDuringReset.add(actorMine);
@@ -606,6 +677,7 @@ public class State
                 // Reset projectiles
                 {
                         LinkedListHead<Projectile> oldProjectiles = this.projectilesList;
+                        this.forceEmitterList.clear();
                         this.projectilesList = new LinkedListHead<>();
 
                         // loop over all the projectiles in the state we are resetting to
@@ -639,6 +711,10 @@ public class State
                                 this.projectiles.put(projectileMine.key, projectileMine);
                                 projectileMine.resetTo(this, projectileOther);
                                 assert projectileMine.state == this;
+                                if (projectileMine.isForceEmitter())
+                                {
+                                        this.forceEmitterList.append(projectileMine.forceEmitterListLink_state);
+                                }
                                 
                                 entry = entry.next;
                         }
