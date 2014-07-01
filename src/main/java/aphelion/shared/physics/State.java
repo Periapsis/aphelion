@@ -40,15 +40,14 @@ package aphelion.shared.physics;
 import aphelion.shared.event.Deadlock;
 import aphelion.shared.gameconfig.ConfigSelection;
 import aphelion.shared.gameconfig.GameConfig;
+import aphelion.shared.map.MapClassic;
 import aphelion.shared.physics.entities.*;
 import aphelion.shared.physics.events.Event;
 import aphelion.shared.physics.events.pub.ProjectileExplosionPublic.EXPLODE_REASON;
 import aphelion.shared.physics.operations.Operation;
 import aphelion.shared.physics.operations.OperationKey;
-import aphelion.shared.physics.valueobjects.EntityGrid;
+import aphelion.shared.swissarmyknife.EntityGrid;
 import aphelion.shared.physics.valueobjects.PhysicsPoint;
-import aphelion.shared.physics.valueobjects.PhysicsShipPosition;
-import aphelion.shared.physics.valueobjects.SequentialDirtyTracker;
 import aphelion.shared.swissarmyknife.LinkedListEntry;
 import aphelion.shared.swissarmyknife.LinkedListHead;
 import aphelion.shared.swissarmyknife.SwissArmyKnife;
@@ -96,7 +95,7 @@ public class State
         /** This grid is a quick way to find out what entities are at what position.
          * It is only valid for "tick_now"
          */
-        public final EntityGrid entityGrid = new EntityGrid(32768);
+        public final EntityGrid<MapEntity> entityGrid = new EntityGrid(32768, 1024 * MapClassic.TILE_PIXELS / 32768);
         
         public final GameConfig config = new GameConfig();
         public final ConfigSelection globalConfig = config.newSelection();
@@ -807,7 +806,7 @@ public class State
                
                 
                 // reset the event history
-                for (LinkedListEntry<Event> linkEv = env.eventHistoryList.first, linkNext = null;
+                for (LinkedListEntry<Event> linkEv = env.eventHistoryList.first, linkNext;
                      linkEv != null; 
                      linkEv = linkNext)
                 {

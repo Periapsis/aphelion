@@ -38,6 +38,8 @@
 
 package aphelion.shared.physics.entities;
 
+import aphelion.shared.swissarmyknife.EntityGridEntity;
+import aphelion.shared.swissarmyknife.EntityGrid;
 import aphelion.shared.gameconfig.GCInteger;
 import aphelion.shared.physics.PhysicsMap;
 import aphelion.shared.physics.State;
@@ -48,14 +50,14 @@ import aphelion.shared.swissarmyknife.LinkedListEntry;
  *
  * @author Joris
  */
-public abstract class MapEntity
+public abstract class MapEntity implements EntityGridEntity
 {
         public long createdAt_tick;
         protected boolean removed = false;
         /** valid if removed = true */
         public long removedAt_tick;
         
-        public final LinkedListEntry<MapEntity> dirtyPositionPathLink_state = new LinkedListEntry<>(null, this);
+        public final LinkedListEntry<MapEntity> dirtyPositionPathLink_state = new LinkedListEntry<>(this);
         
         /** Tracks for which ticks the position path needs reexecuting.
          * Any dirty tick will need to reexecute dead reckon.
@@ -72,7 +74,7 @@ public abstract class MapEntity
         public final State state;
         public final MapEntity[] crossStateList;
         /** This attribute only be accessed by EntityGrid. */
-        public final LinkedListEntry<MapEntity> entityGridEntry = new LinkedListEntry<>(null, this);
+        public final LinkedListEntry<MapEntity> entityGridEntry = new LinkedListEntry<>(this);
         
         public final int HISTORY_LENGTH;
         /** The most recent position. 
@@ -344,5 +346,11 @@ public abstract class MapEntity
                 }
                 
                 markDirtyPositionPath(other.dirtyPositionPathTracker.getFirstDirtyTick());
+        }
+
+        @Override
+        public LinkedListEntry getEntityGridEntry(EntityGrid grid)
+        {
+                return this.entityGridEntry;
         }
 }

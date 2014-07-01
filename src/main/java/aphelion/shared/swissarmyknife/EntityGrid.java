@@ -39,13 +39,12 @@
  * so, delete this exception statement from your version.
  */
 
-package aphelion.shared.physics.valueobjects;
+package aphelion.shared.swissarmyknife;
 
-import aphelion.shared.map.MapClassic;
-import aphelion.shared.physics.entities.MapEntity;
+import aphelion.shared.physics.valueobjects.PhysicsPoint;
 import aphelion.shared.swissarmyknife.LinkedListEntry;
 import aphelion.shared.swissarmyknife.LinkedListHead;
-import aphelion.shared.swissarmyknife.LoopFilter;
+import static aphelion.shared.swissarmyknife.SwissArmyKnife.clip;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 import javax.annotation.Nonnull;
@@ -57,10 +56,11 @@ import javax.annotation.Nullable;
  * Fast way to look up entities by their position.
  * (At the expensive of memory).
  * @author Joris
+ * @param <T> 
  */
-public class EntityGrid
+public class EntityGrid<T extends EntityGridEntity>
 {
-        private final LinkedListHead<MapEntity>[][] grid;
+        private final LinkedListHead<T>[][] grid;
 
         /** The size of a single cell in the entity grid.
          * Must be a factor of 2!
@@ -72,17 +72,15 @@ public class EntityGrid
          */
         public final int GRID_SIZE;
         
-        
-        public EntityGrid(int cellSize)
+        /** 
+         * @param cellSize The size of a single cell in the entity grid.
+         * Must be a factor of 2!
+         * @param cells  The size of the entire grid (per axis).
+         */
+        public EntityGrid(int cellSize, int cells)
         {
                 this.CELL_SIZE = cellSize;
-                
-                // Todo: map size is fixed at 1024x1024, what about bigger maps or a chunked map format?
-                GRID_SIZE = 1024 * MapClassic.TILE_PIXELS / CELL_SIZE;
-                if (1024 * MapClassic.TILE_PIXELS % CELL_SIZE != 0)
-                {
-                        throw new IllegalArgumentException();
-                }
+                this.GRID_SIZE = cells;
                 
                 this.grid = new LinkedListHead[GRID_SIZE][GRID_SIZE];
                 
@@ -95,6 +93,51 @@ public class EntityGrid
                 }
         }
         
+        /** Remove an entity from the grid.
+         * 
+         * @param entity
+         */
+        public void removeEntity(@Nonnull T entity)
+        {
+                LinkedListEntry entry = entity.getEntityGridEntry(this);
+                entry.remove();
+        }
+        
+        /** Update an entity to its new location on the grid. 
+         * Or remove it from the grid entirely if the entity no longer has a valid location.
+         * 
+         * @param entity
+         * @param x
+         * @param y
+         * @return True if the entity is now present in the grid.
+         */
+        public boolean updateLocation(@Nonnull T entity, int x, int y)
+        {
+                LinkedListEntry entry = entity.getEntityGridEntry(this);
+                entry.remove();
+                
+                // Because ENTITY_GRID_CELL_SIZE is a multiple of 2,
+                // This should optimize to a simple bitshift
+                // If support for negative values were to be added, floor() should probably be used.
+                // Currently negative values > -CELL_SIZE are stored in cell 0, this is okay.
+                int cell_x = x / CELL_SIZE;
+                int cell_y = y / CELL_SIZE;
+
+                try
+                {
+                        LinkedListHead<T> cell = grid[cell_x][cell_y];
+                        cell.append(entry);
+                        return true;
+                }
+                catch (IndexOutOfBoundsException ex)
+                {
+                        // do nothing, the entity will not be part of the collison
+                        // This means the projectile is outside of the map
+                }
+                
+                return false;
+        }
+        
         /** Update an entity to its new location on the grid. 
          * Or remove it from the grid entirely if the entity no longer has a valid location.
          * 
@@ -103,28 +146,16 @@ public class EntityGrid
          * if not set remove the entity from the grid (or if the entity is outside of the map borders).
          * @return True if the entity is now present in the grid.
          */
-        public boolean updateLocation(@Nonnull MapEntity entity, @Nullable PhysicsPoint pos)
+        public boolean updateLocation(@Nonnull T entity, @Nullable PhysicsPoint pos)
         {
-                entity.entityGridEntry.remove();
-                        
-                if (pos != null && pos.set)
+                if (pos == null || !pos.set)
                 {
-                        // Because ENTITY_GRID_CELL_SIZE is a multiple of 2,
-                        // This should optimize to a simple bitshift
-                        int cell_x = pos.x / CELL_SIZE;
-                        int cell_y = pos.y / CELL_SIZE;
-
-                        try
-                        {
-                                LinkedListHead<MapEntity> cell = grid[cell_x][cell_y];
-                                cell.append(entity.entityGridEntry);
-                                return true;
-                        }
-                        catch (IndexOutOfBoundsException ex)
-                        {
-                                // do nothing, the entity will not be part of the collison
-                                // This means the projectile is outside of the map
-                        }
+                        removeEntity(entity);
+                        return false;
+                }
+                else
+                {
+                        updateLocation(entity, pos.x, pos.y);
                 }
                 
                 return false;
@@ -135,42 +166,46 @@ public class EntityGrid
          * @param high
          * @return 
          */
-        public Iterator<MapEntity> iterator(final PhysicsPoint low, final PhysicsPoint high)
+        public Iterator<T> iterator(final PhysicsPoint low, final PhysicsPoint high)
         {
-                return new Iterator<MapEntity>()
+                return new Iterator<T>()
                 {
-                        int x = low.x;
-                        int y = low.y;
-                        LinkedListEntry<MapEntity> next;
+                        final PhysicsPoint start = new PhysicsPoint();
+                        final PhysicsPoint end = new PhysicsPoint();
+                        int x;
+                        int y;
+                        LinkedListEntry<T> next;
                         
                         {
-                                if (x < 0) { x = 0; }
-                                if (y < 0) { y = 0; }
+                                start.set = true;
+                                start.x = clip(low.x / CELL_SIZE, 0, GRID_SIZE-1);
+                                start.y = clip(low.y / CELL_SIZE, 0, GRID_SIZE-1);
+                                end.set = true;
+                                end.x   = clip(high.x / CELL_SIZE, 0, GRID_SIZE-1);
+                                end.y   = clip(high.y / CELL_SIZE, 0, GRID_SIZE-1);
+                                
+                                x = start.x;
+                                y = start.y;
+                                
                                 findNext();
                         }
                         
                         void findNext()
-                        {
+                        {                                
                                 if (next != null)
                                 {
                                         next = next.next;
                                 }
                                 
-                                while (next == null)
+                                while (next == null && y <= end.y)
                                 {
                                         next = grid[x][y].first;
                                         ++x;
                                         
-                                        if (x > high.x || x > GRID_SIZE)
+                                        if (x > end.x)
                                         {
-                                                x = low.x;
+                                                x = start.x;
                                                 ++y;
-                                                
-                                                if (y > high.y || y > GRID_SIZE)
-                                                {
-                                                        next = null;
-                                                        return;
-                                                }
                                         }
                                 }
                         }
@@ -182,7 +217,7 @@ public class EntityGrid
                         }
 
                         @Override
-                        public MapEntity next()
+                        public T next()
                         {
                                 if (!hasNext())
                                 {
@@ -212,7 +247,7 @@ public class EntityGrid
          * @param radius
          * @return 
          */
-        public Iterator<MapEntity> iterator(final PhysicsPoint center, int radius)
+        public Iterator<T> iterator(final PhysicsPoint center, int radius)
         {
                 final PhysicsPoint low = new PhysicsPoint(center);
                 final PhysicsPoint high = new PhysicsPoint(center);

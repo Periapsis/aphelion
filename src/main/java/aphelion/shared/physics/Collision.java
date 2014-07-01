@@ -44,7 +44,7 @@ package aphelion.shared.physics;
 import aphelion.shared.gameconfig.GCInteger;
 import static aphelion.shared.physics.PhysicsMap.TILE_PIXELS;
 import aphelion.shared.physics.entities.MapEntity;
-import aphelion.shared.physics.valueobjects.EntityGrid;
+import aphelion.shared.swissarmyknife.EntityGrid;
 import aphelion.shared.physics.valueobjects.PhysicsPoint;
 import aphelion.shared.physics.valueobjects.PhysicsPointHistoryDetailed;
 import aphelion.shared.swissarmyknife.ComparableIntegerDivision;
@@ -457,11 +457,9 @@ public final class Collision
                         
                         final PhysicsPoint low = new PhysicsPoint(prev);
                         low.sub(radius);
-                        low.divideFloor(collideGrid.CELL_SIZE);
 
                         final PhysicsPoint high = new PhysicsPoint(prev);
                         high.add(radius);
-                        high.divideCeil(collideGrid.CELL_SIZE);
                         
                         // Note: the collidGrid is based on non-smoothed positions.
                         // This does not matter at the moment because collisions are performed
