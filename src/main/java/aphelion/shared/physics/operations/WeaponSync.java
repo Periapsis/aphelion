@@ -104,6 +104,15 @@ public class WeaponSync extends Operation implements WeaponSyncPublic
                         // dead reckon current position so that it is no longer late
                         // the position at the tick of this operation should not be dead reckoned, therefor +1
                         projectile.performDeadReckoning(state.env.getMap(), this.tick + 1, ticks_late);
+                        
+                        if (projectile.isForceEmitter())
+                        {
+                                // however a force emitter should emit for the current tick also ( <= )
+                                for (long t = 0; t <= ticks_late; ++t)
+                                {
+                                        projectile.emitForce(tick + t);
+                                }
+                        }
                 }
                 
                 long next = tick + config.fireDelay.get();
