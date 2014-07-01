@@ -71,7 +71,7 @@ public abstract class Event implements EventPublic
         protected Event(SimpleEnvironment env, EventKey key)
         {
                 this.env = env;
-                link = new LinkedListEntry<>(null, this);
+                link = new LinkedListEntry<>(this);
                 this.key = key;
         }
         

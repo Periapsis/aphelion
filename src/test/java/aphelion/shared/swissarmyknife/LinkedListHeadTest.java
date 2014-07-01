@@ -290,7 +290,7 @@ public class LinkedListHeadTest
                 listA.appendData("03");
                 listA.appendData("04");
                 
-                LinkedListEntry<String> test = new LinkedListEntry<String>(null, "10"); // headless
+                LinkedListEntry<String> test = new LinkedListEntry<String>("10"); // headless
                 
                 listA.appendForeignRange(test, test);
                 

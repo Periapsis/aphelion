@@ -53,7 +53,7 @@ import javax.annotation.Nonnull;
  */
 public abstract class MapAnimation extends MapEntity
 {
-        final LinkedListEntry<MapAnimation> link = new LinkedListEntry<>(null, this);
+        final LinkedListEntry<MapAnimation> link = new LinkedListEntry<>(this);
         public Camera camera;
         boolean animating; // set by MapEntities
         protected boolean done;

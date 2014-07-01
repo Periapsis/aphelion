@@ -58,6 +58,12 @@ public class LinkedListEntry<T> implements Iterable<T> // A list is only as stro
                 this.data = data;
         }
         
+        public LinkedListEntry(T data)
+        {
+                this.head = null;
+                this.data = data;
+        }
+        
         public void beginCircular()
         {
                 if (head != null || previous != null || next != null)
@@ -71,7 +77,7 @@ public class LinkedListEntry<T> implements Iterable<T> // A list is only as stro
         
         public LinkedListEntry<T> prependData(T data)
         {
-                return prepend(new LinkedListEntry<>(null, data));
+                return prepend(new LinkedListEntry<>(data));
         }
         
         public LinkedListEntry<T> prepend(LinkedListEntry<T> link)
@@ -102,7 +108,7 @@ public class LinkedListEntry<T> implements Iterable<T> // A list is only as stro
         
         public LinkedListEntry<T> appendData(T data)
         {
-                return append(new LinkedListEntry<>(null, data));
+                return append(new LinkedListEntry<>(data));
         }
         
         public LinkedListEntry<T> append(LinkedListEntry<T> link)

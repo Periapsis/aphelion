@@ -98,7 +98,7 @@ public abstract class Operation implements OperationPublic
                 link = new LinkedListEntry[env.econfig.TRAILING_STATES];
                 for (i = 0; i < env.econfig.TRAILING_STATES; i++)
                 {
-                        link[i] = new LinkedListEntry<>(null, this);
+                        link[i] = new LinkedListEntry<>(this);
                 }
         }
 

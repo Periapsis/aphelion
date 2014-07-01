@@ -75,11 +75,11 @@ public final class Projectile extends MapEntity implements ProjectilePublic
         
         public final ProjectileKey key;
         
-        public final LinkedListEntry<Projectile> projectileListLink_state = new LinkedListEntry<>(null, this);
-        public final LinkedListEntry<Projectile> forceEmitterListLink_state = new LinkedListEntry<>(null, this);
-        public final LinkedListEntry<Projectile> projectileListLink_actor = new LinkedListEntry<>(null, this);
+        public final LinkedListEntry<Projectile> projectileListLink_state = new LinkedListEntry<>(this);
+        public final LinkedListEntry<Projectile> forceEmitterListLink_state = new LinkedListEntry<>(this);
+        public final LinkedListEntry<Projectile> projectileListLink_actor = new LinkedListEntry<>(this);
         // circular headless linked list
-        final public LinkedListEntry<Projectile> coupled = new LinkedListEntry<>(null, this);
+        final public LinkedListEntry<Projectile> coupled = new LinkedListEntry<>(this);
         
         /** Has initFire or initFromSync been called?. */
         private boolean initialized;

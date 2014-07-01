@@ -67,7 +67,7 @@ public class LinkedListHead<T> implements Iterable<T>
         
         public LinkedListEntry<T> prependData(T data)
         {
-                return prepend(new LinkedListEntry<>(null, data));
+                return prepend(new LinkedListEntry<>(data));
         }
 
         public LinkedListEntry<T> prepend(LinkedListEntry<T> link)
@@ -95,7 +95,7 @@ public class LinkedListHead<T> implements Iterable<T>
 
         public LinkedListEntry<T> appendData(T data)
         {
-                return append(new LinkedListEntry<>(null, data));
+                return append(new LinkedListEntry<>(data));
         }
 
         public LinkedListEntry<T> append(LinkedListEntry<T> link)
