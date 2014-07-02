@@ -104,7 +104,7 @@ public class ActorWeaponFire extends Operation implements ActorWeaponFirePublic
         }
         
         @Override
-        public boolean execute(State state, long ticks_late)
+        public boolean execute(State state, boolean late, long ticks_late)
         {
                 Actor actor = state.actors.get(new ActorKey(pid));
                 
@@ -181,9 +181,10 @@ public class ActorWeaponFire extends Operation implements ActorWeaponFirePublic
                         // the position at the tick of this operation should not be dead reckoned, therefor +1
                         projectile.performDeadReckoning(state.env.getMap(), this.tick + 1, ticks_late);
                         
-                        if (projectile.isForceEmitter())
+                        if (projectile.isForceEmitter() && late)
                         {
-                                // however a force emitter should emit for the current tick also ( <= )
+                                // however a force emitter should emit for the current tick also ( <= ).
+                                // If late=false, State.tickForceEmitters will be called soons
                                 for (long t = 0; t <= ticks_late; ++t)
                                 {
                                         projectile.emitForce(tick + t);

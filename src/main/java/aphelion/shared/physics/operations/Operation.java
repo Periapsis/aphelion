@@ -146,12 +146,17 @@ public abstract class Operation implements OperationPublic
          * Thus using "return false" is not suitable in all situations.
          * 
          * @param state
-         * @param ticks_late How many ticks this operation is performed late. Some operations may want to perform very
-         * basic corrections. Trailing state synchronization will correct bigger inconsistencies.
+         * @param late If false, this operation is being executed as part of the State.tickOperations() method, 
+         *        because it is on the todo list.
+         *        
+         *        If true, the state is not currently ticking and the operation has arrived late. Some operations 
+         *        may want to perform basic corrections. Trailing state synchronization will correct bigger 
+         *        inconsistencies. Note that late=true,ticks_late=0 is a valid combination.
+         * @param ticks_late How many ticks this operation is performed late. 
          * @return return false to indicate the execution of this operation was not consistent with newer states.
          *         A time warp to _this_ state will occur.
          */
-        abstract public boolean execute(State state, long ticks_late);
+        abstract public boolean execute(State state, boolean late, long ticks_late);
 
         /** Has this operation been executed consistently between the given two states?.
          * Compare the stored results from step 3 in execute() with each other. 

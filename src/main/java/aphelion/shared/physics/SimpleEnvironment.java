@@ -142,7 +142,8 @@ public class SimpleEnvironment implements TickEvent, PhysicsEnvironment
         private final AtomicLong nextOpSeqSafe = new AtomicLong(1);
         
         private long timewarps = 0;
-        /** should only be set by test cases */
+        /** should only be set by test cases, TODO: get rid of me and use doReexecuteDirtyPositionPath instead */
+        @Deprecated
         public boolean testcaseImmediateMove;
 
         public SimpleEnvironment(boolean server, PhysicsMap map)
@@ -332,11 +333,7 @@ public class SimpleEnvironment implements TickEvent, PhysicsEnvironment
                 
                 pollThreadedAddOperation(deadlockTicker);
                 
-                for (int s = 0; s < econfig.TRAILING_STATES; s++)
-                {
-                        debug_current_state = s;
-                        this.trailingStates[s].doReexecuteDirtyPositionPath();
-                }
+                doReexecuteDirtyPositionPath();
                 
                 ++tick_now;
                 tickedAt_nano = System.nanoTime();
@@ -347,12 +344,19 @@ public class SimpleEnvironment implements TickEvent, PhysicsEnvironment
                         long tick = this.tick_now - this.trailingStates[s].delay;
                         this.trailingStates[s].tick(tick);
                 }
-
                 
                 consistencyCheck(deadlockTicker);
                 removeOldHistory();
         }
         
+        public void doReexecuteDirtyPositionPath()
+        {
+                for (int s = 0; s < econfig.TRAILING_STATES; s++)
+                {
+                        debug_current_state = s;
+                        this.trailingStates[s].doReexecuteDirtyPositionPath();
+                }
+        }
 
         public boolean consistencyCheck()
         {
@@ -1010,11 +1014,7 @@ public class SimpleEnvironment implements TickEvent, PhysicsEnvironment
                 {
                         if (this.testcaseImmediateMove)
                         {
-                                for (int s = 0; s < econfig.TRAILING_STATES; s++)
-                                {
-                                        debug_current_state = s;
-                                        this.trailingStates[s].doReexecuteDirtyPositionPath();
-                                }
+                                doReexecuteDirtyPositionPath();
                         }
                 }
         }

@@ -145,8 +145,8 @@ public final class PhysicsMath
                 long force = range - dist; // fits integer
                 force = force * strength / range;
                 
-                ret.x = (int) ((forcePoint.x - applyTo.x) * force / dist);
-                ret.y = (int) ((forcePoint.y - applyTo.y) * force / dist);
+                ret.x = (int) ((applyTo.x - forcePoint.x) * force / dist);
+                ret.y = (int) ((applyTo.y - forcePoint.y) * force / dist);
                 ret.set = true;
         }
 }

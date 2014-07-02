@@ -65,7 +65,7 @@ public class LoadConfig extends Operation
         }
         
         @Override
-        public boolean execute(State state, long ticks_late)
+        public boolean execute(State state, boolean late, long ticks_late)
         {
                 
                 // Note: Side effects of config change is not checked for consistency explicitely.

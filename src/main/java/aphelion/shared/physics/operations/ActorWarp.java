@@ -79,7 +79,7 @@ public class ActorWarp extends Operation implements ActorWarpPublic
         }
 
         @Override
-        public boolean execute(State state, long ticks_late)
+        public boolean execute(State state, boolean late, long ticks_late)
         {
                 Actor actor;
 

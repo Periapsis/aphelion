@@ -550,9 +550,6 @@ public class TimewarpTest extends PhysicsTest
                 env.timewarp(env.econfig.TRAILING_STATES-1);
                 testExplosionEventShort_assertEvent(0);
                 testExplosionEventShort_assertEvent(1);
-                
-                
-                // todo also test time between fire and explosion > TRAILING_STATE_DELAY
         }
         
         private void testExplosionEventLong_assertEvent(int state)

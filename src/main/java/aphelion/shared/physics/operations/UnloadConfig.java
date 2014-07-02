@@ -60,7 +60,7 @@ public class UnloadConfig extends Operation
         }
         
         @Override
-        public boolean execute(State state, long ticks_late)
+        public boolean execute(State state, boolean late, long ticks_late)
         {
                 // See LoadConfig for more details on how these operations work
                 if (ticks_late == 0)

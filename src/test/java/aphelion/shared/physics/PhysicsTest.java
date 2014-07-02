@@ -152,7 +152,7 @@ public abstract class PhysicsTest
                         throw new Error(ex);
                 }
                 
-                env.loadConfig(env.getTick() - env.getConfig().HIGHEST_DELAY, "test", yamlDocuments);
+                env.loadConfig(env.getTick() - env.getConfig().HIGHEST_DELAY, "PhysicsTest", yamlDocuments);
                 return env.newConfigSelection();
         }
         

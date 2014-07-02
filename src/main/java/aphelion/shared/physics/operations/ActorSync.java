@@ -74,7 +74,7 @@ public class ActorSync extends Operation implements ActorSyncPublic
         }
         
         @Override
-        public boolean execute(State state, long ticks_late)
+        public boolean execute(State state, boolean late, long ticks_late)
         {
                 Actor actor = state.actors.get(new ActorKey(pid));
 

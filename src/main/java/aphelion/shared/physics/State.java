@@ -399,7 +399,7 @@ public class State
                         LinkedListEntry<Operation> nextOp = linkOp.next;
 
                         long late = tick_now - op.tick;
-                        if (!op.execute(this, late))
+                        if (!op.execute(this, late > 0, late))
                         {
                                 needTimewarpToThisState = true;
                                 
@@ -464,10 +464,11 @@ public class State
                 // (which are applied next tick)
                 tickForceEmitters();
                 
+                doReexecuteDirtyPositionPath();
                 
+                tickOperations(true); // sync operations
                 
                 config.tick(tick_now); // used for cleanup
-                tickOperations(true); // sync operations
         }
         
         /** Lookup an actor that was removed as part of the current timewarp.
@@ -882,7 +883,8 @@ public class State
                 
                 if (op.tick <= this.tick_now) // late operation
                 {
-                        if (!op.execute(this, this.tick_now - op.tick))
+                        // The operation is late here even if tick_now == op.tick
+                        if (!op.execute(this, true, this.tick_now - op.tick))
                         {
                                 log.log(Level.WARNING, "{0}: Inconsistency in late operation {1}", new Object[]{
                                         econfig.logString,
