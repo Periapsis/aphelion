@@ -62,8 +62,9 @@ public class ForceEmitterTest extends PhysicsTest
                 {
                 yamlDocuments = GameConfig.loadYaml(
                         "- weapon-slot-repel: repelA\n" +
+                        "  weapon-slot-burst: repelB\n" +
                         "  ship-speed: "+EnvironmentConf.MAX_POSITION+"\n" +
-                        "- selector: {weapon: repelA}\n" +
+                        "- selector: {weapon: [repelA, repelB]}\n" +
                         "  projectile-force-distance-ship: 204800\n" +
                         "  projectile-force-velocity-ship: 3840000\n" +
                         "  projectile-force-distance-projectile: 409600\n" +
@@ -74,7 +75,11 @@ public class ForceEmitterTest extends PhysicsTest
                         "  projectile-hit-tile: false\n" +
                         "  projectile-offset-y: 0\n" +
                         "  projectile-expiration-ticks: 2\n" +
-                        "  projectile-speed-relative: false\n"
+                        "  projectile-speed-relative: false\n" +
+                        
+                        "- selector: {weapon: [repelB]}\n" +
+                        "  projectile-force-velocity-ship: 10\n" +
+                        "  projectile-expiration-ticks: 4\n"
                 );
                 
                 }
@@ -147,7 +152,7 @@ public class ForceEmitterTest extends PhysicsTest
         }
         
         @Test
-        public void testForceOnShip()
+        public void testStrongForceOnShip()
         {
                 SimpleEnvironment env = (SimpleEnvironment) this.env;
                 
@@ -184,12 +189,88 @@ public class ForceEmitterTest extends PhysicsTest
                 
                 env.tick(); // now at 2
                 assertPosition(FIRST_POSITION_START.x, FIRST_POSITION_START.y, firstActor);
-                assertPosition(SECOND_POSITION_START.x + SECOND_VEL_START.x * 2 + 3840000 / 2,
+                assertPosition(SECOND_POSITION_START.x + SECOND_VEL_START.x * 2 + (3840000 / 2),
                         SECOND_POSITION_START.y + SECOND_VEL_START.y * 2, 
                         secondActor);
-                assertVelocity(SECOND_VEL_START.x + 3840000 / 2,
+                assertVelocity(SECOND_VEL_START.x + (3840000 / 2),
                                SECOND_VEL_START.y, 
                                secondActor);
                 
+                env.tick(); // now at 3
+                // force is applied for 2 ticks, but we should be out of range now
+                assertPosition(FIRST_POSITION_START.x, FIRST_POSITION_START.y, firstActor);
+                assertPosition(SECOND_POSITION_START.x + SECOND_VEL_START.x * 3 + (3840000 / 2) * 2,
+                        SECOND_POSITION_START.y + SECOND_VEL_START.y * 3, 
+                        secondActor);
+                assertVelocity(SECOND_VEL_START.x + (3840000 / 2),
+                               SECOND_VEL_START.y, 
+                               secondActor);
+        }
+        
+        @Test
+        public void testWeakForceOnShip()
+        {
+                SimpleEnvironment env = (SimpleEnvironment) this.env;
+                
+                env.actorNew(0, ACTOR_FIRST, 1234, "NX-01");
+                env.actorNew(0, ACTOR_SECOND, 1234, "O'Neill");
+                
+                final PhysicsPoint FIRST_POSITION_START = new PhysicsPoint(20000, 50000);
+                final PhysicsPoint SECOND_POSITION_START = new PhysicsPoint(20000 + 204800 / 2, 50000);
+                
+                final PhysicsPoint SECOND_VEL_START = new PhysicsPoint(100, 150);
+                SECOND_POSITION_START.sub(SECOND_VEL_START);
+                
+                env.actorWarp(0, ACTOR_FIRST , false, FIRST_POSITION_START.x, FIRST_POSITION_START.y, 0, 0, 0);
+                env.actorWarp(0, ACTOR_SECOND, false, SECOND_POSITION_START.x, SECOND_POSITION_START.y, SECOND_VEL_START.x, SECOND_VEL_START.y,     0);
+                
+                env.actorWeapon(1, ACTOR_FIRST, WEAPON_SLOT.BURST);
+                
+                ActorPublic firstActor = env.getActor(ACTOR_FIRST);
+                ActorPublic secondActor = env.getActor(ACTOR_SECOND);
+                
+                assertVelocity(SECOND_VEL_START.x, SECOND_VEL_START.y, secondActor);
+                
+                env.tick(); // now at 1
+                // force should not have been applied to the position or velocity yet.
+                // it should affect the velocity and position in the next tick
+                assertPosition(FIRST_POSITION_START.x, FIRST_POSITION_START.y, firstActor);
+                assertPosition(SECOND_POSITION_START.x + SECOND_VEL_START.x,
+                        SECOND_POSITION_START.y + SECOND_VEL_START.y, 
+                        secondActor);
+                assertVelocity(SECOND_VEL_START.x,
+                               SECOND_VEL_START.y, 
+                               secondActor);
+                
+                
+                env.tick(); // now at 2
+                assertPosition(FIRST_POSITION_START.x, FIRST_POSITION_START.y, firstActor);
+                assertPosition(SECOND_POSITION_START.x + SECOND_VEL_START.x * 2 + 5,
+                        SECOND_POSITION_START.y + SECOND_VEL_START.y * 2, 
+                        secondActor);
+                assertVelocity(SECOND_VEL_START.x + 5,
+                               SECOND_VEL_START.y, 
+                               secondActor);
+                
+                env.tick(); // now at 3
+                assertVelocity(SECOND_VEL_START.x + 5 + 4,
+                               SECOND_VEL_START.y, 
+                               secondActor);
+                
+                env.tick(); // now at 4 (weapon expires at this tick)
+                assertVelocity(SECOND_VEL_START.x + 5 + 4 + 4,
+                               SECOND_VEL_START.y, 
+                               secondActor);
+                
+                env.tick(); // now at 5 
+                assertVelocity(SECOND_VEL_START.x + 5 + 4 + 4 + 4,
+                               SECOND_VEL_START.y, 
+                               secondActor);
+                
+                
+                env.tick(); // now at 6
+                assertVelocity(SECOND_VEL_START.x + 5 + 4 + 4 + 4,
+                               SECOND_VEL_START.y, 
+                               secondActor);
         }
 }
