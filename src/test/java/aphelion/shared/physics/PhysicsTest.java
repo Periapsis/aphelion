@@ -198,20 +198,20 @@ public abstract class PhysicsTest
                 assertTrue(actor.isRemoved());
         }
         
-        public static void assertProjectileExists(ProjectilePublic actor)
+        public static void assertProjectileExists(ProjectilePublic proj)
         {
-                assertNotNull(actor);
-                assertTrue(!actor.isRemoved());
+                assertNotNull(proj);
+                assertTrue(!proj.isRemoved());
         }
         
-        public static void assertProjectileNotExists(ProjectilePublic actor)
+        public static void assertProjectileNotExists(ProjectilePublic proj)
         {
-                if (actor == null)
+                if (proj == null)
                 {
                         return;
                 }
                 
-                assertTrue(actor.isRemoved());
+                assertTrue(proj.isRemoved());
         }
         
         public static void assertPointEquals(int x, int y, PhysicsPoint point)
