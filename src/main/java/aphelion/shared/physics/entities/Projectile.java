@@ -59,6 +59,8 @@ import aphelion.shared.swissarmyknife.AttachmentManager;
 import aphelion.shared.swissarmyknife.LinkedListEntry;
 import aphelion.shared.swissarmyknife.LoopFilter;
 import aphelion.shared.swissarmyknife.SwissArmyKnife;
+import static aphelion.shared.swissarmyknife.SwissArmyKnife.max;
+import static aphelion.shared.swissarmyknife.SwissArmyKnife.min;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
@@ -302,6 +304,42 @@ public final class Projectile extends MapEntity implements ProjectilePublic
                 forceVelocityShip = cfg(config.projectile_forceVelocityShip, tick);
                 forceDistanceProjectile = cfg(config.projectile_forceDistanceProjectile, tick);
                 forceVelocityProjectile = cfg(config.projectile_forceVelocityProjectile, tick);
+        }
+        
+        public void attemptCorrectionForLateProjectile(long operation_tick, boolean operation_late)
+        {
+                // dead reckon current position so that it is no longer late
+                // the position at the tick of this operation should not be dead reckoned, therefor +1
+
+                // First update the projectile up to the expiry...
+                long expiry_tick = max(operation_tick, this.getExpiry());
+                long untilExpiry_ticks = min(expiry_tick - operation_tick, state.tick_now - operation_tick);
+                long afterExpiry_ticks = max(state.tick_now - expiry_tick, 0);
+                this.performDeadReckoning(state.env.getMap(), operation_tick + 1, untilExpiry_ticks);
+
+                if (this.isForceEmitter() && operation_late)
+                {
+                        // however a force emitter should emit for the current tick also ( <= ).
+                        // If late=false, State.tickForceEmitters will be called soons
+                        long t;
+                        for (t = 0; t <= untilExpiry_ticks; ++t)
+                        {
+                                this.emitForce(operation_tick + t);
+                        }
+                        assert t == state.tick_now || t == expiry_tick;
+                }
+
+                if (expiry_tick <= state.tick_now)
+                {
+                        // (performDeadReckoning and emitForce check for isRemoved(tick))
+                        this.explodeWithoutHit(expiry_tick, EXPLODE_REASON.EXPIRATION);
+                        this.softRemove(expiry_tick);
+
+                        // The expiry itself has already been simulated
+                        this.performDeadReckoning(state.env.getMap(), expiry_tick + 1, afterExpiry_ticks);
+                }
+
+                assert this.posHistory.getHighestTick() == state.tick_now;
         }
         
         @SuppressWarnings("unchecked")

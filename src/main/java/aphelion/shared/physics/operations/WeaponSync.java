@@ -46,6 +46,9 @@ import aphelion.shared.physics.entities.Actor;
 import aphelion.shared.physics.entities.Projectile;
 import aphelion.shared.physics.State;
 import aphelion.shared.physics.entities.*;
+import aphelion.shared.physics.events.pub.ProjectileExplosionPublic;
+import static aphelion.shared.swissarmyknife.SwissArmyKnife.max;
+import static aphelion.shared.swissarmyknife.SwissArmyKnife.min;
 import java.util.logging.Logger;
 
 /**
@@ -100,19 +103,7 @@ public class WeaponSync extends Operation implements WeaponSyncPublic
                         
                         projectile.register();
                         projectile.updatedPosition(tick);
-                        
-                        // dead reckon current position so that it is no longer late
-                        // the position at the tick of this operation should not be dead reckoned, therefor +1
-                        projectile.performDeadReckoning(state.env.getMap(), this.tick + 1, ticks_late);
-                        
-                        if (projectile.isForceEmitter())
-                        {
-                                // however a force emitter should emit for the current tick also ( <= )
-                                for (long t = 0; t <= ticks_late; ++t)
-                                {
-                                        projectile.emitForce(tick + t);
-                                }
-                        }
+                        projectile.attemptCorrectionForLateProjectile(this.tick, late);
                 }
                 
                 long next = tick + config.fireDelay.get();
