@@ -818,8 +818,13 @@ public final class Projectile extends MapEntity implements ProjectilePublic
         {
                 final boolean doShip = this.forceDistanceShip > 0 && this.forceVelocityShip != 0;
                 final boolean doProjectile = this.forceDistanceProjectile > 0 && this.forceVelocityProjectile != 0;
-
+                
                 if (!doShip && !doProjectile)
+                {
+                        return;
+                }
+                
+                if (this.isRemoved(tick))
                 {
                         return;
                 }
@@ -842,6 +847,8 @@ public final class Projectile extends MapEntity implements ProjectilePublic
                         
                         if (doShip && en instanceof Actor)
                         {
+                                Actor actor = (Actor) en;
+                                if (actor.isDead(tick)) { continue; }
                                 if (!damageSelf && en == this.owner)
                                 {
                                         continue;
