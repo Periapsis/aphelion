@@ -53,7 +53,7 @@ import aphelion.shared.swissarmyknife.LinkedListEntry;
 public abstract class MapEntity implements EntityGridEntity
 {
         public long createdAt_tick;
-        protected boolean removed = false;
+        private boolean removed = false;
         /** valid if removed = true */
         public long removedAt_tick;
         
@@ -143,14 +143,12 @@ public abstract class MapEntity implements EntityGridEntity
                         removedAt_tick = tick;
                 }
                 
-                // remove it from the grid
-                state.entityGrid.updateLocation(this, null);
                 removed = true;
         }
-        
+
         public boolean isRemoved()
         {
-                return this.removed;
+                return isRemoved(state.tick_now);
         }
         
         public boolean isRemoved(long tick)
@@ -208,7 +206,7 @@ public abstract class MapEntity implements EntityGridEntity
                 
                 if (!ignoreSoftDelete)
                 {
-                        if (en.removed && tick > en.removedAt_tick)
+                        if (isRemoved(tick))
                         {
                                 return null;
                         }
