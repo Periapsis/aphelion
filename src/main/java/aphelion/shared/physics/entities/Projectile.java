@@ -899,6 +899,13 @@ public final class Projectile extends MapEntity implements ProjectilePublic
                                 {
                                         continue;
                                 }
+                                
+                                // Force emitters never affect other force emitters
+                                // (or, at least for now, it causes too many inconsistencies)
+                                if (proj.isForceEmitter())
+                                {
+                                        continue;
+                                }
                         }
                         
                         en.getHistoricPosition(otherPosition, tick, false);
