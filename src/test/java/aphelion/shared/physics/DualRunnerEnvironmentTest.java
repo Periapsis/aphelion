@@ -78,7 +78,7 @@ public class DualRunnerEnvironmentTest extends PhysicsTest
         @Override
         protected void createEnvironment()
         {
-                clock = new ManualClockSource(TimeUnit.MILLISECONDS.toNanos(EnvironmentConf.TICK_LENGTH));
+                clock = new ManualClockSource(EnvironmentConf.TICK_LENGTH);
                 loop = new TickedEventLoop(EnvironmentConf.TICK_LENGTH, 0, clock);
                 env = new DualRunnerEnvironment(loop, new MapEmpty());
                 loop.addTickEvent((DualRunnerEnvironment) env);

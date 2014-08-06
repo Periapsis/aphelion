@@ -101,7 +101,7 @@ public class ServerMain implements LoopEvent, TickEvent
         {
                 int processors = Runtime.getRuntime().availableProcessors();
                 if (processors < 2) { processors = 2; } // minimum of two workers
-                loop = new TickedEventLoop(10, processors, null);
+                loop = new TickedEventLoop(10_000_000L, processors, null);
                 
                 server = new AphelionServer(listen, new File("./www"), loop);
                 

@@ -98,7 +98,7 @@ public class TickedEventLoop implements Workable, Timerable, Deadlock.DeadlockTi
         private final WorkerThread[] workerThreads;
         
         /**
-         * @param tickLength How long does a tick last in milliseconds
+         * @param tickLength How long does a tick last in nanoseconds
          * @param workerThreads How many worker threads to spawn (used by addWorkerTask). 0 to not spawn any threads
          * @param clockSource An interface providing relative time
          */
@@ -110,7 +110,7 @@ public class TickedEventLoop implements Workable, Timerable, Deadlock.DeadlockTi
                         this.clockSource = new DefaultClockSource();
                 }
                 
-                this.TICK = tickLength * 1000 * 1000;
+                this.TICK = tickLength;
                 syncedByOtherLoop = false;
                 
                 if (workerThreads > 0)

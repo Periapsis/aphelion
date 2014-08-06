@@ -210,7 +210,7 @@ public class DualRunnerEnvironment implements TickEvent, LoopEvent, PhysicsEnvir
                 // add half a tick length so that the threads can be scheduled better
                 if (thread.loop != null)
                 {
-                        thread.loop.synchronize(mainLoop.currentNano() + EnvironmentConf.TICK_LENGTH * 1_000_000L / 2, mainLoop.currentTick());
+                        thread.loop.synchronize(mainLoop.currentNano() + EnvironmentConf.TICK_LENGTH / 2, mainLoop.currentTick());
                 }
                 lastLoopSync = System.nanoTime();
         }
@@ -799,7 +799,7 @@ public class DualRunnerEnvironment implements TickEvent, LoopEvent, PhysicsEnvir
                                 // This means we are 1 tick behind! So substract a full tick lenght.
                                 // But running at exactly the same time is not optimal for performance,
                                 // we are probably sleeping between ticks, so only substract half a tick.
-                                syncNano -= TimeUnit.MILLISECONDS.toNanos(EnvironmentConf.TICK_LENGTH) / 2;
+                                syncNano -= EnvironmentConf.TICK_LENGTH / 2;
                                 this.loop.synchronize(syncNano, syncWith.currentTick());
                         }
                         finally

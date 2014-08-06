@@ -59,8 +59,8 @@ public final class EnvironmentConf
         
         public final String logString;
         
-        /** Tick length in milliseconds. */
-        public static final int TICK_LENGTH = 10;
+        /** Tick length in nanoseconds. */
+        public static final long TICK_LENGTH = 10_000_000L;
         
         /** The maximum amount of rotation value. 
          * This must be constant for every peer.
