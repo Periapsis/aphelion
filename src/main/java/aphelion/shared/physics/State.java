@@ -132,7 +132,7 @@ public class State
                 }
         }
 
-        /** if a late weapon has emmited forces,
+        /** if a late weapon has emitted forces,
             or if a late move has been applied,
             reexecute dead reckon here.
         */
