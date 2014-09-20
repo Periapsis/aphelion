@@ -167,16 +167,31 @@ public final class Collision
 
         public void setPreviousPosition(@Nonnull PhysicsPoint pos)
         {
+                if (!pos.set)
+                {
+                        throw new IllegalArgumentException("PhysicsPoint should be set");
+                }
+                
                 this.prevPos.set(pos);
         }
         
         public void setNewPosition(@Nonnull PhysicsPoint pos)
         {
+                if (!pos.set)
+                {
+                        throw new IllegalArgumentException("PhysicsPoint should be set");
+                }
+                
                 this.newPos.set(pos);
         }
 
         public void setVelocity(@Nonnull PhysicsPoint vel)
         {
+                if (!vel.set)
+                {
+                        throw new IllegalArgumentException("PhysicsPoint should be set");
+                }
+                
                 this.vel.set(vel);
         }
 

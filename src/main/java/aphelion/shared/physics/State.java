@@ -148,7 +148,7 @@ public class State
                         // the first tick that is not dirty
                         long tick = en.dirtyPositionPathTracker.getFirstDirtyTick() - 1;
                         
-                        if (tick > en.posHistory.getLowestTick())
+                        if (tick < en.posHistory.getLowestTick())
                         {
                                 tick = en.posHistory.getLowestTick();
                                 en.dirtyPositionPathTracker.setFirstDirtyTick(tick + 1);
@@ -156,6 +156,9 @@ public class State
 
                         en.posHistory.get(en.pos.pos, tick);
                         en.velHistory.get(en.pos.vel, tick);
+                        
+                        assert en.pos.pos.set;
+                        assert en.pos.vel.set;
                         
                         if (en instanceof Projectile)
                         {
