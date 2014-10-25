@@ -482,6 +482,14 @@ public class TimewarpTest extends PhysicsTest
                                 assertPointEquals(45664, 90, pos);
 
                                 PhysicsPositionVector posv = new PhysicsPositionVector();
+
+                                // The projectile is removed at the moment of impact, it no longer has a position
+                                assertFalse(ev.getProjectile(state).getHistoricPosition(posv, ev.getOccurredAt(state), true));
+                                assertFalse(ev.getProjectile(state).getHistoricPosition(posv, ev.getOccurredAt(state), false));
+                                assertTrue(ev.getProjectile(state).getHistoricPosition(posv, ev.getOccurredAt(state) - 1, true));
+                                assertPointEquals(35336,90, posv.pos);
+                                assertTrue(ev.getProjectile(state).getHistoricPosition(posv, ev.getOccurredAt(state) - 1, false));
+                                assertPointEquals(35336,90, posv.pos);
                         }
                         else if (e instanceof ActorDiedPublic)
                         {
@@ -574,6 +582,11 @@ public class TimewarpTest extends PhysicsTest
 
                                 PhysicsPositionVector posv = new PhysicsPositionVector();
 
+                                // The projectile is removed at the moment of impact, it no longer has a position
+                                assertFalse(ev.getProjectile(state).getHistoricPosition(posv, ev.getOccurredAt(state), true));
+                                assertFalse(ev.getProjectile(state).getHistoricPosition(posv, ev.getOccurredAt(state), false));
+                                assertTrue(ev.getProjectile(state).getHistoricPosition(posv, ev.getOccurredAt(state) - 1, true));
+                                assertPointEquals(375336, 90, posv.pos);
                         }
                         else if (e instanceof ActorDiedPublic)
                         {

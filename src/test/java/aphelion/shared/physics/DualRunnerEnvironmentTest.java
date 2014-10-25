@@ -295,6 +295,14 @@ public class DualRunnerEnvironmentTest extends PhysicsTest
                                 assertPointEquals(afterReset ? 485664 : 385664, 90, pos);
 
                                 PhysicsPositionVector posv = new PhysicsPositionVector();
+
+                                // The projectile is removed at the moment of impact, it no longer has a position
+                                assertFalse(ev.getProjectile(0).getHistoricPosition(posv, ev.getOccurredAt(0), true));
+                                assertFalse(ev.getProjectile(0).getHistoricPosition(posv, ev.getOccurredAt(0), false));
+                                assertTrue(ev.getProjectile(0).getHistoricPosition(posv, ev.getOccurredAt(0) - 1, true));
+                                assertPointEquals(afterReset ? 475336 : 375336, 90, posv.pos);
+                                assertTrue(ev.getProjectile(0).getHistoricPosition(posv, ev.getOccurredAt(0) - 1, false));
+                                assertPointEquals(afterReset ? 475336 : 375336, 90, posv.pos);
                         }
                         else if (e instanceof ActorDiedPublic)
                         {

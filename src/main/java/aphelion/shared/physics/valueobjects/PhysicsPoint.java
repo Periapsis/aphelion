@@ -449,6 +449,11 @@ public final class PhysicsPoint
          */
         public void assertEquals(int x, int y)
         {
+                if (!this.set)
+                {
+                        throw new AssertionError("expected point:<" + x + "," + y + "> but was:<unset>");
+                }
+
                 if (x != this.x ||
                     y != this.y)
                 {
