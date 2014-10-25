@@ -214,6 +214,15 @@ public abstract class MapEntity implements EntityGridEntity
                 
                 return en;
         }
+
+        /** Gets the most current position, velocity for the entity.
+         * @param pos The object to fill with position, velocity, and rotation
+         * @return true if the pos has been filled
+         */
+        public void getPosition(PhysicsPositionVector pos)
+        {
+                pos.set(this.pos);
+        }
         
         /** Get the historic position of this entity.
          * @param pos The position is filled in this object
@@ -223,7 +232,7 @@ public abstract class MapEntity implements EntityGridEntity
          *        from the older one is used.
          * @return true if a position was found (the entity existed at this point in time)
          */
-        public boolean getHistoricPosition(PhysicsPoint pos, long tick, boolean lookAtOtherStates)
+        public boolean getHistoricPosition(PhysicsPositionVector pos, long tick, boolean lookAtOtherStates)
         {
                 MapEntity en = getOlderEntity(tick, false, lookAtOtherStates);
 
@@ -232,10 +241,9 @@ public abstract class MapEntity implements EntityGridEntity
                         pos.unset();
                         return false; // deleted or too far in the past
                 }
-                
-                pos.set = true;
-                pos.x = en.posHistory.getX(tick);
-                pos.y = en.posHistory.getY(tick);
+
+                en.posHistory.get(pos.pos, tick);
+                en.velHistory.get(pos.vel, tick);
                 return true;
         }
         

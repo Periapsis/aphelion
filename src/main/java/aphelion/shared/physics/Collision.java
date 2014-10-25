@@ -44,6 +44,7 @@ package aphelion.shared.physics;
 import aphelion.shared.gameconfig.GCInteger;
 import static aphelion.shared.physics.PhysicsMap.TILE_PIXELS;
 import aphelion.shared.physics.entities.MapEntity;
+import aphelion.shared.physics.valueobjects.PhysicsPositionVector;
 import aphelion.shared.swissarmyknife.EntityGrid;
 import aphelion.shared.physics.valueobjects.PhysicsPoint;
 import aphelion.shared.physics.valueobjects.PhysicsPointHistoryDetailed;
@@ -762,8 +763,8 @@ public final class Collision
                         throw new IllegalStateException("Collision between two entities, both with radius is not implemented yet.");
                 }
                 
-                final PhysicsPoint entityFrom = new PhysicsPoint();
-                final PhysicsPoint entityTo = new PhysicsPoint();
+                final PhysicsPositionVector entityFrom = new PhysicsPositionVector();
+                final PhysicsPositionVector entityTo = new PhysicsPositionVector();
                 
                 if (!en.getHistoricPosition(entityFrom, tick - 1, false) ||
                     !en.getHistoricPosition(entityTo, tick, false))
@@ -772,13 +773,13 @@ public final class Collision
                 }
                 
                 if (lineSegmentIntersectsConvexPolygon(
-                        entityFrom.x, entityFrom.y, entityTo.x, entityTo.y, // The line segment (0 radius)
+                        entityFrom.pos.x, entityFrom.pos.y, entityTo.pos.x, entityTo.pos.y, // The line segment (0 radius)
                         buildPositionDeltaPolygon(posFrom, posTo, this.radius),
                         hitLocation, null))
                 {
                         if (!hitLocation.set)
                         {
-                                hitLocation.set(entityFrom);
+                                hitLocation.set(entityFrom.pos);
                                 hitLocation.set = true;
                         }
 

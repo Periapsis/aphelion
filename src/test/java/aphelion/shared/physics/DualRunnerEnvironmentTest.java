@@ -198,18 +198,18 @@ public class DualRunnerEnvironmentTest extends PhysicsTest
                 // Verify the projectile reference does not changed (comparison follows after reset)
                 Iterator<ProjectilePublic> it = env.projectileIterator();
                 assertTrue(it.hasNext());
-                
-                ProjectilePublic.Position pos = new ProjectilePublic.Position();
+
+                PhysicsPositionVector pos = new PhysicsPositionVector();
                 assertTrue(it.hasNext());
                 ProjectilePublic projA = it.next();
                 assertFalse(it.hasNext());
                 projA.getPosition(pos);
                 
                 // Projectile location at tick 2, before reset
-                assertEquals(1000, pos.x);
-                assertEquals(2000 + offsetY, pos.y);
-                assertEquals(0, pos.x_vel);
-                assertEquals(fireSpeed, pos.y_vel);
+                assertEquals(1000, pos.pos.x);
+                assertEquals(2000 + offsetY, pos.pos.y);
+                assertEquals(0, pos.vel.x);
+                assertEquals(fireSpeed, pos.vel.y);
                 
                 it = null;
                 
@@ -241,13 +241,13 @@ public class DualRunnerEnvironmentTest extends PhysicsTest
                 projB.getPosition(pos);
                 
                 // Verify projectile position after the reset
-                assertEquals(1000, pos.x);
+                assertEquals(1000, pos.pos.x);
                 assertEquals(2000 + offsetY + 28 // ship position
                         + (fireSpeed + 28) * ((int) env.getTick() - 2),
-                        pos.y
+                        pos.pos.y
                 );
-                assertEquals(0, pos.x_vel);
-                assertEquals(fireSpeed + 28, pos.y_vel);
+                assertEquals(0, pos.vel.x);
+                assertEquals(fireSpeed + 28, pos.vel.y);
                 
                 
                 // Verify the operation reference does not change, and
@@ -293,12 +293,8 @@ public class DualRunnerEnvironmentTest extends PhysicsTest
                                 PhysicsPoint pos = new PhysicsPoint();
                                 ev.getPosition(0, pos);
                                 assertPointEquals(afterReset ? 485664 : 385664, 90, pos);
-                                
-                                ev.getProjectile(0).getHistoricPosition(pos, ev.getOccurredAt(0), false);
-                                assertPointEquals(afterReset ? 485664 : 385664, 90, pos);
-                                
-                                ev.getProjectile(0).getHistoricPosition(pos, ev.getOccurredAt(0), true);
-                                assertPointEquals(afterReset ? 485664 : 385664, 90, pos);
+
+                                PhysicsPositionVector posv = new PhysicsPositionVector();
                         }
                         else if (e instanceof ActorDiedPublic)
                         {

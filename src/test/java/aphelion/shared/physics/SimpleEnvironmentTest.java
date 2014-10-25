@@ -43,6 +43,8 @@ import aphelion.shared.physics.entities.ProjectilePublic;
 import aphelion.shared.physics.entities.ActorPublic;
 import java.util.Iterator;
 import java.util.List;
+
+import aphelion.shared.physics.valueobjects.PhysicsPositionVector;
 import org.junit.*;
 import static org.junit.Assert.*;
 
@@ -411,16 +413,16 @@ public class SimpleEnvironmentTest extends PhysicsTest
                 
                 Iterator<ProjectilePublic> it = env.projectileIterator(0);
                 assertTrue(it.hasNext());
-                
-                ProjectilePublic.Position pos = new ProjectilePublic.Position();
+
+                PhysicsPositionVector pos = new PhysicsPositionVector();
                 ProjectilePublic proj = it.next();
                 assertFalse(it.hasNext());
                 proj.getPosition(pos);
                 
-                assertEquals(1000, pos.x);
-                assertEquals(2000 + offsetY, pos.y);
-                assertEquals(0, pos.x_vel);
-                assertEquals(fireSpeed + 10, pos.y_vel); 
+                assertEquals(1000, pos.pos.x);
+                assertEquals(2000 + offsetY, pos.pos.y);
+                assertEquals(0, pos.vel.x);
+                assertEquals(fireSpeed + 10, pos.vel.y);
                 
                 it = null;
                 proj = null;
@@ -432,11 +434,11 @@ public class SimpleEnvironmentTest extends PhysicsTest
                 proj = it.next();
                 assertFalse(it.hasNext());
                 proj.getPosition(pos);
-                
-                assertEquals(1000, pos.x);
-                assertEquals(2000 + offsetY + fireSpeed + 10, pos.y);
-                assertEquals(0, pos.x_vel);
-                assertEquals(fireSpeed + 10, pos.y_vel);
+
+                assertEquals(1000, pos.pos.x);
+                assertEquals(2000 + offsetY + fireSpeed + 10, pos.pos.y);
+                assertEquals(0, pos.vel.x);
+                assertEquals(fireSpeed + 10, pos.vel.y);
         }
         
         @Test
@@ -455,16 +457,16 @@ public class SimpleEnvironmentTest extends PhysicsTest
                 
                 Iterator<ProjectilePublic> it = env.projectileIterator(0);
                 assertTrue(it.hasNext());
-                
-                ProjectilePublic.Position pos = new ProjectilePublic.Position();
+
+                PhysicsPositionVector pos = new PhysicsPositionVector();
                 ProjectilePublic proj = it.next();
                 assertFalse(it.hasNext());
                 proj.getPosition(pos);
                 
-                assertEquals(1000, pos.x);
-                assertEquals(2000 + offsetY, pos.y);
-                assertEquals(0, pos.x_vel);
-                assertEquals(fireSpeed, pos.y_vel);
+                assertEquals(1000, pos.pos.x);
+                assertEquals(2000 + offsetY, pos.pos.y);
+                assertEquals(0, pos.vel.x);
+                assertEquals(fireSpeed, pos.vel.y);
                 
                 it = null;
                 proj = null;
@@ -493,14 +495,14 @@ public class SimpleEnvironmentTest extends PhysicsTest
                 
                 // 57548 but was: 57296
                 
-                assertEquals(1000, pos.x);
+                assertEquals(1000, pos.pos.x);
                 assertEquals(2000 + offsetY + 28 // ship position
                         + (fireSpeed + 28) * env.econfig.TRAILING_STATE_DELAY, // the distance the projectile has traveled
-                        pos.y
+                        pos.pos.y
                 );
                 
-                assertEquals(0, pos.x_vel);
-                assertEquals(fireSpeed + 28, pos.y_vel);
+                assertEquals(0, pos.vel.x);
+                assertEquals(fireSpeed + 28, pos.vel.y);
         }
         
         

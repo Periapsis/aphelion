@@ -55,6 +55,7 @@ import static aphelion.shared.physics.events.pub.ProjectileExplosionPublic.EXPLO
 import static aphelion.shared.physics.events.pub.ProjectileExplosionPublic.EXPLODE_REASON.PROX_DELAY;
 import static aphelion.shared.physics.events.pub.ProjectileExplosionPublic.EXPLODE_REASON.PROX_DIST;
 import aphelion.shared.physics.valueobjects.PhysicsPoint;
+import aphelion.shared.physics.valueobjects.PhysicsPositionVector;
 import aphelion.shared.resource.ResourceDB;
 import java.util.ArrayList;
 import javax.annotation.Nonnull;
@@ -222,12 +223,12 @@ public class ProjectileExplosionTracker implements EventTracker
         {
                 Projectile proj = mapEntities.physicsProjectileToGraphics(physicsProj);
                 
-                PhysicsPoint pos = new PhysicsPoint();
+                PhysicsPositionVector pos = new PhysicsPositionVector();
                 physicsProj.getHistoricPosition(pos, event.getOccurredAt(0), true);
                 
-                boolean hitLocal = hitActor == null ? false : hitActor.isLocalPlayer();
+                boolean hitLocal = hitActor != null && hitActor.isLocalPlayer();
                 
-                if (pos.set)
+                if (pos.pos.set)
                 {
                         GCImageAnimation anim = new MyAnimation(spawnID, resourceDB, hitImage);
                         
@@ -236,7 +237,7 @@ public class ProjectileExplosionTracker implements EventTracker
                                 anim.setAlpha(proj.getAlpha());
                         }
 
-                        anim.setPositionFromPhysics(pos);
+                        anim.setPositionFromPhysics(pos.pos);
                         mapEntities.addAnimation(RENDER_LAYER.AFTER_LOCAL_SHIP, anim, null);
                         projectileAnimations.add(anim);
                 }
@@ -244,7 +245,7 @@ public class ProjectileExplosionTracker implements EventTracker
                 // If the last rendered position of the projectile is very different,
                 // display 2 animations.
                 if (proj.physicsPos.set && 
-                    (!pos.set || pos.distanceSquared(proj.physicsPos) > TIMEWARP_EXTRA_ANIM_DISTSQ)
+                    (!pos.pos.set || pos.pos.distanceSquared(proj.physicsPos) > TIMEWARP_EXTRA_ANIM_DISTSQ)
                    )
                 {
                         GCImageAnimation anim = new MyAnimation(spawnID, resourceDB, hitImage);

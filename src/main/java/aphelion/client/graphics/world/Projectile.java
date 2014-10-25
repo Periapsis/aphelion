@@ -49,6 +49,7 @@ import aphelion.shared.physics.EnvironmentConf;
 import aphelion.shared.physics.PhysicsEnvironment;
 import aphelion.shared.physics.entities.ProjectilePublic;
 import aphelion.shared.physics.valueobjects.PhysicsPoint;
+import aphelion.shared.physics.valueobjects.PhysicsPositionVector;
 import aphelion.shared.resource.ResourceDB;
 import aphelion.shared.swissarmyknife.Point;
 import aphelion.shared.swissarmyknife.SwissArmyKnife;
@@ -239,7 +240,7 @@ public class Projectile extends MapEntity implements WrappedValueAbstract.Change
                         if (trail != null)
                         {
                                 Point trailPos = new Point();
-                                PhysicsPoint phyPos = new PhysicsPoint();
+                                PhysicsPositionVector phyPos = new PhysicsPositionVector();
 
                                 long rand = imageTrailRandomized.get() ? SwissArmyKnife.fastRandomIsh() : 0;
 
@@ -255,9 +256,9 @@ public class Projectile extends MapEntity implements WrappedValueAbstract.Change
                                                 tick - 2 * tile, 
                                                 true);
 
-                                        if (phyPos.set)
+                                        if (phyPos.pos.set)
                                         {
-                                                trailPos.set(phyPos.x, phyPos.y);
+                                                trailPos.set(phyPos.pos);
                                                 trailPos.divide(1024);
                                                 camera.mapToScreenPosition(trailPos, trailPos);
 

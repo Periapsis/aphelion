@@ -46,6 +46,7 @@ import aphelion.shared.physics.entities.ActorPublicImpl;
 import aphelion.shared.physics.entities.ProjectilePublic;
 import aphelion.shared.physics.valueobjects.PhysicsMovement;
 import aphelion.shared.physics.valueobjects.PhysicsPoint;
+import aphelion.shared.physics.valueobjects.PhysicsPositionVector;
 import aphelion.shared.physics.valueobjects.PhysicsShipPosition;
 import java.lang.reflect.Field;
 import java.util.Iterator;
@@ -248,16 +249,16 @@ public abstract class PhysicsTest
         public void assertPosition(int x, int y, ProjectilePublic projectile)
         {
                 assertProjectileExists(projectile);
-                ProjectilePublic.Position pos = new ProjectilePublic.Position();
+                PhysicsPositionVector pos = new PhysicsPositionVector();
                 
-                assertTrue(projectile.getPosition(pos));
+                projectile.getPosition(pos);
 
-                if (x != pos.x || y != pos.y)
+                if (x != pos.pos.x || y != pos.pos.y)
                 {
-                        throw new AssertionError("expected position:<" + x + "," + y + "> but was:<" + pos.x + "," + pos.y + ">");
+                        throw new AssertionError("expected position:<" + x + "," + y + "> but was:<" + pos.pos.x + "," + pos.pos.y + ">");
                 }
-                
-                PhysicsPoint pos2 = new PhysicsPoint();
+
+                PhysicsPositionVector pos2 = new PhysicsPositionVector();
                 
                 if (env instanceof SimpleEnvironment)
                 {
@@ -269,9 +270,38 @@ public abstract class PhysicsTest
                 }
                 
                 
-                if (x != pos.x || y != pos.y)
+                if (x != pos.pos.x || y != pos.pos.y)
                 {
                         throw new AssertionError("getHistoricPosition(0) is not equal to the current position!");
+                }
+        }
+
+        public void assertVelocity(int x, int y, ProjectilePublic projectile)
+        {
+                assertProjectileExists(projectile);
+                PhysicsPositionVector pos = new PhysicsPositionVector();
+
+                projectile.getPosition(pos);
+
+                if (x != pos.vel.x || y != pos.vel.y)
+                {
+                        throw new AssertionError("expected velocity:<" + x + "," + y + "> but was:<" + pos.vel.x + "," + pos.vel.y + ">");
+                }
+
+                PhysicsPositionVector pos2 = new PhysicsPositionVector();
+
+                if (env instanceof SimpleEnvironment)
+                {
+                        assertTrue(projectile.getHistoricPosition(pos2, ((SimpleEnvironment) env).getTick(projectile.getStateId()), false));
+                }
+                else
+                {
+                        assertTrue(projectile.getHistoricPosition(pos2, env.getTick(), false));
+                }
+
+                if (x != pos.vel.x || y != pos.vel.y)
+                {
+                        throw new AssertionError("getHistoricPosition(0) is not equal to the current velocity!");
                 }
         }
         

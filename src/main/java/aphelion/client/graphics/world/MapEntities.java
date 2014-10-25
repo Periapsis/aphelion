@@ -57,6 +57,7 @@ import aphelion.shared.physics.events.pub.ActorDiedPublic;
 import aphelion.shared.physics.events.pub.EventPublic;
 import aphelion.shared.physics.events.pub.ProjectileExplosionPublic;
 import aphelion.shared.physics.valueobjects.PhysicsPoint;
+import aphelion.shared.physics.valueobjects.PhysicsPositionVector;
 import aphelion.shared.physics.valueobjects.PhysicsShipPosition;
 import aphelion.shared.resource.ResourceDB;
 import aphelion.shared.swissarmyknife.AttachmentConsumer;
@@ -567,15 +568,13 @@ public class MapEntities implements TickEvent, LoopEvent, Animator, ActorListene
         
         private void updateProjectileFromPhysics(@Nonnull Projectile projectile)
         {
-                ProjectilePublic.Position projectilePos = new ProjectilePublic.Position();
-                PhysicsPoint historicProjectilePos = new PhysicsPoint();
+                PhysicsPositionVector projectilePos = new PhysicsPositionVector();
+                PhysicsPositionVector historicProjectilePos = new PhysicsPositionVector();
                 
                 ProjectilePublic physicsProjectile = projectile.getPhysicsProjectile();
                         
-                if (physicsProjectile.getPosition(projectilePos))
-                {
-                        projectile.setShadowPositionFromPhysics(projectilePos.x, projectilePos.y);
-                }
+                physicsProjectile.getPosition(projectilePos);
+                projectile.setShadowPositionFromPhysics(projectilePos.pos.x, projectilePos.pos.y);
                 
                 if (renderDelay == null)
                 {
@@ -601,7 +600,7 @@ public class MapEntities implements TickEvent, LoopEvent, Animator, ActorListene
                         projectile.renderingAt_tick, 
                         true))
                 {
-                        projectile.setPositionFromPhysics(historicProjectilePos.x, historicProjectilePos.y);
+                        projectile.setPositionFromPhysics(historicProjectilePos.pos.x, historicProjectilePos.pos.y);
                 }
                 else
                 {

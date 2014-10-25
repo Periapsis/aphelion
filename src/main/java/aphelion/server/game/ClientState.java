@@ -338,7 +338,6 @@ public class ClientState
                         assert actorSync.getTick() == oldestStateTick;
                         assert actorSync.getPid() == actorPid;
 
-                        ProjectilePublic.Position projectilePos = new ProjectilePublic.Position();
                         Iterator<ProjectilePublic> projectileIt = actor.projectileIterator();
                         while (projectileIt.hasNext())
                         {
@@ -375,7 +374,6 @@ public class ClientState
                                         assert projectile.getOwner() == projCoupled.getOwner();
                                         assert projectile.getWeaponKey().equals(projCoupled.getWeaponKey());
 
-                                        projCoupled.getPosition(projectilePos);
 
                                         GameOperation.WeaponSync.Projectile.Builder weaponSyncProjectile = weaponSync.addProjectilesBuilder();
                                         projCoupled.getSync(weaponSyncProjectile);

@@ -52,6 +52,7 @@ import aphelion.shared.physics.events.ProjectileExplosion;
 import aphelion.shared.physics.events.pub.ProjectileExplosionPublic;
 import aphelion.shared.physics.events.pub.ProjectileExplosionPublic.EXPLODE_REASON;
 import aphelion.shared.physics.valueobjects.PhysicsPoint;
+import aphelion.shared.physics.valueobjects.PhysicsPositionVector;
 import aphelion.shared.physics.valueobjects.PhysicsShipPosition;
 import aphelion.shared.resource.ResourceDB;
 import aphelion.shared.swissarmyknife.AttachmentData;
@@ -649,8 +650,8 @@ public final class Projectile extends MapEntity implements ProjectilePublic
         
         public int getSplashDamage(Actor actor, long tick, int damage, int range, long rangeSq)
         {
-                PhysicsPoint myPos = new PhysicsPoint();
-                PhysicsPoint actorPos = new PhysicsPoint();
+                final PhysicsPositionVector myPos = new PhysicsPositionVector();
+                final PhysicsPositionVector actorPos = new PhysicsPositionVector();
                 
                 if (!this.getHistoricPosition(myPos, tick, false))
                 {
@@ -662,13 +663,13 @@ public final class Projectile extends MapEntity implements ProjectilePublic
                         return 0;
                 }
                 
-                long distSq = myPos.distanceSquared(actorPos);
+                long distSq = myPos.pos.distanceSquared(actorPos.pos);
                 if (distSq >= rangeSq)
                 {
                         return 0; // out of range
                 }
 
-                long ldist = myPos.distance(actorPos, distSq);
+                long ldist = myPos.pos.distance(actorPos.pos, distSq);
                 assert ldist >= 0;
                 int dist = ldist > Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) ldist;
                 assert range >= dist;
@@ -751,16 +752,6 @@ public final class Projectile extends MapEntity implements ProjectilePublic
         public int getStateId()
         {
                 return state.id;
-        }
-        
-        @Override
-        public boolean getPosition(Position pos)
-        {
-                pos.x = this.pos.pos.x;
-                pos.y = this.pos.pos.y;
-                pos.x_vel = this.pos.vel.x;
-                pos.y_vel = this.pos.vel.y;
-                return true;
         }
 
         @Override
@@ -867,14 +858,15 @@ public final class Projectile extends MapEntity implements ProjectilePublic
                         return;
                 }
 
-                final PhysicsPoint forcePoint = new PhysicsPoint();
-                this.getHistoricPosition(forcePoint, tick, false);
+                final PhysicsPositionVector myPos = new PhysicsPositionVector();
+                this.getHistoricPosition(myPos, tick, false);
+                final PhysicsPoint forcePoint = new PhysicsPoint(myPos.pos);
 
                 Iterator<MapEntity> it = state.entityGrid.iterator(
                         forcePoint,
                         SwissArmyKnife.max(this.forceDistanceShip, this.forceDistanceProjectile));
 
-                final PhysicsPoint otherPosition = new PhysicsPoint();
+                final PhysicsPositionVector otherPosition = new PhysicsPositionVector();
                 final PhysicsPoint velocity = new PhysicsPoint();
                 final PhysicsPoint forceHist = new PhysicsPoint();
 
@@ -909,7 +901,7 @@ public final class Projectile extends MapEntity implements ProjectilePublic
                         }
                         
                         en.getHistoricPosition(otherPosition, tick, false);
-                        PhysicsMath.force(velocity, otherPosition, forcePoint, forceDistanceShip, forceVelocityShip);
+                        PhysicsMath.force(velocity, otherPosition.pos, forcePoint, forceDistanceShip, forceVelocityShip);
                         if (!velocity.isZero())
                         {
                                 en.markDirtyPositionPath(tick + 1);

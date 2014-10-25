@@ -47,6 +47,8 @@ import aphelion.shared.physics.events.pub.EventPublic;
 import aphelion.shared.physics.events.pub.ProjectileExplosionPublic;
 import aphelion.shared.physics.valueobjects.PhysicsPoint;
 import java.util.List;
+
+import aphelion.shared.physics.valueobjects.PhysicsPositionVector;
 import org.junit.*;
 import static org.junit.Assert.*;
 
@@ -474,13 +476,12 @@ public class TimewarpTest extends PhysicsTest
                                 assertEquals(ACTOR_FIRST, ev.getFireActor(state));
                                 assertEquals(ACTOR_SECOND, ev.getHitActor(state));
                                 assertEquals(4, ev.getOccurredAt(state));
-                                
+
                                 PhysicsPoint pos = new PhysicsPoint();
                                 ev.getPosition(state, pos);
                                 assertPointEquals(45664, 90, pos);
-                                
-                                ev.getProjectile(state).getHistoricPosition(pos, ev.getOccurredAt(state), true);
-                                assertPointEquals(45664, 90, pos);
+
+                                PhysicsPositionVector posv = new PhysicsPositionVector();
                         }
                         else if (e instanceof ActorDiedPublic)
                         {
@@ -570,9 +571,9 @@ public class TimewarpTest extends PhysicsTest
                                 PhysicsPoint pos = new PhysicsPoint();
                                 ev.getPosition(state, pos);
                                 assertPointEquals(385664, 90, pos);
-                                
-                                ev.getProjectile(state).getHistoricPosition(pos, ev.getOccurredAt(state), true);
-                                assertPointEquals(385664, 90, pos);
+
+                                PhysicsPositionVector posv = new PhysicsPositionVector();
+
                         }
                         else if (e instanceof ActorDiedPublic)
                         {

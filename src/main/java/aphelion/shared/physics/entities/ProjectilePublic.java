@@ -46,7 +46,7 @@ import aphelion.shared.gameconfig.GCIntegerList;
 import aphelion.shared.gameconfig.GCString;
 import aphelion.shared.gameconfig.GCStringList;
 import aphelion.shared.net.protobuf.GameOperation;
-import aphelion.shared.physics.valueobjects.PhysicsPoint;
+import aphelion.shared.physics.valueobjects.PhysicsPositionVector;
 import aphelion.shared.resource.ResourceDB;
 import aphelion.shared.swissarmyknife.Attachable;
 import java.util.Iterator;
@@ -72,17 +72,16 @@ public interface ProjectilePublic extends Attachable
         
         /** Gets the most current position, velocity for the projectile.
          * @param pos The object to fill with position, velocity, and rotation
-         * @return true if the projectile exists and pos has been filled 
          */
-        boolean getPosition(Position pos);
+        void getPosition(PhysicsPositionVector pos);
         
         /** Gets the historic position for the projectile.
-         * @param pos The object to fill with position and rotation
+         * @param pos The object to fill with position and velocity
          * @param tick
          * @param lookAtOtherStates 
          * @return true if the actor exists and pos has been filled
          */
-        boolean getHistoricPosition(PhysicsPoint pos, long tick, boolean lookAtOtherStates);
+        boolean getHistoricPosition(PhysicsPositionVector pos, long tick, boolean lookAtOtherStates);
         
         /** Returns the actor that fired this weapon.
          * @return the pid of the actor
@@ -115,56 +114,4 @@ public interface ProjectilePublic extends Attachable
         GCStringList getWeaponConfigStringList(String name);
         GCBooleanList getWeaponConfigBooleanList(String name);
         GCImage getWeaponConfigImage(String name, ResourceDB db);
-        
-        public static class Position
-        {
-                public int x;
-                public int y;
-                public int x_vel;
-                public int y_vel;
-
-                @Override
-                public int hashCode()
-                {
-                        int hash = 5;
-                        hash = 47 * hash + this.x;
-                        hash = 47 * hash + this.y;
-                        hash = 47 * hash + this.x_vel;
-                        hash = 47 * hash + this.y_vel;
-                        return hash;
-                }
-
-                @Override
-                public boolean equals(Object obj)
-                {
-                        if (obj == null)
-                        {
-                                return false;
-                        }
-                        if (!(obj instanceof Position))
-                        {
-                                return false;
-                        }
-                        final Position other = (Position) obj;
-                        if (this.x != other.x)
-                        {
-                                return false;
-                        }
-                        if (this.y != other.y)
-                        {
-                                return false;
-                        }
-                        if (this.x_vel != other.x_vel)
-                        {
-                                return false;
-                        }
-                        if (this.y_vel != other.y_vel)
-                        {
-                                return false;
-                        }
-                        return true;
-                }
-                
-                
-        }
 }
