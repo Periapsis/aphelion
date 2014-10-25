@@ -149,7 +149,7 @@ public final class EnvironmentConf
                 KEEP_EVENTS_FOR_TICKS = HIGHEST_DELAY + 1;
                 
                 
-                assert MINIMUM_HISTORY_TICKS >= 1 : "Histories must overlap by atleast 1 ticks!";
+                assert MINIMUM_HISTORY_TICKS >= 1 : "Histories must overlap by at least 1 ticks!";
                 
                 if (!server)
                 {
