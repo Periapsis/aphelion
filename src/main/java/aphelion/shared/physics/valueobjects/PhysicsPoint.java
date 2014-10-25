@@ -440,4 +440,20 @@ public final class PhysicsPoint
                         if (this.y > max.y) { this.y = max.y; }
                 }
         }
+
+        /**
+         * Throw if not equal
+         * @param x
+         * @param y
+         * @throws AssertionError
+         */
+        public void assertEquals(int x, int y)
+        {
+                if (x != this.x ||
+                    y != this.y)
+                {
+                        throw new AssertionError("expected point:<" + x + "," + y + "> but was:<" + this.x + "," + this.y + ">");
+                }
+
+        }
 }

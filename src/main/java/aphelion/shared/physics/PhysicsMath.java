@@ -50,8 +50,6 @@ import java.util.logging.Logger;
  */
 public final class PhysicsMath
 {
-        private static final Logger log = Logger.getLogger("aphelion.shared.physics");
-        
         private PhysicsMath()
         {
         }
@@ -69,30 +67,35 @@ public final class PhysicsMath
                 point.addY((int) ((long) -length * PhysicsTrig.cos(rot) / PhysicsTrig.MAX_VALUE));
         }
 
-        public static int snapRotation(int rot, int rotation_points)
+        /**
+         * Snap the rotation by rounding to the nearest multiple of rotationPoints
+         * @param rot Rotation value
+         * @param rotationPoints <= 1 disables snapping (as if this function was never called.
+         * @return Snapped rotation value
+         */
+        public static int snapRotation(int rot, int rotationPoints)
         {
                 int rem;
                 int snap;
                 
-                if (rotation_points == 0)
+                if (rotationPoints <= 1)
                 {
                         return rot;
                 }
                 
-                snap = EnvironmentConf.ROTATION_POINTS / rotation_points;
+                snap = EnvironmentConf.ROTATION_POINTS / rotationPoints;
                 rem = rot % snap;
                 if (rem == 0)
                 {
                         return rot;
                 }
+
                 if (rem < snap / 2)
                 {
                         return rot - rem;
                 }
-                else
-                {
-                        return (rot + (snap - rem)) % EnvironmentConf.ROTATION_POINTS;
-                }
+
+                return (rot + (snap - rem)) % EnvironmentConf.ROTATION_POINTS;
         }
 
         public static boolean rectanglesCollide(int xA1, int yA1, int xA2, int yA2, int xB1, int yB1, int xB2, int yB2)
@@ -108,11 +111,6 @@ public final class PhysicsMath
                 return true;
         }
 
-        public static boolean rectanglesCollide(PhysicsPoint aLT, PhysicsPoint aBR, PhysicsPoint bLT, PhysicsPoint bBR)
-        {
-                return rectanglesCollide(aLT.x, aLT.y, aBR.x, aBR.y, bLT.x, bLT.y, bBR.x, bBR.y);
-        }
-        
         public static void force(
                 PhysicsPoint ret, 
                 PhysicsPoint applyTo, 

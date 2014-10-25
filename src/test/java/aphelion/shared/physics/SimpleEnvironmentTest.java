@@ -61,20 +61,6 @@ public class SimpleEnvironmentTest extends PhysicsTest
                 
                 // Continuum compatibility (not absolutely necessary, however nice to have):
                 assertTrue(EnvironmentConf.ROTATION_POINTS % 40 == 0); // continuum rotation points
-
-        }
-
-        @Test
-        public void testSnapRotation()
-        {
-                assertEquals(0,
-                        PhysicsMath.snapRotation(100, 40));
-
-                assertEquals(EnvironmentConf.ROTATION_POINTS / 40,
-                        PhysicsMath.snapRotation(EnvironmentConf.ROTATION_POINTS / 40 - 1000, 40));
-
-                assertEquals(0,
-                        PhysicsMath.snapRotation(EnvironmentConf.ROTATION_POINTS - 1000, 40));
         }
 
         @Test

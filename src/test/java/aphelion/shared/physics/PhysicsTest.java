@@ -216,10 +216,7 @@ public abstract class PhysicsTest
         
         public static void assertPointEquals(int x, int y, PhysicsPoint point)
         {
-                if (x != point.x || y != point.y)
-                {
-                        throw new AssertionError("expected point:<" + x + "," + y + "> but was:<" + point.x + "," + point.y + ">");
-                }
+                point.assertEquals(x, y);
         }
 
         public void assertPosition(int x, int y, ActorPublic actor)
