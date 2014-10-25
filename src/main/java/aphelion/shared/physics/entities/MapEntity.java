@@ -225,12 +225,11 @@ public abstract class MapEntity implements EntityGridEntity
          */
         public boolean getHistoricPosition(PhysicsPoint pos, long tick, boolean lookAtOtherStates)
         {
-                pos.set = false;
-                
                 MapEntity en = getOlderEntity(tick, false, lookAtOtherStates);
 
                 if (en == null)
                 {
+                        pos.unset();
                         return false; // deleted or too far in the past
                 }
                 

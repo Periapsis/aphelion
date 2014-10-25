@@ -156,9 +156,9 @@ public class ActorPublicImpl implements ActorPublic
         public boolean getPosition(PhysicsShipPosition pos)
         {
                 Actor actor = getActor();
-                pos.set = false;
                 if (actor == null)
                 {
+                        pos.unset();
                         return false; // deleted
                 }
                 else
@@ -184,10 +184,10 @@ public class ActorPublicImpl implements ActorPublic
         public boolean getHistoricPosition(PhysicsShipPosition pos, long tick, boolean lookAtOtherStates)
         {
                 Actor actor = getActor();
-                pos.set = false;
                 
                 if (actor == null)
                 {
+                        pos.unset();
                         return false; // deleted
                 }
                 

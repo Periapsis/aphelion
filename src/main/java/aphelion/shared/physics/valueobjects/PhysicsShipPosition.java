@@ -70,6 +70,19 @@ public class PhysicsShipPosition
                 return hash;
         }
 
+        public void unset()
+        {
+                this.set = false;
+                this.x = 0;
+                this.y = 0;
+                this.x_vel = 0;
+                this.y_vel = 0;
+                this.smooth_x = 0;
+                this.smooth_y = 0;
+                this.rot = 0;
+                this.rot_snapped = 0;
+        }
+
         public void setPosition(PhysicsPoint p)
         {
                 x = p.x;

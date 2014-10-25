@@ -419,7 +419,7 @@ public final class Projectile extends MapEntity implements ProjectilePublic
                 }
                 
                 // Do not execute the hit tile event if it was planned.
-                hitTile.set = false;
+                hitTile.unset();
 
                 ProjectileExplosion.Key eventKey = new ProjectileExplosion.Key(this.key);
                 ProjectileExplosion event = (ProjectileExplosion) state.env.findEvent(eventKey);

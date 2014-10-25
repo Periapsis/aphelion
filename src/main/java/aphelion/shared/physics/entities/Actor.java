@@ -854,12 +854,11 @@ public class Actor extends MapEntity
         
         public boolean getHistoricPosition(PhysicsShipPosition pos, long tick, boolean lookAtOlderStates)
         {
-                pos.set = false;
-                
                 Actor actor = getOlderActor(tick, false, lookAtOlderStates);
 
                 if (actor == null)
                 {
+                        pos.unset();
                         return false; // deleted or ticks go back way too far
                 }
                 
@@ -879,12 +878,11 @@ public class Actor extends MapEntity
         @Override
         public boolean getHistoricSmoothPosition(PhysicsPoint pos, long tick, boolean lookAtOtherStates)
         {
-                pos.set = false;
-                
                 Actor actor = getOlderActor(tick, false, lookAtOtherStates);
 
                 if (actor == null)
                 {
+                        pos.unset();
                         return false; // deleted or too far in the past
                 }
                 
