@@ -69,8 +69,8 @@ public class PhysicsPositionVector
         public int hashCode()
         {
                 int hash = 7;
-                hash = 59 * hash + (this.pos != null ? this.pos.hashCode() : 0);
-                hash = 59 * hash + (this.vel != null ? this.vel.hashCode() : 0);
+                hash = 59 * hash + this.pos.hashCode();
+                hash = 59 * hash + this.vel.hashCode();
                 return hash;
         }
 
@@ -86,11 +86,11 @@ public class PhysicsPositionVector
                         return false;
                 }
                 final PhysicsPositionVector other = (PhysicsPositionVector) obj;
-                if (this.pos != other.pos && (this.pos == null || !this.pos.equals(other.pos)))
+                if (this.pos != other.pos && !this.pos.equals(other.pos))
                 {
                         return false;
                 }
-                if (this.vel != other.vel && (this.vel == null || !this.vel.equals(other.vel)))
+                if (this.vel != other.vel && !this.vel.equals(other.vel))
                 {
                         return false;
                 }
