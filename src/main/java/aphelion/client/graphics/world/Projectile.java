@@ -241,7 +241,7 @@ public class Projectile extends MapEntity implements WrappedValueAbstract.Change
                                 Point trailPos = new Point();
                                 PhysicsPoint phyPos = new PhysicsPoint();
 
-                                long rand = imageTrailRandomized.get() || true ? SwissArmyKnife.fastRandomIsh() : 0;
+                                long rand = imageTrailRandomized.get() ? SwissArmyKnife.fastRandomIsh() : 0;
 
                                 long tick = this.renderingAt_tick - (rand & 0b11); // 0, 1, 2, 3
                                 rand >>= 2;
