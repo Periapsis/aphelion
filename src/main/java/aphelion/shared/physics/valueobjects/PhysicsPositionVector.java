@@ -58,6 +58,12 @@ public class PhysicsPositionVector
                 this.pos.unset();
                 this.vel.unset();
         }
+
+        public void markSet()
+        {
+                this.pos.set = true;
+                this.vel.set = true;
+        }
         
         public void enforceOverflowLimit()
         {
