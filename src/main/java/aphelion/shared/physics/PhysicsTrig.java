@@ -1,6 +1,6 @@
 /*
  * Aphelion
- * Copyright (c) 2013  Joris van der Wel
+ * Copyright (c) 2013-2014  Joris van der Wel
  * 
  * This file is part of Aphelion
  * 
@@ -54,7 +54,11 @@ import java.nio.ByteBuffer;
  */
 public class PhysicsTrig
 {
-        public static final int MAX_VALUE = 1 << 30;
+        public static final int MAX_VALUE = 1 << 30; // foo / MAX_VALUE === foo >> 30
+
+        private PhysicsTrig()
+        {
+        }
 
         /** Calculates the sine of a rotation angle.
          * @param angle An angle in which ROTATION_POINTS = pi*2
@@ -79,6 +83,7 @@ public class PhysicsTrig
         /** Calculates the tangent of a rotation angle.
          * @param angle An angle in which ROTATION_POINTS = pi*2
          * @return A value between -2^30 and 2^30 (1073741824)
+         * @throws ArithmeticException For invalid angles
          */
         public static int tan(int angle)
         {
@@ -88,6 +93,7 @@ public class PhysicsTrig
         /** Calculates the cotangent of a rotation angle.
          * @param angle An angle in which ROTATION_POINTS = pi*2
          * @return A value between -2^30 and 2^30 (1073741824)
+         * @throws ArithmeticException For invalid angles
          */
         public static int cotan(int angle)
         {
@@ -96,7 +102,6 @@ public class PhysicsTrig
         
         private static int sin(long angle)
         {
-                assert ROTATION_POINTS * 4L > Integer.MAX_VALUE;
                 angle += ROTATION_POINTS * 4L; // instead of abs()
                 angle %= ROTATION_POINTS;
                 
@@ -115,6 +120,7 @@ public class PhysicsTrig
         
         static
         {
+                assert ROTATION_POINTS * 4L > Integer.MAX_VALUE;
                 assert ROTATION_POINTS % LOOKUP_SIZE == 0;
                 load();
         }
@@ -217,8 +223,7 @@ public class PhysicsTrig
                 b.close();
                 /**/
                 
-		//generate();
-
+		generate();
         }
         
 
