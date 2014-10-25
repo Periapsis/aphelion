@@ -37,6 +37,8 @@
  */
 package aphelion.shared.swissarmyknife;
 
+import aphelion.shared.physics.valueobjects.PhysicsPoint;
+
 /**
  *
  * @author JabJabJab
@@ -91,6 +93,12 @@ public class Point
         {
                 this.x = other.getX();
                 this.y = other.getY();
+        }
+
+        public void set(PhysicsPoint other)
+        {
+                this.x = other.x;
+                this.y = other.y;
         }
 
         public void set(float x, float y)
