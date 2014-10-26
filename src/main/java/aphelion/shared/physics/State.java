@@ -95,7 +95,7 @@ public class State
         /** This grid is a quick way to find out what entities are at what position.
          * It is only valid for "tick_now"
          */
-        public final EntityGrid<MapEntity> entityGrid = new EntityGrid(32768, 1024 * MapClassic.TILE_PIXELS / 32768);
+        public final EntityGrid<MapEntity> entityGrid = new EntityGrid<>(32768, 1024 * MapClassic.TILE_PIXELS / 32768);
         
         public final GameConfig config = new GameConfig();
         public final ConfigSelection globalConfig = config.newSelection();
