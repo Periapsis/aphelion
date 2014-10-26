@@ -877,6 +877,9 @@ public final class Projectile extends MapEntity implements ProjectilePublic
                 {
                         MapEntity en = it.next();
                         if (en == this) { continue; }
+
+                        int forceDistance = 0;
+                        int forceVelocity = 0;
                         
                         if (doShip && en instanceof Actor)
                         {
@@ -886,6 +889,9 @@ public final class Projectile extends MapEntity implements ProjectilePublic
                                 {
                                         continue;
                                 }
+
+                                forceDistance = forceDistanceShip;
+                                forceVelocity = forceVelocityShip;
                         }
                         else if (doProjectile && en instanceof Projectile)
                         {
@@ -901,14 +907,16 @@ public final class Projectile extends MapEntity implements ProjectilePublic
                                 {
                                         continue;
                                 }
+
+                                forceDistance = forceDistanceProjectile;
+                                forceVelocity = forceVelocityProjectile;
                         }
                         
-                        en.getHistoricPosition(otherPosition, tick, false);
-                        PhysicsMath.force(velocity, otherPosition.pos, forcePoint, forceDistanceShip, forceVelocityShip);
-                        if (!velocity.isZero())
+                        if (en.getHistoricPosition(otherPosition, tick, false) &&
+                            PhysicsMath.force(velocity, otherPosition.pos, forcePoint, forceDistance, forceVelocity))
                         {
                                 en.markDirtyPositionPath(tick + 1);
-                                
+
                                 en.forceHistory.get(forceHist, tick);
                                 forceHist.add(velocity);
                                 forceHist.enforceOverflowLimit();
