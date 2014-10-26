@@ -111,7 +111,16 @@ public final class PhysicsMath
                 return true;
         }
 
-        public static void force(
+        /**
+         * Calculate the amount of force applied between an emitter and a receiving point.
+         * @param ret Set if the arguments are valid, not set otherwise.
+         * @param applyTo
+         * @param forcePoint
+         * @param range
+         * @param strength
+         * @return true if "ret" is not 0,0
+         */
+        public static boolean force(
                 PhysicsPoint ret, 
                 PhysicsPoint applyTo, 
                 PhysicsPoint forcePoint, 
@@ -119,16 +128,20 @@ public final class PhysicsMath
                 int strength)
         {
                 ret.unset();
-                if (!applyTo.set || range < 1)
+                if (!applyTo.set ||
+                    range < 1  ||
+                    strength == 0)
                 {
-                        return;
+                        return false;
                 }
+
+                ret.set = true;
                 
                 long dist = forcePoint.distance(applyTo);
                 if (dist >= range)
                 {
                         // too far away
-                        return;
+                        return false;
                 }
                 
                 if (dist == 0)
@@ -136,8 +149,7 @@ public final class PhysicsMath
                         // apply south
                         ret.x = 0;
                         ret.y = strength;
-                        ret.set = true;
-                        return;
+                        return true;
                 }
                 
                 long force = range - dist; // fits integer
@@ -145,6 +157,6 @@ public final class PhysicsMath
                 
                 ret.x = (int) ((applyTo.x - forcePoint.x) * force / dist);
                 ret.y = (int) ((applyTo.y - forcePoint.y) * force / dist);
-                ret.set = true;
+                return !ret.isZero();
         }
 }

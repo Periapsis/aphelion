@@ -198,57 +198,69 @@ public class PhysicsMathTest
                 applyTo.set(400, 400);
                 forcePoint.set(400, 400);
 
-                PhysicsMath.force(velocity, applyTo, forcePoint, 0, 50000);
+                assertFalse(PhysicsMath.force(velocity, applyTo, forcePoint, 0, 50000));
                 assertFalse("Return value should not be set if the range is invalid", velocity.set);
                 assertEquals(0, velocity.x);
                 assertEquals(0, velocity.y);
 
                 forcePoint.set(400, 400);
-                PhysicsMath.force(velocity, applyTo, forcePoint, 100, 50000);
+                assertTrue(PhysicsMath.force(velocity, applyTo, forcePoint, 100, 50000));
                 assertTrue("Return value should be set if the positions are equal to each other", velocity.set);
                 assertEquals(0, velocity.x);
                 assertEquals(50000, velocity.y);
 
                 applyTo.set(500, 400);
-                PhysicsMath.force(velocity, applyTo, forcePoint, 100, 50000);
-                assertFalse("Return value should not be set if out of range", velocity.set);
+                assertFalse(PhysicsMath.force(velocity, applyTo, forcePoint, 100, 50000));
+                assertTrue("Return value should be set if out of range", velocity.set);
                 assertEquals(0, velocity.x);
                 assertEquals(0, velocity.y);
 
                 applyTo.set(410, 123401);
-                PhysicsMath.force(velocity, applyTo, forcePoint, 100, 50000);
-                assertFalse("Return value should not be set if out of range", velocity.set);
+                assertFalse(PhysicsMath.force(velocity, applyTo, forcePoint, 100, 50000));
+                assertTrue("Return value should be set if out of range", velocity.set);
                 assertEquals(0, velocity.x);
                 assertEquals(0, velocity.y);
 
                 applyTo.set(350, 400);
-                PhysicsMath.force(velocity, applyTo, forcePoint, 100, 50000);
+                assertTrue(PhysicsMath.force(velocity, applyTo, forcePoint, 100, 50000));
                 assertTrue("Return value should be set", velocity.set);
                 assertEquals(-50000/2, velocity.x);
                 assertEquals(0, velocity.y);
 
                 applyTo.set(450, 400);
-                PhysicsMath.force(velocity, applyTo, forcePoint, 100, 50000);
+                assertTrue(PhysicsMath.force(velocity, applyTo, forcePoint, 100, 50000));
                 assertTrue("Return value should be set", velocity.set);
                 assertEquals(50000/2, velocity.x);
                 assertEquals(0, velocity.y);
 
                 applyTo.set(400, 350);
-                PhysicsMath.force(velocity, applyTo, forcePoint, 100, 50000);
+                assertTrue(PhysicsMath.force(velocity, applyTo, forcePoint, 100, 50000));
                 assertTrue("Return value should be set", velocity.set);
                 assertEquals(0, velocity.x);
                 assertEquals(-50000/2, velocity.y);
 
                 applyTo.set(400, 450);
-                PhysicsMath.force(velocity, applyTo, forcePoint, 100, 50000);
+                assertTrue(PhysicsMath.force(velocity, applyTo, forcePoint, 100, 50000));
                 assertTrue("Return value should be set", velocity.set);
                 assertEquals(0, velocity.x);
                 assertEquals(50000/2, velocity.y);
 
                 applyTo.set(430, 440); // (results in a pythagorean triple, dist=50)
-                PhysicsMath.force(velocity, applyTo, forcePoint, 100, 50000);
+                assertTrue(PhysicsMath.force(velocity, applyTo, forcePoint, 100, 50000));
                 assertTrue("Return value should be set", velocity.set);
                 assertEquals(50000 * 30 / 100, velocity.x);
                 assertEquals(50000 * 40 / 100, velocity.y);
+
+                applyTo.set(350, 400);
+                assertFalse(PhysicsMath.force(velocity, applyTo, forcePoint, 100, 0));
+                assertFalse("Return value should not be set if strength is zero", velocity.set);
+                assertEquals(0, velocity.x);
+                assertEquals(0, velocity.y);
+
+                applyTo.set(350, 400);
+                assertFalse(PhysicsMath.force(velocity, applyTo, forcePoint, 100, 1));
+                assertTrue("Return value should be set if the result evaluated to zero", velocity.set);
+                assertEquals(0, velocity.x);
+                assertEquals(0, velocity.y);
         }
 }
