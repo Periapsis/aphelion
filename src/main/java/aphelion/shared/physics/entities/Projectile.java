@@ -321,13 +321,16 @@ public final class Projectile extends MapEntity implements ProjectilePublic
                 if (this.isForceEmitter() && operation_late)
                 {
                         // however a force emitter should emit for the current tick also ( <= ).
-                        // If late=false, State.tickForceEmitters will be called soons
-                        long t;
-                        for (t = 0; t <= untilExpiry_ticks; ++t)
+                        // If late=false, State.tickForceEmitters will be called soon
+                        long tick = operation_tick;
+                        for (long t = 0; t <= untilExpiry_ticks; ++t)
                         {
-                                this.emitForce(operation_tick + t);
+                                tick = operation_tick + t;
+                                this.emitForce(tick);
                         }
-                        assert t == state.tick_now || t == expiry_tick;
+
+                        assert tick == state.tick_now ||
+                               tick == expiry_tick;
                 }
 
                 if (expiry_tick <= state.tick_now)
