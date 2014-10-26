@@ -244,7 +244,8 @@ public abstract class MapEntity implements EntityGridEntity
 
                 en.posHistory.get(pos.pos, tick);
                 en.velHistory.get(pos.vel, tick);
-                return true;
+                assert pos.pos.set == pos.vel.set;
+                return pos.pos.set;
         }
         
         /** Get the historic smooth position of this entity.
