@@ -121,10 +121,31 @@ public final class PhysicsMath
          * @return true if "ret" is not 0,0
          */
         public static boolean force(
+                PhysicsPoint ret,
+                PhysicsPoint applyTo,
+                PhysicsPoint forcePoint,
+                int range,
+                int strength)
+        {
+                return force(ret, applyTo, forcePoint, range, (long) range * (long) range, strength);
+        }
+
+        /**
+         * Calculate the amount of force applied between an emitter and a receiving point.
+         * @param ret Set if the arguments are valid, not set otherwise.
+         * @param applyTo
+         * @param forcePoint
+         * @param range
+         * @param rangeSq Must be exactly equal to (long) range * range
+         * @param strength
+         * @return true if "ret" is not 0,0
+         */
+        public static boolean force(
                 PhysicsPoint ret, 
                 PhysicsPoint applyTo, 
                 PhysicsPoint forcePoint, 
                 int range,
+                long rangeSq,
                 int strength)
         {
                 ret.unset();
@@ -136,8 +157,15 @@ public final class PhysicsMath
                 }
 
                 ret.set = true;
+
+                long distSq = forcePoint.distanceSquared(applyTo);
+                if (distSq >= rangeSq)
+                {
+                        // too far away (quick)
+                        return false;
+                }
                 
-                long dist = forcePoint.distance(applyTo);
+                long dist = forcePoint.distance(applyTo, distSq);
                 if (dist >= range)
                 {
                         // too far away
