@@ -861,67 +861,75 @@ public final class Projectile extends MapEntity implements ProjectilePublic
                         return;
                 }
 
-                final PhysicsPositionVector myPos = new PhysicsPositionVector();
-                this.getHistoricPosition(myPos, tick, false);
-                final PhysicsPoint forcePoint = new PhysicsPoint(myPos.pos);
+                final PhysicsPoint forcePoint = new PhysicsPoint();
+                this.posHistory.get(forcePoint, tick);
 
                 Iterator<MapEntity> it = state.entityGrid.iterator(
                         forcePoint,
                         SwissArmyKnife.max(this.forceDistanceShip, this.forceDistanceProjectile));
 
+                while (it.hasNext())
+                {
+                        this.emitForce(tick, it.next());
+                }
+        }
+
+        public void emitForce(long tick, MapEntity en)
+        {
+                final boolean doShip = this.forceDistanceShip > 0 && this.forceVelocityShip != 0;
+                final boolean doProjectile = this.forceDistanceProjectile > 0 && this.forceVelocityProjectile != 0;
+                final PhysicsPoint forcePoint = new PhysicsPoint();
                 final PhysicsPositionVector otherPosition = new PhysicsPositionVector();
                 final PhysicsPoint velocity = new PhysicsPoint();
                 final PhysicsPoint forceHist = new PhysicsPoint();
 
-                while (it.hasNext())
+                if (en == this) { return; }
+
+                int forceDistance = 0;
+                int forceVelocity = 0;
+
+                if (doShip && en instanceof Actor)
                 {
-                        MapEntity en = it.next();
-                        if (en == this) { continue; }
-
-                        int forceDistance = 0;
-                        int forceVelocity = 0;
-                        
-                        if (doShip && en instanceof Actor)
+                        Actor actor = (Actor) en;
+                        if (actor.isDead(tick)) { return; }
+                        if (!damageSelf && en == this.owner)
                         {
-                                Actor actor = (Actor) en;
-                                if (actor.isDead(tick)) { continue; }
-                                if (!damageSelf && en == this.owner)
-                                {
-                                        continue;
-                                }
-
-                                forceDistance = forceDistanceShip;
-                                forceVelocity = forceVelocityShip;
+                                return;
                         }
-                        else if (doProjectile && en instanceof Projectile)
+
+                        forceDistance = forceDistanceShip;
+                        forceVelocity = forceVelocityShip;
+                }
+                else if (doProjectile && en instanceof Projectile)
+                {
+                        Projectile proj = (Projectile) en;
+                        if (!damageSelf && proj.owner == this.owner)
                         {
-                                Projectile proj = (Projectile) en;
-                                if (!damageSelf && proj.owner == this.owner)
-                                {
-                                        continue;
-                                }
-                                
-                                // Force emitters never affect other force emitters
-                                // (or, at least for now, it causes too many inconsistencies)
-                                if (proj.isForceEmitter())
-                                {
-                                        continue;
-                                }
-
-                                forceDistance = forceDistanceProjectile;
-                                forceVelocity = forceVelocityProjectile;
+                                return;
                         }
-                        
-                        if (en.getHistoricPosition(otherPosition, tick, false) &&
-                            PhysicsMath.force(velocity, otherPosition.pos, forcePoint, forceDistance, forceVelocity))
+
+                        // Force emitters never affect other force emitters
+                        // (or, at least for now: it causes too many inconsistencies)
+                        if (proj.isForceEmitter())
                         {
-                                en.markDirtyPositionPath(tick + 1);
-
-                                en.forceHistory.get(forceHist, tick);
-                                forceHist.add(velocity);
-                                forceHist.enforceOverflowLimit();
-                                en.forceHistory.setHistory(tick, forceHist);
+                                return;
                         }
+
+                        forceDistance = forceDistanceProjectile;
+                        forceVelocity = forceVelocityProjectile;
+                }
+
+                this.posHistory.get(forcePoint, tick);
+
+                if (en.getHistoricPosition(otherPosition, tick, false) &&
+                    PhysicsMath.force(velocity, otherPosition.pos, forcePoint, forceDistance, forceVelocity))
+                {
+                        en.markDirtyPositionPath(tick + 1);
+
+                        en.forceHistory.get(forceHist, tick);
+                        forceHist.add(velocity);
+                        forceHist.enforceOverflowLimit();
+                        en.forceHistory.setHistory(tick, forceHist);
                 }
         }
 
