@@ -40,13 +40,17 @@
  */
 package aphelion.shared.swissarmyknife;
 
-import aphelion.shared.swissarmyknife.LinkedListEntry;
-
 /**
- *
+ * Any object that might be stored in an EntityGrid must implement this interface.
  * @author joris
  */
 public interface EntityGridEntity
 {
+        /** Get the LinkedListEntry for this object that is used to maintain Linked Lists in the entity grids.
+         * This method must always return the same entry for the same object & grid. Only the EntityGrid should modify
+         * the LinkedListEntry
+         * @param grid The EntityGrid the LinkedListEntry belongs to
+         * @return The LinkedListEntry for your object
+         */
         LinkedListEntry getEntityGridEntry(EntityGrid grid);
 }

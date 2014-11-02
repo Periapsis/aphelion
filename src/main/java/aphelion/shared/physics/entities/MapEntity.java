@@ -73,7 +73,7 @@ public abstract class MapEntity implements EntityGridEntity
         
         public final State state;
         public final MapEntity[] crossStateList;
-        /** This attribute only be accessed by EntityGrid. */
+        /** This attribute must only be accessed by EntityGrid. */
         public final LinkedListEntry<MapEntity> entityGridEntry = new LinkedListEntry<>(this);
         
         public final int HISTORY_LENGTH;

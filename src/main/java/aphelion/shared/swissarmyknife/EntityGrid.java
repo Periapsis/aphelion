@@ -42,9 +42,10 @@
 package aphelion.shared.swissarmyknife;
 
 import aphelion.shared.physics.valueobjects.PhysicsPoint;
-import aphelion.shared.swissarmyknife.LinkedListEntry;
-import aphelion.shared.swissarmyknife.LinkedListHead;
+
 import static aphelion.shared.swissarmyknife.SwissArmyKnife.clip;
+
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 import javax.annotation.Nonnull;
@@ -71,6 +72,22 @@ public class EntityGrid<T extends EntityGridEntity>
          * 
          */
         public final int GRID_SIZE;
+
+        /**
+         * Are actions being queued? (until disableQueue() is called)
+         */
+        private boolean queue_enabled = false;
+
+        /**
+         * The queue containing actions to execute upon disableQueue()
+         * Grows as needed and stays that way to prevent allocation memory over and over
+         */
+        private final ArrayList<QueueEntry<T>> queue = new ArrayList<>();
+
+        /** The index of the last entry with actual data.
+         */
+        private int queue_currentIndex = -1;
+
         
         /** 
          * @param cellSize The size of a single cell in the entity grid.
@@ -92,6 +109,21 @@ public class EntityGrid<T extends EntityGridEntity>
                         }
                 }
         }
+
+        private QueueEntry<T> getEmptyQueueEntry()
+        {
+                int index = ++queue_currentIndex;
+                QueueEntry<T> ret;
+
+                if (index >= queue.size())
+                {
+                        ret = new QueueEntry<>();
+                        queue.add(ret);
+                        return ret;
+                }
+
+                return queue.get(index);
+        }
         
         /** Remove an entity from the grid.
          * 
@@ -99,8 +131,19 @@ public class EntityGrid<T extends EntityGridEntity>
          */
         public void removeEntity(@Nonnull T entity)
         {
-                LinkedListEntry entry = entity.getEntityGridEntry(this);
-                entry.remove();
+                LinkedListEntry link;
+                QueueEntry<T> entry;
+
+                if (this.queue_enabled)
+                {
+                        entry = this.getEmptyQueueEntry();
+                        entry.removeAction = true;
+                        entry.entity = entity;
+                        return;
+                }
+
+                link = entity.getEntityGridEntry(this);
+                link.remove();
         }
         
         /** Update an entity to its new location on the grid. 
@@ -109,12 +152,25 @@ public class EntityGrid<T extends EntityGridEntity>
          * @param entity
          * @param x
          * @param y
-         * @return True if the entity is now present in the grid.
          */
-        public boolean updateLocation(@Nonnull T entity, int x, int y)
+        public void updateLocation(@Nonnull T entity, int x, int y)
         {
-                LinkedListEntry entry = entity.getEntityGridEntry(this);
-                entry.remove();
+                LinkedListEntry<T> link;
+                QueueEntry<T> entry;
+
+                if (this.queue_enabled)
+                {
+                        entry = this.getEmptyQueueEntry();
+                        entry.removeAction = false;
+                        entry.x = x;
+                        entry.y = y;
+                        entry.entity = entity;
+                        return;
+                }
+
+                link = entity.getEntityGridEntry(this);
+
+                link.remove();
                 
                 // Because ENTITY_GRID_CELL_SIZE is a multiple of 2,
                 // This should optimize to a simple bitshift
@@ -126,16 +182,13 @@ public class EntityGrid<T extends EntityGridEntity>
                 try
                 {
                         LinkedListHead<T> cell = grid[cell_x][cell_y];
-                        cell.append(entry);
-                        return true;
+                        cell.append(link);
                 }
                 catch (IndexOutOfBoundsException ex)
                 {
-                        // do nothing, the entity will not be part of the collison
+                        // do nothing, the entity will not be part of the collision
                         // This means the projectile is outside of the map
                 }
-                
-                return false;
         }
         
         /** Update an entity to its new location on the grid. 
@@ -146,22 +199,20 @@ public class EntityGrid<T extends EntityGridEntity>
          * if not set remove the entity from the grid (or if the entity is outside of the map borders).
          * @return True if the entity is now present in the grid.
          */
-        public boolean updateLocation(@Nonnull T entity, @Nullable PhysicsPoint pos)
+        public void updateLocation(@Nonnull T entity, @Nullable PhysicsPoint pos)
         {
                 if (pos == null || !pos.set)
                 {
                         removeEntity(entity);
-                        return false;
                 }
                 else
                 {
                         updateLocation(entity, pos.x, pos.y);
                 }
-                
-                return false;
         }
         
-        /** Iterate over all the entities in the given square.
+        /** Iterate over all the entities in the given square. This iterator is not safe against modifications
+         * (however it will not crash)
          * @param low
          * @param high
          * @return 
@@ -242,7 +293,8 @@ public class EntityGrid<T extends EntityGridEntity>
                 };
         }
         
-        /** Iterate over all the entities within the given radius (square).
+        /** Iterate over all the entities within the given radius (square). This iterator is not safe against modifications
+         * (however it will not crash) unless you call enableQueue() first.
          * @param center
          * @param radius
          * @return 
@@ -254,5 +306,69 @@ public class EntityGrid<T extends EntityGridEntity>
                 low.sub(radius);
                 high.add(radius);
                 return iterator(low, high);
+        }
+
+        /**
+         * Enable queuing of any change to the grid. Enable this during iteration to prevent modifications messing up
+         * this iteration.
+         * Note: if multiple iterators of the same entity grid are needed at the same time (with different views), a
+         * different implementation will be needed
+         * @throws IllegalStateException The queue is already enabled
+         */
+        public void enableQueue()
+        {
+                if (this.queue_enabled)
+                {
+                        throw new IllegalStateException("EntityGrid queue is already enabled");
+                }
+
+                this.queue_enabled = true;
+        }
+
+        /**
+         * Disable the queue enabled by enableQueue() and apply the changes in the queue.
+         * @throws IllegalStateException The queue is already disabled
+         */
+        public void disableQueue()
+        {
+                if (!this.queue_enabled)
+                {
+                        throw new IllegalStateException("EntityGrid queue is already disabled");
+                }
+
+                this.queue_enabled = false;
+
+                for (int i = 0; i <= this.queue_currentIndex; ++i)
+                {
+                        QueueEntry<T> entry = this.queue.get(i);
+                        if (entry.removeAction)
+                        {
+                                this.removeEntity(entry.entity);
+                        }
+                        else
+                        {
+                                this.updateLocation(entry.entity, entry.x, entry.y);
+                        }
+                        entry.reset();
+                }
+
+                // clear the queue without removing the objects
+                this.queue_currentIndex = -1;
+        }
+
+        private static class QueueEntry<T>
+        {
+                boolean removeAction;
+                int x;
+                int y;
+                T entity;
+
+                public void reset()
+                {
+                        removeAction = false;
+                        x = 0;
+                        y = 0;
+                        entity = null;
+                }
         }
 }

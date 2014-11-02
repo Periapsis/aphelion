@@ -41,10 +41,9 @@
 package aphelion.shared.swissarmyknife;
 
 import aphelion.shared.physics.valueobjects.PhysicsPoint;
-import aphelion.shared.swissarmyknife.EntityGridEntity;
-import aphelion.shared.swissarmyknife.EntityGrid;
-import aphelion.shared.swissarmyknife.LinkedListEntry;
 import java.util.Iterator;
+import java.util.NoSuchElementException;
+
 import org.junit.Test;
 import static org.junit.Assert.*;
 import org.junit.Before;
@@ -80,6 +79,42 @@ public class EntityGridTest
                 assertContains("position 32768 * 3 - 1, 0 should be stored in cell 2, 0", a, cellLow(2, 0), cellHigh(2, 0));
                 assertContains("position 32768 * 3 - 1, 0 should be between cell 1,0 and 3,3", a, cellLow(1, 0), cellHigh(3, 3));
         }
+
+        @Test
+        public void testEmptyIterator()
+        {
+                Iterator it = grid.iterator(new PhysicsPoint(0,0), new PhysicsPoint(0,0));
+                assertFalse(it.hasNext());
+
+                try
+                {
+                        it.next();
+                        assertTrue("Should throw", false);
+                }
+                catch (NoSuchElementException ex)
+                {
+                        assertTrue(true);
+                }
+        }
+
+        @Test
+        public void testIteratorRemove()
+        {
+                MyEntity a = new MyEntity("a");
+                grid.updateLocation(a, 0, 0);
+                Iterator it = grid.iterator(cellLow(0, 0), cellHigh(0, 0));
+                assertNotNull(it.next());
+
+                try
+                {
+                        it.remove();
+                        assertTrue("Should throw", false);
+                }
+                catch (UnsupportedOperationException ex)
+                {
+                        assertTrue(true);
+                }
+        }
         
         @Test
         public void testNegative()
@@ -102,14 +137,106 @@ public class EntityGridTest
                 MyEntity d = new MyEntity("d");
                 
                 grid.updateLocation(a, 4000, 10000);
-                grid.updateLocation(b, 2320, 11230);
-                grid.updateLocation(c, 40323, 11230);
+                grid.updateLocation(b, new PhysicsPoint(2320, 11230));
+                grid.updateLocation(c, 40323, 51230);
                 grid.updateLocation(d, 32768*15, 32768*15);
                 
                 assertContains("Should contain a", a, cellLow(0, 0), cellHigh(3, 3));
-                assertContains("Should contain a", b, cellLow(0, 0), cellHigh(3, 3));
-                assertContains("Should contain a", c, cellLow(0, 0), cellHigh(3, 3));
+                assertContains("Should contain b", b, cellLow(0, 0), cellHigh(3, 3));
+                assertContains("Should contain c", c, cellLow(0, 0), cellHigh(3, 3));
                 assertNotContains("Should not contain d", d, cellLow(0, 0), cellHigh(3, 3));
+
+                assertNotContains("Should not contain a", a, cellLow(2, 2), 1);
+                assertNotContains("Should contain b", b, cellLow(2, 2), 1);
+                assertContains("Should contain c", c, cellLow(2, 2), 1);
+                assertNotContains("Should not contain d", d, cellLow(2, 2), 1);
+
+                grid.updateLocation(a, null);
+                grid.updateLocation(b, new PhysicsPoint()); // unset
+
+                assertNotContains("Should not contain a", a, cellLow(0, 0), cellHigh(3, 3));
+                assertNotContains("Should not contain b", b, cellLow(0, 0), cellHigh(3, 3));
+                assertContains("Should contain c", c, cellLow(0, 0), cellHigh(3, 3));
+                assertNotContains("Should not contain d", d, cellLow(0, 0), cellHigh(3, 3));
+        }
+
+        @Test
+        public void testQueue()
+        {
+                MyEntity a = new MyEntity("a");
+                MyEntity b = new MyEntity("b");
+                MyEntity c = new MyEntity("c");
+                MyEntity d = new MyEntity("d");
+
+                grid.enableQueue();
+
+                grid.updateLocation(a, 4000, 10000);
+                grid.removeEntity(a);
+                grid.updateLocation(a, 4000, 10000);
+                grid.updateLocation(b, 2320, 11230);
+                grid.updateLocation(c, new PhysicsPoint(40323, 11230));
+                grid.updateLocation(d, 32768*15, 32768*15);
+                grid.updateLocation(b, null);
+
+                assertNotContains("Should not contain a", a, cellLow(0, 0), cellHigh(3, 3));
+                assertNotContains("Should not contain b", b, cellLow(0, 0), cellHigh(3, 3));
+                assertNotContains("Should not contain c", c, cellLow(0, 0), cellHigh(3, 3));
+                assertNotContains("Should not contain d", d, cellLow(0, 0), cellHigh(3, 3));
+
+                grid.disableQueue();
+
+                assertContains("Should contain a", a, cellLow(0, 0), cellHigh(3, 3));
+                assertNotContains("Should not contain b", b, cellLow(0, 0), cellHigh(3, 3));
+                assertContains("Should contain c", c, cellLow(0, 0), cellHigh(3, 3));
+                assertNotContains("Should not contain d", d, cellLow(0, 0), cellHigh(3, 3));
+
+                // should take effect immediately
+                grid.updateLocation(b, 2320, 11230);
+                assertContains("Should contain b", b, cellLow(0, 0), cellHigh(3, 3));
+
+                grid.enableQueue();
+                grid.updateLocation(a, new PhysicsPoint()); // unset
+                grid.disableQueue();
+
+                assertNotContains("Should contain a", a, cellLow(0, 0), cellHigh(3, 3));
+                assertContains("Should contain b", b, cellLow(0, 0), cellHigh(3, 3));
+                assertContains("Should contain c", c, cellLow(0, 0), cellHigh(3, 3));
+                assertNotContains("Should not contain d", d, cellLow(0, 0), cellHigh(3, 3));
+        }
+
+        @Test
+        public void testQueueIllegalState()
+        {
+                try
+                {
+                        grid.disableQueue();
+                        assertTrue("Should throw", false);
+                }
+                catch (IllegalStateException ex)
+                {
+                        assertTrue(true);
+                }
+
+                grid.enableQueue();
+                try
+                {
+                        grid.enableQueue();
+                        assertTrue("Should throw", false);
+                }
+                catch (IllegalStateException ex)
+                {
+                        assertTrue(true);
+                }
+                grid.disableQueue();
+                try
+                {
+                        grid.disableQueue();
+                        assertTrue("Should throw", false);
+                }
+                catch (IllegalStateException ex)
+                {
+                        assertTrue(true);
+                }
         }
         
         private PhysicsPoint cellLow(int x, int y)
@@ -145,6 +272,39 @@ public class EntityGridTest
         private void assertNotContains(String message, MyEntity first, PhysicsPoint low, PhysicsPoint high)
         {
                 Iterator<MyEntity> it = grid.iterator(low, high);
+                while (it.hasNext())
+                {
+                        MyEntity en = it.next();
+                        if (en == first)
+                        {
+                                assertTrue(message, false);
+                        }
+                }
+        }
+
+        private void assertEmpty(String message, PhysicsPoint center, int radius)
+        {
+                Iterator<MyEntity> it = grid.iterator(center, radius);
+                assertFalse(message, it.hasNext());
+        }
+
+        private void assertContains(String message, MyEntity first, PhysicsPoint center, int radius)
+        {
+                Iterator<MyEntity> it = grid.iterator(center, radius);
+                while (it.hasNext())
+                {
+                        MyEntity en = it.next();
+                        if (en == first)
+                        {
+                                return;
+                        }
+                }
+                assertTrue(message, false);
+        }
+
+        private void assertNotContains(String message, MyEntity first, PhysicsPoint center, int radius)
+        {
+                Iterator<MyEntity> it = grid.iterator(center, radius);
                 while (it.hasNext())
                 {
                         MyEntity en = it.next();
