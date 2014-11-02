@@ -83,7 +83,7 @@ public final class Collision
         private final PhysicsPoint vel = new PhysicsPoint(0, 0);
         private PhysicsPointHistoryDetailed posHistoryDetails;
         
-        private EntityGrid collideGrid;
+        private EntityGrid<MapEntity> collideGrid;
         private LoopFilter<MapEntity, Long> collideFilter = LoopFilter.NO_FILTER;
         
         private int bounceFriction;
@@ -204,7 +204,7 @@ public final class Collision
                 this.posHistoryDetails = posHistoryDetails;
         }
 
-        public void setCollideGrid(@Nullable EntityGrid collideGrid)
+        public void setCollideGrid(@Nullable EntityGrid<MapEntity> collideGrid)
         {
                 this.collideGrid = collideGrid;
         }
@@ -482,23 +482,32 @@ public final class Collision
                         // only with projectiles (which do not have smoothed positions).
                         // In case we ARE colliding with smoothed positions, a secondary grid is needed.
                         // Or perhaps simply use a wider area to look for collision candidates
-                        
-                        Iterator<MapEntity> it = collideGrid.iterator(low, high);
 
-                        while (it.hasNext())
+
+                        collideGrid.enableQueue();
+                        try
                         {
-                                MapEntity collider = it.next();
-                                
-                                if (collideFilter.loopFilter(collider, tick))
-                                {
-                                        continue;
-                                }
+                                Iterator<MapEntity> it = collideGrid.iterator(low, high);
 
-                                final PhysicsPoint hitLocation = new PhysicsPoint();
-                                if (entityCollision(tick, prev, next, collider, hitLocation))
+                                while (it.hasNext())
                                 {
-                                        this.hitEntities.add(new HitData(collider, hitLocation));
+                                        MapEntity collider = it.next();
+
+                                        if (collideFilter.loopFilter(collider, tick))
+                                        {
+                                                continue;
+                                        }
+
+                                        final PhysicsPoint hitLocation = new PhysicsPoint();
+                                        if (entityCollision(tick, prev, next, collider, hitLocation))
+                                        {
+                                                this.hitEntities.add(new HitData(collider, hitLocation));
+                                        }
                                 }
+                        }
+                        finally
+                        {
+                                collideGrid.disableQueue();
                         }
                         
                         

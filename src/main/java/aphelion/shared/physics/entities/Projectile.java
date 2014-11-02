@@ -864,13 +864,21 @@ public final class Projectile extends MapEntity implements ProjectilePublic
                 final PhysicsPoint forcePoint = new PhysicsPoint();
                 this.posHistory.get(forcePoint, tick);
 
-                Iterator<MapEntity> it = state.entityGrid.iterator(
-                        forcePoint,
-                        SwissArmyKnife.max(this.forceDistanceShip, this.forceDistanceProjectile));
-
-                while (it.hasNext())
+                state.entityGrid.enableQueue();
+                try
                 {
-                        this.emitForce(tick, it.next());
+                        Iterator<MapEntity> it = state.entityGrid.iterator(
+                                forcePoint,
+                                SwissArmyKnife.max(this.forceDistanceShip, this.forceDistanceProjectile));
+
+                        while (it.hasNext())
+                        {
+                                this.emitForce(tick, it.next());
+                        }
+                }
+                finally
+                {
+                        state.entityGrid.disableQueue();
                 }
         }
 
