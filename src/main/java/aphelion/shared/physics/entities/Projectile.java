@@ -161,7 +161,7 @@ public final class Projectile extends MapEntity implements ProjectilePublic
                 p.setBounceOtherAxisFriction(bounceOtherAxisFriction);
                 p.setProxDist(proxDist); 
                 p.setProxExplodeDelay(proxExplodeDelay); 
-                p.setProxActivatedBy(proxActivatedBy == null || proxActivatedBy.isRemoved() ? 0 : proxActivatedBy.pid); 
+                p.setProxActivatedBy(proxActivatedBy == null || proxActivatedBy.isNonExistent(state.tick_now) ? 0 : proxActivatedBy.pid);
                 p.setProxLastSeenDist(proxLastSeenDist); 
                 p.setProxLastSeenDistTick(proxLastSeenDist_tick); 
                 p.setProxActivatedAtTick(proxActivatedAt_tick);
@@ -364,7 +364,7 @@ public final class Projectile extends MapEntity implements ProjectilePublic
                         dirtyPositionPathTracker.resolved(tick);
                         assert !dirtyPositionPathTracker.isDirty(tick) : "performDeadReckoning: Skipped a tick!";
                         
-                        if (this.isRemoved(tick) || hitTile.set)
+                        if (this.isNonExistent(tick) || hitTile.set)
                         {
                                 updatedPosition(tick);
                                 continue;
@@ -438,7 +438,7 @@ public final class Projectile extends MapEntity implements ProjectilePublic
         
         public void tickProjectileAfterActor(long tick)
         {
-                if (this.isRemoved(tick))
+                if (this.isNonExistent(tick))
                 {
                         return;
                 }
@@ -471,7 +471,7 @@ public final class Projectile extends MapEntity implements ProjectilePublic
                 // Proximity bombs 
                 // (unlike continuum prox bombs still take part in regular collision unless 
                 //  disabled by config)
-                if (proxDist > 0 && (this.proxActivatedBy == null || this.proxActivatedBy.isRemoved(tick)))
+                if (proxDist > 0 && (this.proxActivatedBy == null || this.proxActivatedBy.isNonExistent(tick)))
                 {
                         long proxDistSq = proxDist * (long) proxDist;
 
@@ -519,7 +519,7 @@ public final class Projectile extends MapEntity implements ProjectilePublic
                                         // moving away! detonate
 
                                         explodeWithoutHit(tick, EXPLODE_REASON.PROX_DIST);
-                                        assert this.isRemoved(tick); // Otherwise this event fires over and over and over
+                                        assert this.isNonExistent(tick); // Otherwise this event fires over and over and over
                                         return;
                                 }
                         }
@@ -530,7 +530,7 @@ public final class Projectile extends MapEntity implements ProjectilePublic
                         if (proxExplodeDelay >= 0 && tick - this.proxActivatedAt_tick >= proxExplodeDelay)
                         {
                                 explodeWithoutHit(tick, EXPLODE_REASON.PROX_DELAY);
-                                assert this.isRemoved(tick); // Otherwise this event fires over and over and over
+                                assert this.isNonExistent(tick); // Otherwise this event fires over and over and over
                                 return;
                         }
                 }
@@ -538,7 +538,7 @@ public final class Projectile extends MapEntity implements ProjectilePublic
         
         public void explodeWithoutHit(long tick, ProjectileExplosionPublic.EXPLODE_REASON reason)
         {
-                assert !this.isRemoved(tick);
+                assert !this.isNonExistent(tick);
                 
                 ProjectileExplosion.Key eventKey = new ProjectileExplosion.Key(this.key);
                 ProjectileExplosion event = (ProjectileExplosion) state.env.findEvent(eventKey);
@@ -697,7 +697,7 @@ public final class Projectile extends MapEntity implements ProjectilePublic
                 
                 for (Actor actor : state.actorsList)
                 {
-                        if (actor.isRemoved(tick) || actor.isDead(tick)) { continue; }
+                        if (actor.isNonExistent(tick) || actor.isDead(tick)) { continue; }
                         if (actor == except) { continue; }
                         if (actor == this.owner && !damageSelf) { continue; }
                         
@@ -741,7 +741,7 @@ public final class Projectile extends MapEntity implements ProjectilePublic
                 
                 for (Actor actor : state.actorsList)
                 {
-                        if (actor.isRemoved(tick) || actor.isDead(tick)) { continue; }
+                        if (actor.isNonExistent(tick) || actor.isDead(tick)) { continue; }
                         if (actor == except) { continue; }
                         if (actor == this.owner && !empSelf) { continue; }
                         
@@ -790,7 +790,7 @@ public final class Projectile extends MapEntity implements ProjectilePublic
                         {
                                 Actor actor = (Actor) en;
                                 
-                                if (actor.isRemoved(arg) || actor.isDead(arg))
+                                if (actor.isNonExistent(arg) || actor.isDead(arg))
                                 {
                                         return true;
                                 }
@@ -856,7 +856,7 @@ public final class Projectile extends MapEntity implements ProjectilePublic
                         return;
                 }
                 
-                if (this.isRemoved(tick))
+                if (this.isNonExistent(tick))
                 {
                         return;
                 }

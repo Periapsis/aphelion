@@ -60,8 +60,8 @@ import java.util.Iterator;
 public interface ActorPublic
 {
         boolean hasReference();
-        boolean isRemoved();
-        boolean isRemoved(long tick);
+        boolean isNonExistent();
+        boolean isNonExistent(long tick);
         long getCreatedAt();
         int getStateId();
         int getPid();

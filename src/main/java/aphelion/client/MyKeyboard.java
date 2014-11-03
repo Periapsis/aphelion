@@ -221,7 +221,7 @@ public class MyKeyboard implements TickEvent
 
                 localPid = networkedGame.getMyPid();
 
-                if (controllingActor.isRemoved())
+                if (controllingActor.isNonExistent())
                 {
                         return;
                 }

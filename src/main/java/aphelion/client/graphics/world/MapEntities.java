@@ -56,7 +56,6 @@ import aphelion.shared.physics.events.Event;
 import aphelion.shared.physics.events.pub.ActorDiedPublic;
 import aphelion.shared.physics.events.pub.EventPublic;
 import aphelion.shared.physics.events.pub.ProjectileExplosionPublic;
-import aphelion.shared.physics.valueobjects.PhysicsPoint;
 import aphelion.shared.physics.valueobjects.PhysicsPositionVector;
 import aphelion.shared.physics.valueobjects.PhysicsShipPosition;
 import aphelion.shared.resource.ResourceDB;
@@ -520,7 +519,7 @@ public class MapEntities implements TickEvent, LoopEvent, Animator, ActorListene
                 
                 actorShip.setExists(true);
 
-                if (physicsActor.isRemoved(actorShip.renderingAt_tick))
+                if (physicsActor.isNonExistent(actorShip.renderingAt_tick))
                 {
                         actorShip.setExists(false);
                 }
@@ -590,7 +589,7 @@ public class MapEntities implements TickEvent, LoopEvent, Animator, ActorListene
                 
                 projectile.setExists(true);
 
-                if (physicsProjectile.isRemoved(projectile.renderingAt_tick))
+                if (physicsProjectile.isNonExistent(projectile.renderingAt_tick))
                 {
                         projectile.setExists(false);
                 }

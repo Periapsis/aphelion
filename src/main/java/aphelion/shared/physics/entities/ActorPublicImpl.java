@@ -113,7 +113,7 @@ public class ActorPublicImpl implements ActorPublic
         }
         
         @Override
-        public boolean isRemoved()
+        public boolean isNonExistent()
         {
                 Actor actor = getActor();
                 if (actor == null)
@@ -121,11 +121,11 @@ public class ActorPublicImpl implements ActorPublic
                         return true;
                 }
                 
-                return actor.isRemoved();
+                return actor.isNonExistent(state.tick_now);
         }
         
         @Override
-        public boolean isRemoved(long tick)
+        public boolean isNonExistent(long tick)
         {
                 Actor actor = getActor();
                 if (actor == null)
@@ -133,7 +133,7 @@ public class ActorPublicImpl implements ActorPublic
                         return true;
                 }
                 
-                return actor.isRemoved(tick);
+                return actor.isNonExistent(tick);
         }
 
         @Override
@@ -598,7 +598,7 @@ public class ActorPublicImpl implements ActorPublic
                 }
                 else
                 {
-                        if (actor.isRemoved() || actor.isDead(state.tick_now))
+                        if (actor.isNonExistent(state.tick_now) || actor.isDead(state.tick_now))
                         {
                                 return false;
                         }
@@ -622,7 +622,7 @@ public class ActorPublicImpl implements ActorPublic
                         return false;
                 }
                 
-                if (actor.isRemoved() || actor.isDead(state.tick_now))
+                if (actor.isNonExistent(state.tick_now) || actor.isDead(state.tick_now))
                 {
                         return false;
                 }
@@ -646,7 +646,7 @@ public class ActorPublicImpl implements ActorPublic
                         return false;
                 }
                 
-                if (actor.isRemoved() || actor.isDead(state.tick_now))
+                if (actor.isNonExistent(state.tick_now) || actor.isDead(state.tick_now))
                 {
                         return false;
                 }

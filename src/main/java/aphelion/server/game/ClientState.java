@@ -315,7 +315,7 @@ public class ClientState
                         assert actor.hasReference();
 
 
-                        if (actor.isRemoved())
+                        if (actor.isNonExistent())
                         {
                                 continue;
                         }
@@ -342,7 +342,7 @@ public class ClientState
                         while (projectileIt.hasNext())
                         {
                                 ProjectilePublic projectile = projectileIt.next();
-                                if (projectile.isRemoved())
+                                if (projectile.isNonExistent())
                                 {
                                         continue;
                                 }
@@ -366,7 +366,7 @@ public class ClientState
                                 while (projIt.hasNext())
                                 {
                                         ProjectilePublic projCoupled = projIt.next();
-                                        if (projCoupled.isRemoved())
+                                        if (projCoupled.isNonExistent())
                                         {
                                                 continue;
                                         }

@@ -201,7 +201,7 @@ public class State
                                 actor.moveHistory.setHistory(tick_now, null);
                         }
                         
-                        if (actor.isRemoved())
+                        if (actor.isRemovedSet())
                         {
                                 // Can we really remove the actor now?
                                 if (env.tick_now - actor.removedAt_tick > econfig.HIGHEST_DELAY)
@@ -209,7 +209,8 @@ public class State
                                         boolean activeSomewhere = false;
                                         for (int s = 0; s < actor.crossStateList.length; ++s)
                                         {
-                                                if (actor.crossStateList[s] != null && !actor.crossStateList[s].isRemoved())
+                                                if (actor.crossStateList[s] != null &&
+                                                    !actor.crossStateList[s].isRemoved(this.tick_now))
                                                 {
                                                         activeSomewhere = true;
                                                         break;
@@ -295,7 +296,7 @@ public class State
                         
                         // do not bother if the projectile index is not 0
                         // in this case, it has already been checked (thanks to combined)
-                        if (projectile.isRemoved())
+                        if (projectile.isRemovedSet())
                         {
                                 // NOTE: this removal checking has been optimized to turn 
                                 // "n * (n-1)" checks into "n" checks (in the case of coupled 
@@ -315,7 +316,7 @@ public class State
                                                 for (int s = 0; s < coupledProjectile.crossStateList.length; ++s)
                                                 {
                                                         if (coupledProjectile.crossStateList[s] != null 
-                                                                && !coupledProjectile.crossStateList[s].isRemoved())
+                                                                && !coupledProjectile.crossStateList[s].isRemoved(this.tick_now))
                                                         {
                                                                 activeSomewhere = true;
                                                                 break ACTIVE_CHECK;
@@ -593,7 +594,7 @@ public class State
         /**
          * Copy everything from the other state (Actors, Projectiles, config, etc)
          * (but not operations) to this one.
-         * @param other The state to reset to, foreign states are allowed.
+         * @param older The state to reset to, foreign states are allowed.
          */
         @SuppressWarnings("unchecked")
         private void resetTo(State older)

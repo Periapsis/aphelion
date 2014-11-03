@@ -146,19 +146,55 @@ public abstract class MapEntity implements EntityGridEntity
                 removed = true;
         }
 
-        public boolean isRemoved()
-        {
-                return isRemoved(state.tick_now);
-        }
-        
+        /**
+         * Has the entity been removed at the given tick?.
+         * This method does not check createdAt_tick, use isNonExistent() for that
+         * @param tick The tick to check by
+         * @return true if the entity has been removed
+         */
         public boolean isRemoved(long tick)
         {
                 if (this.removed)
                 {
                         return this.removedAt_tick <= tick;
                 }
-                
+
                 return false;
+        }
+
+        /**
+         * Has this entity been scheduled for removal (regardless of the tick)
+         * @return true if the entity has been scheduled for removal
+         */
+        public boolean isRemovedSet()
+        {
+                return this.removed;
+        }
+
+        /** Does this entity not yet, or no longer exist at the tick of the state this entity belongs to?.
+         * An entity is considered nonexistent before its creation (this.createdAt_tick) and
+         * after its (soft) removal (this.removedAt_tick)
+         * @return true if the entity is nonexistent
+         */
+        public boolean isNonExistent()
+        {
+                return this.isNonExistent(this.state.tick_now);
+        }
+
+        /** Does this entity not yet, or no longer exist at the specified tick?.
+         * An entity is considered nonexistent before its creation (this.createdAt_tick) and
+         * after its (soft) removal (this.removedAt_tick)
+         * @param tick The tick to check by
+         * @return true if the entity is nonexistent
+         */
+        public boolean isNonExistent(long tick)
+        {
+                if (this.isRemoved(tick))
+                {
+                        return true;
+                }
+                
+                return tick < this.createdAt_tick;
         }
         
         public void markDirtyPositionPath(long dirtyTick)
@@ -206,7 +242,7 @@ public abstract class MapEntity implements EntityGridEntity
                 
                 if (!ignoreSoftDelete)
                 {
-                        if (isRemoved(tick))
+                        if (isNonExistent(tick))
                         {
                                 return null;
                         }

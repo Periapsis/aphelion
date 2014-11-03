@@ -996,7 +996,7 @@ public class Actor extends MapEntity
                                 continue;
                         }
                         
-                        if (proj.isRemoved(tick))
+                        if (proj.isNonExistent(tick))
                         {
                                 continue;
                         }

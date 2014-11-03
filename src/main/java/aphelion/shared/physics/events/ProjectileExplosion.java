@@ -173,7 +173,7 @@ public class ProjectileExplosion extends Event implements ProjectileExplosionPub
                                         continue;
                                 }
                                 
-                                if (coupledProjectile.isRemoved(tick))
+                                if (coupledProjectile.isNonExistent(tick))
                                 {
                                         continue;
                                 }
