@@ -121,7 +121,7 @@ public class ActorWarp extends Operation implements ActorWarpPublic
 
                 // dead reckon current position so that it is no longer late
                 // the position at the tick of this operation should not be dead reckoned, therefor +1
-                actor.performDeadReckoning(state.env.getMap(), this.tick + 1, ticks_late);
+                actor.performDeadReckoning(state.env.getMap(), this.tick + 1, ticks_late, true);
                 
                 if (state.id == 0)
                 {

@@ -86,12 +86,6 @@ public abstract class MapEntity implements EntityGridEntity
         /** The history of all velocities of this entity. */
         public final PhysicsPointHistory velHistory;
         
-        /** The history of all force (summed) that has been applied on this entity. 
-         * Force is applied to the total velocity of the same tick.
-         * Velocity affect the position of the next tick.
-         */
-        public final PhysicsPointHistory forceHistory;
-        
         /** The radius in pixels * 1024 (not diameter) of the object. The radius may be 0 if it has no
          * diameter, like a bullet.
          */
@@ -112,8 +106,6 @@ public abstract class MapEntity implements EntityGridEntity
                 assert posHistory.HISTORY_LENGTH == HISTORY_LENGTH;
                 this.velHistory = new PhysicsPointHistoryDetailed(createdAt_tick, HISTORY_LENGTH);
                 assert velHistory.HISTORY_LENGTH == HISTORY_LENGTH;
-                this.forceHistory = new PhysicsPointHistory(createdAt_tick, HISTORY_LENGTH);
-                assert forceHistory.HISTORY_LENGTH == HISTORY_LENGTH;
                 dirtyPositionPathTracker.setFirstDirtyTick(createdAt_tick+1);
         }
         
@@ -299,8 +291,20 @@ public abstract class MapEntity implements EntityGridEntity
                 pos.unset();
                 return false;
         }
-        
-        public abstract void performDeadReckoning(PhysicsMap map, long tick_now, long reckon_ticks);
+
+        /**
+         * Simulate the given amount of ticks of dead reckoning, collision, force emitters, etc
+         * @param map Map
+         * @param tick_now The tick this calculation belongs to. The last tick that will be calculated is
+         *                 (tick_now + reckon_ticks - 1)
+         * @param reckon_ticks The amount of ticks to perform
+         * @param applyForceEmitters When this method is used to correct late operations, force emitters
+         *                           must also be parsed. However when this dead reckon step is not for a late tick,
+         *                           forces are calculated using a much more efficient method (using the entity grid,
+         *                           see State.tickForceEmitters). This second method is considered the consistent one
+         *                           and is thus used during timewarps.
+         */
+        public abstract void performDeadReckoning(PhysicsMap map, long tick_now, long reckon_ticks, boolean applyForceEmitters);
         
         /** Add (or update) the current position to the history
          *
@@ -310,7 +314,6 @@ public abstract class MapEntity implements EntityGridEntity
         {
                 posHistory.setHistory(tick, pos.pos);
                 velHistory.setHistory(tick, pos.vel);
-                forceHistory.ensureHighestTick(tick);
                 dirtyPositionPathTracker.resolved(tick);
                 
                 if (tick == state.tick_now)
@@ -366,7 +369,6 @@ public abstract class MapEntity implements EntityGridEntity
                 pos.set(other.pos);
                 posHistory.set(other.posHistory);
                 velHistory.set(other.velHistory);
-                forceHistory.set(other.forceHistory);
                 
                 if (state.isForeign(other) && posHistory.HISTORY_LENGTH != other.posHistory.HISTORY_LENGTH)
                 {
@@ -383,7 +385,6 @@ public abstract class MapEntity implements EntityGridEntity
                                 if (other.crossStateList[s] != null)
                                 {
                                         posHistory.overwrite(other.crossStateList[s].posHistory);
-                                        forceHistory.overwrite(other.crossStateList[s].forceHistory);
                                 }
                         }
                 }

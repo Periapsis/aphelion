@@ -318,7 +318,7 @@ public class Actor extends MapEntity
                         
                         // dead reckon current position so that it is no longer late
                         // the position at the tick of this operation should not be dead reckoned, therefor +1
-                        this.performDeadReckoning(state.env.getMap(), operation_tick + 1, state.tick_now - operation_tick);
+                        this.performDeadReckoning(state.env.getMap(), operation_tick + 1, state.tick_now - operation_tick, true);
                 }
                 
                 for (int i = 0; i < s.getNextWeaponFireKeyCount(); ++i)
@@ -388,15 +388,9 @@ public class Actor extends MapEntity
                         spawnAt_tick = tick + 1;
                 }
         }
-        
-        /** Perform dead reckoning on this actor for the specified number of ticks.
-         * 
-         * @param map
-         * @param tick_now The first tick to apply to
-         * @param reckon_ticks
-         */
+
         @Override
-        public void performDeadReckoning(PhysicsMap map, long tick_now, long reckon_ticks)
+        public void performDeadReckoning(PhysicsMap map, long tick_now, long reckon_ticks, boolean applyForceEmitters)
         {
                 Collision collision = state.collision;
                 collision.reset();
@@ -406,8 +400,6 @@ public class Actor extends MapEntity
                 collision.setCollideFilter(collideFilter);
                 collision.setBounceFriction(config.bounceFriction.get());
                 collision.setOtherAxisFriction(config.bounceOtherAxisFriction.get());
-                
-                final PhysicsPoint prevForce = new PhysicsPoint();
                 
                 for (long t = 0; t < reckon_ticks; ++t)
                 {
@@ -420,19 +412,11 @@ public class Actor extends MapEntity
                         
                         int prevEnergy = this.energy.get(tick - 1);
                         PhysicsMoveable prevMove = this.getHistoricMovement(tick - 1, false);
-                        
-                        // force for _this_ tick is added AFTER we dead reckon.
-                        // so wait for the next tick to do the force for _this_ tick.
-                        // otherwise all entities have to be looped an extra time.
-                        this.forceHistory.get(prevForce, tick - 1);
-                        
-                        
+
                         boolean prevBoost = 
                                 prevMove instanceof PhysicsMovement
                                 && ((PhysicsMovement) prevMove).isValidBoost()
                                 && prevEnergy >= config.boostEnergy.get();
-                        
-                        this.pos.vel.add(prevForce);
                         
                         this.pos.vel.limitLength(
                                 prevBoost && config.boostSpeed.isSet() 
@@ -469,6 +453,8 @@ public class Actor extends MapEntity
                                 }
                                 collision.tickEntityCollision(tick);
 
+                                updatedPosition(tick);
+
                                 Iterator<Collision.HitData> it = collision.getHitEntities();
                                 while (it.hasNext())
                                 {
@@ -492,6 +478,18 @@ public class Actor extends MapEntity
 
                                 // Any speed increase applied during this tick is not used until the next tick
                                 applyMoveable(moveHistory.get(tick), tick);
+                        }
+
+                        updatedPosition(tick);
+
+                        // (applyForceEmitters is only set when correcting for late operations)
+                        if (applyForceEmitters)
+                        {
+                                for (Projectile other : state.forceEmitterList)
+                                {
+                                        // does nothing if out of range
+                                        other.emitForce(tick, this);
+                                }
                         }
                         
                         updatedPosition(tick);

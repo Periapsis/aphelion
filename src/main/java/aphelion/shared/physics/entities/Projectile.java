@@ -316,46 +316,36 @@ public final class Projectile extends MapEntity implements ProjectilePublic
                 long expiry_tick = max(operation_tick, this.getExpiry());
                 long untilExpiry_ticks = min(expiry_tick - operation_tick, state.tick_now - operation_tick);
                 long afterExpiry_ticks = max(state.tick_now - expiry_tick, 0);
-                this.performDeadReckoning(state.env.getMap(), operation_tick + 1, untilExpiry_ticks);
-
-                if (this.isForceEmitter() && operation_late)
-                {
-                        // however a force emitter should emit for the current tick also ( <= ).
-                        // If late=false, State.tickForceEmitters will be called soon
-                        long tick = operation_tick;
-                        for (long t = 0; t <= untilExpiry_ticks; ++t)
-                        {
-                                tick = operation_tick + t;
-                                this.emitForce(tick);
-                        }
-
-                        assert tick == state.tick_now ||
-                               tick == expiry_tick;
-                }
+                this.markDirtyWithinForceRange(operation_tick); // (only does something if we really are a force emitter.
+                                                                // further ticks are marked dirty by performDeadReckoning)
+                this.performDeadReckoning(state.env.getMap(), operation_tick + 1, untilExpiry_ticks, true, true);
 
                 if (expiry_tick <= state.tick_now)
                 {
-                        // (performDeadReckoning and emitForce check for isRemoved(tick))
+                        // (performDeadReckoning and emitForce check for isNonExistent(tick))
                         this.explodeWithoutHit(expiry_tick, EXPLODE_REASON.EXPIRATION);
                         this.softRemove(expiry_tick);
 
                         // The expiry itself has already been simulated
-                        this.performDeadReckoning(state.env.getMap(), expiry_tick + 1, afterExpiry_ticks);
+                        this.performDeadReckoning(state.env.getMap(), expiry_tick + 1, afterExpiry_ticks, true);
                 }
 
                 assert this.posHistory.getHighestTick() == state.tick_now;
         }
+
+        @Override
+        public void performDeadReckoning(PhysicsMap map, long tick_now, long reckon_ticks, boolean applyForceEmitters)
+        {
+                this.performDeadReckoning(map, tick_now, reckon_ticks, applyForceEmitters, false);
+        }
         
         @SuppressWarnings("unchecked")
-        @Override
-        public void performDeadReckoning(PhysicsMap map, long tick_now, long reckon_ticks)
+        private void performDeadReckoning(PhysicsMap map, long tick_now, long reckon_ticks, boolean applyForceEmitters, boolean markDirtyPositionPathWithinForceRange)
         {
                 Collision collision = state.collision;
                 collision.reset();
                 collision.setMap(this.collideTile ? map : null);
                 collision.setRadius(this.radius.get());
-                
-                final PhysicsPoint prevForce = new PhysicsPoint();
                 
                 for (long t = 0; t < reckon_ticks; ++t)
                 {
@@ -370,18 +360,14 @@ public final class Projectile extends MapEntity implements ProjectilePublic
                                 continue;
                         }
                         
-                        // force for _this_ tick is added AFTER we dead reckon.
-                        // so wait for the next tick to do the force for _this_ tick.
-                        // otherwise all entities have to be looped an extra time.
-                        this.forceHistory.get(prevForce, tick - 1);
-                        this.pos.vel.add(prevForce);
-                        
                         collision.setPreviousPosition(pos.pos);
                         collision.setVelocity(pos.vel);
                         collision.setBouncesLeft(bouncesLeft);
                         collision.tickMap(tick);
                         collision.getNewPosition(pos.pos);
                         collision.getVelocity(pos.vel);
+
+                        updatedPosition(tick);
                         
                         if (bouncesLeft >= 0)
                         {
@@ -394,11 +380,28 @@ public final class Projectile extends MapEntity implements ProjectilePublic
                                 activateBouncesLeft -= collision.getBounces();
                                 if (activateBouncesLeft < 0) activateBouncesLeft = 0;
                         }
+
+                        // (applyForceEmitters is only set when correcting for late operations)
+                        if (applyForceEmitters &&
+                            !this.isForceEmitter()) // Force emitters never affect other force emitters
+                        {                           // (or, at least for now: it causes too many inconsistencies)
+                                for (Projectile emitter : state.forceEmitterList)
+                                {
+                                        // does nothing if out of range
+                                        emitter.emitForce(tick, this);
+                                }
+                                // todo implement active delay for force emitters too (and perhaps other effects?)
+                                // todo default activate delay for force emitters?
+                        }
                         
                         updatedPosition(tick);
+
+                        if (markDirtyPositionPathWithinForceRange)
+                        {
+                                this.markDirtyWithinForceRange(tick);
+                        }
                         
                         // hit a tile?
-
                         if (collision.hasExhaustedBounces())
                         {
                                 collision.getHitTile(hitTile);
@@ -406,7 +409,7 @@ public final class Projectile extends MapEntity implements ProjectilePublic
                                 
                                 // The event is not really executed until actors have ticked (see tickProjectileAfterActor)
                                 // This is so that hitting an actor is prioritized over hitting a tile.
-                        }        
+                        }
                 }
         }
         
@@ -841,9 +844,120 @@ public final class Projectile extends MapEntity implements ProjectilePublic
                 final boolean doProjectile = this.forceDistanceProjectile > 0 && this.forceVelocityProjectile != 0;
                 return doShip || doProjectile;
         }
+
+        /**
+         * Is the force of this entity applicable to the specified entity?.
+         * This method checks if both of the entities currently exist, not dead, not on the same team, et cetera.
+         * It does not check if the entity is within range.
+         * @param tick The tick at which you would like to apply the force
+         * @param en The entity that the force should be applied to
+         * @return true if the force of this emitter is able to abe applied to "en"
+         */
+        private boolean forceAppliesTo(long tick, MapEntity en)
+        {
+                final boolean doShip = this.forceDistanceShip > 0 && this.forceVelocityShip != 0;
+                final boolean doProjectile = this.forceDistanceProjectile > 0 && this.forceVelocityProjectile != 0;
+
+                if (en == this)
+                {
+                        return false;
+                }
+
+                if (this.isNonExistent(tick) ||
+                    en.isNonExistent(tick))
+                {
+                        return false;
+                }
+
+                if (doShip &&
+                    en instanceof Actor)
+                {
+                        Actor actor = (Actor) en;
+                        if (actor.isDead(tick))
+                        {
+                                return false;
+                        }
+
+                        if (!damageSelf &&
+                            en == this.owner)
+                        {
+                                return false;
+                        }
+
+                        return true;
+                }
+                else if (doProjectile &&
+                         en instanceof Projectile)
+                {
+                        Projectile proj = (Projectile) en;
+
+                        if (!damageSelf &&
+                            proj.owner == this.owner)
+                        {
+                                return false;
+                        }
+
+                        // Force emitters never affect other force emitters
+                        // (or, at least for now: it causes too many inconsistencies)
+                        if (proj.isForceEmitter())
+                        {
+                                return false;
+                        }
+
+                        return true;
+                }
+
+                return false;
+        }
+
+        /**
+         * Mark all entities we might apply a force on and are (somewhat) within range as having a dirty position path.
+         * @param tick The tick to mark as dirty and the tick used for checks.
+         */
+        public void markDirtyWithinForceRange(long tick)
+        {
+                final boolean doShip = this.forceDistanceShip > 0 && this.forceVelocityShip != 0;
+                final boolean doProjectile = this.forceDistanceProjectile > 0 && this.forceVelocityProjectile != 0;
+
+                if (!doShip &&
+                    !doProjectile)
+                {
+                        return;
+                }
+
+                if (this.isNonExistent(tick))
+                {
+                        return;
+                }
+
+                final PhysicsPoint forcePoint = new PhysicsPoint();
+                this.posHistory.get(forcePoint, tick);
+
+                state.entityGrid.enableQueue();
+                try
+                {
+                        Iterator<MapEntity> it = state.entityGrid.iterator(
+                                forcePoint,
+                                SwissArmyKnife.max(this.forceDistanceShip, this.forceDistanceProjectile));
+
+                        while (it.hasNext())
+                        {
+                                MapEntity en = it.next();
+
+                                if (this.forceAppliesTo(tick, en))
+                                {
+                                        en.markDirtyPositionPath(tick);
+                                }
+                        }
+                }
+                finally
+                {
+                        state.entityGrid.disableQueue();
+                }
+        }
         
-        /** Emit the configured force on the "forceHistory" of other entities, without updating the velocity or position.
-         * The velocity and position must be updated in a separate step.
+        /** Emit the configured force on all entities within range.
+         * The velocity of these entities will be increased by the applied force (which might be negative).
          * @param tick
          */
         public void emitForce(long tick)
@@ -851,7 +965,8 @@ public final class Projectile extends MapEntity implements ProjectilePublic
                 final boolean doShip = this.forceDistanceShip > 0 && this.forceVelocityShip != 0;
                 final boolean doProjectile = this.forceDistanceProjectile > 0 && this.forceVelocityProjectile != 0;
                 
-                if (!doShip && !doProjectile)
+                if (!doShip &&
+                    !doProjectile)
                 {
                         return;
                 }
@@ -882,49 +997,38 @@ public final class Projectile extends MapEntity implements ProjectilePublic
                 }
         }
 
+        /** Emit the configured force on the specified entity (if it is in range)
+         * The velocity of the entity will be increased by the applied force (which might be negative).
+         * @param tick
+         * @param en
+         */
         public void emitForce(long tick, MapEntity en)
         {
-                final boolean doShip = this.forceDistanceShip > 0 && this.forceVelocityShip != 0;
-                final boolean doProjectile = this.forceDistanceProjectile > 0 && this.forceVelocityProjectile != 0;
                 final PhysicsPoint forcePoint = new PhysicsPoint();
                 final PhysicsPositionVector otherPosition = new PhysicsPositionVector();
                 final PhysicsPoint velocity = new PhysicsPoint();
-                final PhysicsPoint forceHist = new PhysicsPoint();
 
-                if (en == this) { return; }
+                if (!this.forceAppliesTo(tick, en))
+                {
+                     return;
+                }
 
                 int forceDistance = 0;
                 int forceVelocity = 0;
 
-                if (doShip && en instanceof Actor)
+                if (en instanceof Actor)
                 {
-                        Actor actor = (Actor) en;
-                        if (actor.isDead(tick)) { return; }
-                        if (!damageSelf && en == this.owner)
-                        {
-                                return;
-                        }
-
                         forceDistance = forceDistanceShip;
                         forceVelocity = forceVelocityShip;
                 }
-                else if (doProjectile && en instanceof Projectile)
+                else if (en instanceof Projectile)
                 {
-                        Projectile proj = (Projectile) en;
-                        if (!damageSelf && proj.owner == this.owner)
-                        {
-                                return;
-                        }
-
-                        // Force emitters never affect other force emitters
-                        // (or, at least for now: it causes too many inconsistencies)
-                        if (proj.isForceEmitter())
-                        {
-                                return;
-                        }
-
                         forceDistance = forceDistanceProjectile;
                         forceVelocity = forceVelocityProjectile;
+                }
+                else
+                {
+                        assert false;
                 }
 
                 this.posHistory.get(forcePoint, tick);
@@ -932,12 +1036,11 @@ public final class Projectile extends MapEntity implements ProjectilePublic
                 if (en.getHistoricPosition(otherPosition, tick, false) &&
                     PhysicsMath.force(velocity, otherPosition.pos, forcePoint, forceDistance, forceVelocity))
                 {
-                        en.markDirtyPositionPath(tick + 1);
+                        en.markDirtyPositionPath(tick);
 
-                        en.forceHistory.get(forceHist, tick);
-                        forceHist.add(velocity);
-                        forceHist.enforceOverflowLimit();
-                        en.forceHistory.setHistory(tick, forceHist);
+                        en.pos.vel.add(velocity);
+                        en.pos.vel.enforceOverflowLimit();
+                        en.updatedPosition(tick);
                 }
         }
 

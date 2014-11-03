@@ -270,7 +270,7 @@ public abstract class PhysicsTest
                 }
                 
                 
-                if (x != pos.pos.x || y != pos.pos.y)
+                if (x != pos2.pos.x || y != pos2.pos.y)
                 {
                         throw new AssertionError("getHistoricPosition(0) is not equal to the current position!");
                 }
@@ -299,9 +299,20 @@ public abstract class PhysicsTest
                         assertTrue(projectile.getHistoricPosition(pos2, env.getTick(), false));
                 }
 
-                if (x != pos.vel.x || y != pos.vel.y)
+                if (x != pos2.vel.x || y != pos2.vel.y)
                 {
                         throw new AssertionError("getHistoricPosition(0) is not equal to the current velocity!");
+                }
+        }
+
+        public void assertVelocity(long tick, int x, int y, ProjectilePublic projectile)
+        {
+                PhysicsPositionVector pos = new PhysicsPositionVector();
+                assertTrue(projectile.getHistoricPosition(pos, tick, false));
+
+                if (x != pos.vel.x || y != pos.vel.y)
+                {
+                        throw new AssertionError("expected velocity:<" + x + "," + y + "> but was:<" + pos.vel.x + "," + pos.vel.y + "> at tick " + tick);
                 }
         }
         

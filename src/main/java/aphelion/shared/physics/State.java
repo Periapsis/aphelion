@@ -85,7 +85,7 @@ public class State
         
         public final HashMap<ProjectileKey, Projectile> projectiles = new HashMap<>(PROJECTILE_INITIALCAPACITY);
         public LinkedListHead<Projectile> projectilesList = new LinkedListHead<>();
-        public final LinkedListHead<Projectile> forceEmitterList = new LinkedListHead<>();
+        public final LinkedListHead<Projectile> forceEmitterList = new LinkedListHead<>(); // todo ensure that projectiles are not removed in this list too soon
         public final LinkedListHead<MapEntity> dirtyPositionPathList = new LinkedListHead<>();
         
         public final LinkedListHead<Operation> history = new LinkedListHead<>(); // ordered by tick ascending
@@ -177,7 +177,7 @@ public class State
                         
                         // this method is called in between tick()s
                         // so we also need to resimulate the current tick of the state
-                        en.performDeadReckoning(env.getMap(), tick + 1, tick_now - tick);
+                        en.performDeadReckoning(env.getMap(), tick + 1, tick_now - tick, true);
                         
                         assert en.dirtyPositionPathTracker.getFirstDirtyTick() > this.tick_now;
                 }
@@ -278,7 +278,7 @@ public class State
                                 // This makes it possible to show an explosion animation that follow path of the actor
                         }
                         
-                        actor.performDeadReckoning(env.getMap(), tick_now, 1);
+                        actor.performDeadReckoning(env.getMap(), tick_now, 1, false);
                 }
         }
         
@@ -367,7 +367,7 @@ public class State
                                 continue;
                         }
 
-                        projectile.performDeadReckoning(env.getMap(), tick_now, 1);
+                        projectile.performDeadReckoning(env.getMap(), tick_now, 1, false);
                 }
         }
         

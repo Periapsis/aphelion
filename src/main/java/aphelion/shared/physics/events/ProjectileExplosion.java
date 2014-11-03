@@ -290,7 +290,7 @@ public class ProjectileExplosion extends Event implements ProjectileExplosionPub
 
                                 // dead reckon current position so that it is no longer late
                                 // the position at the tick of this operation should not be dead reckoned, therefor +1
-                                projectile.performDeadReckoning(state.env.getMap(), tick + 1, state.tick_now - tick);
+                                projectile.performDeadReckoning(state.env.getMap(), tick + 1, state.tick_now - tick, true);
                         }
                 }
                 

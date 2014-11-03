@@ -45,6 +45,8 @@ import java.util.List;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+
+import aphelion.shared.physics.valueobjects.PhysicsPositionVector;
 import org.junit.Test;
 
 
@@ -126,42 +128,50 @@ public class ForceEmitterTest extends PhysicsTest
                 env.actorWarp(0, ACTOR_FIRST , false, FIRST_POSITION_START.x, FIRST_POSITION_START.y, 0, 0, 0);
                 env.actorWarp(0, ACTOR_SECOND, false, SECOND_POSITION_START.x, SECOND_POSITION_START.y, SECOND_VEL_START.x, SECOND_VEL_START.y, 0);
                 
-                env.actorWeapon(1, ACTOR_FIRST, WEAPON_SLOT.REPEL);
+                env.actorWeapon(1, ACTOR_FIRST, WEAPON_SLOT.REPEL); // repelA (applies force for 2 ticks)
                 
                 ActorPublic firstActor = env.getActor(ACTOR_FIRST);
                 ActorPublic secondActor = env.getActor(ACTOR_SECOND);
                 
-                assertVelocity(SECOND_VEL_START.x, SECOND_VEL_START.y, secondActor);
+                assertVelocity(SECOND_VEL_START.x,
+                               SECOND_VEL_START.y,
+                               secondActor);
                 
                 env.tick(); // now at 1
-                // force should not have been applied to the position or velocity yet.
-                // it should affect the velocity and position in the next tick
-                assertPosition(FIRST_POSITION_START.x, FIRST_POSITION_START.y, firstActor);
-                assertPosition(SECOND_POSITION_START.x + SECOND_VEL_START.x,
-                        SECOND_POSITION_START.y + SECOND_VEL_START.y, 
-                        secondActor);
-                assertVelocity(SECOND_VEL_START.x,
-                               SECOND_VEL_START.y, 
+                // force point is (20000,50000)
+                assertPosition(FIRST_POSITION_START.x, // (20000, 50000)
+                               FIRST_POSITION_START.y,
+                               firstActor);
+                assertVelocity(SECOND_VEL_START.x + (3840000 / 2), // (1920100, 150)
+                               SECOND_VEL_START.y,
+                               secondActor);
+                // should not affect the position yet
+                assertPosition(SECOND_POSITION_START.x + SECOND_VEL_START.x, // (2042500, 50150)
+                               SECOND_POSITION_START.y + SECOND_VEL_START.y, //
                                secondActor);
                 
                 
                 env.tick(); // now at 2
-                assertPosition(FIRST_POSITION_START.x, FIRST_POSITION_START.y, firstActor);
-                assertPosition(SECOND_POSITION_START.x + SECOND_VEL_START.x * 2 + (3840000 / 2),
-                        SECOND_POSITION_START.y + SECOND_VEL_START.y * 2, 
-                        secondActor);
+                assertPosition(FIRST_POSITION_START.x,
+                               FIRST_POSITION_START.y,
+                               firstActor);
+                // force is applied for 2 ticks, but the force was so strong the emitter is now out of range
                 assertVelocity(SECOND_VEL_START.x + (3840000 / 2),
-                               SECOND_VEL_START.y, 
+                               SECOND_VEL_START.y,
+                               secondActor);
+                assertPosition(SECOND_POSITION_START.x + SECOND_VEL_START.x * 2 + (3840000 / 2),
+                               SECOND_POSITION_START.y + SECOND_VEL_START.y * 2,
                                secondActor);
                 
                 env.tick(); // now at 3
-                // force is applied for 2 ticks, but we should be out of range now
-                assertPosition(FIRST_POSITION_START.x, FIRST_POSITION_START.y, firstActor);
-                assertPosition(SECOND_POSITION_START.x + SECOND_VEL_START.x * 3 + (3840000 / 2) * 2,
-                        SECOND_POSITION_START.y + SECOND_VEL_START.y * 3, 
-                        secondActor);
+                assertPosition(FIRST_POSITION_START.x,
+                               FIRST_POSITION_START.y,
+                               firstActor);
                 assertVelocity(SECOND_VEL_START.x + (3840000 / 2),
-                               SECOND_VEL_START.y, 
+                               SECOND_VEL_START.y,
+                               secondActor);
+                assertPosition(SECOND_POSITION_START.x + SECOND_VEL_START.x * 3 + (3840000 / 2) * 2,
+                               SECOND_POSITION_START.y + SECOND_VEL_START.y * 3,
                                secondActor);
         }
         
@@ -182,47 +192,53 @@ public class ForceEmitterTest extends PhysicsTest
                 env.actorWarp(0, ACTOR_FIRST , false, FIRST_POSITION_START.x, FIRST_POSITION_START.y, 0, 0, 0);
                 env.actorWarp(0, ACTOR_SECOND, false, SECOND_POSITION_START.x, SECOND_POSITION_START.y, SECOND_VEL_START.x, SECOND_VEL_START.y, 0);
                 
-                env.actorWeapon(1, ACTOR_FIRST, WEAPON_SLOT.BURST);
+                env.actorWeapon(1, ACTOR_FIRST, WEAPON_SLOT.BURST); // repelB (applies force for 4 ticks)
                 
                 ActorPublic firstActor = env.getActor(ACTOR_FIRST);
                 ActorPublic secondActor = env.getActor(ACTOR_SECOND);
                 
-                assertVelocity(SECOND_VEL_START.x, SECOND_VEL_START.y, secondActor);
+                assertVelocity(
+                        SECOND_VEL_START.x,
+                        SECOND_VEL_START.y,
+                        secondActor);
                 
                 env.tick(); // now at 1
-                // force should not have been applied to the position or velocity yet.
-                // it should affect the velocity and position in the next tick
-                assertPosition(FIRST_POSITION_START.x, FIRST_POSITION_START.y, firstActor);
+                assertPosition(FIRST_POSITION_START.x,
+                               FIRST_POSITION_START.y,
+                               firstActor);
+                assertVelocity(SECOND_VEL_START.x + 5, // 5 is the force applied
+                               SECOND_VEL_START.y,
+                               secondActor);
+                // should not affect the position yet
                 assertPosition(SECOND_POSITION_START.x + SECOND_VEL_START.x,
-                        SECOND_POSITION_START.y + SECOND_VEL_START.y, 
-                        secondActor);
-                assertVelocity(SECOND_VEL_START.x,
-                               SECOND_VEL_START.y, 
+                               SECOND_POSITION_START.y + SECOND_VEL_START.y,
                                secondActor);
                 
                 
                 env.tick(); // now at 2
-                assertPosition(FIRST_POSITION_START.x, FIRST_POSITION_START.y, firstActor);
+                assertPosition(FIRST_POSITION_START.x,
+                               FIRST_POSITION_START.y,
+                               firstActor);
                 assertPosition(SECOND_POSITION_START.x + SECOND_VEL_START.x * 2 + 5,
-                        SECOND_POSITION_START.y + SECOND_VEL_START.y * 2, 
-                        secondActor);
-                assertVelocity(SECOND_VEL_START.x + 5,
-                               SECOND_VEL_START.y, 
+                               SECOND_POSITION_START.y + SECOND_VEL_START.y * 2,
+                               secondActor);
+                assertVelocity(SECOND_VEL_START.x + 5 + 4,
+                               SECOND_VEL_START.y,
                                secondActor);
                 
                 env.tick(); // now at 3
-                assertVelocity(SECOND_VEL_START.x + 5 + 4,
-                               SECOND_VEL_START.y, 
+                assertVelocity(SECOND_VEL_START.x + 5 + 4 + 4,
+                               SECOND_VEL_START.y,
                                secondActor);
                 
                 env.tick(); // now at 4 (weapon expires at this tick)
-                assertVelocity(SECOND_VEL_START.x + 5 + 4 + 4,
-                               SECOND_VEL_START.y, 
+                assertVelocity(SECOND_VEL_START.x + 5 + 4 + 4 + 4,
+                               SECOND_VEL_START.y,
                                secondActor);
                 
                 env.tick(); // now at 5 
                 assertVelocity(SECOND_VEL_START.x + 5 + 4 + 4 + 4,
-                               SECOND_VEL_START.y, 
+                               SECOND_VEL_START.y,
                                secondActor);
                 
                 
@@ -248,7 +264,7 @@ public class ForceEmitterTest extends PhysicsTest
 
                 env.actorWeapon(1, ACTOR_FIRST, WEAPON_SLOT.BOMB);
 
-                // This is the operation that will arrive late in the next test:
+                // This is the operation that will arrive late in the next tests:
                 env.actorWeapon(7, ACTOR_SECOND, WEAPON_SLOT.BURST); // repelB
 
                 ActorPublic firstActor = env.getActor(ACTOR_FIRST);
@@ -262,7 +278,7 @@ public class ForceEmitterTest extends PhysicsTest
                 assertVelocity(3, 0, projectile);
 
 
-                while (env.getTick() < 7) { env.tick(); }
+                while (env.getTick() < 6) { env.tick(); }
                 assertVelocity(3, 0, projectile);
 
                 // force is applied during 4 ticks
@@ -279,16 +295,29 @@ public class ForceEmitterTest extends PhysicsTest
 
                 while (env.getTick() < 40) { env.tick(); }
 
+                assertFalse("Test case needs updating because the history length for projectiles has been increased",
+                            projectile.getHistoricPosition(new PhysicsPositionVector(), 6, false));
+                assertVelocity( 7, 3 -15, 0, projectile);
+                assertVelocity( 8, 3 -15-15, 0, projectile);
+                assertVelocity( 9, 3 -15-15-14, 0, projectile);
+                assertVelocity(10, 3 -15-15-14-14, 0, projectile);
+                assertVelocity(11, 3 -15-15-14-14, 0, projectile);
+
                 assertVelocity(3 -15-15-14-14, 0, projectile);
                 assertPosition(
                         18288,
                         FIRST_POSITION_START.y,
                         projectile);
+
+                // (first actor is also affected by the repel)
+                assertPosition(19463,50000, firstActor);
+                assertVelocity(-17,0, firstActor);
+
+                assertEquals(env.getTimewarpCount(), 0);
         }
 
         @Test
-        @org.junit.Ignore // disabled until it is fixed
-        public void testLateAsPossibleWithoutTimeWarp_forceOnProjectile()
+        public void testLateAsPossibleWithoutTimeWarp_forceOnProjectile_fail()
         {
                 SimpleEnvironment env = (SimpleEnvironment) this.env;
 
@@ -318,25 +347,106 @@ public class ForceEmitterTest extends PhysicsTest
 
                 while (env.getTick() < 40) { env.tick(); }
 
-                /* */
                 assertVelocity(3, 0, projectile);
                 assertPosition(
                         FIRST_POSITION_START.x + 3 * ((int) env.getTick() - 1),
                         FIRST_POSITION_START.y,
                         projectile);
 
-                // the only difference between this test case and the previous one is that this this operation is late:
-                assert env.getTick() - PROJECTILE_HISTORY_LENGTH + 1 == 7;
-                // this is the oldest tick we can fix without a timewarp
-                env.actorWeapon(env.getTick() - PROJECTILE_HISTORY_LENGTH + 1, ACTOR_SECOND, WEAPON_SLOT.BURST); // repelB
-                /* */
+                // the only difference between this test case and the control is that this this operation is late:
+                assertEquals(env.getTick() - PROJECTILE_HISTORY_LENGTH + 1, 7);
+                // this is the most recent tick we can not fix without a timewarp
+                env.actorWeapon(7, ACTOR_SECOND, WEAPON_SLOT.BURST); // repelB
+
+                assertPosition(
+                        FIRST_POSITION_START.x + 3 * ((int) env.getTick() - 1),
+                        FIRST_POSITION_START.y,
+                        projectile);
+
                 env.doReexecuteDirtyPositionPath();
 
-                // see previous test case
+                assertVelocity( 7, 3, 0, projectile); // it should have been applied to this tick, but this is not possible
+                assertVelocity(3 -15-15-14, 0, projectile);
+
+                // (first actor is also affected by the repel)
+                assertPosition(19463,50000, firstActor);
+                assertVelocity(-17,0, firstActor);
+
+                assertEquals(env.getTimewarpCount(), 0);
+        }
+
+        @Test
+        public void testLateAsPossibleWithoutTimeWarp_forceOnProjectile()
+        {
+                SimpleEnvironment env = (SimpleEnvironment) this.env;
+
+                env.actorNew(0, ACTOR_FIRST , 1234, "NX-01");
+                env.actorNew(0, ACTOR_SECOND, 1234, "O'Neill");
+
+                final PhysicsPoint FIRST_POSITION_START  = new PhysicsPoint(20000             , 50000);
+                final PhysicsPoint SECOND_POSITION_START = new PhysicsPoint(20000 + 204800 / 2, 50000);
+
+                env.actorWarp(0, ACTOR_FIRST , false, FIRST_POSITION_START.x , FIRST_POSITION_START.y , 0, 0, EnvironmentConf.ROTATION_1_4TH);
+                env.actorWarp(0, ACTOR_SECOND, false, SECOND_POSITION_START.x, SECOND_POSITION_START.y, 0, 0, EnvironmentConf.ROTATION_1_4TH * 3);
+
+                env.actorWeapon(1, ACTOR_FIRST, WEAPON_SLOT.BOMB);
+
+                ActorPublic firstActor = env.getActor(ACTOR_FIRST);
+                ActorPublic secondActor = env.getActor(ACTOR_SECOND);
+
+                final int PROJECTILE_HISTORY_LENGTH = env.getConfig().TRAILING_STATE_DELAY + env.getConfig().MINIMUM_HISTORY_TICKS;
+                assert PROJECTILE_HISTORY_LENGTH == 34 : "test case needs adjusting";
+
+                env.tick(); // 1
+                env.tick(); // 2
+
+                ProjectilePublic projectile = env.projectileIterator().next();
+                assertEquals(ACTOR_FIRST, projectile.getOwner());
+                assertVelocity(3, 0, projectile);
+
+                while (env.getTick() < 39) { env.tick(); } // (previous test case has "40")
+
+                assertVelocity(3, 0, projectile);
+                assertPosition(
+                        FIRST_POSITION_START.x + 3 * ((int) env.getTick() - 1),
+                        FIRST_POSITION_START.y,
+                        projectile);
+
+                // the only difference between this test case and the control is that this this operation is late:
+                assertEquals(env.getTick() - PROJECTILE_HISTORY_LENGTH + 1, 6);
+                // this is the oldest tick we can fix without a timewarp
+                env.actorWeapon(7, ACTOR_SECOND, WEAPON_SLOT.BURST); // repelB
+
+                assertPosition(
+                        FIRST_POSITION_START.x + 3 * ((int) env.getTick() - 1),
+                        FIRST_POSITION_START.y,
+                        projectile);
+
+                env.doReexecuteDirtyPositionPath();
+
+                assertVelocity( 7, 3 -15, 0, projectile);
+                assertVelocity( 8, 3 -15-15, 0, projectile);
+                assertVelocity( 9, 3 -15-15-14, 0, projectile);
+                assertVelocity(10, 3 -15-15-14-14, 0, projectile);
+                assertVelocity(11, 3 -15-15-14-14, 0, projectile);
+
                 assertVelocity(3 -15-15-14-14, 0, projectile);
+                assertPosition(
+                        18343,
+                        FIRST_POSITION_START.y,
+                        projectile);
+
+                env.tick(); // 40
+
                 assertPosition(
                         18288,
                         FIRST_POSITION_START.y,
                         projectile);
+
+                // (first actor is also affected by the repel)
+                assertPosition(19463,50000, firstActor);
+                assertVelocity(-17,0, firstActor);
+
+                assertEquals(env.getTimewarpCount(), 0);
         }
 }
