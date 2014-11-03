@@ -199,6 +199,7 @@ public abstract class MapEntity implements EntityGridEntity
         
         public void markDirtyPositionPath(long dirtyTick)
         {
+                dirtyTick = Math.max(this.createdAt_tick, dirtyTick);
                 dirtyPositionPathTracker.markDirty(dirtyTick);
 
                 if (dirtyPositionPathTracker.isDirty(state.tick_now)
