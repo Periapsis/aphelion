@@ -349,7 +349,6 @@ public class WebSocketTest
         
         
         @Test(timeout=2000)
-        @Ignore
         public void testMultiGameWebSocket() throws IOException, URISyntaxException
         {
                 // use the same loop for client and server
