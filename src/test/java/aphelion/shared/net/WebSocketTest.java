@@ -136,6 +136,7 @@ public class WebSocketTest
                         server.setup();
                         client.connect();
 
+                        log.log(Level.INFO, "Starting loop");
                         loop.run();
                         assertEquals(1, clientNewClient);
                         assertEquals(1, serverNewClient);
@@ -191,6 +192,8 @@ public class WebSocketTest
                 public void gameC2SMessage(GameProtocolConnection game, GameC2S.C2S c2s, long receivedAt)
                 {
                         ++serverMessages;
+                        log.log(Level.INFO, "Server: C2S message: {0}", serverMessages);
+
                         assertEquals(1, c2s.getActorMoveCount());
                         assertEquals(1, c2s.getAllFields().size());
                         
@@ -229,15 +232,17 @@ public class WebSocketTest
                 @Override
                 public void gameNewConnection(GameProtocolConnection game)
                 {
-                        assertEquals(1, serverNewClient);
                         ++serverConnections;
+                        log.log(Level.INFO, "Server: gameNewConnection: {0}", serverConnections);
+                        assertEquals(1, serverNewClient);
                 }
 
                 @Override
                 public void gameDropConnection(GameProtocolConnection game, WS_CLOSE_STATUS code, String reason)
                 {
-                        assertEquals(1, serverNewClient);
                         --serverConnections;
+                        log.log(Level.INFO, "Server: gameDropConnection: {0}", serverConnections);
+                        assertEquals(1, serverNewClient);
                 }
 
                 @Override
@@ -302,7 +307,8 @@ public class WebSocketTest
                 public void gameS2CMessage(GameProtocolConnection game, GameS2C.S2C s2c, long receivedAt)
                 {
                         ++clientMessages;
-                        
+                        log.log(Level.INFO, "Client: S2C message: {0}", clientMessages);
+
                         assertEquals(1, s2c.getArenaSyncCount());
                         assertEquals(1, s2c.getAllFields().size());
                         
@@ -323,6 +329,7 @@ public class WebSocketTest
                 {
                         assertEquals(1, clientNewClient);
                         ++clientConnections;
+                        log.log(Level.INFO, "Client: gameNewConnection: {0}", clientConnections);
                 }
 
                 @Override
@@ -330,6 +337,7 @@ public class WebSocketTest
                 {
                         assertEquals(1, clientNewClient);
                         --clientConnections;
+                        log.log(Level.INFO, "Client: gameDropConnection: {0}", clientNewClient);
                 }
                 
                 @Override
