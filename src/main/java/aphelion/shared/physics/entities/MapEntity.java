@@ -108,19 +108,25 @@ public abstract class MapEntity implements EntityGridEntity
                 assert velHistory.HISTORY_LENGTH == HISTORY_LENGTH;
                 dirtyPositionPathTracker.setFirstDirtyTick(createdAt_tick+1);
         }
-        
+
+        /**
+         * Remove the entity from all lists. This is called during the ticking loop after as the result of a soft remove.
+         * @param tick
+         */
         public void hardRemove(long tick)
         {
-                if (!removed)
-                {
-                        removed = true;
-                        removedAt_tick = tick;
-                }
+                this.softRemove(tick);
                 
                 crossStateList[state.id] = null;
                 dirtyPositionPathLink_state.remove();
         }
-        
+
+        /**
+         * Mark the entity for removal, but do not really remove it from any list yet.
+         * The ticking loop will execute a hardRemove() when this entity has been removed in all states.
+         * This ensures timewarps will work properly
+         * @param tick
+         */
         public void softRemove(long tick)
         {
                 if (removed)
