@@ -373,6 +373,7 @@ public class WebSocketTest
                         loop.addLoopEvent(client);
                         client.connect();
 
+                        log.log(Level.INFO, "Start loop");
                         loop.run();
                         assertEquals(1, clientNewClient);
                         assertEquals(1, serverNewClient);
@@ -395,8 +396,8 @@ public class WebSocketTest
                 @Override
                 public void gameNewClient(GameProtocolConnection game)
                 {
-                        log.log(Level.INFO, "Server: new client");
                         ++serverNewClient;
+                        log.log(Level.INFO, "Server: new client {0}", serverNewClient);
                         
                         assertEquals(0, serverConnections);
                         
@@ -427,8 +428,9 @@ public class WebSocketTest
                 @Override
                 public void gameC2SMessage(GameProtocolConnection game, GameC2S.C2S c2s, long receivedAt)
                 {
-                        ++serverMessages;
                         log.log(Level.INFO, "Server: Received message {0}", serverMessages);
+                        ++serverMessages;
+
                         assertTrue(c2s.getActorMoveCount() > 0);
                         assertEquals(1, c2s.getAllFields().size());
                         
@@ -463,7 +465,9 @@ public class WebSocketTest
                 public void gameNewConnection(GameProtocolConnection game)
                 {
                         ++serverConnections;
-                        
+
+                        log.log(Level.INFO, "Server: gameNewConnection {0}", serverConnections);
+
                         if (serverConnections == 5)
                         {
                                 S2C.Builder s2c = S2C.newBuilder();
@@ -487,10 +491,12 @@ public class WebSocketTest
 
                                         if (a < 17)
                                         {
+                                                log.log(Level.INFO, "Server: gameNewConnection: send(s2c) {0}", s2c.getActorMoveCount());
                                                 game.send(s2c);
                                         }
                                 }
 
+                                log.log(Level.INFO, "Server: gameNewConnection: send(s2c) {0} (after loop)", s2c.getActorMoveCount());
                                 game.send(s2c);
                         }
                 }
@@ -499,6 +505,7 @@ public class WebSocketTest
                 public void gameDropConnection(GameProtocolConnection game, WS_CLOSE_STATUS code, String reason)
                 {
                         --serverConnections;
+                        log.log(Level.INFO, "Server: gameDropConnection {0}", serverConnections);
                 }
                 
                 @Override
@@ -514,8 +521,8 @@ public class WebSocketTest
                 @Override
                 public void gameNewClient(GameProtocolConnection game)
                 {
-                        log.log(Level.INFO, "Client: new client");
                         ++clientNewClient;
+                        log.log(Level.INFO, "Client: new client {0} clientNewClient");
                         
                         assertEquals(0, clientConnections);
                         
@@ -554,8 +561,6 @@ public class WebSocketTest
                         ++clientMessages;
                         log.log(Level.INFO, "Client: received message {0}", clientMessages);
                         
-                        
-                        
                         assertTrue(s2c.getActorMoveCount() > 0);
                         assertEquals(1, s2c.getAllFields().size());
                         
@@ -584,6 +589,8 @@ public class WebSocketTest
                 public void gameNewConnection(GameProtocolConnection game)
                 {
                         ++clientConnections;
+
+                        log.log(Level.INFO, "Client: gameNewConnection {0}", clientConnections);
                         
                         if (clientConnections == 5)
                         {
@@ -608,9 +615,12 @@ public class WebSocketTest
 
                                         if (a < 27)
                                         {
+                                                log.log(Level.INFO, "Client: gameNewConnection: send(c2s) {0}", c2s.getActorMoveCount());
                                                 game.send(c2s);
                                         }
                                 }
+
+                                log.log(Level.INFO, "Client: gameNewConnection: send(c2s) {0} (after loop)", c2s.getActorMoveCount());
                                 game.send(c2s);
                         }
                         
@@ -622,6 +632,7 @@ public class WebSocketTest
                 public void gameDropConnection(GameProtocolConnection game, WS_CLOSE_STATUS code, String reason)
                 {
                         --clientConnections;
+                        log.log(Level.INFO, "Client: gameDropConnection {0}", clientConnections);
                 }
                 
                 @Override
