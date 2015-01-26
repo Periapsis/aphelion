@@ -194,14 +194,19 @@ public abstract class MapEntity implements EntityGridEntity
                 
                 return tick < this.createdAt_tick;
         }
-        
+
+        /**
+         * Mark that the historic position at the given tick is "dirty".
+         * The position will be rolled back to the tick before this tick and resimulated, but only for this entity.
+         * The effect is not instant, it is deferred to the next ticked loop.
+         * @param dirtyTick The tick that is dirty
+         */
         public void markDirtyPositionPath(long dirtyTick)
         {
                 dirtyTick = Math.max(this.createdAt_tick, dirtyTick);
                 dirtyPositionPathTracker.markDirty(dirtyTick);
 
-                if (dirtyPositionPathTracker.isDirty(state.tick_now)
-                    && dirtyPositionPathLink_state.head == null)
+                if (dirtyPositionPathLink_state.head == null)
                 {
                         state.dirtyPositionPathList.append(dirtyPositionPathLink_state);
                 }

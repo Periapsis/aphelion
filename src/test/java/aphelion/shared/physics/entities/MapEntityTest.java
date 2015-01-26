@@ -72,7 +72,7 @@ public class MapEntityTest
                 en = new MapEntity(
                         state,
                         crossStateList,
-                        100, // created at tick
+                        90, // created at tick
                         10 // history length
                 ) {
                         @Override
@@ -84,6 +84,7 @@ public class MapEntityTest
 
                 while (state.tick_now < 100)
                 {
+                        en.updatedPosition(state.tick_now);
                         env.tick();
                 }
 
@@ -160,7 +161,7 @@ public class MapEntityTest
         public void testIsNonExistent()
         {
                 assertTrue(en.isNonExistent(1));
-                assertTrue(en.isNonExistent(99));
+                assertTrue(en.isNonExistent(89)); // entity created at tick 90
                 assertFalse(en.isNonExistent(100));
                 assertFalse(en.isNonExistent(1000));
 
@@ -168,7 +169,7 @@ public class MapEntityTest
 
                 assertFalse(en.isNonExistent()); // state tick_now (100)
                 assertTrue(en.isNonExistent(1));
-                assertTrue(en.isNonExistent(99));
+                assertTrue(en.isNonExistent(89));
                 assertFalse(en.isNonExistent(100));
                 assertFalse(en.isNonExistent(104));
                 assertTrue(en.isNonExistent(105));
@@ -176,5 +177,33 @@ public class MapEntityTest
 
                 en.softRemove(100);
                 assertTrue(en.isNonExistent()); // state tick_now (100)
+        }
+
+        @Test
+        public void testMarkDirtyPositionPath_beforeCreation()
+        {
+                assert en.dirtyPositionPathLink_state.head == null;
+
+                // entity is created at tick 90
+                en.markDirtyPositionPath(85); // before its creation tick
+                assertFalse(en.dirtyPositionPathTracker.isDirty(89));
+                assertTrue(en.dirtyPositionPathTracker.isDirty(90));
+                assertTrue(en.dirtyPositionPathTracker.isDirty(1000));
+
+                assert en.dirtyPositionPathLink_state.head == state.dirtyPositionPathList;
+        }
+
+        @Test
+        public void testMarkDirtyPositionPath_afterCreation()
+        {
+                assert en.dirtyPositionPathLink_state.head == null;
+
+                // entity is created at tick 90
+                en.markDirtyPositionPath(95); // after its creation tick
+                assertFalse(en.dirtyPositionPathTracker.isDirty(94));
+                assertTrue(en.dirtyPositionPathTracker.isDirty(95));
+                assertTrue(en.dirtyPositionPathTracker.isDirty(1000));
+
+                assert en.dirtyPositionPathLink_state.head == state.dirtyPositionPathList;
         }
 }
