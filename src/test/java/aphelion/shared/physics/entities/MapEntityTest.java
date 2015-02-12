@@ -227,38 +227,38 @@ public class MapEntityTest
         }
 
         @Test
-        public void testGetOlderEntityOnlyThis()
+        public void testGetEntityAtOnlyThis()
         {
                 // last argument false means do not look at other states
-                assert null == en.getOlderEntity(89, false, false);
-                assert en == en.getOlderEntity(90, false, false);
+                assert null == en.getEntityAt(89, false, false);
+                assert en == en.getEntityAt(90, false, false);
                 en.softRemove(105);
-                assert en == en.getOlderEntity(104, false, false);
-                assert null == en.getOlderEntity(105, false, false);
-                assert en == en.getOlderEntity(105, true, false); // ignore soft delete
+                assert en == en.getEntityAt(104, false, false);
+                assert null == en.getEntityAt(105, false, false);
+                assert en == en.getEntityAt(105, true, false); // ignore soft delete
         }
 
         @Test
-        public void testGetOlderEntity()
+        public void testGetEntityAt()
         {
                 tickTo(oldState, 100);
                 // 132
 
-                assert null == en.getOlderEntity(89, false, true);
-                assert oldEn == en.getOlderEntity(90, false, true);
-                assert oldEn == en.getOlderEntity(99, false, true);
-                assert oldEn == en.getOlderEntity(100, false, true);
-                assert en == en.getOlderEntity(101, false, true);
+                assert null == en.getEntityAt(89, false, true);
+                assert oldEn == en.getEntityAt(90, false, true);
+                assert oldEn == en.getEntityAt(99, false, true);
+                assert oldEn == en.getEntityAt(100, false, true);
+                assert en == en.getEntityAt(101, false, true);
 
-                assert null == oldEn.getOlderEntity(89, false, true);
-                assert oldEn == oldEn.getOlderEntity(90, false, true);
-                assert oldEn == oldEn.getOlderEntity(99, false, true);
-                assert oldEn == oldEn.getOlderEntity(100, false, true);
-                assert en == oldEn.getOlderEntity(101, false, true);
+                assert null == oldEn.getEntityAt(89, false, true);
+                assert oldEn == oldEn.getEntityAt(90, false, true);
+                assert oldEn == oldEn.getEntityAt(99, false, true);
+                assert oldEn == oldEn.getEntityAt(100, false, true);
+                assert en == oldEn.getEntityAt(101, false, true);
 
 
                 tickTo(oldState, 100 + econf.HIGHEST_DELAY); // too far back for the createdAt to interfere
-                assert null == en.getOlderEntity(100, false, true);
-                assert null == en.getOlderEntity(oldState.tick_now + 1000, false, true);
+                assert null == en.getEntityAt(100, false, true);
+                assert null == en.getEntityAt(oldState.tick_now + 1000, false, true);
         }
 }

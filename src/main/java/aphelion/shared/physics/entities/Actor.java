@@ -847,7 +847,7 @@ public class Actor extends MapEntity
         
         public Actor getOlderActor(long tick, boolean ignoreSoftDelete, boolean lookAtOtherStates)
         {
-                return (Actor) getOlderEntity(tick, ignoreSoftDelete, lookAtOtherStates);
+                return (Actor) getEntityAt(tick, ignoreSoftDelete, lookAtOtherStates);
         }
         
         public boolean getHistoricPosition(PhysicsShipPosition pos, long tick, boolean lookAtOlderStates)

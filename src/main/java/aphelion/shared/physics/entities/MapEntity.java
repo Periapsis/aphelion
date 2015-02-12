@@ -213,7 +213,7 @@ public abstract class MapEntity implements EntityGridEntity
                 }
         }
         
-        public MapEntity getOlderEntity(long tick, boolean ignoreSoftDelete, boolean lookAtOtherStates)
+        public MapEntity getEntityAt(long tick, boolean ignoreSoftDelete, boolean lookAtOtherStates)
         {
                 MapEntity en;
                 if (lookAtOtherStates)
@@ -275,7 +275,7 @@ public abstract class MapEntity implements EntityGridEntity
          */
         public boolean getHistoricPosition(PhysicsPositionVector pos, long tick, boolean lookAtOtherStates)
         {
-                MapEntity en = getOlderEntity(tick, false, lookAtOtherStates);
+                MapEntity en = getEntityAt(tick, false, lookAtOtherStates);
 
                 if (en == null)
                 {
@@ -343,7 +343,7 @@ public abstract class MapEntity implements EntityGridEntity
         
         public PhysicsPointHistoryDetailed getAndSeekHistoryDetail(long tick, boolean lookAtOtherStates)
         {
-                MapEntity en = getOlderEntity(tick, false, lookAtOtherStates);
+                MapEntity en = getEntityAt(tick, false, lookAtOtherStates);
 
                 if (en == null)
                 {
