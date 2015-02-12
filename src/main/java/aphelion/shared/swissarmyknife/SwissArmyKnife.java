@@ -558,7 +558,7 @@ public final class SwissArmyKnife
 
                 d = a / b;
 
-                if (d >= 0)
+                if (a >= 0 == b >= 0) // result is non negative
                 {
                         return d;
                 }
@@ -579,7 +579,7 @@ public final class SwissArmyKnife
 
                 d = a / b;
 
-                if (d >= 0)
+                if (a >= 0 == b >= 0) // result is non negative
                 {
                         return d;
                 }
@@ -599,7 +599,7 @@ public final class SwissArmyKnife
 
                 d = a / b;
 
-                if (d <= 0)
+                if (a <= 0 != b <= 0) // result is non positive
                 {
                         return d;
                 }
@@ -619,7 +619,7 @@ public final class SwissArmyKnife
 
                 d = a / b;
 
-                if (d <= 0)
+                if (a <= 0 != b <= 0) // result is non positive
                 {
                         return d;
                 }
