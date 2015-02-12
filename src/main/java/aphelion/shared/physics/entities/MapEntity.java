@@ -45,6 +45,7 @@ import aphelion.shared.physics.PhysicsMap;
 import aphelion.shared.physics.State;
 import aphelion.shared.physics.valueobjects.*;
 import aphelion.shared.swissarmyknife.LinkedListEntry;
+import aphelion.shared.swissarmyknife.SwissArmyKnife;
 
 /**
  *
@@ -219,7 +220,7 @@ public abstract class MapEntity implements EntityGridEntity
                 {
                         int ticks_ago = (int) (state.tick_now - tick);
 
-                        int states_ago = ticks_ago / state.econfig.TRAILING_STATE_DELAY;
+                        int states_ago = SwissArmyKnife.divideFloor(ticks_ago, state.econfig.TRAILING_STATE_DELAY);
 
                         int state_id = state.id + states_ago;
                         if (state_id < 0 || state_id >= crossStateList.length)
@@ -238,7 +239,7 @@ public abstract class MapEntity implements EntityGridEntity
                 {
                         return null;
                 }
-                
+
                 if (en.createdAt_tick > tick)
                 {
                         return null;
@@ -246,7 +247,7 @@ public abstract class MapEntity implements EntityGridEntity
                 
                 if (!ignoreSoftDelete)
                 {
-                        if (isNonExistent(tick))
+                        if (en.isNonExistent(tick))
                         {
                                 return null;
                         }

@@ -39,7 +39,6 @@
 package aphelion.shared.physics.entities;
 
 import aphelion.shared.physics.*;
-import aphelion.shared.physics.entities.MapEntity;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -54,8 +53,10 @@ public class MapEntityTest
 {
         private EnvironmentConf econf;
         private SimpleEnvironment env;
+        private State oldState;
         private State state;
         private MapEntity[] crossStateList;
+        private MapEntity oldEn;
         private MapEntity en;
 
         @Before
@@ -65,6 +66,7 @@ public class MapEntityTest
                 env = new SimpleEnvironment(econf, new MapEmpty(), false);
                 Field field = env.getClass().getDeclaredField("trailingStates");
                 field.setAccessible(true);
+                oldState = ( (State[]) field.get(env) )[2];
                 state = ( (State[]) field.get(env) )[1];
 
                 crossStateList = new MapEntity[econf.TRAILING_STATES];
@@ -82,13 +84,30 @@ public class MapEntityTest
                         }
                 };
 
-                while (state.tick_now < 100)
+                oldEn = new MapEntity(
+                        oldState,
+                        crossStateList,
+                        90, // created at tick
+                        10 // history length
+                ) {
+                        @Override
+                        public void performDeadReckoning(PhysicsMap map, long tick_now, long reckon_ticks, boolean applyForceEmitters)
+                        {
+                                // noop
+                        }
+                };
+
+                tickTo(state, 100);
+        }
+
+        private void tickTo(State target, int tick)
+        {
+                while (target.tick_now < tick)
                 {
+                        oldEn.updatedPosition(oldState.tick_now);
                         en.updatedPosition(state.tick_now);
                         env.tick();
                 }
-
-                // state 1 is now at tick 100
         }
 
         @Test
@@ -205,5 +224,41 @@ public class MapEntityTest
                 assertTrue(en.dirtyPositionPathTracker.isDirty(1000));
 
                 assert en.dirtyPositionPathLink_state.head == state.dirtyPositionPathList;
+        }
+
+        @Test
+        public void testGetOlderEntityOnlyThis()
+        {
+                // last argument false means do not look at other states
+                assert null == en.getOlderEntity(89, false, false);
+                assert en == en.getOlderEntity(90, false, false);
+                en.softRemove(105);
+                assert en == en.getOlderEntity(104, false, false);
+                assert null == en.getOlderEntity(105, false, false);
+                assert en == en.getOlderEntity(105, true, false); // ignore soft delete
+        }
+
+        @Test
+        public void testGetOlderEntity()
+        {
+                tickTo(oldState, 100);
+                // 132
+
+                assert null == en.getOlderEntity(89, false, true);
+                assert oldEn == en.getOlderEntity(90, false, true);
+                assert oldEn == en.getOlderEntity(99, false, true);
+                assert oldEn == en.getOlderEntity(100, false, true);
+                assert en == en.getOlderEntity(101, false, true);
+
+                assert null == oldEn.getOlderEntity(89, false, true);
+                assert oldEn == oldEn.getOlderEntity(90, false, true);
+                assert oldEn == oldEn.getOlderEntity(99, false, true);
+                assert oldEn == oldEn.getOlderEntity(100, false, true);
+                assert en == oldEn.getOlderEntity(101, false, true);
+
+
+                tickTo(oldState, 100 + econf.HIGHEST_DELAY); // too far back for the createdAt to interfere
+                assert null == en.getOlderEntity(100, false, true);
+                assert null == en.getOlderEntity(oldState.tick_now + 1000, false, true);
         }
 }
