@@ -85,8 +85,8 @@ public class MapEntityTest
                         }
                 };
 
-                en.pos.pos.set(12, 34);
-                en.pos.vel.set(5, 6);
+                en.pos.pos.set(1000, 2000);
+                en.pos.vel.set(3, 7);
 
                 oldEn = new MapEntity(
                         oldState,
@@ -101,7 +101,8 @@ public class MapEntityTest
                         }
                 };
 
-                oldEn.pos.set(en.pos);
+                oldEn.pos.pos.set(5000, 7000);
+                oldEn.pos.vel.set(4, 9);
 
                 tickTo(state, 100);
         }
@@ -110,9 +111,12 @@ public class MapEntityTest
         {
                 while (target.tick_now < tick)
                 {
+                        env.tick();
+                        oldEn.pos.pos.add(oldEn.pos.vel);
+                        en.pos.pos.add(en.pos.vel);
+
                         oldEn.updatedPosition(oldState.tick_now);
                         en.updatedPosition(state.tick_now);
-                        env.tick();
                 }
         }
 
@@ -248,7 +252,6 @@ public class MapEntityTest
         public void testGetEntityAt()
         {
                 tickTo(oldState, 100);
-                // 132
 
                 assert null == en.getEntityAt(89, false, true);
                 assert oldEn == en.getEntityAt(90, false, true);
@@ -274,9 +277,63 @@ public class MapEntityTest
                 final PhysicsPositionVector pos = new PhysicsPositionVector();
                 en.getPosition(pos);
 
-                assertEquals(12, pos.pos.x);
-                assertEquals(34, pos.pos.y);
-                assertEquals(5, pos.vel.x);
-                assertEquals(6, pos.vel.y);
+                pos.pos.assertEquals(1396, 2924);
+                pos.vel.assertEquals(3, 7);
+        }
+
+        @Test
+        public void testGetHistoricPositionOnlyThis()
+        {
+                final PhysicsPositionVector pos = new PhysicsPositionVector();
+
+                // into the future
+                assertFalse(en.getHistoricPosition(pos, 101, false));
+                assert !pos.pos.set;
+                assert !pos.vel.set;
+
+                assertTrue(en.getHistoricPosition(pos, 100, false));
+                pos.pos.assertEquals(1396, 2924);
+                pos.vel.assertEquals(3, 7);
+
+                assertTrue(en.getHistoricPosition(pos, 99, false));
+                pos.pos.assertEquals(1393, 2917);
+                pos.vel.assertEquals(3, 7);
+
+                assertTrue(en.getHistoricPosition(pos, 91, false));
+                pos.pos.assertEquals(1369, 2861);
+                pos.vel.assertEquals(3, 7);
+
+                //further back than the history length we set (10)
+                assertFalse(en.getHistoricPosition(pos, 90, false));
+                assert !pos.pos.set;
+                assert !pos.vel.set;
+        }
+
+        @Test
+        public void testGetHistoricPosition()
+        {
+                final PhysicsPositionVector pos = new PhysicsPositionVector();
+
+                tickTo(oldState, 100);
+
+                // into the future
+                assertFalse(en.getHistoricPosition(pos, state.tick_now + 1, true));
+                assert !pos.pos.set;
+                assert !pos.vel.set;
+
+                assertTrue(en.getHistoricPosition(pos, state.tick_now, true));
+                pos.pos.assertEquals(1492, 3148);
+                pos.vel.assertEquals(3, 7);
+
+                assertTrue(en.getHistoricPosition(pos, state.tick_now - 1, true));
+                pos.pos.assertEquals(1489, 3141);
+                pos.vel.assertEquals(3, 7);
+
+                // the older entity has a different position on purpose so that we can test this
+                assertTrue(en.getHistoricPosition(pos, oldState.tick_now, true));
+                pos.pos.assertEquals(5656, 8476);
+                pos.vel.assertEquals(4, 9);
+
+
         }
 }
