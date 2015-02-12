@@ -39,6 +39,7 @@
 package aphelion.shared.physics.entities;
 
 import aphelion.shared.physics.*;
+import aphelion.shared.physics.valueobjects.PhysicsPositionVector;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -84,6 +85,9 @@ public class MapEntityTest
                         }
                 };
 
+                en.pos.pos.set(12, 34);
+                en.pos.vel.set(5, 6);
+
                 oldEn = new MapEntity(
                         oldState,
                         crossStateList,
@@ -96,6 +100,8 @@ public class MapEntityTest
                                 // noop
                         }
                 };
+
+                oldEn.pos.set(en.pos);
 
                 tickTo(state, 100);
         }
@@ -260,5 +266,17 @@ public class MapEntityTest
                 tickTo(oldState, 100 + econf.HIGHEST_DELAY); // too far back for the createdAt to interfere
                 assert null == en.getEntityAt(100, false, true);
                 assert null == en.getEntityAt(oldState.tick_now + 1000, false, true);
+        }
+
+        @Test
+        public void testGetPosition()
+        {
+                final PhysicsPositionVector pos = new PhysicsPositionVector();
+                en.getPosition(pos);
+
+                assertEquals(12, pos.pos.x);
+                assertEquals(34, pos.pos.y);
+                assertEquals(5, pos.vel.x);
+                assertEquals(6, pos.vel.y);
         }
 }
