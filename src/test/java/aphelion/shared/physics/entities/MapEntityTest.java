@@ -39,6 +39,7 @@
 package aphelion.shared.physics.entities;
 
 import aphelion.shared.physics.*;
+import aphelion.shared.physics.valueobjects.PhysicsPoint;
 import aphelion.shared.physics.valueobjects.PhysicsPositionVector;
 import org.junit.Before;
 import org.junit.Test;
@@ -335,5 +336,14 @@ public class MapEntityTest
                 pos.vel.assertEquals(4, 9);
 
 
+        }
+
+        @Test
+        public void testGetHistoricSmoothPosition()
+        {
+                // Not implemented in MapEntities by default
+                final PhysicsPoint pos = new PhysicsPoint();
+                assertFalse(en.getHistoricSmoothPosition(pos, state.tick_now, false));
+                assert !pos.set;
         }
 }
