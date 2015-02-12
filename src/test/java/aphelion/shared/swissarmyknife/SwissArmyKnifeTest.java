@@ -135,9 +135,59 @@ public class SwissArmyKnifeTest
                 assertEquals(1L, SwissArmyKnife.divideCeil(1L, 1L));
                 assertEquals(1L, SwissArmyKnife.divideCeil(1L, 2L));
                 assertEquals(4L, SwissArmyKnife.divideCeil(10L, 3L));
+                assertEquals(5L, SwissArmyKnife.divideCeil(10L, 2L));
+                assertEquals(-5L, SwissArmyKnife.divideCeil(-10L, 2L));
                 assertEquals(-3L, SwissArmyKnife.divideCeil(-10L, 3L));
                 assertEquals(-3L, SwissArmyKnife.divideCeil(10L, -3L));
                 assertEquals(4L, SwissArmyKnife.divideCeil(-10L, -3L));
                 assertEquals(0L, SwissArmyKnife.divideCeil(-1L, 32L));
+        }
+
+        @Test
+        public void testDivideUpInt()
+        {
+                try
+                {
+                        SwissArmyKnife.divideUp(0, 0);
+                        assert false;
+                }
+                catch (ArithmeticException ex)
+                {
+                        assert true;
+                }
+
+                assertEquals(0, SwissArmyKnife.divideUp(0, 1));
+                assertEquals(1, SwissArmyKnife.divideUp(1, 30));
+                assertEquals(-1, SwissArmyKnife.divideUp(-1, 30));
+                assertEquals(-1, SwissArmyKnife.divideUp(1, -30));
+                assertEquals(1, SwissArmyKnife.divideUp(-1, -30));
+                assertEquals(5, SwissArmyKnife.divideUp(10, 2));
+                assertEquals(-5, SwissArmyKnife.divideUp(10, -2));
+                assertEquals(-5, SwissArmyKnife.divideUp(-10, 2));
+                assertEquals(5, SwissArmyKnife.divideUp(-10, -2));
+        }
+
+        @Test
+        public void testDivideUpLong()
+        {
+                try
+                {
+                        SwissArmyKnife.divideUp(0L, 0L);
+                        assert false;
+                }
+                catch (ArithmeticException ex)
+                {
+                        assert true;
+                }
+
+                assertEquals(0L, SwissArmyKnife.divideUp(0L, 1L));
+                assertEquals(1L, SwissArmyKnife.divideUp(1L, 30L));
+                assertEquals(-1L, SwissArmyKnife.divideUp(-1L, 30L));
+                assertEquals(-1L, SwissArmyKnife.divideUp(1L, -30L));
+                assertEquals(1L, SwissArmyKnife.divideUp(-1L, -30L));
+                assertEquals(5L, SwissArmyKnife.divideUp(10L, 2L));
+                assertEquals(-5L, SwissArmyKnife.divideUp(10L, -2L));
+                assertEquals(-5L, SwissArmyKnife.divideUp(-10L, 2L));
+                assertEquals(5L, SwissArmyKnife.divideUp(-10L, -2L));
         }
 }
