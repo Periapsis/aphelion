@@ -330,7 +330,7 @@ public abstract class MapEntity implements EntityGridEntity
                 
                 if (tick == state.tick_now)
                 {
-                        if (this.removed)
+                        if (this.isRemoved(tick))
                         {
                                 state.entityGrid.updateLocation(this, null);
                         }

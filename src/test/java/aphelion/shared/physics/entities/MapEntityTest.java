@@ -45,6 +45,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.lang.reflect.Field;
+import java.util.Iterator;
 
 import static org.junit.Assert.*;
 
@@ -345,5 +346,62 @@ public class MapEntityTest
                 final PhysicsPoint pos = new PhysicsPoint();
                 assertFalse(en.getHistoricSmoothPosition(pos, state.tick_now, false));
                 assert !pos.set;
+        }
+
+        @Test
+        public void testUpdatedPositionFutureTick()
+        {
+                assertTrue(en.dirtyPositionPathTracker.isDirty(101));
+
+                en.pos.pos.set(500000, 666666);
+                en.pos.vel.set(-1, -2);
+                en.updatedPosition(101);
+
+                assertEquals(500000, en.posHistory.getX(101));
+                assertEquals(666666, en.posHistory.getY(101));
+                assertEquals(-1, en.velHistory.getX(101));
+                assertEquals(-2, en.velHistory.getY(101));
+                assertFalse(en.dirtyPositionPathTracker.isDirty(101));
+
+                // 101 is not the current tick so not in the entity grid:
+                Iterator<MapEntity> it = state.entityGrid.iterator(new PhysicsPoint(500000, 666666), 1);
+                assertFalse(it.hasNext());
+        }
+
+        @Test
+        public void testUpdatedPositionNow()
+        {
+                en.pos.pos.set(500000, 666666);
+                en.pos.vel.set(-1, -2);
+                en.updatedPosition(100);
+
+                assertEquals(500000, en.posHistory.getX(100));
+                assertEquals(666666, en.posHistory.getY(100));
+                assertEquals(-1, en.velHistory.getX(100));
+                assertEquals(-2, en.velHistory.getY(100));
+
+                // 100 is the current tick so we should be in the grid
+                Iterator<MapEntity> it = state.entityGrid.iterator(new PhysicsPoint(500000, 666666), 1);
+                assertTrue(it.hasNext());
+                assertEquals(it.next(), en);
+        }
+
+        @Test
+        public void testUpdatedPositionNowRemoved()
+        {
+                en.softRemove(100);
+                en.pos.pos.set(500000, 666666);
+                en.pos.vel.set(-1, -2);
+                en.updatedPosition(100);
+
+                assertEquals(500000, en.posHistory.getX(100));
+                assertEquals(666666, en.posHistory.getY(100));
+                assertEquals(-1, en.velHistory.getX(100));
+                assertEquals(-2, en.velHistory.getY(100));
+
+                // 100 is the current tick so we should be in the grid
+                // if removed we should not be in the entity grid
+                Iterator<MapEntity> it = state.entityGrid.iterator(new PhysicsPoint(500000, 666666), 1);
+                assertFalse(it.hasNext());
         }
 }
