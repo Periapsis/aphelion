@@ -109,7 +109,7 @@ public class PhysicsPointHistoryDetailed extends PhysicsPointHistory
                         return;
                 }
                 
-                if (this.first != null && this.first.tick <= tick)
+                if (this.first.tick <= tick)
                 {
                         myEntry.next = this.first;
                         this.first = myEntry;
