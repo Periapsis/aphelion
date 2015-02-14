@@ -683,9 +683,9 @@ public class Actor extends MapEntity
         }
         
         @Override
-        public void resetTo(State myState, MapEntity other_)
+        public void resetTo(MapEntity other_)
         {
-                super.resetTo(myState, other_);
+                super.resetTo(other_);
                 
                 Actor other = (Actor) other_;
                 
@@ -705,7 +705,7 @@ public class Actor extends MapEntity
 
                 if (pid != publicWrapper.pid)
                 {
-                        publicWrapper = new ActorPublicImpl(this, myState);
+                        publicWrapper = new ActorPublicImpl(this, this.state);
                 }
                 
                 
@@ -735,7 +735,7 @@ public class Actor extends MapEntity
                 
                 Actor dummy = new Actor(this.state, crossStateList, pid, tick);
                 crossStateList[this.state.id] = null; // skip assertion in resetTo
-                this.resetTo(this.state, dummy);
+                this.resetTo(dummy);
                 crossStateList[this.state.id] = (MapEntity) this;
         }
         

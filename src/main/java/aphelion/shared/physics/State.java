@@ -639,7 +639,7 @@ public class State
                                         continue;
                                 }
 
-                                actorMine.resetTo(this, actorOther);
+                                actorMine.resetTo(actorOther);
                                 assert actorMine.state == this;
                         }
                 }
@@ -672,7 +672,7 @@ public class State
                                                 actorMine = new Actor(this, findCrossStateListForActor(actorOther), actorOther.pid, actorOther.createdAt_tick);
                                         }
                                         
-                                        actorMine.resetTo(this, actorOther);
+                                        actorMine.resetTo(actorOther);
                                         assert actorMine.state == this;
                                 }
                         }
@@ -713,7 +713,7 @@ public class State
                                 
                                 this.projectilesList.append(projectileMine.projectileListLink_state);
                                 this.projectiles.put(projectileMine.key, projectileMine);
-                                projectileMine.resetTo(this, projectileOther);
+                                projectileMine.resetTo(projectileOther);
                                 assert projectileMine.state == this;
                                 if (projectileMine.isForceEmitter())
                                 {

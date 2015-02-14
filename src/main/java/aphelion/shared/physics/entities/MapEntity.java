@@ -354,17 +354,15 @@ public abstract class MapEntity implements EntityGridEntity
                 return en.posHistory;
         }
         
-        public void resetTo(State myState, MapEntity other)
+        public void resetTo(MapEntity other)
         {
-                assert myState == this.state;
-                
                 if (!this.state.isForeign(other))
                 {
                         assert other.crossStateList == this.crossStateList;
 
-                        if (other.crossStateList[myState.id] != null)
+                        if (other.crossStateList[this.state.id] != null)
                         {
-                                assert other.crossStateList[myState.id] == this;
+                                assert other.crossStateList[this.state.id] == this;
                         }
 
                         if (this.crossStateList[other.state.id] != null)

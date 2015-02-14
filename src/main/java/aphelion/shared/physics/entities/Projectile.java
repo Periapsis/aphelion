@@ -567,9 +567,9 @@ public final class Projectile extends MapEntity implements ProjectilePublic
         }
         
         @Override
-        public void resetTo(State myState, MapEntity other_)
+        public void resetTo(MapEntity other_)
         {
-                super.resetTo(myState, other_);
+                super.resetTo(other_);
                 
                 Projectile other = (Projectile) other_;
                 assert this.key.equals(other.key);
@@ -650,7 +650,7 @@ public final class Projectile extends MapEntity implements ProjectilePublic
                 Projectile dummy = new Projectile(this.key, this.state, crossStateList, this.owner, tick, this.config, this.configIndex);
                 
                 crossStateList[this.state.id] = null; // skip assertion in resetTo
-                this.resetTo(this.state, dummy);
+                this.resetTo(dummy);
                 crossStateList[this.state.id] = (MapEntity) this;
         }
         
