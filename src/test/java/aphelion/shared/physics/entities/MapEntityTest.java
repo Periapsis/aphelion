@@ -40,6 +40,7 @@ package aphelion.shared.physics.entities;
 
 import aphelion.shared.physics.*;
 import aphelion.shared.physics.valueobjects.PhysicsPoint;
+import aphelion.shared.physics.valueobjects.PhysicsPointHistoryDetailed;
 import aphelion.shared.physics.valueobjects.PhysicsPositionVector;
 import org.junit.Before;
 import org.junit.Test;
@@ -403,5 +404,24 @@ public class MapEntityTest
                 // if removed we should not be in the entity grid
                 Iterator<MapEntity> it = state.entityGrid.iterator(new PhysicsPoint(500000, 666666), 1);
                 assertFalse(it.hasNext());
+        }
+
+        @Test
+        public void testGetAndSeekHistoryDetail()
+        {
+                final PhysicsPoint pos = new PhysicsPoint();
+
+                en.posHistory.appendDetail(98, 1100, 2005);
+
+                PhysicsPointHistoryDetailed history = en.getAndSeekHistoryDetail(98, false);
+                assertTrue(history.hasNextDetail());
+
+                history.nextDetail(pos);
+                pos.assertEquals(1100, 2005);
+
+                assertFalse(history.hasNextDetail());
+
+                // history length was set at "10"
+                assertNull(en.getAndSeekHistoryDetail(89, false));
         }
 }
