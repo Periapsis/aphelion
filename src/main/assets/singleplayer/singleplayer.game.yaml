@@ -82,8 +82,8 @@
 
 - noop: &EXPLOSION_BOMB
         resource: classic.explosion-bomb
-        tiles: [4, 11]
-        frame-duration: 50
+        tiles: [32, 1]
+        frame-duration: 100
         
 - noop: &EXPLOSION_EBOMB
         resource: classic.explosion-ebomb

@@ -7,3 +7,5 @@ This directory contains some default graphics that zones can use. All of these i
 
 - *ships.png* AGPL 3
 
+## [Csaba Felvegi](http://opengameart.org/users/chabull)
+- *chabull_explosion_06.png* CC-BY
