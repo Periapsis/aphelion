@@ -551,6 +551,13 @@ public class MapEntityTest
                 assertHistoryTickEqual(en.posHistory, entityForeign.posHistory, 100 - econf.TRAILING_STATE_DELAY - 4);
                 assertHistoryTickEqual(oldEn.posHistory, entityForeign.posHistory, 100 - econf.TRAILING_STATE_DELAY - 5);
                 assertHistoryTickEqual(oldEn.posHistory, entityForeign.posHistory, 100 - econf.TRAILING_STATE_DELAY * 2 + 1);
+
+                assertHistoryTickEqual(en.velHistory, entityForeign.velHistory, 99);
+                assertHistoryTickEqual(en.velHistory, entityForeign.velHistory, 100 - econf.TRAILING_STATE_DELAY);
+                // This is where state 0 and 1 of "env" overlap by 5 ticks; state 0 has priority:
+                assertHistoryTickEqual(en.velHistory, entityForeign.velHistory, 100 - econf.TRAILING_STATE_DELAY - 4);
+                assertHistoryTickEqual(oldEn.velHistory, entityForeign.velHistory, 100 - econf.TRAILING_STATE_DELAY - 5);
+                assertHistoryTickEqual(oldEn.velHistory, entityForeign.velHistory, 100 - econf.TRAILING_STATE_DELAY * 2 + 1);
         }
 
         private static void assertHistoryTickEqual(PhysicsPointHistory expected, PhysicsPointHistory actual, long tick)

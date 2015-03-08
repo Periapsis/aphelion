@@ -395,6 +395,7 @@ public abstract class MapEntity implements EntityGridEntity
                                 if (other.crossStateList[s] != null)
                                 {
                                         posHistory.overwrite(other.crossStateList[s].posHistory);
+                                        velHistory.overwrite(other.crossStateList[s].velHistory);
                                 }
                         }
                 }
