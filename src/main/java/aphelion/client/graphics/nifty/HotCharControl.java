@@ -86,8 +86,6 @@ public class HotCharControl extends AbstractController
                 }
                 ElementInteraction interact = el.getElementInteraction();
                 
-                System.out.println("doPrimaryMouse");
-                
                 long now = el.getNifty().getTimeProvider().getMsTime();
                 
                 NiftyMouseInputEvent ev = new NiftyMouseInputEvent();
