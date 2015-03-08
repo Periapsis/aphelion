@@ -110,7 +110,7 @@ public class WebSocketTest
                 sessionToken = null;
         }
         
-        @Test(timeout=2000)
+        @Test(timeout=20000)
         public void testSingleGameWebSocket() throws IOException, URISyntaxException
         {
                 // use the same loop for client and server
@@ -348,7 +348,7 @@ public class WebSocketTest
         }
         
         
-        @Test(timeout=2000)
+        @Test(timeout=20000)
         public void testMultiGameWebSocket() throws IOException, URISyntaxException
         {
                 // use the same loop for client and server
