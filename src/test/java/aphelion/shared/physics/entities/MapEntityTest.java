@@ -90,6 +90,7 @@ public class MapEntityTest
 
                 en.pos.pos.set(1000, 2000);
                 en.pos.vel.set(3, 7);
+                en.updatedPosition(state.tick_now);
 
                 oldEn = new MapEntity(
                         oldState,
@@ -106,6 +107,7 @@ public class MapEntityTest
 
                 oldEn.pos.pos.set(5000, 7000);
                 oldEn.pos.vel.set(4, 9);
+                oldEn.updatedPosition(oldState.tick_now);
 
                 tickTo(state, 100);
         }
@@ -423,5 +425,44 @@ public class MapEntityTest
 
                 // history length was set at "10"
                 assertNull(en.getAndSeekHistoryDetail(89, false));
+        }
+
+        @Test
+        public void testReset()
+        {
+                tickTo(oldState, 100);
+
+                assertEquals(101, oldEn.dirtyPositionPathTracker.getFirstDirtyTick());
+                oldEn.createdAt_tick = 89;
+                oldEn.softRemove(110);
+                oldEn.pos.pos.set(1234, 5678);
+                oldEn.pos.vel.set(910, 1112);
+                oldEn.updatedPosition(oldState.tick_now);
+                oldEn.markDirtyPositionPath(95);
+                assertEquals(100, oldEn.posHistory.getHighestTick());
+                assertEquals(95, oldEn.dirtyPositionPathTracker.getFirstDirtyTick());
+
+                en.resetTo(oldEn);
+
+                assertEquals(95, en.dirtyPositionPathTracker.getFirstDirtyTick());
+                assertEquals(89, en.createdAt_tick);
+                assertEquals(110, en.removedAt_tick);
+                assertTrue(en.isRemovedSet());
+                en.pos.pos.assertEquals(1234, 5678);
+                en.pos.vel.assertEquals(910, 1112);
+                assertEquals(100, en.posHistory.getHighestTick());
+                assertEquals(1234, en.posHistory.getX(100));
+                assertEquals(5678, en.posHistory.getY(100));
+                assertEquals(100, en.velHistory.getHighestTick());
+                assertEquals(910, en.velHistory.getX(100));
+                assertEquals(1112, en.velHistory.getY(100));
+                assertTrue(en.dirtyPositionPathTracker.isDirty(95));
+                assertFalse(en.dirtyPositionPathTracker.isDirty(94));
+        }
+
+        @Test
+        public void testResetForeign()
+        {
+                // test a foreign reset with a different history length
         }
 }
