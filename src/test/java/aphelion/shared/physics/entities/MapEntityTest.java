@@ -40,6 +40,7 @@ package aphelion.shared.physics.entities;
 
 import aphelion.shared.physics.*;
 import aphelion.shared.physics.valueobjects.PhysicsPoint;
+import aphelion.shared.physics.valueobjects.PhysicsPointHistory;
 import aphelion.shared.physics.valueobjects.PhysicsPointHistoryDetailed;
 import aphelion.shared.physics.valueobjects.PhysicsPositionVector;
 import org.junit.Before;
@@ -465,8 +466,96 @@ public class MapEntityTest
         }
 
         @Test
-        public void testResetForeign()
+        public void testResetForeign() throws IllegalAccessException
         {
                 // test a foreign reset with a different history length
+
+                // First environment //
+                econf = new EnvironmentConf(false, true, true);
+                env = new SimpleEnvironment(econf, new MapEmpty(), false);
+                oldState = ( (State[]) trailingStatesField.get(env) )[1];
+                state = ( (State[]) trailingStatesField.get(env) )[0];
+
+                crossStateList = new MapEntity[econf.TRAILING_STATES];
+
+                // overlapping histories (by 5 ticks)
+                en = new MyMapEntity(state, crossStateList, 2, econf.TRAILING_STATE_DELAY + 5);
+                en.pos.pos.set(1000, 2000);
+                en.pos.vel.set(3, 7);
+                en.updatedPosition(state.tick_now);
+
+                oldEn = new MyMapEntity(oldState, crossStateList, 0, econf.TRAILING_STATE_DELAY + 5);
+                oldEn.pos.pos.set(5000, 7000);
+                oldEn.pos.vel.set(4, 9);
+                oldEn.updatedPosition(oldState.tick_now);
+
+
+                // The foreign environment //
+                EnvironmentConf econfForeign = new EnvironmentConf(false, true, true);
+                SimpleEnvironment envForeign = new SimpleEnvironment(econfForeign, new MapEmpty(), false);
+                State foreignState = ( (State[]) trailingStatesField.get(envForeign) )[0];
+
+                MapEntity entityForeign = new MyMapEntity(foreignState, new MapEntity[1], 90, econf.TRAILING_STATE_DELAY * 2);
+                entityForeign.pos.pos.set(500000, 400000);
+                entityForeign.pos.vel.set(150, 100);
+                entityForeign.updatedPosition(foreignState.tick_now);
+                assertNotEquals(en.HISTORY_LENGTH, entityForeign.HISTORY_LENGTH);
+
+
+                while (state.tick_now < 100)
+                {
+                        env.tick();
+                        envForeign.tick();
+                        assert env.getTick() == envForeign.getTick();
+
+                        oldEn.pos.pos.add(oldEn.pos.vel);
+                        en.pos.pos.add(en.pos.vel);
+                        entityForeign.pos.pos.add(entityForeign.pos.vel);
+
+                        oldEn.updatedPosition(oldState.tick_now);
+                        en.updatedPosition(state.tick_now);
+                        entityForeign.updatedPosition(foreignState.tick_now);
+                }
+
+                // Now at tick 100
+                assertEquals(101, en.dirtyPositionPathTracker.getFirstDirtyTick());
+                en.createdAt_tick = 89;
+                en.softRemove(110);
+                en.pos.pos.set(1234, 5678);
+                en.pos.vel.set(910, 1112);
+                en.updatedPosition(state.tick_now);
+                en.markDirtyPositionPath(95);
+                assertEquals(100, en.posHistory.getHighestTick());
+                assertEquals(95, en.dirtyPositionPathTracker.getFirstDirtyTick());
+
+                entityForeign.resetTo(en);
+
+                assertEquals(95, entityForeign.dirtyPositionPathTracker.getFirstDirtyTick());
+                assertEquals(89, entityForeign.createdAt_tick);
+                assertEquals(110, entityForeign.removedAt_tick);
+                assertTrue(entityForeign.isRemovedSet());
+                entityForeign.pos.pos.assertEquals(1234, 5678);
+                entityForeign.pos.vel.assertEquals(910, 1112);
+                assertEquals(100, entityForeign.posHistory.getHighestTick());
+                assertEquals(1234, entityForeign.posHistory.getX(100));
+                assertEquals(5678, entityForeign.posHistory.getY(100));
+                assertEquals(100, entityForeign.velHistory.getHighestTick());
+                assertEquals(910, entityForeign.velHistory.getX(100));
+                assertEquals(1112, entityForeign.velHistory.getY(100));
+                assertTrue(entityForeign.dirtyPositionPathTracker.isDirty(95));
+                assertFalse(entityForeign.dirtyPositionPathTracker.isDirty(94));
+
+                assertHistoryTickEqual(en.posHistory, entityForeign.posHistory, 99);
+                assertHistoryTickEqual(en.posHistory, entityForeign.posHistory, 100 - econf.TRAILING_STATE_DELAY);
+                // This is where state 0 and 1 of "env" overlap by 5 ticks; state 0 has priority:
+                assertHistoryTickEqual(en.posHistory, entityForeign.posHistory, 100 - econf.TRAILING_STATE_DELAY - 4);
+                assertHistoryTickEqual(oldEn.posHistory, entityForeign.posHistory, 100 - econf.TRAILING_STATE_DELAY - 5);
+                assertHistoryTickEqual(oldEn.posHistory, entityForeign.posHistory, 100 - econf.TRAILING_STATE_DELAY * 2 + 1);
+        }
+
+        private static void assertHistoryTickEqual(PhysicsPointHistory expected, PhysicsPointHistory actual, long tick)
+        {
+                assertEquals(expected.getX(tick), actual.getX(tick));
+                assertEquals(expected.getY(tick), actual.getY(tick));
         }
 }
