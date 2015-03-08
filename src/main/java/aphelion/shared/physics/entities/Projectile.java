@@ -858,7 +858,7 @@ public final class Projectile extends MapEntity implements ProjectilePublic
                 final boolean doShip = this.forceDistanceShip > 0 && this.forceVelocityShip != 0;
                 final boolean doProjectile = this.forceDistanceProjectile > 0 && this.forceVelocityProjectile != 0;
 
-                if (en == this)
+                if (en == this || en == this.owner)
                 {
                         return false;
                 }
