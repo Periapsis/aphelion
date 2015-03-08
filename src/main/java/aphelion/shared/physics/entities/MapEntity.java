@@ -384,9 +384,9 @@ public abstract class MapEntity implements EntityGridEntity
                 {
                         // history length might be different between foreign states.
                         // projectile history within a single state is usually not complete.
-                        // (unlike actors, which store full (overlaping) histories up to in each state)
+                        // (unlike actors, which store full (overlapping) histories up to in each state)
                         // the posHistory.set above make sure the tick range is correct.
-                        // Using overwite the missing values will be filled in properly.
+                        // Using overwrite the missing values will be filled in properly.
                         
                         for (int s = other.state.env.econfig.TRAILING_STATES - 1;
                              s >= other.state.id;
