@@ -89,7 +89,12 @@
         resource: classic.explosion-ebomb
         tiles: [5, 2]
         frame-duration: 50
-        
+
+- noop: &EXPLOSION_REPEL
+        resource: classic.explosion-repel
+        tiles: [24, 1]
+        frame-duration: 50
+
 - ship-rotation-points: 40
   ships: [warbird, javelin, spider, leviathan, terrier, weasel, lancaster, shark, superspider]
   ship-speed: 1000
@@ -280,7 +285,8 @@
 - {selector: {weapon: [classic-ebomb-lvl4]},    weapon-nifty-show: gauge-ebomb-4} 
 
 - {selector: {weapon: [classic-thor]},          weapon-nifty-show: gauge-thor}
-- {selector: {weapon: [classic-burst]},         weapon-nifty-show: gauge-burst} 
+- {selector: {weapon: [classic-burst]},         weapon-nifty-show: gauge-burst}
+- {selector: {weapon: [classic-repel]},         weapon-nifty-show: gauge-repel}
   
   
 - selector: {weapon: *BOMBSMINES}
@@ -357,7 +363,31 @@
   projectile-prox-explode-ticks: 10 # -1 for never, 0 for immediate   
   projectile-damage-splash: 600
   projectile-hit-tile: false
-  
+
+- selector: {weapon: classic-repel}
+  projectile-speed: 0
+  projectile-damage: 0
+  projectile-angle-relative: false
+  projectile-speed-relative: false
+  projectile-offset-y: 0
+  projectile-hit-ship: false
+  projectile-hit-tile: false
+  weapon-fire-delay: 500
+
+  # repel has an delayed effect
+  projectile-expiration-chain-weapon: classic-repel-emitter
+  projectile-expiration-ticks: 10
+  projectile-expiration-explode: true
+  # todo: weapon-fire-animation
+  projectile-expiration-animation: *EXPLOSION_REPEL
+
+- selector: {weapon: classic-repel-emitter}
+  # this applies the actual force
+  projectile-force-distance-ship: 163840
+  projectile-force-velocity-ship: 10000
+  projectile-force-distance-projectile: 409600
+  projectile-force-velocity-projectile: 1000
+  projectile-expiration-ticks: 1
   
 - selector: {ship: warbird}
   ship-image:
@@ -486,6 +516,7 @@
   weapon-slot-gun-multi: classic-mgun-lvl2
   weapon-slot-bomb: classic-ebomb-lvl3
   weapon-slot-mine: classic-emine-lvl3
+  weapon-slot-repel: classic-repel
   
 # has multi icon
 - {selector: {ship: leviathan, weapon: [classic-gun-lvl1]}, weapon-nifty-show: gauge-gun-singlem-1}
@@ -686,6 +717,7 @@
   weapon-slot-bomb: classic-ebomb-lvl1
   weapon-slot-mine: classic-emine-lvl1
   weapon-slot-burst: classic-burst
+  weapon-slot-repel: classic-repel
 
 - selector: {ship: shark, weapon: *BOMBS}
   weapon-fire-energy: 1150
@@ -731,6 +763,7 @@
   weapon-slot-gun-multi: classic-mgun-lvl1
   weapon-slot-bomb: classic-bomb-lvl1
   projectile-damage-self-kill: true
+  weapon-slot-repel: classic-repel
   
 - selector: {ship: superspider, weapon: *GUNS}
   weapon-fire-energy: 50

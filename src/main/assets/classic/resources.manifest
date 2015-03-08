@@ -19,5 +19,6 @@ classic.explosion-bullet = sinistar_tiny_explosion.png
 classic.explosion-bomb = chabull_explosion_06.png
 classic.explosion-ebomb = empburst.png
 classic.explosion-ship = chabull_explosion_10.png
+classic.explosion-repel = chabull_explosion_01.png
 classic.exhaust = exhaust.png
 classic.emped = spark.png

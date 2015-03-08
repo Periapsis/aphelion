@@ -147,7 +147,8 @@
                                 </panel>
                                 <panel childLayout="center" width="26" height="24">
                                         <image filename="gui.gauges" imageMode="subImage:152,120,4,24" width="4" height="24" align="left"/>
-                                        
+
+                                        <image id="gauge-repel" style="gauge-left" filename="gui.gauges" imageMode="subImage:104,72,26,24"/>
                                 </panel>
                                 <panel childLayout="center" width="26" height="24">
                                         <image filename="gui.gauges" imageMode="subImage:152,120,4,24" width="4" height="24" align="left"/>
