@@ -77,8 +77,8 @@
   
 - noop: &EXPLOSION_BULLET
         resource: classic.explosion-bullet
-        tiles: [7, 1]
-        frame-duration: 150
+        tiles: [6, 1]
+        frame-duration: 75
 
 - noop: &EXPLOSION_BOMB
         resource: classic.explosion-bomb
