@@ -143,8 +143,8 @@ public class MyKeyboard implements TickEvent
                 boolean shift = Keyboard.isKeyDown(Keyboard.KEY_LSHIFT) 
                         || Keyboard.isKeyDown(Keyboard.KEY_RSHIFT);
 
-                boolean ctrl = Keyboard.isKeyDown(Keyboard.KEY_LCONTROL) 
-                        || Keyboard.isKeyDown(Keyboard.KEY_RCONTROL);
+                /*boolean ctrl = Keyboard.isKeyDown(Keyboard.KEY_LCONTROL)
+                        || Keyboard.isKeyDown(Keyboard.KEY_RCONTROL);*/
 
                 up    = Keyboard.isKeyDown(Keyboard.KEY_UP);
                 down  = Keyboard.isKeyDown(Keyboard.KEY_DOWN);
@@ -152,12 +152,12 @@ public class MyKeyboard implements TickEvent
                 right = Keyboard.isKeyDown(Keyboard.KEY_RIGHT);
                 boost = shift;
 
-                fireGun = !shift && ctrl;
-                fireBomb = !shift && Keyboard.isKeyDown(Keyboard.KEY_TAB);
-                fireMine = shift && Keyboard.isKeyDown(Keyboard.KEY_TAB);
+                fireGun = Keyboard.isKeyDown(Keyboard.KEY_LCONTROL);
+                fireBomb = Keyboard.isKeyDown(Keyboard.KEY_TAB);
+                fireMine = Keyboard.isKeyDown(Keyboard.KEY_RCONTROL);
                 fireThor = Keyboard.isKeyDown(Keyboard.KEY_F6);
                 fireBurst = Keyboard.isKeyDown(Keyboard.KEY_DELETE) && shift;
-                fireRepel = shift && ctrl;
+                fireRepel = Keyboard.isKeyDown(Keyboard.KEY_LMENU);
                 fireDecoy = Keyboard.isKeyDown(Keyboard.KEY_F5);
                 fireRocket = Keyboard.isKeyDown(Keyboard.KEY_F3);
                 fireBrick = Keyboard.isKeyDown(Keyboard.KEY_F4);
@@ -171,7 +171,7 @@ public class MyKeyboard implements TickEvent
                         int key = event.getKey();
                         char chr = event.getCharacter();
 
-                        if (key == KeyboardInputEvent.KEY_LMENU || key == KeyboardInputEvent.KEY_RMENU)
+                        if (key == KeyboardInputEvent.KEY_RMENU)
                         {
                                 if (bigRadar != null && smallRadar != null)
                                 {
