@@ -18,6 +18,6 @@ classic.mines = mines.png
 classic.explosion-bullet = explode0.png
 classic.explosion-bomb = chabull_explosion_06.png
 classic.explosion-ebomb = empburst.png
-classic.explosion-ship = explode1.png
+classic.explosion-ship = chabull_explosion_10.png
 classic.exhaust = exhaust.png
 classic.emped = spark.png

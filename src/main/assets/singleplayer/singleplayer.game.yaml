@@ -152,8 +152,8 @@
   
   ship-explosion-animation:
         resource: classic.explosion-ship
-        tiles: [6, 6]
-        frame-duration: 50
+        tiles: [32, 1]
+        frame-duration: 70
 
   # Latency compensation stuff
   render-delay: 0

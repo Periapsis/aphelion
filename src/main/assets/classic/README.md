@@ -9,3 +9,4 @@ This directory contains some default graphics that zones can use. All of these i
 
 ## [Csaba Felvegi](http://opengameart.org/users/chabull)
 - *chabull_explosion_06.png* CC-BY
+- *chabull_explosion_10.png* CC-BY
