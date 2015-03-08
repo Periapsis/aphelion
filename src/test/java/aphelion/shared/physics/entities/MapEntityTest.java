@@ -55,6 +55,20 @@ import static org.junit.Assert.*;
  */
 public class MapEntityTest
 {
+        private static final Field trailingStatesField;
+        static
+        {
+                try
+                {
+                        trailingStatesField = SimpleEnvironment.class.getDeclaredField("trailingStates");
+                        trailingStatesField.setAccessible(true);
+                }
+                catch (NoSuchFieldException e)
+                {
+                        throw new Error(e);
+                }
+        }
+
         private EnvironmentConf econf;
         private SimpleEnvironment env;
         private State oldState;
@@ -63,51 +77,41 @@ public class MapEntityTest
         private MapEntity oldEn;
         private MapEntity en;
 
+        private static class MyMapEntity extends MapEntity
+        {
+                public MyMapEntity(State state, MapEntity[] crossStateList, long createdAt_tick, int historyLength)
+                {
+                        super(state, crossStateList, createdAt_tick, historyLength);
+                }
+
+                @Override
+                public void performDeadReckoning(PhysicsMap map, long tick_now, long reckon_ticks, boolean applyForceEmitters)
+                {
+                        // noop
+                }
+        }
+
         @Before
-        public void setUp() throws NoSuchFieldException, IllegalAccessException
+        public void setUp() throws IllegalAccessException
         {
                 econf = new EnvironmentConf(false, true, true);
                 env = new SimpleEnvironment(econf, new MapEmpty(), false);
-                Field field = env.getClass().getDeclaredField("trailingStates");
-                field.setAccessible(true);
-                oldState = ( (State[]) field.get(env) )[2];
-                state = ( (State[]) field.get(env) )[1];
+                oldState = ( (State[]) trailingStatesField.get(env) )[2];
+                state = ( (State[]) trailingStatesField.get(env) )[1];
 
                 crossStateList = new MapEntity[econf.TRAILING_STATES];
 
-                en = new MapEntity(
-                        state,
-                        crossStateList,
-                        90, // created at tick
-                        10 // history length
-                ) {
-                        @Override
-                        public void performDeadReckoning(PhysicsMap map, long tick_now, long reckon_ticks, boolean applyForceEmitters)
-                        {
-                                // noop
-                        }
-                };
-
+                en = new MyMapEntity(state, crossStateList, /* created at tick */ 90, /* history length*/ 10);
                 en.pos.pos.set(1000, 2000);
                 en.pos.vel.set(3, 7);
                 en.updatedPosition(state.tick_now);
 
-                oldEn = new MapEntity(
-                        oldState,
-                        crossStateList,
-                        90, // created at tick
-                        10 // history length
-                ) {
-                        @Override
-                        public void performDeadReckoning(PhysicsMap map, long tick_now, long reckon_ticks, boolean applyForceEmitters)
-                        {
-                                // noop
-                        }
-                };
-
+                oldEn = new MyMapEntity(oldState, crossStateList, 90, 10);
                 oldEn.pos.pos.set(5000, 7000);
                 oldEn.pos.vel.set(4, 9);
                 oldEn.updatedPosition(oldState.tick_now);
+
+                // (the entities are not registered in the state in this test)
 
                 tickTo(state, 100);
         }
