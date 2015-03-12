@@ -23,11 +23,6 @@
                         <includes>
                                 <include>*:jar:*</include>
                         </includes>
-                        <unpackOptions>
-                                <includes>
-                                        <include>**/*.class</include>
-                                </includes>
-                        </unpackOptions>
                 </dependencySet>
         </dependencySets>
 </assembly>
