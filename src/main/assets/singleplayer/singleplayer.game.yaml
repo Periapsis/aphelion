@@ -372,22 +372,16 @@
   projectile-offset-y: 0
   projectile-hit-ship: false
   projectile-hit-tile: false
-  weapon-fire-delay: 500
+  weapon-fire-delay: 100
 
-  # repel has an delayed effect
-  projectile-expiration-chain-weapon: classic-repel-emitter
-  projectile-expiration-ticks: 10
-  projectile-expiration-explode: true
-  # todo: weapon-fire-animation
+  projectile-force-distance-ship: 600000
+  projectile-force-velocity-ship: 10000
+  projectile-force-distance-projectile: 1000000
+  projectile-force-velocity-projectile: 10000
+  projectile-expiration-ticks: 1
+  projectile-expiration-explode: true # to trigger the animation (todo: weapon-fire-animation or something similar)
   projectile-expiration-animation: *EXPLOSION_REPEL
 
-- selector: {weapon: classic-repel-emitter}
-  # this applies the actual force
-  projectile-force-distance-ship: 163840
-  projectile-force-velocity-ship: 10000
-  projectile-force-distance-projectile: 409600
-  projectile-force-velocity-projectile: 1000
-  projectile-expiration-ticks: 1
   
 - selector: {ship: warbird}
   ship-image:
