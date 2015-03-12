@@ -41,50 +41,95 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 
 /**
- * Used to manually create double linked lists. (useful in certain performance scenerios)
- * @param <T> 
+ * A Linked List implementation that lets you reference the links it uses.
+ * By using circular references between the link and the object it stores
+ * removal / reinsertion, is O(1) instead of O(n) in java.util.LinkedList.
+ * Also, in this case, rapid reinsertion will not create new objects.
+ * This implementation is doubly linked (you can traverse values in either direction).
+ * Optionally, you can also construct circular linked lists (in this case you would use
+ * LinkedListEntry's without a LinkedListHead)
+ *
+ * @param <T> The type of values contained by this link
  * @author Joris
  */
 public class LinkedListEntry<T> implements Iterable<T> // A list is only as strong as its weakest link.
 {
+        /**
+         * The previous link in the list
+         */
         public LinkedListEntry<T> previous;
+
+        /**
+         * The next link in the list
+         */
         public LinkedListEntry<T> next;
+
+        /**
+         * The LinkedListHead that this link belongs to.
+         * Note that this property is optional. A list without a LinkedListHead
+         * is valid (such as when using circular linked lists)
+         */
         public LinkedListHead<T> head;
+
+        /**
+         * The data that this entry references
+         */
         public final T data;
 
+        /**
+         * Create a new link belonging to the specified head.
+         * @param head
+         * @param data
+         */
         public LinkedListEntry(LinkedListHead<T> head, T data)
         {
                 this.head = head;
                 this.data = data;
         }
-        
+
+        /**
+         * Create a new link without a head.
+         * @param data
+         */
         public LinkedListEntry(T data)
         {
                 this.head = null;
                 this.data = data;
         }
-        
+
+        /**
+         * Set up this entry to be the beginning of a new circular linked list.
+         */
         public void beginCircular()
         {
-                if (head != null || previous != null || next != null)
-                {
-                        throw new IllegalStateException();
-                }
+                assert head == null : "this link is already part of a list";
+                assert previous == null : "this link is already part of a list";
+                assert next == null : "this link is already part of a list";
                 
                 previous = this;
                 next = this;
         }
-        
+
+        /**
+         * Create a new LinkedListEntry containing the given data and prepend it before this link.
+         * @param data
+         * @return the newly created entry
+         */
         public LinkedListEntry<T> prependData(T data)
         {
                 return prepend(new LinkedListEntry<>(data));
         }
-        
+
+        /**
+         * Insert the given entry before this link.
+         * @param link
+         * @return `link`
+         */
         public LinkedListEntry<T> prepend(LinkedListEntry<T> link)
         {
-                assert link.head == null;
-                assert link.previous == null;
-                assert link.next == null;
+                assert link.head == null : "The given `link` is already part of a list";
+                assert link.previous == null : "The given `link` is already part of a list";
+                assert link.next == null : "The given `link` is already part of a list";
                 
                 link.head = this.head;
                 
@@ -105,17 +150,27 @@ public class LinkedListEntry<T> implements Iterable<T> // A list is only as stro
                 
                 return link;
         }
-        
+
+        /**
+         * Create a new LinkedListEntry containing the given data and append it after this link.
+         * @param data
+         * @return the newly created entry
+         */
         public LinkedListEntry<T> appendData(T data)
         {
                 return append(new LinkedListEntry<>(data));
         }
-        
+
+        /**
+         * Append the given entry after this link.
+         * @param link
+         * @return `link`
+         */
         public LinkedListEntry<T> append(LinkedListEntry<T> link)
         {
-                assert link.head == null;
-                assert link.previous == null;
-                assert link.next == null;
+                assert link.head == null : "The given `link` is already part of a list";
+                assert link.previous == null : "The given `link` is already part of a list";
+                assert link.next == null : "The given `link` is already part of a list";
                 
                 link.head = this.head;
                 
@@ -136,7 +191,12 @@ public class LinkedListEntry<T> implements Iterable<T> // A list is only as stro
                 
                 return link;
         }
-        
+
+        /**
+         * Append the given headless list of entries after this link
+         * @param start
+         * @param end
+         */
         public void appendForeignRange(LinkedListEntry<T> start, LinkedListEntry<T> end)
         {
                 LinkedListEntry<T> link;
@@ -197,7 +257,12 @@ public class LinkedListEntry<T> implements Iterable<T> // A list is only as stro
                 
                 this.next = start;
         }
-        
+
+        /**
+         * Prepend the given headless list of entries before this link
+         * @param start
+         * @param end
+         */
         public void prependForeignRange(LinkedListEntry<T> start, LinkedListEntry<T> end)
         {
                 LinkedListEntry<T> link;
@@ -242,7 +307,11 @@ public class LinkedListEntry<T> implements Iterable<T> // A list is only as stro
                 
                 this.previous = end;
         }
-        
+
+        /**
+         * Remove this entry from the list it belongs to.
+         * It is safe to call this on entries that have already been removed
+         */
         public void remove()
         {
                 if (head != null)
@@ -292,22 +361,38 @@ public class LinkedListEntry<T> implements Iterable<T> // A list is only as stro
                 }
         }
 
+        /**
+         * Iterate over the values from `start` to `end`. Calling it.remove() is allowed.
+         * @return
+         */
         @Override
         public Iterator<T> iterator()
         {
                 return new Itr(false, false);
         }
-        
+
+        /**
+         * Iterate over the values from `start` to `end`. Calling it.remove() is NOT allowed.
+         * @return
+         */
         public Iterator<T> iteratorReadOnly()
         {
                 return new Itr(true, false);
         }
-        
+
+        /**
+         * Iterate over the values from `end` to `start`. Calling it.remove() is allowed.
+         * @return
+         */
         public Iterator<T> iteratorReverse()
         {
                 return new Itr(false, true);
         }
-        
+
+        /**
+         * Iterate over the values from `end` to `start`. Calling it.remove() is NOT allowed.
+         * @return
+         */
         public Iterator<T> iteratorReverseReadOnly()
         {
                 return new Itr(true, true);
@@ -376,7 +461,11 @@ public class LinkedListEntry<T> implements Iterable<T> // A list is only as stro
                         current = null;
                 }
         }
-        
+
+        /**
+         * Verify the internal consistency of this circular list by using assert.
+         * This is slow when performed too often, it is most useful in test cases
+         */
         public void assertCircularConsistency()
         {
                 if (!SwissArmyKnife.assertEnabled)

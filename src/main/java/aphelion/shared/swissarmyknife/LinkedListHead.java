@@ -41,42 +41,76 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 
 /**
+ * A Linked List implementation that lets you reference the links it uses (LinkedListEntry).
+ * By using circular references between the link and the object it stores
+ * removal / reinsertion, is O(1) instead of O(n) in java.util.LinkedList.
+ * Also, in this case, rapid reinsertion will not create new objects.
+ * This implementation is doubly linked (you can traverse values in either direction).
+ * Optionally, you can also construct circular linked lists (in this case you would use
+ * LinkedListEntry's without a LinkedListHead)
  *
- * @param <T> 
+ * @param <T> The type of values contained by the links
  * @author Joris
+ * @see LinkedListEntry
  */
 public class LinkedListHead<T> implements Iterable<T>
 {
+        /**
+         * The first Link of this list.
+         * If this property is null, last must also be null
+         */
         public LinkedListEntry<T> first;
+
+        /**
+         * The last Link of this list.
+         * If this property is null, last must also be null
+         */
         public LinkedListEntry<T> last;
-        
+
+        /**
+         * Create a new empty linked list
+         */
         public LinkedListHead()
         {
         }
 
+        /**
+         * Is this list empty?
+         * @return
+         */
         public boolean isEmpty()
         {
                 if (first == null || last == null)
                 {
-                        assert first == null && last == null;
+                        assert first == null && last == null : "Inconsistency: first may only be null if last is also null";
                         
                         return true;
                 }
                 return false;
         }
-        
+
+        /**
+         * Create a new LinkedListEntry with the given data and prepend to the start of the list
+         * @param data
+         * @return The newly created LinkedListEntry
+         */
         public LinkedListEntry<T> prependData(T data)
         {
                 return prepend(new LinkedListEntry<>(data));
         }
 
+        /**
+         * Prepend the given LinkedListEntry to the start of the list
+         * @param link
+         * @return `link`
+         */
         public LinkedListEntry<T> prepend(LinkedListEntry<T> link)
         {
                 if (isEmpty())
                 {
-                        assert link.head == null;
-                        assert link.previous == null;
-                        assert link.next == null;
+                        assert link.head == null : "The given `link` is already part of a list";
+                        assert link.previous == null : "The given `link` is already part of a list";
+                        assert link.next == null : "The given `link` is already part of a list";
 
                         link.head = this;
                         
@@ -93,18 +127,28 @@ public class LinkedListHead<T> implements Iterable<T>
                 }
         }
 
+        /**
+         * Create a new LinkedListEntry with the given data and append to the end of the list
+         * @param data
+         * @return The newly created LinkedListEntry
+         */
         public LinkedListEntry<T> appendData(T data)
         {
                 return append(new LinkedListEntry<>(data));
         }
 
+        /**
+         * Append the given LinkedListEntry to the end of the list
+         * @param link
+         * @return `link`
+         */
         public LinkedListEntry<T> append(LinkedListEntry<T> link)
         {
                 if (isEmpty())
                 {                        
-                        assert link.head == null;
-                        assert link.previous == null;
-                        assert link.next == null;
+                        assert link.head == null : "The given `link` is already part of a list";
+                        assert link.previous == null : "The given `link` is already part of a list";
+                        assert link.next == null : "The given `link` is already part of a list";
 
                         link.head = this;
                         
@@ -120,19 +164,24 @@ public class LinkedListHead<T> implements Iterable<T>
                         return last.append(link);
                 }
         }
-        
+
+        /**
+         * Remove the given range of links between `start` and `end`
+         * @param start
+         * @param end
+         */
         public void removeRange(LinkedListEntry<T> start, LinkedListEntry<T> end)
         {
                 LinkedListEntry<T> link;
                 
-                assert start.head == this;
-                assert end.head == this;
+                assert start.head == this : "The given `start` link is not part of this list";
+                assert end.head == this : "The given `end` link is not part of this list";
                 
                 link = start;
                 while(true)
                 {
                         assert link != null;
-                        assert link.head == this;
+                        assert link.head == this : "One of the links in the given range is not part of this list";
                         
                         link.head = null;
                         
@@ -169,30 +218,38 @@ public class LinkedListHead<T> implements Iterable<T>
                 start.previous = null;
                 end.next = null;
         }
-        
+
+        /**
+         * Remove all links
+         */
         public void clear()
         {
-                if (this.first == null)
+                if (first == null || last == null)
                 {
-                        assert this.last == null;
+                        assert first == null && last == null : "Inconsistency: first may only be null if last is also null";
                         return;
                 }
                 
                 removeRange(first, last);
         }
-        
+
+        /**
+         * Append the given headless list of entries to the end of this list
+         * @param start
+         * @param end
+         */
         public void appendForeignRange(LinkedListEntry<T> start, LinkedListEntry<T> end)
         {
                 LinkedListEntry<T> link;
                 
-                assert start != null;
-                assert end != null;
+                assert start != null : "`start` should not be null";
+                assert end != null : "`end` should not be null";
                 
                 if (first == null)
                 {
                         if (start.head != null)
                         {
-                                assert start.head != this;
+                                assert start.head != this : "One of the links in the given range is not a foreign link";
                                 start.head.removeRange(start, end);
                         }
                 
@@ -222,18 +279,23 @@ public class LinkedListHead<T> implements Iterable<T>
                 }
         }
 
+        /**
+         * Prepend the given headless list of entries to the start of this list
+         * @param start
+         * @param end
+         */
         public void prependForeignRange(LinkedListEntry<T> start, LinkedListEntry<T> end)
         {
                 LinkedListEntry<T> link;
-                
-                assert start != null;
-                assert end != null;
+
+                assert start != null : "`start` should not be null";
+                assert end != null : "`end` should not be null";
                 
                 if (first == null)
                 {
                         if (start.head != null)
                         {
-                                assert start.head != this;
+                                assert start.head != this : "One of the links in the given range is not a foreign link";
                                 start.head.removeRange(start, end);
                         }
                 
@@ -263,8 +325,11 @@ public class LinkedListHead<T> implements Iterable<T>
                 }
         }
 
-        
-
+        /**
+         * Find a link by matching the given `data` using == and remove it.
+         * @param data The reference to compare
+         * @return The link that was removed, or null if `data` was not found
+         */
         public LinkedListEntry<T> removeByReference(T data)
         {
                 LinkedListEntry<T> entry;
@@ -283,6 +348,11 @@ public class LinkedListHead<T> implements Iterable<T>
                 return null;
         }
 
+        /**
+         * Find a link by matching the given `data` using data.equals() and remove it.
+         * @param data The object to test for equality, or null to test for null.
+         * @return The link that was removed, or null if `data` was not found
+         */
         public LinkedListEntry<T> removeByEquals(T data)
         {
                 LinkedListEntry<T> entry;
@@ -355,6 +425,10 @@ public class LinkedListHead<T> implements Iterable<T>
                 return builder.toString();
         }
 
+        /**
+         * Return and remove the last item
+         * @return The last item or null if the list is empty
+         */
         public T pop()
         {
                 LinkedListEntry<T> val;
@@ -369,6 +443,10 @@ public class LinkedListHead<T> implements Iterable<T>
                 return val.data;
         }
 
+        /**
+         * Return and remove the first item
+         * @return The first item or null if the list is empty
+         */
         public T shift()
         {
                 LinkedListEntry<T> val;
@@ -383,22 +461,38 @@ public class LinkedListHead<T> implements Iterable<T>
                 return val.data;
         }
 
+        /**
+         * Iterate over the values from `start` to `end`. Calling it.remove() is allowed.
+         * @return
+         */
         @Override
         public Iterator<T> iterator()
         {
                 return new Itr(false, false);
         }
-        
+
+        /**
+         * Iterate over the values from `start` to `end`. Calling it.remove() is NOT allowed.
+         * @return
+         */
         public Iterator<T> iteratorReadOnly()
         {
                 return new Itr(true, false);
         }
-        
+
+        /**
+         * Iterate over the values from `end` to `start`. Calling it.remove() is allowed.
+         * @return
+         */
         public Iterator<T> iteratorReverse()
         {
                 return new Itr(false, true);
         }
-        
+
+        /**
+         * Iterate over the values from `end` to `start`. Calling it.remove() is NOT allowed.
+         * @return
+         */
         public Iterator<T> iteratorReverseReadOnly()
         {
                 return new Itr(true, true);
@@ -414,7 +508,11 @@ public class LinkedListHead<T> implements Iterable<T>
                         link.head = null;
                 }
         }
-        
+
+        /**
+         *
+         * @return The number of links in this list
+         */
         public int calculateSize()
         {
                 int size = 0;
@@ -425,7 +523,11 @@ public class LinkedListHead<T> implements Iterable<T>
                 
                 return size;
         }
-        
+
+        /**
+         * Verify the internal consistency of this list by using assert.
+         * This is slow when performed too often, it is most useful in test cases
+         */
         public void assertConsistency()
         {
                 if (!SwissArmyKnife.assertEnabled)
