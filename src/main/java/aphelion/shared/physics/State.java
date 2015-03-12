@@ -717,6 +717,7 @@ public class State
                                 assert projectileMine.state == this;
                                 if (projectileMine.isForceEmitter())
                                 {
+                                        projectileMine.forceEmitterListLink_state.remove();
                                         this.forceEmitterList.append(projectileMine.forceEmitterListLink_state);
                                 }
                                 
