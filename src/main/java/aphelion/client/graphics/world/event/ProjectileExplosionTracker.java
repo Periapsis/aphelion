@@ -142,8 +142,7 @@ public class ProjectileExplosionTracker implements EventTracker
                 if (projectileAnimations == null)
                 {
                         // using the render delay of the projectile
-                        
-                        PhysicsPoint pos = new PhysicsPoint();
+
                         event.getPosition(0, lastEventPosition);
                 
                         if (physicsProjectile_state0 != null &&
@@ -223,12 +222,12 @@ public class ProjectileExplosionTracker implements EventTracker
         {
                 Projectile proj = mapEntities.physicsProjectileToGraphics(physicsProj);
                 
-                PhysicsPositionVector pos = new PhysicsPositionVector();
-                physicsProj.getHistoricPosition(pos, event.getOccurredAt(0), true);
+                PhysicsPoint pos = new PhysicsPoint();
+                event.getPosition(0, pos);
                 
                 boolean hitLocal = hitActor != null && hitActor.isLocalPlayer();
                 
-                if (pos.pos.set)
+                if (pos.set)
                 {
                         GCImageAnimation anim = new MyAnimation(spawnID, resourceDB, hitImage);
                         
@@ -237,7 +236,7 @@ public class ProjectileExplosionTracker implements EventTracker
                                 anim.setAlpha(proj.getAlpha());
                         }
 
-                        anim.setPositionFromPhysics(pos.pos);
+                        anim.setPositionFromPhysics(pos);
                         mapEntities.addAnimation(RENDER_LAYER.AFTER_LOCAL_SHIP, anim, null);
                         projectileAnimations.add(anim);
                 }
@@ -245,7 +244,7 @@ public class ProjectileExplosionTracker implements EventTracker
                 // If the last rendered position of the projectile is very different,
                 // display 2 animations.
                 if (proj.physicsPos.set && 
-                    (!pos.pos.set || pos.pos.distanceSquared(proj.physicsPos) > TIMEWARP_EXTRA_ANIM_DISTSQ)
+                    (!pos.set || pos.distanceSquared(proj.physicsPos) > TIMEWARP_EXTRA_ANIM_DISTSQ)
                    )
                 {
                         GCImageAnimation anim = new MyAnimation(spawnID, resourceDB, hitImage);
