@@ -46,12 +46,12 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
                 <dependency>
                         <groupId>org.lwjgl.lwjgl</groupId>
                         <artifactId>lwjgl</artifactId>
-                        <version>2.9.0</version>
+                        <version>2.9.3</version>
                 </dependency>
                 <dependency>
                         <groupId>org.lwjgl.lwjgl</groupId>
                         <artifactId>lwjgl_util</artifactId>
-                        <version>2.9.0</version>
+                        <version>2.9.3</version>
                 </dependency>
                 <dependency>
                         <!-- This slick version is not in any repository yet, 
