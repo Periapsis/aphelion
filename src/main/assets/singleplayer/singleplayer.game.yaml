@@ -45,6 +45,7 @@
         - classic-emine-lvl2
         - classic-emine-lvl3
         - classic-emine-lvl4
+        - gravity-mine
  
 - noop: &BOMBSMINES
         - classic-bomb-lvl1
@@ -64,6 +65,7 @@
         - classic-emine-lvl3
         - classic-emine-lvl4
         - classic-thor
+        - gravity-mine
         
 - noop: &BOMBSMINES_EMP
         - classic-ebomb-lvl1
@@ -382,6 +384,20 @@
   projectile-expiration-explode: true # to trigger the animation (todo: weapon-fire-animation or something similar)
   projectile-expiration-animation: *EXPLOSION_REPEL
 
+- selector: {weapon: gravity-mine}
+  projectile-speed: 0
+  projectile-damage: 0
+  projectile-image: {resource: classic.mines,        offset: [0,  48, 160, 16], tiles: [10, 1]}
+  projectile-damage-splash: 150
+  weapon-fire-energy: 200
+  weapon-fire-delay: 100
+  weapon-switch-delay: 100
+  weapon-fire-projectile-limit: 2
+  weapon-fire-projectile-limit-group: 1 # 1 is used for all mines
+  projectile-force-distance-ship: 600000
+  projectile-force-velocity-ship: -1000
+  projectile-force-distance-projectile: 1000000
+  projectile-force-velocity-projectile: -1000
   
 - selector: {ship: warbird}
   ship-image:
@@ -758,6 +774,7 @@
   weapon-slot-bomb: classic-bomb-lvl1
   projectile-damage-self-kill: true
   weapon-slot-repel: classic-repel
+  weapon-slot-mine: gravity-mine
   
 - selector: {ship: superspider, weapon: *GUNS}
   weapon-fire-energy: 50
