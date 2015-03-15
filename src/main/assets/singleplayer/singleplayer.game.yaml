@@ -93,7 +93,7 @@
 - noop: &EXPLOSION_REPEL
         resource: classic.explosion-repel
         tiles: [24, 1]
-        frame-duration: 50
+        frame-duration: [10, 10, 10, 10, 50]
 
 - ship-rotation-points: 40
   ships: [warbird, javelin, spider, leviathan, terrier, weasel, lancaster, shark, superspider]
