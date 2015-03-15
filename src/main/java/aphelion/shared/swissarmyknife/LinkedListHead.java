@@ -166,53 +166,78 @@ public class LinkedListHead<T> implements Iterable<T>
         }
 
         /**
-         * Remove the given range of links between `start` and `end`
+         * Remove the given range of links between `start` and `end` but do not clear the links.
+         * The links between start and end will form their own headless list.
+         * @param start
+         * @param end
+         */
+        public void extractRange(LinkedListEntry<T> start, LinkedListEntry<T> end)
+        {
+                removeRange(start, end, false);
+        }
+
+        /**
+         * Remove the given range of links between `start` and `end` and clear all the links.
          * @param start
          * @param end
          */
         public void removeRange(LinkedListEntry<T> start, LinkedListEntry<T> end)
         {
+                removeRange(start, end, true);
+        }
+
+        private void removeRange(LinkedListEntry<T> start, LinkedListEntry<T> end, boolean clearLinks)
+        {
                 LinkedListEntry<T> link;
                 
                 assert start.head == this : "The given `start` link is not part of this list";
                 assert end.head == this : "The given `end` link is not part of this list";
+
+                LinkedListEntry<T> left = start.previous;
+                LinkedListEntry<T> right = end.next;
                 
                 link = start;
                 while(true)
                 {
                         assert link != null;
                         assert link.head == this : "One of the links in the given range is not part of this list";
+                        LinkedListEntry<T> next = link.next;
                         
                         link.head = null;
+
+                        if (clearLinks)
+                        {
+                                link.previous = null;
+                                link.next = null;
+                        }
                         
                         if (link == end)
                         {
                                 break;
                         }
                         
-                        link = link.next;
+                        link = next;
                         assert link != start;
                 }
                 
-                
-                if (start.previous != null)
+                if (left != null)
                 {
-                        start.previous.next = end.next;
+                        left.next = right;
                 }
 
                 if (this.first == start)
                 {
-                        this.first = end.next;
+                        this.first = right;
                 }
 
-                if (end.next != null)
+                if (right != null)
                 {
-                        end.next.previous = start.previous;
+                        right.previous = left;
                 }
 
                 if (this.last == end)
                 {
-                        this.last = start.previous;
+                        this.last = left;
                 }
 
                 start.previous = null;
@@ -250,7 +275,7 @@ public class LinkedListHead<T> implements Iterable<T>
                         if (start.head != null)
                         {
                                 assert start.head != this : "One of the links in the given range is not a foreign link";
-                                start.head.removeRange(start, end);
+                                start.head.extractRange(start, end);
                         }
                 
                         link = start;
@@ -296,7 +321,7 @@ public class LinkedListHead<T> implements Iterable<T>
                         if (start.head != null)
                         {
                                 assert start.head != this : "One of the links in the given range is not a foreign link";
-                                start.head.removeRange(start, end);
+                                start.head.extractRange(start, end);
                         }
                 
                         link = start;

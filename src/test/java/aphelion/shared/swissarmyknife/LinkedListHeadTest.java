@@ -468,39 +468,89 @@ public class LinkedListHeadTest
                 assertEquals("10 01 02 03 04", forwardString(listA));
                 assertEquals("10 01 02 03 04", backwardString(listA));
         }
+
+        @Test
+        public void testRemoveRange()
+        {
+                LinkedListHead<String> list = new LinkedListHead<>();
+                list.appendData("01");
+                list.appendData("02");
+                LinkedListEntry<String> three = list.appendData("03");
+                LinkedListEntry<String> four = list.appendData("04");
+                LinkedListEntry<String> five = list.appendData("05");
+                list.appendData("06");
+
+                list.removeRange(three, five);
+
+                assertEquals("01 02 06", forwardString(list));
+                assertEquals("01 02 06", backwardString(list));
+                assertUnlinked(three);
+                assertUnlinked(four);
+                assertUnlinked(five);
+        }
+
+        @Test
+        public void testClear()
+        {
+                LinkedListHead<String> list = new LinkedListHead<>();
+                LinkedListEntry<String> one = list.appendData("01");
+                LinkedListEntry<String> two = list.appendData("02");
+                LinkedListEntry<String> three = list.appendData("03");
+                LinkedListEntry<String> four = list.appendData("04");
+                LinkedListEntry<String> five = list.appendData("05");
+
+                list.clear();
+                assertEquals("", forwardString(list));
+                assertEquals("", backwardString(list));
+                assertUnlinked(one);
+                assertUnlinked(two);
+                assertUnlinked(three);
+                assertUnlinked(four);
+                assertUnlinked(five);
+        }
         
         private String forwardString(LinkedListHead<String> list)
         {
+                return forwardString(list.first);
+        }
+
+        private String forwardString(LinkedListEntry<String> first)
+        {
                 LinkedListEntry<String> link;
                 StringBuilder ret = new StringBuilder();
-                
-                for (link = list.first; link != null; link = link.next)
+
+                for (link = first; link != null; link = link.next)
                 {
                         ret.append(link.data);
                         if (link.next != null)
                         {
                                 ret.append(" ");
                         }
-                        
+
                 }
-                
+
                 return ret.toString();
         }
-        
+
         private String backwardString(LinkedListHead<String> list)
+        {
+                return backwardString(list.last);
+        }
+
+        private String backwardString(LinkedListEntry<String> last)
         {
                 LinkedListEntry<String> link;
                 StringBuilder ret = new StringBuilder();
-                
-                for (link = list.last; link != null; link = link.previous)
+
+                for (link = last; link != null; link = link.previous)
                 {
-                        if (link != list.last)
+                        if (link != last)
                         {
                                 ret.insert(0, " ");
                         }
                         ret.insert(0, link.data);
                 }
-                
+
                 return ret.toString();
         }
         
@@ -512,5 +562,12 @@ public class LinkedListHeadTest
                 {
                         assertTrue(link.head == head);
                 }  
+        }
+
+        private void assertUnlinked(LinkedListEntry entry)
+        {
+                assertNull(entry.head);
+                assertNull(entry.previous);
+                assertNull(entry.next);
         }
 }

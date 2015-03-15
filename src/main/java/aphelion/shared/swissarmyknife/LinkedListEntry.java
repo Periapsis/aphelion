@@ -207,7 +207,7 @@ public class LinkedListEntry<T> implements Iterable<T> // A list is only as stro
                 if (start.head != null)
                 {
                         assert start.head != this.head : "'start' is not a foreign link";
-                        start.head.removeRange(start, end);
+                        start.head.extractRange(start, end);
                 }
                 
                 if (start.previous != null)
@@ -272,7 +272,7 @@ public class LinkedListEntry<T> implements Iterable<T> // A list is only as stro
                 if (start.head != null)
                 {
                         assert start.head != this.head;
-                        start.head.removeRange(start, end);
+                        start.head.extractRange(start, end);
                 }
                 
                 link = start;
