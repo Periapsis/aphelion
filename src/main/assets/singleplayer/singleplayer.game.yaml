@@ -99,9 +99,9 @@
 
 - ship-rotation-points: 40
   ships: [warbird, javelin, spider, leviathan, terrier, weasel, lancaster, shark, superspider]
-  ship-speed: 1000
-  ship-thrust: 10
-  ship-rotation-speed: 3000000
+  ship-speed: 1666
+  ship-thrust: 16
+  ship-rotation-speed: 5000000
   ship-bounce-friction: 600
   ship-bounce-friction-other-axis: 900 
   ship-radius: 14336 # 14 * 1024
@@ -109,8 +109,8 @@
   ship-spawn-y: 512
   ship-spawn-radius: 83
   ship-energy: 1000
-  ship-recharge: 1000
-  ship-respawn-delay: 400
+  ship-recharge: 1666
+  ship-respawn-delay: 240
   ship-change-respawn: true
   ship-image:
         resource: classic.ships
@@ -122,7 +122,7 @@
         offset: [0, 0, 304, 16]
         tiles: [19, 1] 
         frame-duration: [10, 50]
-  ship-exhaust-delay: 100 # a new puff every X ms
+  ship-exhaust-delay: 60 # a new puff every X ms
   ship-exhaust-remote-players: false
   
   ship-emped-image:
@@ -130,7 +130,7 @@
         offset: [0, 0, 400, 40]
         tiles: [10, 1] 
         frame-duration: 50
-  ship-emped-delay: 200 # a new spark every X ms
+  ship-emped-delay: 120 # a new spark every X ms
   
   ship-radar-colour: 0xFFFF39
   ship-local-radar-colour:
@@ -145,7 +145,7 @@
   projectile-bounce-friction-other-axis: 1024
   projectile-offset-y: 14336 # same as the radius
   projectile-image-trail-randomized: true
-  projectile-expiration-ticks: 500
+  projectile-expiration-ticks: 300
   projectile-speed-relative: true
   projectile-damage-self: true
   projectile-damage-self-kill: false
@@ -167,10 +167,10 @@
   render-delay-latency-ratio: 0
   render-delay-projectiles: false
   render-delay-maximize-local-time: false
-  render-delay-update-ship-delay-every-ticks: 50
   render-delay-update-projectile-delay-every-ticks: 2
+  render-delay-update-ship-delay-every-ticks: 30
   smoothing-algorithm: LINEAR
-  smoothing-look-ahead-ticks: 200
+  smoothing-look-ahead-ticks: 120
   smoothing-step-ratio: 5000
   smoothing-distance-limit: 1000
   smoothing-projectile-collisions: true
@@ -306,13 +306,13 @@
   projectile-prox-animation: *EXPLOSION_EBOMB
 
 - selector: {weapon: *GUNS}
-  projectile-expiration-ticks: 800
+  projectile-expiration-ticks: 480
   
 - selector: {weapon: *BOMBS}
-  projectile-expiration-ticks: 12000
+  projectile-expiration-ticks: 7200
                 
 - selector: {weapon: *MINES}
-  projectile-expiration-ticks: 15000
+  projectile-expiration-ticks: 9000
   projectile-speed-relative: false
   projectile-speed: 0
   projectile-offset-y: 0
@@ -336,13 +336,13 @@
 - {selector: {weapon: [classic-ebomb-lvl3, classic-emine-lvl3]}, projectile-emp-splash: 450}
 - {selector: {weapon: [classic-ebomb-lvl4, classic-emine-lvl4]}, projectile-emp-splash: 600}
 
-- {selector: {weapon: *BOMBSMINES_EMP}, projectile-emp-time: 2000}
+- {selector: {weapon: *BOMBSMINES_EMP}, projectile-emp-time: 1200}
   
   
 - selector: {weapon: classic-burst}
   weapon-projectiles: 3
   projectile-angle: [-245044800, 0, 245044800]
-  projectile-speed: 3500
+  projectile-speed: 5833
   projectile-damage: 2000
   projectile-angle-relative: false
   projectile-bounces: -1
@@ -362,7 +362,7 @@
 
 - selector: {weapon: classic-thor}
   projectile-prox-distance: 81920
-  projectile-prox-explode-ticks: 10 # -1 for never, 0 for immediate   
+  projectile-prox-explode-ticks: 6 # -1 for never, 0 for immediate   
   projectile-damage-splash: 600
   projectile-hit-tile: false
 
@@ -374,7 +374,7 @@
   projectile-offset-y: 0
   projectile-hit-ship: false
   projectile-hit-tile: false
-  weapon-fire-delay: 100
+  weapon-fire-delay: 60
 
   projectile-force-distance-ship: 600000
   projectile-force-velocity-ship: 10000
@@ -390,8 +390,8 @@
   projectile-image: {resource: classic.mines,        offset: [0,  48, 160, 16], tiles: [10, 1]}
   projectile-damage-splash: 150
   weapon-fire-energy: 200
-  weapon-fire-delay: 100
-  weapon-switch-delay: 100
+  weapon-fire-delay: 60
+  weapon-switch-delay: 60
   weapon-fire-projectile-limit: 2
   weapon-fire-projectile-limit-group: 1 # 1 is used for all mines
   projectile-force-distance-ship: 600000
@@ -405,29 +405,29 @@
         offset: [0, 0, 480, 192]
         tiles: [10, 4]
         
-  ship-speed: 2000
-  ship-thrust: 16
-  ship-boost-speed: 6000
-  ship-boost-thrust: 24
+  ship-speed: 3333
+  ship-thrust: 26
+  ship-boost-speed: 10000
+  ship-boost-thrust: 40
   ship-boost-energy: 5500
   
   ship-energy: 1500
-  ship-recharge: 4000
-  ship-rotation-speed: 3675672 # round(735134400/40000 * 200)
+  ship-recharge: 6666
+  ship-rotation-speed: 6126120 # round( 735134400/40000 * 200 * (10/6) )
   
   weapon-slot-gun: classic-gun-lvl3
   weapon-slot-gun-multi: classic-gun-lvl3
 
 - selector: {ship: warbird, weapon: *GUNS}
-  projectile-speed: 5000
+  projectile-speed: 8333
   weapon-fire-energy: 1350
-  weapon-fire-delay: 100
-  weapon-switch-delay: 100
+  weapon-fire-delay: 60
+  weapon-switch-delay: 60
 
 - selector: {ship: warbird, weapon: *BOMBS}
-  projectile-speed: 4000
-  weapon-fire-delay: 30
-  weapon-switch-delay: 30
+  projectile-speed: 6666
+  weapon-fire-delay: 18
+  weapon-switch-delay: 18
 
 - selector: {ship: javelin}
   ship-image:
@@ -435,13 +435,13 @@
         offset: [0, 192, 480, 192]
         tiles: [10, 4]
         
-  ship-speed: 1900
-  ship-thrust: 13
+  ship-speed: 3166
+  ship-thrust: 21
   ship-energy: 1500
-  ship-recharge: 1500
-  ship-rotation-speed: 3675672
-  ship-boost-speed: 6000
-  ship-boost-thrust: 24
+  ship-recharge: 2500
+  ship-rotation-speed: 6126120
+  ship-boost-speed: 10000
+  ship-boost-thrust: 40
   ship-boost-energy: 5000
   weapon-slot-bomb: classic-bomb-lvl1
   weapon-slot-gun: classic-gun-lvl1
@@ -452,10 +452,10 @@
 
   
 - selector: {ship: javelin, weapon: *GUNS}
-  projectile-speed: 900
+  projectile-speed: 1500
   weapon-fire-energy: 300
-  weapon-fire-delay: 60
-  weapon-switch-delay: 60
+  weapon-fire-delay: 36
+  weapon-switch-delay: 36
   projectile-angle: 367567200
   
 # has multi icon
@@ -465,17 +465,17 @@
 - {selector: {ship: javelin, weapon: [classic-gun-lvl4]}, weapon-nifty-show: gauge-gun-singlem-4}
   
 - selector: {ship: javelin, weapon: *GUNS_MULTI}
-  weapon-fire-delay: 150
-  weapon-switch-delay: 150
+  weapon-fire-delay: 90
+  weapon-switch-delay: 90
   weapon-projectiles: 3
   projectile-angle: [330810480, 367567200, 404323920]
   
   
 - selector: {ship: javelin, weapon: *BOMBS}
   weapon-fire-energy: 1100
-  weapon-fire-delay: 75
-  weapon-switch-delay: 75
-  projectile-speed: 2250
+  weapon-fire-delay: 45
+  weapon-switch-delay: 45
+  projectile-speed: 3750
   projectile-bounces: 1
   
 - selector: {ship: spider}
@@ -484,28 +484,28 @@
         offset: [0, 384, 480, 192]
         tiles: [10, 4]
 
-  ship-speed: 1700
-  ship-thrust: 18
+  ship-speed: 2833
+  ship-thrust: 30
   ship-energy: 1400
-  ship-recharge: 2500
-  ship-rotation-speed: 3308105
-  ship-boost-speed: 6000
-  ship-boost-thrust: 24
+  ship-recharge: 4166
+  ship-rotation-speed: 5513508
+  ship-boost-speed: 10000
+  ship-boost-thrust: 40
   ship-boost-energy: 6200
   weapon-slot-gun: classic-gun-lvl1
   weapon-slot-gun-multi: classic-gun-lvl1
   
 - selector: {ship: spider, weapon: *GUNS}
   weapon-fire-energy: 225
-  weapon-fire-delay: 35
-  weapon-switch-delay: 35
-  projectile-speed: 4000
+  weapon-fire-delay: 21
+  weapon-switch-delay: 21
+  projectile-speed: 6666
   
 
 - selector: {ship: spider, weapon: *BOMBS}
   projectile-speed: 0
-  weapon-fire-delay: 30
-  weapon-switch-delay: 30
+  weapon-fire-delay: 18
+  weapon-switch-delay: 18
   
   
 - selector: {ship: leviathan}
@@ -514,13 +514,13 @@
         offset: [0, 576, 480, 192]
         tiles: [10, 4]
 
-  ship-speed: 500
-  ship-thrust: 5
+  ship-speed: 833
+  ship-thrust: 8
   ship-energy: 1500
-  ship-recharge: 1100
-  ship-rotation-speed: 827026
-  ship-boost-speed: 6000
-  ship-boost-thrust: 24
+  ship-recharge: 1833
+  ship-rotation-speed: 1378376
+  ship-boost-speed: 10000
+  ship-boost-thrust: 40
   ship-boost-energy: 12000
   weapon-slot-gun: classic-gun-lvl2
   weapon-slot-gun-multi: classic-mgun-lvl2
@@ -535,9 +535,9 @@
 - {selector: {ship: leviathan, weapon: [classic-gun-lvl4]}, weapon-nifty-show: gauge-gun-singlem-4}
 
 - selector: {ship: leviathan, weapon: *GUNS}
-  weapon-fire-delay: 60
-  weapon-switch-delay: 60
-  projectile-speed: 1000
+  weapon-fire-delay: 36
+  weapon-switch-delay: 36
+  projectile-speed: 1666
   
 - selector: {ship: leviathan, weapon: *GUNS_SINGLE}
   weapon-fire-energy: 500
@@ -553,9 +553,9 @@
         
 - selector: {ship: leviathan, weapon: *BOMBS}
   weapon-fire-energy: 1100
-  weapon-fire-delay: 300
-  weapon-switch-delay: 300
-  projectile-speed: 3500
+  weapon-fire-delay: 180
+  weapon-switch-delay: 180
+  projectile-speed: 5833
                 
 - selector: {ship: terrier}
   ship-image:
@@ -563,16 +563,16 @@
         offset: [0, 768, 480, 192]
         tiles: [10, 4]
         
-  ship-speed: 4000
-  ship-thrust: 24
+  ship-speed: 6666
+  ship-thrust: 40
   ship-energy: 1500
-  ship-recharge: 1800
-  ship-rotation-speed: 5513508
-  ship-boost-speed: 6000
-  ship-boost-thrust: 24
+  ship-recharge: 3000
+  ship-rotation-speed: 9189180
+  ship-boost-speed: 10000
+  ship-boost-thrust: 40
   ship-boost-energy: 4000
-  weapon-fire-delay: 30
-  weapon-switch-delay: 30
+  weapon-fire-delay: 18
+  weapon-switch-delay: 18
   weapon-slot-gun: classic-gun-lvl1
   weapon-slot-gun-multi: classic-mgun-lvl1
   weapon-slot-burst: classic-burst
@@ -586,9 +586,9 @@
   
 - selector: {ship: terrier, weapon: *GUNS}
   weapon-fire-energy: 400
-  weapon-fire-delay: 75
-  weapon-switch-delay: 75
-  projectile-speed: 800
+  weapon-fire-delay: 45
+  weapon-switch-delay: 45
+  projectile-speed: 1333
 
   
 - selector: {ship: terrier, weapon: *GUNS_SINGLE}
@@ -601,9 +601,9 @@
   projectile-angle: [-183783600, 0, 0, 183783600]
   
 - selector: {ship: terrier, weapon: classic-burst}
-  weapon-fire-delay: 30
-  weapon-switch-delay: 30
-  projectile-speed: 3500
+  weapon-fire-delay: 18
+  weapon-switch-delay: 18
+  projectile-speed: 5833
   
 - selector: {ship: weasel}
   ship-image:
@@ -611,13 +611,13 @@
         offset: [0, 960, 480, 192]
         tiles: [10, 4]
         
-  ship-speed: 1500
-  ship-thrust: 14
+  ship-speed: 2500
+  ship-thrust: 23
   ship-energy: 1020
-  ship-recharge: 1500
-  ship-rotation-speed: 3308105
-  ship-boost-speed: 6200
-  ship-boost-thrust: 24
+  ship-recharge: 2500
+  ship-rotation-speed: 5513508
+  ship-boost-speed: 10333
+  ship-boost-thrust: 40
   ship-boost-energy: 3600
   weapon-slot-gun: classic-gun-lvl3
   weapon-slot-gun-multi: classic-mgun-lvl3
@@ -631,9 +631,9 @@
   
 - selector: {ship: weasel, weapon: *GUNS}
   weapon-fire-energy: 624
-  weapon-fire-delay: 40
-  weapon-switch-delay: 40
-  projectile-speed: 1000
+  weapon-fire-delay: 24
+  weapon-switch-delay: 24
+  projectile-speed: 1666
   
 - selector: {ship: weasel, weapon: *GUNS_MULTI}
   weapon-fire-energy: 762
@@ -641,9 +641,9 @@
   projectile-angle: [-16319984, 0, 16319984]
 
 - selector: {ship: weasel, weapon: *BOMBS}
-  weapon-fire-delay: 30
-  weapon-switch-delay: 30
-  projectile-speed: 5000
+  weapon-fire-delay: 18
+  weapon-switch-delay: 18
+  projectile-speed: 8333
   
 - selector: {ship: lancaster}
   ship-image:
@@ -651,13 +651,13 @@
         offset: [0, 1152, 480, 192]
         tiles: [10, 4]
   
-  ship-speed: 1800
-  ship-thrust: 12
+  ship-speed: 3000
+  ship-thrust: 20
   ship-energy: 1500
-  ship-recharge: 2500
-  ship-rotation-speed: 3491888
-  ship-boost-speed: 6500
-  ship-boost-thrust: 28
+  ship-recharge: 4166
+  ship-rotation-speed: 5819813
+  ship-boost-speed: 10833
+  ship-boost-thrust: 46
   ship-boost-energy: 4250
   weapon-slot-gun: classic-gun-lvl2
   weapon-slot-gun-multi: classic-mgun-lvl2
@@ -673,9 +673,9 @@
         
 - selector: {ship: lancaster, weapon: *GUNS}
   weapon-fire-energy: 620
-  weapon-fire-delay: 45
-  weapon-switch-delay: 45
-  projectile-speed: 3650
+  weapon-fire-delay: 27
+  weapon-switch-delay: 27
+  projectile-speed: 6083
 
 - selector: {ship: lancaster, weapon: *GUNS_SINGLE}
   weapon-projectiles: 2
@@ -683,28 +683,28 @@
   
 - selector: {ship: lancaster, weapon: *GUNS_MULTI}
   weapon-fire-energy: 870
-  weapon-fire-delay: 50
-  weapon-switch-delay: 50
+  weapon-fire-delay: 30
+  weapon-switch-delay: 30
   weapon-projectiles: 4
   projectile-offset-x: [0, -9000, 9000, 0]
   projectile-angle: [-10199990, 0, 0, 10199990]
   
 - selector: {ship: lancaster, weapon: *BOMBS}
-  weapon-fire-delay: 30
-  weapon-switch-delay: 30
-  projectile-speed: 2250
+  weapon-fire-delay: 18
+  weapon-switch-delay: 18
+  projectile-speed: 3750
 
 - selector: {ship: lancaster, weapon: classic-burst}
-  weapon-fire-delay: 30
-  weapon-switch-delay: 30
-  projectile-speed: 2000
+  weapon-fire-delay: 18
+  weapon-switch-delay: 18
+  projectile-speed: 3333
   weapon-projectiles: 50
   projectile-angle: [LINEAR, 14702688] # 735134400 / 50
   
 - selector: {ship: lancaster, weapon: classic-thor}
   projectile-expiration-chain-weapon: classic-burst
   projectile-damage:  500
-  projectile-expiration-ticks: 100
+  projectile-expiration-ticks: 60
   projectile-expiration-explode: true
   projectile-expiration-animation: *EXPLOSION_BOMB
 
@@ -715,13 +715,13 @@
         offset: [0, 1344, 480, 192]
         tiles: [10, 4]
         
-  ship-speed: 1875
-  ship-thrust: 13
+  ship-speed: 3125
+  ship-thrust: 21
   ship-energy: 1200
-  ship-recharge: 1500
-  ship-rotation-speed: 3859456
-  ship-boost-speed: 6000
-  ship-boost-thrust: 24
+  ship-recharge: 2500
+  ship-rotation-speed: 6432426
+  ship-boost-speed: 10000
+  ship-boost-thrust: 40
   ship-boost-energy: 4000
   projectile-speed: 0
   weapon-slot-bomb: classic-ebomb-lvl1
@@ -731,20 +731,20 @@
 
 - selector: {ship: shark, weapon: *BOMBS}
   weapon-fire-energy: 1150
-  weapon-fire-delay: 45
-  weapon-switch-delay: 45
+  weapon-fire-delay: 27
+  weapon-switch-delay: 27
   
 - selector: {ship: shark, weapon: *MINES}
   weapon-fire-energy: 200
-  weapon-fire-delay: 10
-  weapon-switch-delay: 10
+  weapon-fire-delay: 6
+  weapon-switch-delay: 6
   weapon-fire-projectile-limit: 4
   weapon-fire-projectile-limit-group: 1 # 1 is used for all mines
   
 - selector: {ship: shark, weapon: classic-burst}
-  weapon-fire-delay: 30
-  weapon-switch-delay: 30
-  projectile-speed: 2000
+  weapon-fire-delay: 18
+  weapon-switch-delay: 18
+  projectile-speed: 3333
   #weapon-projectiles: 50
   #projectile-angle: [LINEAR, 14702688] # 735134400 / 50
   weapon-projectiles: 8
@@ -761,13 +761,13 @@
         offset: [0, 384, 480, 192]
         tiles: [10, 4]
 
-  ship-speed: 4000
-  ship-thrust: 50
+  ship-speed: 6666
+  ship-thrust: 83
   ship-energy: 1200
-  ship-recharge: 4000
-  ship-rotation-speed: 6616210
-  ship-boost-speed: 6000
-  ship-boost-thrust: 24
+  ship-recharge: 6666
+  ship-rotation-speed: 11027016
+  ship-boost-speed: 10000
+  ship-boost-thrust: 40
   ship-boost-energy: 6200
   weapon-slot-gun: classic-gun-lvl1
   weapon-slot-gun-multi: classic-mgun-lvl1
@@ -778,16 +778,16 @@
   
 - selector: {ship: superspider, weapon: *GUNS}
   weapon-fire-energy: 50
-  weapon-fire-delay: 5
-  weapon-switch-delay: 5
-  projectile-speed: 5000
-  projectile-emp-time: 200
+  weapon-fire-delay: 3
+  weapon-switch-delay: 3
+  projectile-speed: 8333
+  projectile-emp-time: 120
 
 - selector: {ship: superspider, weapon: *BOMBS}
-  projectile-speed: 5000
+  projectile-speed: 8333
   weapon-fire-energy: 200
-  weapon-fire-delay: 20
-  weapon-switch-delay: 20
+  weapon-fire-delay: 12
+  weapon-switch-delay: 12
   weapon-projectiles: 2
   projectile-offset-x: [-9000, 9000]
   projectile-hit-ship-coupled: false
@@ -814,3 +814,8 @@
 - {selector: {ship: superspider, weapon: *BOMBSMINES}, projectile-damage:  200}
 
 ...
+
+
+
+
+
