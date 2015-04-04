@@ -125,7 +125,7 @@ public class DualRunnerEnvironment implements TickEvent, LoopEvent, PhysicsEnvir
         @Override
         public void loop(long systemNanoTime, long sourceNanoTime)
         {
-                if (!firstTick)
+                if (!firstTick) // Syncing on the first tick is done elsewhere
                 {
                         tryStateReset();
 
@@ -233,7 +233,7 @@ public class DualRunnerEnvironment implements TickEvent, LoopEvent, PhysicsEnvir
                 
                 environment.tick();
                 env_tickCount = environment.getTick();
-                //System.out.printf("%d: %4d => %4d (M)\n", Objects.hashCode(mainLoop), (mainLoop.currentNano()/1_000_000L), env_tickCount);
+                //System.out.printf("%d: %4d => %4d (M)\n", java.util.Objects.hashCode(mainLoop), (mainLoop.currentNano()/1_000_000L), env_tickCount);
         }
         
         public void done()
@@ -793,9 +793,9 @@ public class DualRunnerEnvironment implements TickEvent, LoopEvent, PhysicsEnvir
                         {
                                 long syncNano = syncWith.currentNano();
                                 // This thread is spawned during the first physics tick.
-                                // This means we are 1 tick behind! So substract a full tick lenght.
+                                // This means we are 1 tick behind! So subtract a full tick length.
                                 // But running at exactly the same time is not optimal for performance,
-                                // we are probably sleeping between ticks, so only substract half a tick.
+                                // we are probably sleeping between ticks, so only subtract half a tick.
                                 syncNano -= EnvironmentConf.TICK_LENGTH / 2;
                                 this.loop.synchronize(syncNano, syncWith.currentTick());
                         }
