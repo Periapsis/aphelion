@@ -62,7 +62,7 @@ public final class EnvironmentConf
         /** Tick length in nanoseconds.
          * (should be divisible by 2)
          */
-        public static final long TICK_LENGTH = 10_000_000L;
+        public static final long TICK_LENGTH = 16_666_666L;
         
         /** The maximum amount of rotation value. 
          * This must be constant for every peer.
