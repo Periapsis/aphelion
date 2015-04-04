@@ -326,7 +326,7 @@ public class DualRunnerEnvironmentTest extends PhysicsTest
                 assertEquals(2, events);
         }
         
-        @Test
+        @Test(timeout=10000)
         public void testExplosionEventLong() throws InterruptedException
         {
                 DualRunnerEnvironment env = (DualRunnerEnvironment) this.env;
