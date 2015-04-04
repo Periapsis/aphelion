@@ -796,6 +796,7 @@ public class DualRunnerEnvironment implements TickEvent, LoopEvent, PhysicsEnvir
                                 // This means we are 1 tick behind! So subtract a full tick length.
                                 // But running at exactly the same time is not optimal for performance,
                                 // we are probably sleeping between ticks, so only subtract half a tick.
+                                assert EnvironmentConf.TICK_LENGTH % 2 == 0;
                                 syncNano -= EnvironmentConf.TICK_LENGTH / 2;
                                 this.loop.synchronize(syncNano, syncWith.currentTick());
                         }

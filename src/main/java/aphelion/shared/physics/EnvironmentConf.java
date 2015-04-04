@@ -59,7 +59,9 @@ public final class EnvironmentConf
         
         public final String logString;
         
-        /** Tick length in nanoseconds. */
+        /** Tick length in nanoseconds.
+         * (should be divisible by 2)
+         */
         public static final long TICK_LENGTH = 10_000_000L;
         
         /** The maximum amount of rotation value. 
