@@ -96,7 +96,7 @@ public final class WeaponConfig
         public final GCBooleanList projectile_damageTeamKill;
         public final GCBooleanList projectile_damageSelfKill;
 
-        public final GCIntegerList projectile_empTime;
+        public final GCIntegerList projectile_empTicks;
         public final GCIntegerList projectile_empSplash;
         public final GCBooleanList projectile_empTeam;
         public final GCBooleanList projectile_empSelf;
@@ -159,7 +159,7 @@ public final class WeaponConfig
                 projectile_damageTeamKill = selection.getBooleanList("projectile-damage-team-kill");
                 projectile_damageSelfKill = selection.getBooleanList("projectile-damage-self-kill");
 
-                projectile_empTime = selection.getIntegerList("projectile-emp-time");
+                projectile_empTicks = selection.getIntegerList("projectile-emp-ticks");
                 projectile_empSplash = selection.getIntegerList("projectile-emp-splash");
                 projectile_empTeam = selection.getBooleanList("projectile-emp-team");
                 projectile_empSelf = selection.getBooleanList("projectile-emp-self");

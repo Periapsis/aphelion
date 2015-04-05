@@ -736,7 +736,7 @@ public final class Projectile extends MapEntity implements ProjectilePublic
                 {
                         return;
                 }
-                int damage = cfg(config.projectile_empTime, tick);
+                int damage = cfg(config.projectile_empTicks, tick);
                 
                 long splashSq = splash * (long) splash;
                 

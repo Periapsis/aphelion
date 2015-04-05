@@ -229,7 +229,7 @@ public class ProjectileExplosion extends Event implements ProjectileExplosionPub
                                 actorHit.died(tick);
                         }
 
-                        actorHit.applyEmp(tick, explodedProjectile.cfg(explodedConfig.projectile_empTime, tick));
+                        actorHit.applyEmp(tick, explodedProjectile.cfg(explodedConfig.projectile_empTicks, tick));
                 }
                 
                 if (doSplash)

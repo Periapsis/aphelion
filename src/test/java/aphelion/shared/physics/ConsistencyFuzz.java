@@ -103,7 +103,7 @@ public class ConsistencyFuzz
                                 + "  projectile-angle-relative: true\n"
                                 + "  projectile-expiration-ticks: 1000\n"
                                 + "  projectile-damage: 5000\n"
-                                + "  projectile-emp-time: 5\n"
+                                + "  projectile-emp-ticks: 5\n"
                                 + "");
                 }
                 catch (Exception ex)

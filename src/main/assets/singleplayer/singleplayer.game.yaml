@@ -336,7 +336,7 @@
 - {selector: {weapon: [classic-ebomb-lvl3, classic-emine-lvl3]}, projectile-emp-splash: 450}
 - {selector: {weapon: [classic-ebomb-lvl4, classic-emine-lvl4]}, projectile-emp-splash: 600}
 
-- {selector: {weapon: *BOMBSMINES_EMP}, projectile-emp-time: 1200}
+- {selector: {weapon: *BOMBSMINES_EMP}, projectile-emp-ticks: 1200}
   
   
 - selector: {weapon: classic-burst}
@@ -781,7 +781,7 @@
   weapon-fire-delay: 3
   weapon-switch-delay: 3
   projectile-speed: 8333
-  projectile-emp-time: 120
+  projectile-emp-ticks: 120
 
 - selector: {ship: superspider, weapon: *BOMBS}
   projectile-speed: 8333
