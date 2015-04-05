@@ -42,7 +42,7 @@ package aphelion.shared.physics.events;
 import aphelion.shared.gameconfig.GCStringList;
 import aphelion.shared.physics.SimpleEnvironment;
 import aphelion.shared.physics.entities.Actor;
-import aphelion.shared.physics.entities.WeaponConfig;
+import aphelion.shared.physics.config.WeaponConfig;
 import aphelion.shared.physics.entities.Projectile;
 import aphelion.shared.physics.entities.ProjectilePublic;
 import aphelion.shared.physics.events.pub.ProjectileExplosionPublic;

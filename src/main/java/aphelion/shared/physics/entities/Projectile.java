@@ -48,6 +48,7 @@ import aphelion.shared.gameconfig.GCString;
 import aphelion.shared.gameconfig.GCStringList;
 import aphelion.shared.net.protobuf.GameOperation;
 import aphelion.shared.physics.*;
+import aphelion.shared.physics.config.WeaponConfig;
 import aphelion.shared.physics.events.ProjectileExplosion;
 import aphelion.shared.physics.events.pub.ProjectileExplosionPublic;
 import aphelion.shared.physics.events.pub.ProjectileExplosionPublic.EXPLODE_REASON;

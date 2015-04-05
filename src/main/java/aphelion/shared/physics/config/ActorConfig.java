@@ -36,10 +36,12 @@
  * module is a module which is not derived from or based on this library.
  */
 
-package aphelion.shared.physics.entities;
+package aphelion.shared.physics.config;
 
 import aphelion.shared.gameconfig.*;
 import aphelion.shared.physics.WEAPON_SLOT;
+import aphelion.shared.physics.entities.Actor;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Logger;

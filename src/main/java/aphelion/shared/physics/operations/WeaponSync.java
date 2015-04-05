@@ -41,12 +41,13 @@ package aphelion.shared.physics.operations;
 
 import aphelion.shared.net.protobuf.GameOperation;
 import aphelion.shared.physics.SimpleEnvironment;
+import aphelion.shared.physics.config.WeaponConfig;
 import aphelion.shared.physics.operations.pub.WeaponSyncPublic;
 import aphelion.shared.physics.entities.Actor;
 import aphelion.shared.physics.entities.Projectile;
 import aphelion.shared.physics.State;
 import aphelion.shared.physics.entities.*;
-import aphelion.shared.physics.events.pub.ProjectileExplosionPublic;
+
 import static aphelion.shared.swissarmyknife.SwissArmyKnife.max;
 import static aphelion.shared.swissarmyknife.SwissArmyKnife.min;
 import java.util.logging.Logger;

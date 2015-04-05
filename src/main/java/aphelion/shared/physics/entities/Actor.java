@@ -40,6 +40,8 @@ package aphelion.shared.physics.entities;
 import aphelion.shared.gameconfig.*;
 import aphelion.shared.net.protobuf.GameOperation;
 import aphelion.shared.physics.*;
+import aphelion.shared.physics.config.ActorConfig;
+import aphelion.shared.physics.config.WeaponConfig;
 import aphelion.shared.physics.valueobjects.PhysicsMoveable;
 import aphelion.shared.physics.valueobjects.PhysicsMovement;
 import aphelion.shared.physics.valueobjects.PhysicsPoint;

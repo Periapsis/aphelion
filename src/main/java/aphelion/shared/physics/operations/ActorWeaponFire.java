@@ -40,6 +40,7 @@ package aphelion.shared.physics.operations;
 
 
 import aphelion.shared.physics.SimpleEnvironment;
+import aphelion.shared.physics.config.WeaponConfig;
 import aphelion.shared.physics.operations.pub.ActorWeaponFirePublic;
 import aphelion.shared.physics.entities.Actor;
 import aphelion.shared.physics.entities.Projectile;
@@ -48,7 +49,6 @@ import aphelion.shared.physics.valueobjects.PhysicsPositionVector;
 import aphelion.shared.physics.valueobjects.PhysicsShipPosition;
 import aphelion.shared.physics.WEAPON_SLOT;
 import aphelion.shared.physics.entities.*;
-import aphelion.shared.physics.events.pub.ProjectileExplosionPublic.EXPLODE_REASON;
 import aphelion.shared.swissarmyknife.SwissArmyKnife;
 import static aphelion.shared.swissarmyknife.SwissArmyKnife.max;
 import static aphelion.shared.swissarmyknife.SwissArmyKnife.min;

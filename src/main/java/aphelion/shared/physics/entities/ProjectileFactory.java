@@ -39,6 +39,7 @@ package aphelion.shared.physics.entities;
 
 
 import aphelion.shared.physics.State;
+import aphelion.shared.physics.config.WeaponConfig;
 import aphelion.shared.swissarmyknife.LinkedListEntry;
 import java.util.ArrayList;
 import java.util.logging.Logger;
