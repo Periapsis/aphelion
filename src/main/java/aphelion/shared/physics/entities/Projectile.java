@@ -391,8 +391,6 @@ public final class Projectile extends MapEntity implements ProjectilePublic
                                         // does nothing if out of range
                                         emitter.emitForce(tick, this);
                                 }
-                                // todo implement active delay for force emitters too (and perhaps other effects?)
-                                // todo default activate delay for force emitters?
                         }
                         
                         updatedPosition(tick);
