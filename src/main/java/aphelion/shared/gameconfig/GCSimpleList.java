@@ -62,11 +62,40 @@ public abstract class GCSimpleList<GCSIMPLE extends SimpleAbstract<TYPE>, TYPE> 
         
         public static enum LIST_FUNCTION
         {
-                REPEAT,
-                REPEAT_ALL,
-                LINEAR,
-                SHUFFLE,
-                RAND;
+                REPEAT ("~REPEAT"),
+                REPEAT_ALL ("~REPEAT_ALL"),
+                LINEAR ("~LINEAR"),
+                SHUFFLE ("~SHUFFLE"),
+                RAND ("~RAND");
+
+                /** name in config */
+                public final String name;
+
+                private final static LIST_FUNCTION[] values = values();
+
+                LIST_FUNCTION(String name)
+                {
+                        this.name = name;
+                }
+
+                @Override
+                public String toString()
+                {
+                        return name;
+                }
+
+                public static LIST_FUNCTION byName(String name)
+                {
+                        for (LIST_FUNCTION func : values)
+                        {
+                                if (func.name.equals(name))
+                                {
+                                        return func;
+                                }
+                        }
+
+                        return null;
+                }
         };
         
         // [REPEAT, 1, 2, 4]     = [1, 2,  4,  4,  4,   4]
@@ -264,15 +293,17 @@ public abstract class GCSimpleList<GCSIMPLE extends SimpleAbstract<TYPE>, TYPE> 
                 boolean skipFirst = false;
                 if (list.get(0) instanceof String)
                 {
-                        try
-                        {
-                                this.listFunction = LIST_FUNCTION.valueOf((String) list.get(0));
-                                skipFirst = true;
-                        }
-                        catch (IllegalArgumentException ex)
+                        this.listFunction = LIST_FUNCTION.byName((String) list.get(0));
+
+                        if (this.listFunction == null)
                         {
                                 this.listFunction = LIST_FUNCTION.LINEAR;
                         }
+                        else
+                        {
+                                skipFirst = true;
+                        }
+
                 }
                 needsSeed = this.listFunction == LIST_FUNCTION.SHUFFLE || this.listFunction == LIST_FUNCTION.RAND;
                 

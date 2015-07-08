@@ -699,7 +699,7 @@
   weapon-switch-delay: 18
   projectile-speed: 3333
   weapon-projectiles: 50
-  projectile-angle: [LINEAR, 14702688] # 735134400 / 50
+  projectile-angle: [~LINEAR, 14702688] # 735134400 / 50
   
 - selector: {ship: lancaster, weapon: classic-thor}
   projectile-expiration-chain-weapon: classic-burst
@@ -746,9 +746,9 @@
   weapon-switch-delay: 18
   projectile-speed: 3333
   #weapon-projectiles: 50
-  #projectile-angle: [LINEAR, 14702688] # 735134400 / 50
+  #projectile-angle: [~LINEAR, 14702688] # 735134400 / 50
   weapon-projectiles: 8
-  projectile-angle: [RAND, 0, 735134400]
+  projectile-angle: [~RAND, 0, 735134400]
   
   
   

@@ -81,9 +81,9 @@ public class GCIntegerList extends GCSimpleList<GCInteger, Integer>
         protected Integer calculateLinear(Integer from, Integer to, int factor)
         {
                 // [600, 700] should become [600, 700, 800, 900, 1000, ...]
-                // aka [from, to, factor 1, factor 2, factor 3]
+                // aka [from, to, factor 0, factor 1, factor 2]
                 if (from == null) from = 0;
-                return to + factor * (to - from);
+                return to + (factor + 1) * (to - from);
         }
 
         @Override

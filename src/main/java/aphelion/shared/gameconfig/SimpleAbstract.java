@@ -68,7 +68,7 @@ public abstract class SimpleAbstract<T> extends WrappedValueAbstract
         boolean newValue(Object value)
         {
                 T oldVal = this.value;
-                // do not support float and double since those may not be interpeted the same by all clients
+                // do not support float and double since those may not be interpreted the same by all clients
                 // (add a GCFloat type if desired)
                 this.value = castValue(value);
                 boolean wasSet = this.set;
