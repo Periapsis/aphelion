@@ -227,6 +227,16 @@ public class ConfigSelection
                         }
                 }
         }
+
+        public <T> GCEnum<T> getEnum(EnumResolver<T> resolver, String name)
+        {
+                return (GCEnum<T>) getValue(name, GCEnum.class, new GCEnum.Factory(resolver));
+        }
+
+        public <T> GCEnumList<T> getEnumList(EnumResolver<T> resolver, String name)
+        {
+                return (GCEnumList<T>) getValue(name, GCEnumList.class, new GCEnumList.Factory(resolver));
+        }
         
         /** Update the value for a single wrapped value.
          * Called by resolveValues()
