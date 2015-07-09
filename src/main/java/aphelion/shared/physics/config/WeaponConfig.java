@@ -39,6 +39,7 @@
 package aphelion.shared.physics.config;
 
 import aphelion.shared.gameconfig.*;
+import aphelion.shared.gameconfig.enums.GCFunction2D;
 import aphelion.shared.physics.entities.Actor;
 
 
@@ -101,6 +102,7 @@ public final class WeaponConfig
         public final GCBooleanList projectile_empTeam;
         public final GCBooleanList projectile_empSelf;
 
+        public final GCEnumList<GCFunction2D> projectile_forceFunction;
         public final GCIntegerList projectile_forceDistanceShip;
         public final GCIntegerList projectile_forceVelocityShip;
         public final GCIntegerList projectile_forceDistanceProjectile;
@@ -163,7 +165,8 @@ public final class WeaponConfig
                 projectile_empSplash = selection.getIntegerList("projectile-emp-splash");
                 projectile_empTeam = selection.getBooleanList("projectile-emp-team");
                 projectile_empSelf = selection.getBooleanList("projectile-emp-self");
-                
+
+                projectile_forceFunction = selection.getEnumList(GCFunction2D.resolver, "projectile-force-function");
                 projectile_forceDistanceShip = selection.getIntegerList("projectile-force-distance-ship");
                 projectile_forceVelocityShip = selection.getIntegerList("projectile-force-velocity-ship");
                 projectile_forceDistanceProjectile = selection.getIntegerList("projectile-force-distance-projectile");

@@ -45,14 +45,16 @@ import aphelion.shared.gameconfig.EnumResolver;
  */
 public enum GCFunction2D
 {
-        ABSOLUTE ("ABSOLUTE"),
-        LINEAR ("LINEAR");
+        ABSOLUTE (0, "ABSOLUTE"),
+        LINEAR (1, "LINEAR");
 
+        public final int id; // used on the protocol
         public final String name;
         private final static GCFunction2D[] values = values();
 
-        GCFunction2D(String name)
+        GCFunction2D(int id, String name)
         {
+                this.id = id;
                 this.name = name;
         }
 
@@ -60,6 +62,16 @@ public enum GCFunction2D
         public String toString()
         {
                 return name;
+        }
+
+        public static GCFunction2D byId(int id)
+        {
+                if (id < 0 || id >= values.length)
+                {
+                        return null;
+                }
+
+                return values[id];
         }
 
         public static GCFunction2D byName(String name)

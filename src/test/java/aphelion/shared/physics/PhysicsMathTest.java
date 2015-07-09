@@ -37,6 +37,7 @@
  */
 package aphelion.shared.physics;
 
+import aphelion.shared.gameconfig.enums.GCFunction2D;
 import aphelion.shared.physics.valueobjects.PhysicsPoint;
 import org.junit.Test;
 
@@ -188,79 +189,120 @@ public class PhysicsMathTest
         }
 
         @Test
-        public void testForce()
+        public void testLinearForce()
         {
                 PhysicsPoint forcePoint = new PhysicsPoint();
                 PhysicsPoint applyTo = new PhysicsPoint();
                 PhysicsPoint velocity = new PhysicsPoint();
 
-
                 applyTo.set(400, 400);
                 forcePoint.set(400, 400);
 
-                assertFalse(PhysicsMath.force(velocity, applyTo, forcePoint, 0, 50000));
+                assertFalse(PhysicsMath.force(velocity, applyTo, forcePoint, 0, 50000, GCFunction2D.LINEAR));
                 assertFalse("Return value should not be set if the range is invalid", velocity.set);
                 assertEquals(0, velocity.x);
                 assertEquals(0, velocity.y);
 
                 forcePoint.set(400, 400);
-                assertTrue(PhysicsMath.force(velocity, applyTo, forcePoint, 100, 50000));
+                assertTrue(PhysicsMath.force(velocity, applyTo, forcePoint, 100, 50000, GCFunction2D.LINEAR));
                 assertTrue("Return value should be set if the positions are equal to each other", velocity.set);
                 assertEquals(0, velocity.x);
                 assertEquals(50000, velocity.y);
 
                 applyTo.set(500, 400);
-                assertFalse(PhysicsMath.force(velocity, applyTo, forcePoint, 100, 50000));
+                assertFalse(PhysicsMath.force(velocity, applyTo, forcePoint, 100, 50000, GCFunction2D.LINEAR));
                 assertTrue("Return value should be set if out of range", velocity.set);
                 assertEquals(0, velocity.x);
                 assertEquals(0, velocity.y);
 
                 applyTo.set(410, 123401);
-                assertFalse(PhysicsMath.force(velocity, applyTo, forcePoint, 100, 50000));
+                assertFalse(PhysicsMath.force(velocity, applyTo, forcePoint, 100, 50000, GCFunction2D.LINEAR));
                 assertTrue("Return value should be set if out of range", velocity.set);
                 assertEquals(0, velocity.x);
                 assertEquals(0, velocity.y);
 
                 applyTo.set(350, 400);
-                assertTrue(PhysicsMath.force(velocity, applyTo, forcePoint, 100, 50000));
+                assertTrue(PhysicsMath.force(velocity, applyTo, forcePoint, 100, 50000, GCFunction2D.LINEAR));
                 assertTrue("Return value should be set", velocity.set);
                 assertEquals(-50000/2, velocity.x);
                 assertEquals(0, velocity.y);
 
                 applyTo.set(450, 400);
-                assertTrue(PhysicsMath.force(velocity, applyTo, forcePoint, 100, 50000));
+                assertTrue(PhysicsMath.force(velocity, applyTo, forcePoint, 100, 50000, GCFunction2D.LINEAR));
                 assertTrue("Return value should be set", velocity.set);
                 assertEquals(50000/2, velocity.x);
                 assertEquals(0, velocity.y);
 
                 applyTo.set(400, 350);
-                assertTrue(PhysicsMath.force(velocity, applyTo, forcePoint, 100, 50000));
+                assertTrue(PhysicsMath.force(velocity, applyTo, forcePoint, 100, 50000, GCFunction2D.LINEAR));
                 assertTrue("Return value should be set", velocity.set);
                 assertEquals(0, velocity.x);
                 assertEquals(-50000/2, velocity.y);
 
                 applyTo.set(400, 450);
-                assertTrue(PhysicsMath.force(velocity, applyTo, forcePoint, 100, 50000));
+                assertTrue(PhysicsMath.force(velocity, applyTo, forcePoint, 100, 50000, GCFunction2D.LINEAR));
                 assertTrue("Return value should be set", velocity.set);
                 assertEquals(0, velocity.x);
                 assertEquals(50000/2, velocity.y);
 
                 applyTo.set(430, 440); // (results in a pythagorean triple, dist=50)
-                assertTrue(PhysicsMath.force(velocity, applyTo, forcePoint, 100, 50000));
+                assertTrue(PhysicsMath.force(velocity, applyTo, forcePoint, 100, 50000, GCFunction2D.LINEAR));
                 assertTrue("Return value should be set", velocity.set);
                 assertEquals(50000 * 30 / 100, velocity.x);
                 assertEquals(50000 * 40 / 100, velocity.y);
 
                 applyTo.set(350, 400);
-                assertFalse(PhysicsMath.force(velocity, applyTo, forcePoint, 100, 0));
+                assertFalse(PhysicsMath.force(velocity, applyTo, forcePoint, 100, 0, GCFunction2D.LINEAR));
                 assertFalse("Return value should not be set if strength is zero", velocity.set);
                 assertEquals(0, velocity.x);
                 assertEquals(0, velocity.y);
 
                 applyTo.set(350, 400);
-                assertFalse(PhysicsMath.force(velocity, applyTo, forcePoint, 100, 1));
+                assertFalse(PhysicsMath.force(velocity, applyTo, forcePoint, 100, 1, GCFunction2D.LINEAR));
                 assertTrue("Return value should be set if the result evaluated to zero", velocity.set);
                 assertEquals(0, velocity.x);
                 assertEquals(0, velocity.y);
+        }
+
+        @Test
+        public void testAbsoluteForce()
+        {
+                PhysicsPoint forcePoint = new PhysicsPoint();
+                PhysicsPoint applyTo = new PhysicsPoint();
+                PhysicsPoint velocity = new PhysicsPoint();
+
+                applyTo.set(400, 400);
+                forcePoint.set(400, 400);
+
+                applyTo.set(350, 400);
+                assertTrue(PhysicsMath.force(velocity, applyTo, forcePoint, 100, 50000, GCFunction2D.ABSOLUTE));
+                assertTrue("Return value should be set", velocity.set);
+                assertEquals(-50000, velocity.x);
+                assertEquals(0, velocity.y);
+
+                applyTo.set(450, 400);
+                assertTrue(PhysicsMath.force(velocity, applyTo, forcePoint, 100, 50000, GCFunction2D.ABSOLUTE));
+                assertTrue("Return value should be set", velocity.set);
+                assertEquals(50000, velocity.x);
+                assertEquals(0, velocity.y);
+
+                applyTo.set(400, 350);
+                assertTrue(PhysicsMath.force(velocity, applyTo, forcePoint, 100, 50000, GCFunction2D.ABSOLUTE));
+                assertTrue("Return value should be set", velocity.set);
+                assertEquals(0, velocity.x);
+                assertEquals(-50000, velocity.y);
+
+                applyTo.set(400, 450);
+                assertTrue(PhysicsMath.force(velocity, applyTo, forcePoint, 100, 50000, GCFunction2D.ABSOLUTE));
+                assertTrue("Return value should be set", velocity.set);
+                assertEquals(0, velocity.x);
+                assertEquals(50000, velocity.y);
+
+                applyTo.set(430, 440); // (results in a pythagorean triple, 30, 40, 50)
+                assertTrue(PhysicsMath.force(velocity, applyTo, forcePoint, 100, 50000, GCFunction2D.ABSOLUTE));
+                assertTrue("Return value should be set", velocity.set);
+                // sqrt(30000^2 + 40000^2) -> 50000
+                assertEquals(30000, velocity.x);
+                assertEquals(40000, velocity.y);
         }
 }

@@ -67,6 +67,7 @@ public class ForceEmitterTest extends PhysicsTest
                         "- weapon-slot-repel: repelA\n" +
                         "  weapon-slot-burst: repelB\n" +
                         "  weapon-slot-bomb: bomb\n" +
+                        "  projectile-force-function: LINEAR\n" +
                         "  ship-speed: "+EnvironmentConf.MAX_POSITION+"\n" +
 
                         "- selector: {weapon: [repelA, repelB]}\n" +

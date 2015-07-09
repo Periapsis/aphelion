@@ -46,6 +46,7 @@ import aphelion.shared.gameconfig.GCIntegerFixed;
 import aphelion.shared.gameconfig.GCIntegerList;
 import aphelion.shared.gameconfig.GCString;
 import aphelion.shared.gameconfig.GCStringList;
+import aphelion.shared.gameconfig.enums.GCFunction2D;
 import aphelion.shared.net.protobuf.GameOperation;
 import aphelion.shared.physics.*;
 import aphelion.shared.physics.config.WeaponConfig;
@@ -110,6 +111,7 @@ public final class Projectile extends MapEntity implements ProjectilePublic
         public int bounceOtherAxisFriction;
         public int proxDist;
         public int proxExplodeDelay;
+        public GCFunction2D forceFunction;
         public int forceDistanceShip;
         public int forceVelocityShip;
         public int forceDistanceProjectile;
@@ -166,6 +168,7 @@ public final class Projectile extends MapEntity implements ProjectilePublic
                 p.setProxLastSeenDist(proxLastSeenDist); 
                 p.setProxLastSeenDistTick(proxLastSeenDist_tick); 
                 p.setProxActivatedAtTick(proxActivatedAt_tick);
+                p.setForceFunction(forceFunction.id);
                 p.setForceDistanceShip(forceDistanceShip);
                 p.setForceVelocityShip(forceVelocityShip);
                 p.setForceDistanceProjectile(forceDistanceProjectile);
@@ -195,6 +198,7 @@ public final class Projectile extends MapEntity implements ProjectilePublic
                 proxLastSeenDist = s.getProxLastSeenDist();
                 proxLastSeenDist_tick = s.getProxLastSeenDistTick();
                 proxActivatedAt_tick = s.getProxActivatedAtTick();
+                forceFunction = GCFunction2D.byId(s.getForceFunction());
                 forceDistanceShip = s.getForceDistanceShip();
                 forceVelocityShip = s.getForceVelocityShip();
                 forceDistanceProjectile = s.getForceDistanceProjectile();
@@ -302,6 +306,7 @@ public final class Projectile extends MapEntity implements ProjectilePublic
                 proxExplodeDelay = config.projectile_proxExplodeTicks.isSet()
                         ? cfg(config.projectile_proxExplodeTicks, tick)
                         : -1;
+                forceFunction = config.projectile_forceFunction.get(this.configIndex, configSeed(tick));
                 forceDistanceShip = cfg(config.projectile_forceDistanceShip, tick);
                 forceVelocityShip = cfg(config.projectile_forceVelocityShip, tick);
                 forceDistanceProjectile = cfg(config.projectile_forceDistanceProjectile, tick);
@@ -1033,7 +1038,7 @@ public final class Projectile extends MapEntity implements ProjectilePublic
                 this.posHistory.get(forcePoint, tick);
 
                 if (en.getHistoricPosition(otherPosition, tick, false) &&
-                    PhysicsMath.force(velocity, otherPosition.pos, forcePoint, forceDistance, forceVelocity))
+                    PhysicsMath.force(velocity, otherPosition.pos, forcePoint, forceDistance, forceVelocity, forceFunction))
                 {
                         en.markDirtyPositionPath(tick);
 

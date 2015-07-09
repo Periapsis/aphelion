@@ -37,6 +37,7 @@
  */
 package aphelion.shared.physics;
 
+import aphelion.shared.gameconfig.enums.GCFunction2D;
 import aphelion.shared.physics.valueobjects.PhysicsPoint;
 import static aphelion.shared.swissarmyknife.SwissArmyKnife.max;
 import static aphelion.shared.swissarmyknife.SwissArmyKnife.abs;
@@ -125,9 +126,10 @@ public final class PhysicsMath
                 PhysicsPoint applyTo,
                 PhysicsPoint forcePoint,
                 int range,
-                int strength)
+                int strength,
+                GCFunction2D function)
         {
-                return force(ret, applyTo, forcePoint, range, (long) range * (long) range, strength);
+                return force(ret, applyTo, forcePoint, range, (long) range * (long) range, strength, function);
         }
 
         /**
@@ -146,7 +148,8 @@ public final class PhysicsMath
                 PhysicsPoint forcePoint, 
                 int range,
                 long rangeSq,
-                int strength)
+                int strength,
+                GCFunction2D function)
         {
                 ret.unset();
                 if (!applyTo.set ||
@@ -179,9 +182,18 @@ public final class PhysicsMath
                         ret.y = strength;
                         return true;
                 }
-                
-                long force = range - dist; // fits integer
-                force = force * strength / range;
+
+                long force;
+
+                if (function == GCFunction2D.LINEAR)
+                {
+                        force = range - dist; // fits integer
+                        force = force * strength / range;
+                }
+                else // if (function == GCFunction2D.ABSOLUTE)
+                {
+                        force = strength;
+                }
                 
                 ret.x = (int) ((applyTo.x - forcePoint.x) * force / dist);
                 ret.y = (int) ((applyTo.y - forcePoint.y) * force / dist);

@@ -171,9 +171,10 @@ message WeaponSync {
                 required int64 proxLastSeenDist = 18;
                 required int64 proxLastSeenDist_tick = 19;
                 required int64 proxActivatedAt_tick = 20;
-                required int32 forceDistanceShip = 21;
-                required int32 forceVelocityShip = 22;
-                required int32 forceDistanceProjectile = 23;
-                required int32 forceVelocityProjectile = 24;
+                required int32 forceFunction = 21;
+                required int32 forceDistanceShip = 22;
+                required int32 forceVelocityShip = 23;
+                required int32 forceDistanceProjectile = 24;
+                required int32 forceVelocityProjectile = 25;
         }
 }

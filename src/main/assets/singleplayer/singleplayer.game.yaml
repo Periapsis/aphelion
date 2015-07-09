@@ -376,6 +376,7 @@
   projectile-hit-tile: false
   weapon-fire-delay: 60
 
+  projectile-force-function: ABSOLUTE
   projectile-force-distance-ship: 600000
   projectile-force-velocity-ship: 10000
   projectile-force-distance-projectile: 1000000
@@ -394,6 +395,7 @@
   weapon-switch-delay: 60
   weapon-fire-projectile-limit: 2
   weapon-fire-projectile-limit-group: 1 # 1 is used for all mines
+  projectile-force-function: LINEAR
   projectile-force-distance-ship: 600000
   projectile-force-velocity-ship: -1000
   projectile-force-distance-projectile: 1000000
