@@ -83,8 +83,8 @@ public class Actor extends MapEntity
         public final RollingHistory<PhysicsMoveable> moveHistory;
         private long mostRecentMove_tick;
         public final PhysicsPointHistorySmooth smoothHistory;
-        
-        public long nextSwitchedWeaponFire_tick; // >=
+
+        public final PhysicsExpiration switchedWeaponReload = new PhysicsExpiration();
         public WeaponConfig lastWeaponFire;
         
         
@@ -137,7 +137,7 @@ public class Actor extends MapEntity
                 
                 posHistoryDetailed = (PhysicsPointHistoryDetailed) this.posHistory;
                 
-                this.nextSwitchedWeaponFire_tick = createdAt_tick;
+                this.switchedWeaponReload.setExpiration(createdAt_tick);
                 
                 this.pid = pid;
                 key = new ActorKey(this.pid);
@@ -236,7 +236,7 @@ public class Actor extends MapEntity
                 s.setRotation(rot.points);
                 
                 // position is synced using a warp packet
-                s.setNextSwitchedWeaponFireTick(this.nextSwitchedWeaponFire_tick);
+                s.setSwitchedWeaponReloadTick(this.switchedWeaponReload.getExpiration());
                 
                 for (WeaponConfig c : config.weapons.values())
                 {
@@ -302,9 +302,8 @@ public class Actor extends MapEntity
                 
                 // make sure  the energy used for matching does not get modified by a side effect
                 int myEnergy = this.energy.get(operation_tick);
-                
-                this.nextSwitchedWeaponFire_tick = initFromSync_set(this.nextSwitchedWeaponFire_tick, s.getNextSwitchedWeaponFireTick());
-                
+
+                this.switchedWeaponReload.setExpiration(initFromSync_set(this.switchedWeaponReload.getExpiration(), s.getSwitchedWeaponReloadTick()));
                 
                 PhysicsWarp warp = new PhysicsWarp(s.getX(), s.getY(), s.getXVel(), s.getYVel(), s.getRotation());
                 PhysicsShipPosition currentPos = new PhysicsShipPosition();
@@ -709,9 +708,8 @@ public class Actor extends MapEntity
                 {
                         publicWrapper = new ActorPublicImpl(this, this.state);
                 }
-                
-                
-                nextSwitchedWeaponFire_tick = other.nextSwitchedWeaponFire_tick;
+
+                switchedWeaponReload.set(other.switchedWeaponReload);
                 this.lastWeaponFire = null;
                 for (WeaponConfig otherConfig : other.config.weapons.values())
                 {
@@ -790,7 +788,7 @@ public class Actor extends MapEntity
                 
                 if (slot.config != this.lastWeaponFire)
                 {
-                        if (tick < this.nextSwitchedWeaponFire_tick)
+                        if (this.switchedWeaponReload.isActiveAt(tick))
                         {
                                 // weapon switch delay
                                 return false;

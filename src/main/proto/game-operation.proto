@@ -68,7 +68,7 @@ message ActorSync {
 	required sint32  y_vel     = 6;
 	required fixed32 rotation  = 7;
         
-        required int64 nextSwitchedWeaponFire_tick = 8;
+        required int64 switchedWeaponReload_tick = 8;
         repeated string nextWeaponFire_key = 9;
         repeated int64 nextWeaponFire_tick = 10;
         

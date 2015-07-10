@@ -191,12 +191,7 @@ public class ActorWeaponFire extends Operation implements ActorWeaponFirePublic
                 }
                 
                 actor.lastWeaponFire = config;
-                
-                next = tick + config.switchDelay.get();
-                if (next > actor.nextSwitchedWeaponFire_tick)
-                {
-                        actor.nextSwitchedWeaponFire_tick = next;
-                }
+                actor.switchedWeaponReload.ensureActiveUntil(tick + config.switchDelay.get());
                 
                 actor.energy.addRelativeValue(
                         Actor.ENERGY_SETTER.OTHER.id, 
