@@ -41,6 +41,7 @@ package aphelion.shared.physics.config;
 import aphelion.shared.gameconfig.*;
 import aphelion.shared.gameconfig.enums.GCFunction2D;
 import aphelion.shared.physics.entities.Actor;
+import aphelion.shared.physics.valueobjects.PhysicsExpiration;
 
 
 /**
@@ -53,7 +54,7 @@ public final class WeaponConfig
         public final ConfigSelection selection;
         public final String weaponKey;
 
-        public long nextWeaponFire_tick;
+        public final PhysicsExpiration weaponReload = new PhysicsExpiration();
 
         public final GCInteger fireEnergy;
         public final GCInteger fireDelay;
@@ -114,8 +115,8 @@ public final class WeaponConfig
                 this.actor = actor;
                 this.weaponKey = weaponKey;
                 this.selection = actor.state.config.newSelection();
-                
-                this.nextWeaponFire_tick = actor.createdAt_tick;
+
+                this.weaponReload.setExpiration(actor.createdAt_tick);
                 selection.selection.setWeapon(weaponKey);
                 selection.selection.setShip(actor.ship);
 

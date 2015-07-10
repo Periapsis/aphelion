@@ -240,15 +240,9 @@ public class Actor extends MapEntity
                 
                 for (WeaponConfig c : config.weapons.values())
                 {
-                        if (c.nextWeaponFire_tick < state.tick_now)
-                        {
-                                continue; // no need to send
-                        }
-                        
-                        s.addNextWeaponFireKey(c.weaponKey);
-                        s.addNextWeaponFireTick(c.nextWeaponFire_tick);
+                        s.addWeaponReloadKey(c.weaponKey);
+                        s.addWeaponReloadTick(c.weaponReload.getExpiration());
                 }
-                
                 
                 if (lastWeaponFire == null)
                 {
@@ -322,12 +316,12 @@ public class Actor extends MapEntity
                         this.performDeadReckoning(state.env.getMap(), operation_tick + 1, state.tick_now - operation_tick, true);
                 }
                 
-                for (int i = 0; i < s.getNextWeaponFireKeyCount(); ++i)
+                for (int i = 0; i < s.getWeaponReloadKeyCount(); ++i)
                 {
-                        WeaponConfig c = config.getWeaponConfig(s.getNextWeaponFireKey(i));
+                        WeaponConfig c = config.getWeaponConfig(s.getWeaponReloadKey(i));
                         try
                         {
-                                c.nextWeaponFire_tick = initFromSync_set(c.nextWeaponFire_tick, s.getNextWeaponFireTick(i));
+                                c.weaponReload.setExpiration(initFromSync_set(c.weaponReload.getExpiration(), s.getWeaponReloadTick(i)));
                         }
                         catch (IndexOutOfBoundsException ex)
                         {
@@ -714,7 +708,7 @@ public class Actor extends MapEntity
                 for (WeaponConfig otherConfig : other.config.weapons.values())
                 {
                         WeaponConfig myConfig = config.getWeaponConfig(otherConfig.weaponKey); // never returns null
-                        myConfig.nextWeaponFire_tick = otherConfig.nextWeaponFire_tick;
+                        myConfig.weaponReload.set(otherConfig.weaponReload);
                         
                         if (otherConfig == other.lastWeaponFire)
                         {
@@ -779,8 +773,7 @@ public class Actor extends MapEntity
                 // History is not tracked for fire delay; this is fine, use a timewarp for late weapons.
                 // (this is very rare because the input code does not send a weapon fire packet
                 //  to the server if the player does not have the proper amount of energy)
-                
-                if (tick < slot.config.nextWeaponFire_tick)
+                if (slot.config.weaponReload.isActiveAt(tick))
                 {
                         // reload per weapon
                         return false;

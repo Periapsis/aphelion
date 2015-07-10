@@ -184,12 +184,7 @@ public class ActorWeaponFire extends Operation implements ActorWeaponFirePublic
                 
                 
                 // this is consistent with reordered weapons thanks to the canFireWeapon() check above
-                long next = tick + config.fireDelay.get();
-                if (next > config.nextWeaponFire_tick)
-                {
-                        config.nextWeaponFire_tick = next;
-                }
-                
+                config.weaponReload.ensureActiveUntil(tick + config.fireDelay.get());
                 actor.lastWeaponFire = config;
                 actor.switchedWeaponReload.ensureActiveUntil(tick + config.switchDelay.get());
                 
